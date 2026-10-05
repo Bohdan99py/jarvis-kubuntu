@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=J.A.R.V.I.S.
+GenericName=AI Assistant
+Comment=Personal AI assistant
+Exec=jarvis
+Icon=utilities-terminal
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+StartupWMClass=jarvis

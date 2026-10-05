@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.jarvis.Daemon1
+Exec=@JARVIS_BINDIR@/jarvisd
+SystemdService=jarvis.service

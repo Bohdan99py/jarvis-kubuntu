@@ -1,0 +1,14 @@
+[Unit]
+Description=J.A.R.V.I.S. assistant daemon
+After=dbus.socket
+
+[Service]
+Type=dbus
+BusName=org.jarvis.Daemon1
+ExecStart=@JARVIS_BINDIR@/jarvisd
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target
