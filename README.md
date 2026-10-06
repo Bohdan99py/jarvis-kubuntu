@@ -1,59 +1,97 @@
-# J.A.R.V.I.S. for Kubuntu (v0.3: daemon)
+# Jarvis for Kubuntu · 0.6
 
-Everything lives in one flat folder with a single CMakeLists.txt.
+Системный ассистент с чатом, голосом, быстрыми командами, подключаемыми навыками и обучаемой памятью. Интерфейс — Qt Quick, фоновая служба — systemd user + D-Bus.
 
-## Processes
+[Скачать последний релиз](https://github.com/Bohdan99py/jarvis-kubuntu/releases/latest) · [Сборки GitHub Actions](https://github.com/Bohdan99py/jarvis-kubuntu/actions/workflows/release.yml)
 
-    jarvisd  — background daemon (systemd user service), owns the brain, D-Bus org.jarvis.Daemon1
-    jarvis   — Qt Quick chat window; talks to jarvisd, falls back to a local engine if it is absent
+## Установка пакета
 
-## Files
+Скачайте `.deb` для вашей версии Kubuntu/Ubuntu (24.04 или 26.04, amd64). Откройте его в KDE Discover и нажмите «Установить». Или:
 
-| File(s)                                        | Role                                              |
-|------------------------------------------------|---------------------------------------------------|
-| jv_sys.h / jv_sys.c                            | pure C11 layer: reads /proc and /sys              |
-| jv_sysinfo_cli.c                               | CLI to test the C layer on its own                |
-| system_info.h/.cpp                             | Qt adapter: C data -> RU/EN sentences             |
-| chat_engine.h/.cpp                             | rule-based brain (request ids, async replies)     |
-| dbus_names.h                                   | D-Bus names shared by daemon and GUI              |
-| daemon_service.h/.cpp, jarvisd_main.cpp        | the daemon                                        |
-| daemon_client.h/.cpp                           | GUI-side D-Bus proxy                              |
-| chat_model.h/.cpp, main.cpp, Main.qml          | chat window                                       |
-| jarvis.service.in, org.jarvis.Daemon1.service.in | systemd unit and D-Bus activation templates     |
-| org.jarvis.Jarvis.desktop                      | KDE launcher entry                                |
+```sh
+sudo apt install ./jarvis_0.6.0_ubuntu-26.04_amd64.deb
+```
 
-## Dependencies
+Пакет устанавливает программу, значок, пункт меню KDE, D-Bus activation и пользовательскую службу. Jarvis запускается из меню приложений. Демон запускается при обращении и при следующем входе пользователя в сеанс. Он работает с правами пользователя; пароль администратора требуется только системному менеджеру пакетов при установке/обновлении.
 
-    sudo apt install build-essential cmake ninja-build \
-        qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
-        qml6-module-qtquick qml6-module-qtquick-controls \
-        qml6-module-qtquick-layouts qml6-module-qtquick-templates \
-        qml6-module-qtquick-window qml6-module-qtqml-workerscript
+Если ранее ставили исходники в `~/.local`, эта копия имеет приоритет над системной. Перед переходом остановите старую службу и перенесите старые `~/.local/bin/jarvis`, `~/.local/bin/jarvisd`, `~/.local/share/applications/org.jarvis.Jarvis.desktop`, `~/.local/share/dbus-1/services/org.jarvis.Daemon1.service` и `~/.local/share/systemd/user/jarvis.service` в резервную папку. Затем выполните `systemctl --user daemon-reload`. Конфигурацию и память удалять не нужно. Запуск системной версии: `/usr/bin/jarvis`.
 
-## Build
+## Быстрые команды
 
-    cmake -S . -B build -G Ninja
-    cmake --build build
+- **Meta+J** — действие «Быстрые команды» в KDE. Если сочетание уже занято или Plasma не назначила его автоматически, выберите Jarvis → Быстрые команды в «Параметры системы → Клавиатура → Комбинации клавиш».
+- `jarvis --quick` — компактная строка. Повторный запуск активирует уже открытое приложение через D-Bus.
+- **Enter** — отправить вопрос; `/web запрос` — поиск DuckDuckGo в браузере; **Esc** — скрыть строку.
+- Кнопки «Память», «Процессор», «Диск» получают локальные данные. «Файлы», «Терминал», «Настройки KDE» открывают соответствующее приложение.
+- Значок в системном трее открывает строку или основное окно. Произвольные shell-команды из текста не исполняются.
 
-## Try the daemon without installing
+## Голос
 
-    # terminal 1
-    ./build/jarvisd
-    # terminal 2
-    ./build/jarvis        # header says "jarvisd подключён"
+Откройте «Меню → Навыки, голос и обновления → Голос». Включите «Озвучивать ответы» и нажмите «Проверить голос». Озвучивание использует Speech Dispatcher, установленный вместе с пакетом.
 
-    # talk to it straight over D-Bus
-    busctl --user introspect org.jarvis.Daemon1 /org/jarvis/Daemon1
-    busctl --user call org.jarvis.Daemon1 /org/jarvis/Daemon1 org.jarvis.Daemon1 Version
+Для диктовки нажмите «Установить голос». Эта явная операция устанавливает `vosk==0.3.45` в отдельное пользовательское Python-окружение и скачивает [русскую модель Vosk](https://alphacephei.com/vosk/models). Размер модели около 45 МБ; ей требуется дополнительная память при работе. Установка не меняет системный Python. После этого распознавание работает без сети.
 
-## Install as a user service (no sudo)
+Нажмите «Микрофон», говорите, нажмите стоп. Запись ограничена 20 секундами. Звук не сохраняется в файл и не отправляется в сеть. Распознанный текст попадает в строку ввода: его можно исправить перед отправкой. Уже отправленный текст обрабатывается обычной маршрутизацией: локальные команды/память/примеры или Claude при настроенном API-ключе. Wake-word и фоновое прослушивание не включены.
 
-    cmake --install build --prefix ~/.local
-    systemctl --user daemon-reload
-    systemctl --user enable --now jarvis.service
+Данные голоса: `~/.local/share/jarvis/voice` (или `$XDG_DATA_HOME/jarvis/voice`). Для записи используется стандартное ALSA-устройство `default`; его источник выбирается в аудионастройках KDE.
 
-    systemctl --user status jarvis.service
-    journalctl --user -u jarvis.service -f      # daemon log
-    systemctl --user stop jarvis.service        # stop it
+## Навыки
 
-Once installed, opening the GUI wakes the daemon by itself (D-Bus activation).
+Встроены философия, электроника, игры, разговор и письмо. Переключатели действуют со следующего запроса, в том числе у демона. Навык — декларативный JSON: тематические инструкции для Claude и необязательные точные примеры для локальных ответов. Он не запускает код, не получает root и не обучает веса модели.
+
+Импортируйте JSON-файл или укажите прямую HTTPS-ссылку на JSON. Новые навыки устанавливаются выключенными. Нажмите «О навыке», прочитайте инструкции и включите нужный навык. При работе через Claude включённые инструкции передаются в Anthropic как часть системного контекста; учитывайте это при добавлении приватных сведений. Отключённый навык не добавляется в новый запрос, но уже состоявшийся диалог остаётся в контексте текущего процесса.
+
+Пример `skills-example.json`:
+
+```json
+{
+  "schema": 1,
+  "id": "gardening",
+  "name": "Садоводство",
+  "description": "Уход за домашними растениями",
+  "prompt": "For plant-care questions, ask about the plant, light and watering before suggesting changes.",
+  "examples": [
+    {"question": "Зачем нужен дренаж?", "answer": "Дренажные отверстия помогают лишней воде выходить из горшка."}
+  ]
+}
+```
+
+До 50 навыков; файл до 64 КБ; инструкция до 4000 символов; до 50 примеров. Импорт не заменяет существующий id. Для новой редакции используйте новый id и отключите прежнюю. Пользовательские файлы: `~/.local/share/jarvis/skills`. Состояние: `~/.config/jarvis/skills.ini`. Переменные XDG поддерживаются.
+
+## Обучаемая память
+
+Введите вопрос и правильный ответ в правой панели. Повторное сохранение заменяет ответ. Регистр, пунктуация и лишние пробелы не влияют на совпадение. Текущие данные системы имеют приоритет. До 500 примеров, вопрос/ответ до 4096 символов, атомарное сохранение с правами 0600.
+
+Граф показывает реальные совместные упоминания слов в учебных примерах (до 48 узлов, до 20 разных слов на пример). Анимация импульсов декоративная. Это память примеров, а не визуализация весов Claude. Диалоги автоматически в память не записываются.
+
+## Обновление одной кнопкой
+
+«Центр управления → Приложение → Обновить Jarvis» проверяет публичные GitHub Releases, выбирает пакет под выпуск Ubuntu и архитектуру, проверяет SHA-256 из GitHub API и метаданные `.deb`, затем открывает Discover. Системную установку подтверждает пользователь. После установки доступны кнопки перезапуска службы и приложения. Не выполняется скрытая установка от root, не запускаются удалённые shell-скрипты.
+
+Первый опубликованный релиз нужен, чтобы эта кнопка начала находить пакеты. До появления релиза, при ошибке сети, отсутствии checksum или несовместимой платформе она показывает ошибку. Более старые версии не устанавливаются. Пока выпускаются пакеты amd64 для 24.04/26.04.
+
+## GitHub Actions: выпуск новой версии
+
+Workflow `.github/workflows/release.yml` строит две версии пакета, выполняет тесты и сохраняет артефакты. Чтобы выпустить следующую версию:
+
+1. Обновите `project(jarvis VERSION …)` в `CMakeLists.txt` и сохраните изменения в GitHub.
+2. Actions → Build and release Jarvis → Run workflow → включите **publish**.
+3. После успешных проверок появится Release `v<версия>` с двумя `.deb` и контрольными суммами. Можно также отправить тег `v<версия>`.
+
+Уже опубликованные версии не перезаписываются. На pull request публикация недоступна. Используется штатный `GITHUB_TOKEN`; личный токен в репозиторий не нужен. API-ключи, память и голосовые модели в Git не входят.
+
+## Сборка для разработки
+
+```sh
+sudo apt install build-essential cmake ninja-build dpkg-dev qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
+  qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates \
+  qml6-module-qtquick-window qml6-module-qtquick-dialogs qml6-module-qtqml-workerscript qml6-module-qt-labs-platform \
+  python3 python3-venv python3-speechd alsa-utils speech-dispatcher speech-dispatcher-espeak-ng espeak-ng
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build build -j 4
+ctest --test-dir build --output-on-failure
+JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.conf -- python3 tests/integration.py
+cpack --config build/CPackConfig.cmake -B dist
+./build/jarvis
+```
+
+Qt 6.4+, C++17, Python 3.10+. Сборка под 26.04 не предназначена для 24.04: используйте соответствующий артефакт. Код для распознавания проверяется без доступа к микрофону; реальную работу микрофона и системной горячей клавиши проверяйте в KDE-сеансе.

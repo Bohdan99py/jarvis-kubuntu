@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "electronics",
+  "name": "Электроника",
+  "description": "Схемы, компоненты и расчёты.",
+  "prompt": "For electronics questions, state units, assumptions, supply voltages and component ratings. Explain calculations step by step, distinguish simulation from measurement, and call out actual mains-voltage hazards when relevant.",
+  "examples": [
+    {
+      "question": "Что такое закон Ома?",
+      "answer": "Закон Ома: U = I × R. Например, при сопротивлении 100 Ом и токе 0,02 А напряжение равно 2 В."
+    }
+  ]
+}

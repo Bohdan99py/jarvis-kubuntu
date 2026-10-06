@@ -6,7 +6,7 @@
 #include <QString>
 #include <QtQml/qqmlregistration.h>
 
-#include "chat_engine.h"
+#include "assistant.h"
 #include "daemon_client.h"
 
 // List model for the chat view + bridge between QML and the brain.
@@ -16,6 +16,10 @@ class ChatModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(QString lastReply READ lastReply NOTIFY lastReplyChanged FINAL)
+    Q_PROPERTY(QString graph READ graph NOTIFY graphChanged FINAL)
+    Q_PROPERTY(QString learningStatus READ learningStatus NOTIFY graphChanged FINAL)
+    Q_PROPERTY(bool learningBusy READ learningBusy NOTIFY graphChanged FINAL)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)
     Q_PROPERTY(bool daemonConnected READ daemonConnected NOTIFY daemonConnectedChanged FINAL)
 
@@ -38,8 +42,21 @@ public:
 
     Q_INVOKABLE void send(const QString &text);
     Q_INVOKABLE void clear();
+    Q_INVOKABLE void refreshGraph();
+    Q_INVOKABLE void teach(const QString &question, const QString &answer);
+    QString lastReply() const { return m_lastReply; }
+    QString graph() const { return m_graph; }
+    QString learningStatus() const { return m_learningStatus; }
+    bool learningBusy() const { return m_learningBusy; }
+    // Re-read the config file here and in the daemon (after the settings dialog saved).
+    Q_INVOKABLE void reloadConfig();
+    // Stop the background daemon (the window keeps working in local mode).
+    Q_INVOKABLE void quitDaemon();
 
 signals:
+    void lastReplyChanged();
+    void assistantReply(const QString &text);
+    void graphChanged();
     void busyChanged();
     void daemonConnectedChanged();
 
@@ -59,9 +76,13 @@ private:
     void onReply(const QString &reply);
     void onDaemonFailed(const QString &reason);
 
+    QString m_lastReply;
+    QString m_graph = QStringLiteral("{\"nodes\":[],\"edges\":[],\"examples\":0}");
+    QString m_learningStatus;
+    bool m_learningBusy = false;
     QList<Message> m_messages;
     DaemonClient m_daemon;
-    jarvis::ChatEngine m_engine;
+    jarvis::Assistant m_assistant;
     QString m_pendingText;
     bool m_busy = false;
 };

@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "writing",
+  "name": "Письмо",
+  "description": "Редактирование, письма и ясный текст.",
+  "prompt": "For writing and editing, preserve the intended meaning and voice. Clarify audience and purpose when needed. Provide the actual revised text and avoid inventing facts or quotations.",
+  "examples": [
+    {
+      "question": "Как написать хорошее письмо?",
+      "answer": "Начни с цели письма, добавь нужный контекст и заверши конкретным следующим шагом. Короткие абзацы и ясная тема помогут адресату быстро понять просьбу."
+    }
+  ]
+}

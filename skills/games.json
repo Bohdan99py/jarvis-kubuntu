@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "id": "games",
+  "name": "Игры",
+  "description": "Механики, стратегии и разработка игр.",
+  "prompt": "For games, explain mechanics and tradeoffs, avoid spoilers unless requested, and ask which game/version matters. For game development, offer small implementable steps.",
+  "examples": [
+    {
+      "question": "Что такое игровой цикл?",
+      "answer": "Игровой цикл последовательно считывает ввод, обновляет состояние мира и отрисовывает кадр. Этот цикл повторяется, пока игра работает."
+    }
+  ]
+}

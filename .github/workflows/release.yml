@@ -1,0 +1,100 @@
+name: Build and release Jarvis
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a release for the version in CMakeLists.txt
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jarvis-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build and runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build dpkg-dev qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
+            qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates \
+            qml6-module-qtquick-window qml6-module-qtquick-dialogs qml6-module-qtqml-workerscript qml6-module-qt-labs-platform \
+            dbus libglib2.0-bin python3 python3-venv python3-speechd alsa-utils speech-dispatcher speech-dispatcher-espeak-ng espeak-ng desktop-file-utils
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DJARVIS_DISTRO=${{ matrix.os }}
+          cmake --build build --parallel 4
+      - name: Test core, skills, updater and D-Bus
+        run: |
+          ctest --test-dir build --output-on-failure
+          JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.conf -- python3 tests/integration.py
+          desktop-file-validate org.jarvis.Jarvis.desktop
+      - name: QML smoke test
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          ANTHROPIC_API_KEY: ''
+        run: |
+          set +e
+          timeout 5s dbus-run-session --config-file=tests/test-bus.conf -- ./build/jarvis --quick > ui.log 2>&1
+          result=$?
+          set -e
+          cat ui.log
+          test "$result" -eq 124
+          ! grep -E 'failed to load|ReferenceError|TypeError|Binding loop|Cannot assign' ui.log
+      - name: Package
+        run: |
+          cpack --config build/CPackConfig.cmake -B dist
+          sha256sum dist/*.deb > dist/SHA256SUMS-${{ matrix.os }}
+          dpkg-deb --info dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-${{ matrix.os }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jarvis-*
+          merge-multiple: true
+          path: dist
+      - name: Publish verified packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          version=$(sed -n 's/^project(jarvis VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          tag="v$version"
+          if [[ "$RELEASE_REF" == refs/tags/* ]]; then
+            test "$RELEASE_REF" = "refs/tags/$tag"
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; increment the project version instead of replacing published packages."
+            exit 1
+          fi
+          gh release create "$tag" dist/* --target "$RELEASE_SHA" --title "Jarvis $version" --generate-notes --latest

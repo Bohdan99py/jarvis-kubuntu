@@ -22,6 +22,12 @@ public:
 
     void ask(const QString &text);
 
+    // Tell the daemon to re-read its config file (fire and forget).
+    void reloadConfig();
+    // Ask the daemon to exit. Blocks for up to one second so the request is
+    // really on the bus before the GUI quits.
+    void quitDaemon();
+
 signals:
     void availabilityChanged(bool available);
     void replyReady(const QString &reply);
@@ -35,7 +41,7 @@ private:
     void fail(const QString &reason);
 
     static constexpr int kCallTimeoutMs = 3000;
-    static constexpr int kReplyTimeoutMs = 6000;
+    static constexpr int kReplyTimeoutMs = 90000; // Claude may take up to 60 s
 
     QDBusServiceWatcher m_watcher;
     QTimer m_timeout;

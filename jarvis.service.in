@@ -9,6 +9,8 @@ ExecStart=@JARVIS_BINDIR@/jarvisd
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=yes
+UMask=0077
+PrivateTmp=yes
 
 [Install]
 WantedBy=default.target

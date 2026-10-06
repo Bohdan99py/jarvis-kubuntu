@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QString>
 
-#include "chat_engine.h"
+#include "assistant.h"
 
 namespace jarvis {
 
@@ -26,19 +26,24 @@ public:
 
     // Returns the request id, or 0 if the request was rejected.
     quint64 ask(const QString &text);
+    void reloadConfig();
 
+    QString teach(const QString &q, const QString &a) { return m_assistant.teach(q, a); }
+    QString graph() const { return m_assistant.graph(); }
     static QString version();
 
 signals:
     void replyReady(quint64 id, const QString &reply);
 
 private:
-    ChatEngine m_engine;
+    Assistant m_assistant;
 };
 
 // D-Bus face of DaemonService: interface org.jarvis.Daemon1
 //   method Ask(s) -> t      queue a request, returns its id (0 = rejected)
 //   method Version() -> s
+//   method ReloadConfig()   re-read ~/.config/jarvis/config.json (API key, model)
+//   method Quit()           stop the daemon (clean exit, systemd will not restart it)
 //   signal Reply(t, s)      answer for request id
 class DaemonAdaptor : public QDBusAbstractAdaptor
 {
@@ -51,6 +56,10 @@ public:
 public slots:
     quint64 Ask(const QString &text);
     QString Version();
+    QString Teach(const QString &question, const QString &answer);
+    QString Graph();
+    void ReloadConfig();
+    void Quit();
 
 signals:
     void Reply(quint64 id, const QString &text);

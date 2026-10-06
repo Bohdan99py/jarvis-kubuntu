@@ -80,6 +80,26 @@ void DaemonClient::ask(const QString &text)
             });
 }
 
+void DaemonClient::reloadConfig()
+{
+    if (!m_available)
+        return;
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+        QString(jarvis::dbus::kInterface), QStringLiteral("ReloadConfig"));
+    QDBusConnection::sessionBus().asyncCall(msg, kCallTimeoutMs);
+}
+
+void DaemonClient::quitDaemon()
+{
+    if (!m_available)
+        return;
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+        QString(jarvis::dbus::kInterface), QStringLiteral("Quit"));
+    QDBusConnection::sessionBus().call(msg, QDBus::Block, 1000);
+}
+
 void DaemonClient::onReplySignal(quint64 id, const QString &reply)
 {
     // Reply is broadcast to every client; take only our own.

@@ -3,10 +3,20 @@ Type=Application
 Version=1.0
 Name=J.A.R.V.I.S.
 GenericName=AI Assistant
-Comment=Personal AI assistant
-Exec=jarvis
-Icon=utilities-terminal
+GenericName[ru]=ИИ-ассистент
+Comment=Voice, quick commands and learning memory
+Comment[ru]=Голос, быстрые команды и обучаемая память
+Exec=/usr/bin/jarvis
+Icon=org.jarvis.Jarvis
 Terminal=false
-Categories=Utility;
+Categories=Utility;Qt;KDE;
 StartupNotify=true
 StartupWMClass=jarvis
+Actions=Quick;
+
+[Desktop Action Quick]
+Name=Quick commands
+Name[ru]=Быстрые команды
+Exec=/usr/bin/jarvis --quick
+Icon=system-search
+X-KDE-Shortcuts=Meta+J

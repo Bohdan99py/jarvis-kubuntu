@@ -6,7 +6,6 @@
 #include <QRandomGenerator>
 #include <QStringList>
 #include <QTime>
-#include <QTimer>
 
 #include <utility>
 
@@ -63,6 +62,7 @@ struct Rule
     QStringList ru;        // canned replies (unused when handler is set)
     QStringList en;
     bool needsFollowUp;    // short reply; add "how can I help" if it stands alone
+    bool data;             // answer depends on live data -> always handled locally
     SysHandler handler;    // live system report instead of a canned reply
 };
 
@@ -76,14 +76,14 @@ QStringList normalizeAll(const QStringList &list)
 }
 
 Rule textRule(const QStringList &keys, QStringList ru, QStringList en,
-              bool needsFollowUp = false)
+              bool needsFollowUp = false, bool data = false)
 {
-    return Rule{normalizeAll(keys), {}, std::move(ru), std::move(en), needsFollowUp, nullptr};
+    return Rule{normalizeAll(keys), {}, std::move(ru), std::move(en), needsFollowUp, data, nullptr};
 }
 
 Rule sysRule(const QStringList &keys, SysHandler handler, const QStringList &notKeys = {})
 {
-    return Rule{normalizeAll(keys), normalizeAll(notKeys), {}, {}, false, handler};
+    return Rule{normalizeAll(keys), normalizeAll(notKeys), {}, {}, false, true, handler};
 }
 
 bool matches(const QString &padded, const QStringList &keys)
@@ -176,13 +176,15 @@ const QList<Rule> &rules()
             {u"который час"_s, u"сколько времени"_s, u"сколько сейчас времени"_s,
              u"what time"_s, u"current time"_s},
             {u"Сейчас %time%."_s},
-            {u"It's %time%."_s}),
+            {u"It's %time%."_s},
+            /*needsFollowUp=*/false, /*data=*/true),
 
         textRule(
             {u"какое число"_s, u"какая дата"_s, u"какой сегодня день"_s,
              u"какое сегодня число"_s, u"what date"_s, u"what day"_s, u"todays date"_s},
             {u"Сегодня %date%."_s},
-            {u"Today is %date%."_s}),
+            {u"Today is %date%."_s},
+            /*needsFollowUp=*/false, /*data=*/true),
 
         textRule(
             {u"спасибо"_s, u"благодарю"_s, u"thanks"_s, u"thank you"_s},
@@ -233,7 +235,12 @@ ChatEngine::ChatEngine(QObject *parent)
 {
 }
 
-QString ChatEngine::respond(const QString &input) const
+bool ChatEngine::looksRussian(const QString &text)
+{
+    return hasCyrillic(text);
+}
+
+ChatEngine::Match ChatEngine::match(const QString &input, QString *reply) const
 {
     const bool ru = hasCyrillic(input);
     const QString padded = normalize(input);
@@ -241,6 +248,7 @@ QString ChatEngine::respond(const QString &input) const
     QStringList parts;
     const Rule *only = nullptr;
     bool anyReport = false;
+    bool anyData = false;
 
     for (const Rule &rule : rules()) {
         if (!matches(padded, rule.keys))
@@ -251,35 +259,38 @@ QString ChatEngine::respond(const QString &input) const
         parts.append(rule.handler ? (m_sys.*rule.handler)(ru)
                                   : pick(ru ? rule.ru : rule.en));
         anyReport = anyReport || rule.handler != nullptr;
+        anyData = anyData || rule.data;
         only = &rule;
     }
 
-    if (parts.isEmpty())
-        return pick(ru ? fallbackRu() : fallbackEn());
+    if (parts.isEmpty()) {
+        if (reply)
+            *reply = pick(ru ? fallbackRu() : fallbackEn());
+        return Match::None;
+    }
 
     if (parts.size() == 1 && only->needsFollowUp)
         parts.append(ru ? u"Чем могу помочь?"_s : u"How can I help?"_s);
 
     // Small talk reads as one paragraph; system reports each get their own line.
-    QString reply = parts.join(anyReport ? QChar(u'\n') : QChar(u' '));
+    QString out = parts.join(anyReport ? QChar(u'\n') : QChar(u' '));
 
-    if (reply.contains(u"%time%"_s) || reply.contains(u"%date%"_s)) {
+    if (out.contains(u"%time%"_s) || out.contains(u"%date%"_s)) {
         const QLocale loc(ru ? QLocale::Russian : QLocale::English);
-        reply.replace(u"%time%"_s, loc.toString(QTime::currentTime(), u"HH:mm"_s));
-        reply.replace(u"%date%"_s, loc.toString(QDate::currentDate(), QLocale::LongFormat));
+        out.replace(u"%time%"_s, loc.toString(QTime::currentTime(), u"HH:mm"_s));
+        out.replace(u"%date%"_s, loc.toString(QDate::currentDate(), QLocale::LongFormat));
     }
-    return reply;
+
+    if (reply)
+        *reply = out;
+    return anyData ? Match::Data : Match::SmallTalk;
 }
 
-quint64 ChatEngine::ask(const QString &input)
+QString ChatEngine::respond(const QString &input) const
 {
-    const quint64 id = ++m_nextId;
-    QString reply = respond(input);
-    const int delayMs = 300 + int(QRandomGenerator::global()->bounded(500u));
-    QTimer::singleShot(delayMs, this, [this, id, reply = std::move(reply)] {
-        emit replyReady(id, reply);
-    });
-    return id;
+    QString reply;
+    match(input, &reply);
+    return reply;
 }
 
 } // namespace jarvis
