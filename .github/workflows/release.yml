@@ -65,7 +65,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: jarvis-${{ matrix.os }}
-          path: dist/*
+          path: |
+            dist/*.deb
+            dist/SHA256SUMS-*
           if-no-files-found: error
 
   publish:
@@ -94,7 +96,13 @@ jobs:
             test "$RELEASE_REF" = "refs/tags/$tag"
           fi
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag already exists; increment the project version instead of replacing published packages."
-            exit 1
+            draft=$(gh release view "$tag" --json isDraft --jq .isDraft)
+            if [ "$draft" != true ]; then
+              echo "Release $tag already exists; increment the project version instead of replacing published packages."
+              exit 1
+            fi
+          else
+            gh release create "$tag" --target "$RELEASE_SHA" --title "Jarvis $version" --generate-notes --draft
           fi
-          gh release create "$tag" dist/* --target "$RELEASE_SHA" --title "Jarvis $version" --generate-notes --latest
+          gh release upload "$tag" dist/*.deb dist/SHA256SUMS-* --clobber
+          gh release edit "$tag" --draft=false --latest
