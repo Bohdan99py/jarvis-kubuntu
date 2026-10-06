@@ -2,7 +2,9 @@
   "schema": 1,
   "id": "writing",
   "name": "Письмо",
+  "name_en": "Writing",
   "description": "Редактирование, письма и ясный текст.",
+  "description_en": "Editing, letters and clear prose.",
   "prompt": "For writing and editing, preserve the intended meaning and voice. Clarify audience and purpose when needed. Provide the actual revised text and avoid inventing facts or quotations.",
   "examples": [
     {

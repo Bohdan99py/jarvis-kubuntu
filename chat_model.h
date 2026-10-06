@@ -6,6 +6,8 @@
 #include <QString>
 #include <QtQml/qqmlregistration.h>
 
+#include <functional>
+
 #include "assistant.h"
 #include "daemon_client.h"
 
@@ -22,6 +24,8 @@ class ChatModel : public QAbstractListModel
     Q_PROPERTY(bool learningBusy READ learningBusy NOTIFY graphChanged FINAL)
     Q_PROPERTY(bool busy READ busy NOTIFY busyChanged FINAL)
     Q_PROPERTY(bool daemonConnected READ daemonConnected NOTIFY daemonConnectedChanged FINAL)
+    Q_PROPERTY(QString memory READ memory NOTIFY memoryChanged FINAL)
+    Q_PROPERTY(QString memoryStatus READ memoryStatus NOTIFY memoryChanged FINAL)
 
 public:
     enum Role {
@@ -44,6 +48,15 @@ public:
     Q_INVOKABLE void clear();
     Q_INVOKABLE void refreshGraph();
     Q_INVOKABLE void teach(const QString &question, const QString &answer);
+    // Long-term memory: facts, topics and activity as JSON (see Assistant::memoryJson).
+    Q_INVOKABLE void refreshMemory();
+    Q_INVOKABLE void remember(const QString &text);
+    // A fact id, "facts" or "activity".
+    Q_INVOKABLE void forget(const QString &what);
+    // A Jarvis action the user triggered; feeds suggestions.
+    Q_INVOKABLE void recordAction(const QString &id, const QString &label);
+    QString memory() const { return m_memory; }
+    QString memoryStatus() const { return m_memoryStatus; }
     QString lastReply() const { return m_lastReply; }
     QString graph() const { return m_graph; }
     QString learningStatus() const { return m_learningStatus; }
@@ -59,6 +72,7 @@ signals:
     void graphChanged();
     void busyChanged();
     void daemonConnectedChanged();
+    void memoryChanged();
 
 private:
     struct Message
@@ -75,10 +89,19 @@ private:
     void addGreeting();
     void onReply(const QString &reply);
     void onDaemonFailed(const QString &reason);
+    void callDaemon(const QString &method, const QVariantList &args,
+                    const std::function<void(const QString &result, const QString &error)> &done);
 
+private slots:
+    void onDaemonMemoryChanged();
+    void onDaemonActivityChanged();
+
+private:
     QString m_lastReply;
     QString m_graph = QStringLiteral("{\"nodes\":[],\"edges\":[],\"examples\":0}");
     QString m_learningStatus;
+    QString m_memory = QStringLiteral("{}");
+    QString m_memoryStatus;
     bool m_learningBusy = false;
     QList<Message> m_messages;
     DaemonClient m_daemon;

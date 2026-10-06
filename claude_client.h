@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QString>
 
+#include "language.h"
+
 class QNetworkReply;
 
 namespace jarvis {
@@ -24,7 +26,9 @@ public:
     bool isConfigured() const noexcept { return !m_apiKey.isEmpty(); }
     QString model() const { return m_model; }
 
-    void ask(const QString &userText, bool ru, const QString &skills = {});
+    // `context` is appended to the system prompt: skills, what Jarvis knows
+    // about the user, relevant taught answers, optional activity.
+    void ask(const QString &userText, Lang lang, bool forcedLanguage, const QString &context = {});
 
 signals:
     // On success `text` is the answer, otherwise a human-readable error.

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.6.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.7.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,6 +43,14 @@ jarvis_warnings(jv_sysinfo)
 # 2. jarvis_core — headless C++ (Core + Network): rules, Claude client, router.
 # ---------------------------------------------------------------------------
 qt_add_library(jarvis_core STATIC
+    language.h
+    language.cpp
+    memory_text.h
+    memory_text.cpp
+    knowledge_store.h
+    knowledge_store.cpp
+    activity_store.h
+    activity_store.cpp
     skill_store.h
     skill_store.cpp
     learning_store.h
@@ -63,6 +71,22 @@ qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.j
 target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Network jarvis_sys)
 jarvis_warnings(jarvis_core)
 
+# Russian translation of the English source strings (C++ and QML). Only
+# lrelease is needed (package qt6-l10n-tools); the .qm is embedded in the core
+# library so the GUI and the daemon share it. Refresh the .ts after changing
+# strings: lupdate -locations none -no-obsolete . -ts i18n/jarvis_ru.ts
+find_program(JARVIS_LRELEASE NAMES lrelease lrelease-qt6
+    HINTS "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}" "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBEXECS}" /usr/lib/qt6/bin
+    REQUIRED)
+set(JARVIS_QM "${CMAKE_CURRENT_BINARY_DIR}/i18n/jarvis_ru.qm")
+add_custom_command(OUTPUT "${JARVIS_QM}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/i18n"
+    COMMAND "${JARVIS_LRELEASE}" -silent "${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts" -qm "${JARVIS_QM}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts"
+    VERBATIM)
+set_source_files_properties("${JARVIS_QM}" PROPERTIES GENERATED TRUE)
+qt_add_resources(jarvis_core translations PREFIX "/i18n" BASE "${CMAKE_CURRENT_BINARY_DIR}/i18n" FILES "${JARVIS_QM}")
+
 # ---------------------------------------------------------------------------
 # 3. jarvisd — the daemon: owns the engine, speaks D-Bus (org.jarvis.Daemon1).
 # ---------------------------------------------------------------------------
@@ -70,6 +94,9 @@ qt_add_executable(jarvisd
     jarvisd_main.cpp
     daemon_service.h
     daemon_service.cpp
+    activity_bridge.h
+    activity_bridge.cpp
+    runtime_paths.h
     dbus_names.h
 )
 target_link_libraries(jarvisd PRIVATE jarvis_core Qt6::DBus)
@@ -81,7 +108,7 @@ jarvis_warnings(jarvisd)
 qt_add_executable(jarvis main.cpp)
 
 # Theme.qml is a QML singleton (Theme.accent, Theme.bg, ...).
-set_source_files_properties(Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(Theme.qml Texts.qml QuickCommands.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(jarvis
     URI Jarvis
@@ -92,7 +119,10 @@ qt_add_qml_module(jarvis
         QuickBar.qml
         ControlCenter.qml
         SynapseGraph.qml
+        MemoryPanel.qml
         Theme.qml
+        Texts.qml
+        QuickCommands.qml
         DarkButton.qml
         DarkMenuItem.qml
         SettingsDialog.qml
@@ -130,6 +160,7 @@ qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg)
 # ---------------------------------------------------------------------------
 install(TARGETS jarvis jarvisd jv_sysinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES scripts/voice.py scripts/update.py scripts/speak.py DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/scripts)
+install(FILES kwin/activity.js DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/kwin)
 install(FILES icons/org.jarvis.Jarvis.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 install(FILES org.jarvis.Jarvis.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 
@@ -153,4 +184,6 @@ if(BUILD_TESTING)
     add_test(NAME core COMMAND jarvis_core_tests)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_test(NAME helpers COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_helpers.py)
+    add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
 endif()

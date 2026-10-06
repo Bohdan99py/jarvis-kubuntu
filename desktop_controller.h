@@ -40,6 +40,7 @@ signals:
     void mainRequested();
 private:
     void installSkill(const QByteArray &bytes);
+    QString launchApplication(const QString &desktopId);
     void readUpdateEvents();
     jarvis::SkillStore m_skills;
     QNetworkAccessManager m_network;

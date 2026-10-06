@@ -2,7 +2,9 @@
   "schema": 1,
   "id": "electronics",
   "name": "Электроника",
+  "name_en": "Electronics",
   "description": "Схемы, компоненты и расчёты.",
+  "description_en": "Circuits, components and calculations.",
   "prompt": "For electronics questions, state units, assumptions, supply voltages and component ratings. Explain calculations step by step, distinguish simulation from measurement, and call out actual mains-voltage hazards when relevant.",
   "examples": [
     {

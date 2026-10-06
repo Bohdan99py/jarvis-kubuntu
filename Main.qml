@@ -19,18 +19,18 @@ ApplicationWindow {
         id: chatModel
     }
 
-    VoiceController { id: voiceEngine }
-    QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; onVoiceSetupRequested: { quickBar.hide(); root.show(); controlCenter.showVoice() } }
-    ControlCenter { id: controlCenter; objectName: "controlCenter"; desktop: desktopBridge; voice: voiceEngine; chat: chatModel; onApiSettingsRequested: settingsDialog.open() }
+    VoiceController { id: voiceEngine; language: appSettings.uiLanguage }
+    QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; settings: appSettings; onVoiceSetupRequested: { quickBar.hide(); root.show(); controlCenter.showVoice() } }
+    ControlCenter { id: controlCenter; objectName: "controlCenter"; desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings; onApiSettingsRequested: settingsDialog.open() }
     Platform.SystemTrayIcon {
         Component.onCompleted: visible = true
         icon.source: "qrc:/icons/org.jarvis.Jarvis.svg"
-        tooltip: "Jarvis — персональный ассистент"
+        tooltip: qsTr("Jarvis — personal assistant")
         onActivated: quickBar.reveal()
         menu: Platform.Menu {
-            Platform.MenuItem { text: "Быстрые команды"; onTriggered: quickBar.reveal() }
-            Platform.MenuItem { text: "Открыть Jarvis"; onTriggered: { root.show(); root.raise(); root.requestActivate() } }
-            Platform.MenuItem { text: "Выход"; onTriggered: Qt.quit() }
+            Platform.MenuItem { text: qsTr("Quick commands"); onTriggered: quickBar.reveal() }
+            Platform.MenuItem { text: qsTr("Open Jarvis"); onTriggered: { root.show(); root.raise(); root.requestActivate() } }
+            Platform.MenuItem { text: qsTr("Quit"); onTriggered: Qt.quit() }
         }
     }
     Connections {
@@ -90,14 +90,14 @@ ApplicationWindow {
             border.color: Theme.border
         }
 
-        DarkMenuItem { text: "Навыки, голос и обновления"; onTriggered: controlCenter.open() }
-        DarkMenuItem { text: "Быстрые команды · Meta+J"; onTriggered: quickBar.reveal() }
+        DarkMenuItem { text: qsTr("Skills, voice, memory and updates"); onTriggered: controlCenter.open() }
+        DarkMenuItem { text: qsTr("Quick commands · Meta+J"); onTriggered: quickBar.reveal() }
         DarkMenuItem {
-            text: qsTr("Настройки Claude API…")
+            text: qsTr("Claude API settings…")
             onTriggered: settingsDialog.open()
         }
         DarkMenuItem {
-            text: qsTr("Очистить чат")
+            text: qsTr("Clear chat")
             onTriggered: chatModel.clear()
         }
         MenuSeparator {
@@ -107,11 +107,11 @@ ApplicationWindow {
             }
         }
         DarkMenuItem {
-            text: qsTr("Выход")
+            text: qsTr("Quit")
             onTriggered: Qt.quit()
         }
         DarkMenuItem {
-            text: qsTr("Выход и остановить jarvisd")
+            text: qsTr("Quit and stop jarvisd")
             enabled: chatModel.daemonConnected
             onTriggered: {
                 chatModel.quitDaemon()
@@ -174,8 +174,8 @@ ApplicationWindow {
                     }
                     Label {
                         text: chatModel.busy
-                              ? qsTr("думает…")
-                              : (chatModel.daemonConnected ? qsTr("jarvisd подключён") : qsTr("локальный режим"))
+                              ? qsTr("thinking…")
+                              : (chatModel.daemonConnected ? qsTr("jarvisd connected") : qsTr("local mode"))
                                 + (appSettings.hasKey ? qsTr(" · Claude") : "")
                         color: Theme.textDim
                         font.pixelSize: 11
@@ -184,10 +184,10 @@ ApplicationWindow {
 
                 Item { Layout.fillWidth: true }
 
-                DarkButton { text: "⌕"; onClicked: quickBar.reveal(); Accessible.name: "Быстрые команды" }
+                DarkButton { text: "⌕"; onClicked: quickBar.reveal(); Accessible.name: qsTr("Quick commands") }
                 DarkButton {
                     id: menuBtn
-                    text: qsTr("☰  Меню")
+                    text: qsTr("☰  Menu")
                     onClicked: mainMenu.popup(menuBtn, menuBtn.width - mainMenu.width, menuBtn.height + 4)
                 }
             }
@@ -335,7 +335,7 @@ ApplicationWindow {
                     maximumLength: 4096
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    placeholderText: qsTr("Напиши сообщение…")
+                    placeholderText: qsTr("Write a message…")
                     placeholderTextColor: Theme.textDim
                     color: Theme.text
                     font.pixelSize: Theme.fontSize
@@ -353,13 +353,13 @@ ApplicationWindow {
                 }
 
                 DarkButton {
-                    text: voiceEngine.recording ? "■" : "Микрофон"
+                    text: voiceEngine.recording ? "■" : qsTr("Microphone")
                     enabled: !voiceEngine.busy || voiceEngine.recording
                     onClicked: { if(!voiceEngine.ready) controlCenter.showVoice(); else if(voiceEngine.recording) voiceEngine.stop(); else voiceEngine.listen() }
                 }
                 DarkButton {
                     Layout.fillHeight: true
-                    text: qsTr("Отправить")
+                    text: qsTr("Send")
                     primary: true
                     enabled: !chatModel.busy && input.text.trim().length > 0
                     onClicked: root.submit()
@@ -367,52 +367,14 @@ ApplicationWindow {
             }
         }
       }
-      Rectangle {
-        Layout.preferredWidth: Math.max(330, root.width * 0.38)
+      MemoryPanel {
+        objectName: "memoryPanel"
+        Layout.preferredWidth: Math.max(340, root.width * 0.38)
         Layout.fillHeight: true
-        color: Theme.panel
-        radius: 22
-        border.color: Theme.border
-        ColumnLayout {
-          anchors.fill: parent
-          anchors.margins: 20
-          spacing: 14
-          Label { text: "NEURAL MEMORY"; color: Theme.accent; font.letterSpacing: 3; font.pixelSize: 11 }
-          Label { text: "Граф синапсов"; color: Theme.text; font.pixelSize: 25; font.bold: true }
-          Label {
-            text: "Примеров: " + neural.network.examples + "  ·  Связей: " + (neural.network.edges || []).length
-            color: Theme.textDim
-          }
-          SynapseGraph { id: neural; Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 160; graphData: chatModel.graph }
-          Label { text: "Обучить ассистента"; color: Theme.text; font.pixelSize: 18; font.bold: true }
-          Label { text: "Сохраните вопрос и правильный ответ.\nПамять доступна после перезапуска."; color: Theme.textDim; font.pixelSize: 12 }
-          TextField {
-            id: trainingQuestion
-            Layout.fillWidth: true
-            placeholderText: "Вопрос или фраза"
-            color: Theme.text; placeholderTextColor: Theme.textDim; maximumLength: 4096
-            background: Rectangle { color: Theme.bg; radius: 10; border.color: trainingQuestion.activeFocus ? Theme.accent : Theme.border }
-          }
-          ScrollView {
-            Layout.fillWidth: true; Layout.preferredHeight: 100
-            TextArea {
-              id: trainingAnswer
-              placeholderText: "Правильный ответ (до 4096 символов)"
-              color: Theme.text; placeholderTextColor: Theme.textDim; wrapMode: TextEdit.Wrap
-              background: Rectangle { color: Theme.bg; radius: 10; border.color: Theme.border }
-            }
-          }
-          RowLayout {
-            DarkButton {
-              text: chatModel.learningBusy ? "Сохранение…" : "Создать связи"
-              primary: true
-              enabled: !chatModel.learningBusy && trainingQuestion.text.trim().length > 0 && trainingAnswer.text.trim().length > 0 && trainingAnswer.text.length <= 4096
-              onClicked: chatModel.teach(trainingQuestion.text, trainingAnswer.text)
-            }
-            DarkButton { text: "↻"; onClicked: chatModel.refreshGraph() }
-          }
-          Label { text: chatModel.learningStatus; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12 }
-        }
+        chat: chatModel
+        settings: appSettings
+        desktop: desktopBridge
+        onPrivacyRequested: controlCenter.showMemory()
       }
 
     }

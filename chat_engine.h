@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 
+#include "language.h"
 #include "system_info.h"
 
 namespace jarvis {
@@ -26,6 +27,8 @@ public:
     ~ChatEngine() override = default;
 
     Match match(const QString &input, QString *reply) const;
+    // Same, but replies in `lang` whatever script the message uses.
+    Match match(const QString &input, QString *reply, Lang lang) const;
     QString respond(const QString &input) const;
 
     static bool looksRussian(const QString &text);

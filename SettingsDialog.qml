@@ -8,7 +8,7 @@ Dialog {
     // AppSettings instance
     required property var settings
 
-    title: qsTr("Настройки Claude API")
+    title: qsTr("Claude API settings")
     modal: true
     anchors.centerIn: Overlay.overlay
     width: Math.min(Overlay.overlay ? Overlay.overlay.width - 32 : 460, 460)
@@ -61,13 +61,13 @@ Dialog {
             wrapMode: Text.Wrap
             color: Theme.textDim
             font.pixelSize: 12
-            text: qsTr("Сообщения, которые Jarvis не обрабатывает локальными командами, "
-                       + "отправляются в Anthropic (api.anthropic.com). Команды вроде «память» "
-                       + "или «топ процессов» остаются на твоём компьютере.")
+            text: qsTr("Messages that Jarvis does not handle with local commands are sent to Anthropic "
+                       + "(api.anthropic.com) together with the facts it remembers about you. Commands like "
+                       + "\"memory\" or \"top processes\" stay on your computer.")
         }
 
         Label {
-            text: qsTr("API-ключ")
+            text: qsTr("API key")
             color: Theme.text
             font.pixelSize: 13
         }
@@ -79,7 +79,7 @@ Dialog {
             color: Theme.text
             placeholderTextColor: Theme.textDim
             placeholderText: dlg.settings.hasKey
-                             ? qsTr("сохранён (%1) — оставь пустым, чтобы не менять").arg(dlg.settings.keyHint)
+                             ? qsTr("saved (%1) — leave empty to keep it").arg(dlg.settings.keyHint)
                              : "sk-ant-..."
             leftPadding: 12
             background: FieldBackground { field: keyField }
@@ -87,7 +87,7 @@ Dialog {
         }
 
         Label {
-            text: qsTr("Модель")
+            text: qsTr("Model")
             color: Theme.text
             font.pixelSize: 13
         }
@@ -105,7 +105,7 @@ Dialog {
             wrapMode: Text.Wrap
             color: Theme.textDim
             font.pixelSize: 11
-            text: qsTr("Например: claude-haiku-4-5-20251001 (быстрая и недорогая), "
+            text: qsTr("For example: claude-haiku-4-5-20251001 (fast and inexpensive), "
                        + "claude-sonnet-5-5, claude-opus-5-5.")
         }
 
@@ -123,7 +123,7 @@ Dialog {
             wrapMode: Text.WrapAnywhere
             color: Theme.textDim
             font.pixelSize: 11
-            text: qsTr("Файл: %1 (доступ только для владельца).").arg(dlg.settings.configPath)
+            text: qsTr("File: %1 (owner-only access).").arg(dlg.settings.configPath)
         }
 
         RowLayout {
@@ -132,7 +132,7 @@ Dialog {
             spacing: 10
 
             DarkButton {
-                text: qsTr("Удалить ключ")
+                text: qsTr("Remove key")
                 danger: true
                 visible: dlg.settings.hasKey
                 onClicked: {
@@ -145,11 +145,11 @@ Dialog {
             }
             Item { Layout.fillWidth: true }
             DarkButton {
-                text: qsTr("Отмена")
+                text: qsTr("Cancel")
                 onClicked: dlg.close()
             }
             DarkButton {
-                text: qsTr("Сохранить")
+                text: qsTr("Save")
                 primary: true
                 onClicked: dlg.submit()
             }

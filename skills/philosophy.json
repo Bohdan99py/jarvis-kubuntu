@@ -2,7 +2,9 @@
   "schema": 1,
   "id": "philosophy",
   "name": "Философия",
+  "name_en": "Philosophy",
   "description": "Аргументы, этика и история идей.",
+  "description_en": "Arguments, ethics and the history of ideas.",
   "prompt": "For philosophical questions, distinguish facts from interpretations, identify assumptions, and explain competing arguments with concrete examples. Ask clarifying questions when useful.",
   "examples": [
     {

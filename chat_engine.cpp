@@ -127,12 +127,17 @@ const QList<Rule> &rules()
         textRule(
             {u"что ты умеешь"_s, u"что умеешь"_s, u"помощь"_s, u"помоги"_s,
              u"help"_s, u"what can you do"_s},
-            {u"Умею болтать и смотреть на состояние компьютера. Спроси: «как дела», "
+            {u"Умею болтать, смотреть на состояние компьютера и учиться. Спроси: «как дела», "
              u"«загрузка процессора», «память», «батарея», «температура», «диск», "
-             u"«аптайм», «информация о системе», «топ процессов», «который час», «какая дата»."_s},
-            {u"I can chat and check on the computer. Ask: \"how are you\", \"cpu usage\", "
+             u"«аптайм», «информация о системе», «топ процессов», «который час», «какая дата».\n"
+             u"Память: «запомни, что …», «забудь …», «что ты обо мне знаешь», «запомни ответ», "
+             u"«нет, правильно: …». Активность: «что я делаю», «чем я занимался сегодня»."_s},
+            {u"I can chat, check on the computer and learn. Ask: \"how are you\", \"cpu usage\", "
              u"\"memory\", \"battery\", \"temperature\", \"disk space\", \"uptime\", "
-             u"\"system info\", \"top processes\", \"what time is it\", \"what date is it\"."_s}),
+             u"\"system info\", \"top processes\", \"what time is it\", \"what date is it\".\n"
+             u"Memory: \"remember that …\", \"forget …\", \"what do you know about me\", "
+             u"\"remember this answer\", \"no, the correct answer is …\". Activity: \"what am I doing\", "
+             u"\"what did I do today\"."_s}),
 
         // ---- live system reports (C layer) ----
         sysRule({u"топ процессов"_s, u"процессы"_s, u"самые тяжелые процессы"_s,
@@ -242,7 +247,12 @@ bool ChatEngine::looksRussian(const QString &text)
 
 ChatEngine::Match ChatEngine::match(const QString &input, QString *reply) const
 {
-    const bool ru = hasCyrillic(input);
+    return match(input, reply, hasCyrillic(input) ? Lang::Ru : Lang::En);
+}
+
+ChatEngine::Match ChatEngine::match(const QString &input, QString *reply, Lang lang) const
+{
+    const bool ru = lang == Lang::Ru;
     const QString padded = normalize(input);
 
     QStringList parts;

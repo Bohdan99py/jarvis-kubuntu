@@ -4,6 +4,12 @@ import signal
 import sys
 import threading
 
+def language(text):
+    """The answer's own script decides the voice: Cyrillic -> Russian, otherwise English."""
+    cyrillic = sum(1 for c in text if '\u0400' <= c <= '\u04ff')
+    latin = sum(1 for c in text if c.isascii() and c.isalpha())
+    return 'ru' if cyrillic >= latin else 'en'
+
 def main():
     import speechd
     finished = threading.Event()
@@ -12,11 +18,11 @@ def main():
     signal.signal(signal.SIGINT, lambda *_: (stopped.set(), finished.set()))
     client = speechd.SSIPClient('Jarvis', component='responses')
     try:
-        client.set_language('ru')
         client.set_data_mode(speechd.DataMode.TEXT)
         text = sys.stdin.read(6000)
         if not text.strip():
             return 0
+        client.set_language(language(text))
         client.speak(text, callback=lambda *_args, **_kwargs: finished.set(),
                      event_types=(speechd.CallbackType.END, speechd.CallbackType.CANCEL))
         if not finished.wait(300):

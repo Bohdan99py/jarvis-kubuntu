@@ -66,6 +66,6 @@ int main(int argc, char *argv[])
     }
 
     qInfo().noquote() << "jarvisd" << jarvis::DaemonService::version() << "ready on"
-                      << jarvis::dbus::kService;
+                      << jarvis::dbus::daemonService();
     return app.exec();
 }

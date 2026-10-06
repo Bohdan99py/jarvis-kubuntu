@@ -1,4 +1,5 @@
 #include "skill_store.h"
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
@@ -23,22 +24,25 @@ namespace jarvis {
 SkillStore::SkillStore() { initSkills(); }
 QString SkillStore::directory() { return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/jarvis/skills"; }
 QString SkillStore::validate(const QByteArray &bytes) {
-    if (bytes.size()>65536) return QStringLiteral("Файл навыка больше 64 КБ.");
+    if (bytes.size()>65536) return QCoreApplication::translate("jarvis", "The skill file is larger than 64 KB.");
     QJsonParseError error; auto doc=QJsonDocument::fromJson(bytes,&error);
-    if (error.error!=QJsonParseError::NoError || !doc.isObject()) return QStringLiteral("Навык должен быть JSON-объектом.");
+    if (error.error!=QJsonParseError::NoError || !doc.isObject()) return QCoreApplication::translate("jarvis", "A skill must be a JSON object.");
     auto o=doc.object();
     static const QRegularExpression id("^[a-z][a-z0-9-]{0,47}$");
-    if (o["schema"].toInt()!=1 || !id.match(o["id"].toString()).hasMatch()) return QStringLiteral("Нужны schema: 1 и id из латинских букв, цифр и дефиса.");
+    if (o["schema"].toInt()!=1 || !id.match(o["id"].toString()).hasMatch()) return QCoreApplication::translate("jarvis", "schema: 1 and an id of Latin letters, digits and hyphens are required.");
     for (const auto &field : {"name","description","prompt"})
         if (!o[field].isString() || o[field].toString().trimmed().isEmpty() || o[field].toString().size()>(QString(field)=="prompt"?4000:300))
-            return QStringLiteral("Недопустимое поле навыка: %1").arg(field);
-    if (o.contains("examples") && !o["examples"].isArray()) return QStringLiteral("examples должен быть массивом.");
-    if (o["examples"].toArray().size()>50) return QStringLiteral("До 50 примеров на навык.");
+            return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg(field);
+    for (const auto &field : {"name_en","description_en"})
+        if (o.contains(field) && (!o[field].isString() || o[field].toString().size()>300))
+            return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg(field);
+    if (o.contains("examples") && !o["examples"].isArray()) return QCoreApplication::translate("jarvis", "examples must be an array.");
+    if (o["examples"].toArray().size()>50) return QCoreApplication::translate("jarvis", "Up to 50 examples per skill.");
     for (const auto &v:o["examples"].toArray()) {
         auto example=v.toObject();
         for (const auto &field:{"question","answer"})
             if (!example[field].isString() || example[field].toString().trimmed().isEmpty() || example[field].toString().size()>4096)
-                return QStringLiteral("У примера нужны вопрос и ответ до 4096 символов.");
+                return QCoreApplication::translate("jarvis", "Each example needs a question and an answer up to 4096 characters.");
     }
     return {};
 }
@@ -60,17 +64,17 @@ QJsonArray SkillStore::list() const {
 }
 QString SkillStore::setEnabled(const QString &id,bool enabled) {
     bool exists=false; for(const auto &v:list()) if(v.toObject()["id"].toString()==id) exists=true;
-    if(!exists) return QStringLiteral("Навык не найден.");
+    if(!exists) return QCoreApplication::translate("jarvis", "Skill not found.");
     QSettings s(statePath(),QSettings::IniFormat);s.setValue(id+"/enabled",enabled);s.sync();
-    return s.status()==QSettings::NoError ? QString() : QStringLiteral("Не удалось сохранить состояние навыка.");
+    return s.status()==QSettings::NoError ? QString() : QCoreApplication::translate("jarvis", "Could not save the skill state.");
 }
 QString SkillStore::install(const QByteArray &bytes) {
     const auto error=validate(bytes);if(!error.isEmpty()) return error;
     const auto o=QJsonDocument::fromJson(bytes).object();const QString id=o["id"].toString();
     const auto current=list();
-    if(current.size()>=50) return QStringLiteral("Лимит: 50 навыков.");
-    for(const auto &v:current) if(v.toObject()["id"].toString()==id) return QStringLiteral("Навык с таким id уже установлен.");
-    if(!QDir().mkpath(directory())) return QStringLiteral("Не удалось создать папку навыков.");
+    if(current.size()>=50) return QCoreApplication::translate("jarvis", "Limit: 50 skills.");
+    for(const auto &v:current) if(v.toObject()["id"].toString()==id) return QCoreApplication::translate("jarvis", "A skill with this id is already installed.");
+    if(!QDir().mkpath(directory())) return QCoreApplication::translate("jarvis", "Cannot create the skills folder.");
     QSaveFile file(directory()+"/"+id+".json");if(!file.open(QIODevice::WriteOnly)) return file.errorString();
     file.setPermissions(QFileDevice::ReadOwner|QFileDevice::WriteOwner);
     if(file.write(bytes)!=bytes.size() || !file.commit()) return file.errorString();

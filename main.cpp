@@ -8,11 +8,14 @@
 #include <QTimer>
 #include "desktop_controller.h"
 #include "build_config.h"
+#include "config.h"
+#include "language.h"
 
 int main(int argc,char *argv[]) {
     QApplication app(argc,argv);
     app.setApplicationName("jarvis");app.setOrganizationName("Jarvis");app.setApplicationDisplayName("J.A.R.V.I.S.");
     app.setApplicationVersion(JARVIS_VERSION);app.setDesktopFileName("org.jarvis.Jarvis");
+    jarvis::applyUiLanguage(jarvis::Config::loadFileOnly().language);
     QCommandLineParser parser;parser.setApplicationDescription("Jarvis desktop assistant");parser.addHelpOption();parser.addVersionOption();
     parser.addOption({"quick","Open the quick command bar"});parser.process(app);
     const bool quick=parser.isSet("quick");

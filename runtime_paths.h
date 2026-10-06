@@ -3,8 +3,11 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include "build_config.h"
-inline QString jarvisScript(const QString &name) {
-    const QString installed=QCoreApplication::applicationDirPath()+"/../share/jarvis/scripts/"+name;
+// Installed data (/usr/share/jarvis/…) next to the binary's prefix, or the
+// source tree when running from a build directory.
+inline QString jarvisDataFile(const QString &relative) {
+    const QString installed=QCoreApplication::applicationDirPath()+"/../share/jarvis/"+relative;
     if(QFileInfo::exists(installed)) return installed;
-    return QString(JARVIS_SOURCE_DIR)+"/scripts/"+name;
+    return QString(JARVIS_SOURCE_DIR)+"/"+relative;
 }
+inline QString jarvisScript(const QString &name) { return jarvisDataFile("scripts/"+name); }

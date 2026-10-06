@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -12,6 +13,15 @@
 using namespace Qt::StringLiterals;
 
 namespace jarvis {
+namespace {
+
+QString languageValue(const QJsonObject &o, const QString &key)
+{
+    const QString v = o.value(key).toString();
+    return (v == u"ru" || v == u"en") ? v : u"auto"_s;
+}
+
+} // namespace
 
 QString Config::defaultModel()
 {
@@ -36,6 +46,12 @@ ConfigData Config::loadFileOnly()
         const QString m = o.value(u"model"_s).toString().trimmed();
         if (!m.isEmpty())
             d.model = m;
+        d.language = languageValue(o, u"language"_s);
+        d.replyLanguage = languageValue(o, u"reply_language"_s);
+        d.learnDialog = o.value(u"learn_dialog"_s).toBool(true);
+        d.trackActivity = o.value(u"track_activity"_s).toBool(false);
+        d.trackTitles = o.value(u"track_titles"_s).toBool(false);
+        d.shareActivity = o.value(u"share_activity"_s).toBool(false);
     }
     return d;
 }
@@ -60,23 +76,29 @@ bool Config::save(const ConfigData &data, QString *error)
     const QString path = filePath();
     const QDir dir = QFileInfo(path).absoluteDir();
     if (!dir.mkpath(QStringLiteral(".")))
-        return fail(u"Не удалось создать папку %1"_s.arg(dir.absolutePath()));
+        return fail(QCoreApplication::translate("jarvis", "Cannot create folder %1").arg(dir.absolutePath()));
     QFile::setPermissions(dir.absolutePath(),
                           QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
 
     // QSaveFile writes to a temp file and renames: no half-written config.
     QSaveFile f(path);
     if (!f.open(QIODevice::WriteOnly))
-        return fail(u"Не удалось открыть %1: %2"_s.arg(path, f.errorString()));
+        return fail(QCoreApplication::translate("jarvis", "Cannot open %1: %2").arg(path, f.errorString()));
     f.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
 
     QJsonObject o;
     o.insert(u"api_key"_s, data.apiKey);
     o.insert(u"model"_s, data.model);
+    o.insert(u"language"_s, data.language);
+    o.insert(u"reply_language"_s, data.replyLanguage);
+    o.insert(u"learn_dialog"_s, data.learnDialog);
+    o.insert(u"track_activity"_s, data.trackActivity);
+    o.insert(u"track_titles"_s, data.trackTitles);
+    o.insert(u"share_activity"_s, data.shareActivity);
     f.write(QJsonDocument(o).toJson(QJsonDocument::Indented));
 
     if (!f.commit())
-        return fail(u"Не удалось сохранить %1: %2"_s.arg(path, f.errorString()));
+        return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));
     return true;
 }
 

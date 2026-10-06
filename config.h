@@ -8,6 +8,18 @@ struct ConfigData
 {
     QString apiKey;
     QString model;
+    // "auto" follows the system locale; otherwise "ru" or "en".
+    QString language = QStringLiteral("auto");
+    // "auto" answers in the language of each message; otherwise "ru" or "en".
+    QString replyLanguage = QStringLiteral("auto");
+    // Learn facts and topics from the conversation itself.
+    bool learnDialog = true;
+    // Opt-in: watch the focused window through KWin.
+    bool trackActivity = false;
+    // Opt-in on top of trackActivity: keep window titles, not only app names.
+    bool trackTitles = false;
+    // Opt-in: add the current activity summary to Claude requests.
+    bool shareActivity = false;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.

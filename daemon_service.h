@@ -4,12 +4,12 @@
 #include <QObject>
 #include <QString>
 
+#include "activity_bridge.h"
 #include "assistant.h"
 
 namespace jarvis {
 
-// The daemon's brain: owns the engine and publishes it on the session bus.
-// Future engines (context, memory, AI router) are added here, next to ChatEngine.
+// The daemon's brain: owns the assistant and publishes it on the session bus.
 class DaemonService : public QObject
 {
     Q_OBJECT
@@ -30,6 +30,7 @@ public:
 
     QString teach(const QString &q, const QString &a) { return m_assistant.teach(q, a); }
     QString graph() const { return m_assistant.graph(); }
+    Assistant &assistant() { return m_assistant; }
     static QString version();
 
 signals:
@@ -37,14 +38,24 @@ signals:
 
 private:
     Assistant m_assistant;
+    ActivityBridge m_bridge;
 };
 
 // D-Bus face of DaemonService: interface org.jarvis.Daemon1
-//   method Ask(s) -> t      queue a request, returns its id (0 = rejected)
+//   method Ask(s) -> t        queue a request, returns its id (0 = rejected)
 //   method Version() -> s
-//   method ReloadConfig()   re-read ~/.config/jarvis/config.json (API key, model)
-//   method Quit()           stop the daemon (clean exit, systemd will not restart it)
-//   signal Reply(t, s)      answer for request id
+//   method Teach(s, s) -> s   save a question/answer example ("" = ok)
+//   method Graph() -> s       memory graph JSON
+//   method Memory() -> s      facts, topics, activity and learning settings JSON
+//   method Remember(s) -> s   store a note about the user ("" = ok)
+//   method Forget(s) -> s     fact id, "facts" or "activity" ("" = ok)
+//   method RecordAction(s, s) a Jarvis action the user triggered (id, label)
+//   method WindowActivated(s, s, s)  focused window from the KWin script
+//   method ReloadConfig()     re-read ~/.config/jarvis/config.json
+//   method Quit()             stop the daemon (clean exit, systemd will not restart it)
+//   signal Reply(t, s)        answer for request id
+//   signal MemoryChanged()    facts/examples/topics changed
+//   signal ActivityChanged()  activity data changed (throttled)
 class DaemonAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
@@ -58,11 +69,18 @@ public slots:
     QString Version();
     QString Teach(const QString &question, const QString &answer);
     QString Graph();
+    QString Memory();
+    QString Remember(const QString &text);
+    QString Forget(const QString &what);
+    void RecordAction(const QString &id, const QString &label);
+    void WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
     void ReloadConfig();
     void Quit();
 
 signals:
     void Reply(quint64 id, const QString &text);
+    void MemoryChanged();
+    void ActivityChanged();
 
 private:
     DaemonService *m_service;

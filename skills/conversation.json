@@ -2,7 +2,9 @@
   "schema": 1,
   "id": "conversation",
   "name": "Разговор",
+  "name_en": "Conversation",
   "description": "Естественное общение и обсуждение идей.",
+  "description_en": "Natural conversation and discussing ideas.",
   "prompt": "In casual conversation, use a warm natural tone, respond to what the user actually says, and avoid forced enthusiasm. Do not pretend to have human experiences.",
   "examples": [
     {
