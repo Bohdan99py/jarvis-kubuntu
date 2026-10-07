@@ -47,6 +47,7 @@ ApplicationWindow {
     AppSettings {
         id: appSettings
         onSaved: chatModel.reloadConfig()
+        onLanguageApplied: chatModel.retranslate()
     }
 
     SettingsDialog {

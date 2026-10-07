@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDBusAbstractAdaptor>
+#include <QDBusContext>
 #include <QObject>
 #include <QString>
 
@@ -10,7 +11,8 @@
 namespace jarvis {
 
 // The daemon's brain: owns the assistant and publishes it on the session bus.
-class DaemonService : public QObject
+// QDBusContext: Qt delivers the caller's message to the adaptor's parent.
+class DaemonService : public QObject, public QDBusContext
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(DaemonService)
@@ -31,6 +33,7 @@ public:
     QString teach(const QString &q, const QString &a) { return m_assistant.teach(q, a); }
     QString graph() const { return m_assistant.graph(); }
     Assistant &assistant() { return m_assistant; }
+    const ActivityBridge &bridge() const { return m_bridge; }
     static QString version();
 
 signals:
@@ -50,7 +53,8 @@ private:
 //   method Remember(s) -> s   store a note about the user ("" = ok)
 //   method Forget(s) -> s     fact id, "facts" or "activity" ("" = ok)
 //   method RecordAction(s, s) a Jarvis action the user triggered (id, label)
-//   method WindowActivated(s, s, s)  focused window from the KWin script
+//   method Curious() -> s     a question Jarvis wants to ask now ("" = none)
+//   method WindowActivated(s, s, s)  focused window; accepted only from KWin
 //   method ReloadConfig()     re-read ~/.config/jarvis/config.json
 //   method Quit()             stop the daemon (clean exit, systemd will not restart it)
 //   signal Reply(t, s)        answer for request id
@@ -73,6 +77,7 @@ public slots:
     QString Remember(const QString &text);
     QString Forget(const QString &what);
     void RecordAction(const QString &id, const QString &label);
+    QString Curious();
     void WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
     void ReloadConfig();
     void Quit();

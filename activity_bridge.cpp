@@ -3,6 +3,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QDBusMessage>
+#include <QDBusReply>
 #include <QDebug>
 #include <QDir>
 #include <QFile>
@@ -12,6 +13,7 @@
 #include <QStandardPaths>
 
 #include "assistant.h"
+#include "dbus_names.h"
 #include "runtime_paths.h"
 
 using namespace Qt::StringLiterals;
@@ -19,7 +21,6 @@ using namespace Qt::StringLiterals;
 namespace jarvis {
 namespace {
 
-constexpr auto kPlugin = "jarvis-activity";
 constexpr int kTimeoutMs = 3000;
 
 QDBusMessage kwinCall(const QString &method, const QVariantList &args = {})
@@ -30,12 +31,19 @@ QDBusMessage kwinCall(const QString &method, const QVariantList &args = {})
     return QDBusConnection::sessionBus().call(msg, QDBus::Block, kTimeoutMs);
 }
 
-QString generatedScriptPath()
+// One script per daemon bus name, so a development daemon never touches the
+// installed daemon's script.
+QString pluginName(const QString &service)
+{
+    return service == QLatin1String(dbus::kService) ? u"jarvis-activity"_s : u"jarvis-activity-"_s + service;
+}
+
+QString generatedScriptPath(const QString &plugin)
 {
     QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
     if (dir.isEmpty())
         dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    return dir + u"/jarvis-activity.js"_s;
+    return dir + u"/"_s + plugin + u".js"_s;
 }
 
 } // namespace
@@ -44,10 +52,27 @@ ActivityBridge::ActivityBridge(Assistant *assistant, QString service, QObject *p
     : QObject(parent)
     , m_assistant(assistant)
     , m_service(std::move(service))
+    , m_kwinWatcher(u"org.kde.KWin"_s, QDBusConnection::sessionBus(),
+                    QDBusServiceWatcher::WatchForRegistration | QDBusServiceWatcher::WatchForUnregistration)
 {
     QDBusConnection::sessionBus().connect(u"org.freedesktop.ScreenSaver"_s, u"/ScreenSaver"_s,
                                           u"org.freedesktop.ScreenSaver"_s, u"ActiveChanged"_s, this,
                                           SLOT(onScreenSaverActive(bool)));
+    // At login the user service can start before KWin owns its name: load the
+    // script as soon as KWin appears, and again if KWin restarts.
+    connect(&m_kwinWatcher, &QDBusServiceWatcher::serviceRegistered, this, [this] {
+        m_attempts = 0;
+        if (m_enabled)
+            tryLoad();
+    });
+    connect(&m_kwinWatcher, &QDBusServiceWatcher::serviceUnregistered, this, [this] {
+        m_loaded = false;
+        m_retry.stop();
+        if (m_enabled)
+            m_assistant->setTrackingStatus(u"no-kwin"_s);
+    });
+    m_retry.setSingleShot(true);
+    connect(&m_retry, &QTimer::timeout, this, &ActivityBridge::tryLoad);
 }
 
 ActivityBridge::~ActivityBridge()
@@ -57,19 +82,45 @@ ActivityBridge::~ActivityBridge()
 
 void ActivityBridge::apply(bool enabled)
 {
+    m_enabled = enabled;
+    m_retry.stop();
     if (!enabled) {
         unload();
         m_assistant->setTrackingStatus(u"off"_s);
         return;
     }
+    m_attempts = 0;
+    tryLoad();
+}
+
+void ActivityBridge::tryLoad()
+{
+    if (!m_enabled)
+        return;
     // Always reload: a script left by a previous daemon may target an old build.
     QString error;
     if (load(&error)) {
         m_assistant->setTrackingStatus(u"kwin"_s);
-    } else {
-        qWarning().noquote() << "activity tracking unavailable:" << error;
-        m_assistant->setTrackingStatus(error);
+        return;
     }
+    m_assistant->setTrackingStatus(error);
+    if (error == u"no-kwin") {
+        qInfo() << "activity tracking: waiting for KWin";
+        return; // the watcher calls back when KWin registers
+    }
+    qWarning().noquote() << "activity tracking unavailable:" << error;
+    // KWin may own its name a moment before /Scripting is ready.
+    if (++m_attempts < 5)
+        m_retry.start(1000 * m_attempts);
+}
+
+bool ActivityBridge::isKWin(const QString &sender) const
+{
+    QDBusConnectionInterface *bus = QDBusConnection::sessionBus().interface();
+    if (!bus || sender.isEmpty())
+        return false;
+    const QDBusReply<QString> owner = bus->serviceOwner(u"org.kde.KWin"_s);
+    return owner.isValid() && owner.value() == sender;
 }
 
 bool ActivityBridge::load(QString *error)
@@ -93,7 +144,7 @@ bool ActivityBridge::load(QString *error)
     QByteArray script = templ.readAll();
     script.replace("%SERVICE%", m_service.toUtf8());
 
-    const QString path = generatedScriptPath();
+    const QString path = generatedScriptPath(pluginName(m_service));
     QDir().mkpath(QFileInfo(path).absolutePath());
     QSaveFile out(path);
     if (!out.open(QIODevice::WriteOnly) || out.write(script) != script.size()
@@ -103,7 +154,7 @@ bool ActivityBridge::load(QString *error)
     }
 
     unload();
-    const QDBusMessage loaded = kwinCall(u"loadScript"_s, {path, QString::fromLatin1(kPlugin)});
+    const QDBusMessage loaded = kwinCall(u"loadScript"_s, {path, pluginName(m_service)});
     if (loaded.type() == QDBusMessage::ErrorMessage) {
         *error = u"error:"_s + loaded.errorMessage();
         return false;
@@ -131,9 +182,9 @@ void ActivityBridge::unload()
         return;
     }
     // Also clears a script that a crashed daemon left behind.
-    const QDBusMessage reply = kwinCall(u"isScriptLoaded"_s, {QString::fromLatin1(kPlugin)});
+    const QDBusMessage reply = kwinCall(u"isScriptLoaded"_s, {pluginName(m_service)});
     if (m_loaded || reply.arguments().value(0).toBool()) {
-        kwinCall(u"unloadScript"_s, {QString::fromLatin1(kPlugin)});
+        kwinCall(u"unloadScript"_s, {pluginName(m_service)});
         qInfo() << "activity tracking: KWin script unloaded";
     }
     m_loaded = false;

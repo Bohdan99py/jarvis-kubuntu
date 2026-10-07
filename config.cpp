@@ -49,6 +49,7 @@ ConfigData Config::loadFileOnly()
         d.language = languageValue(o, u"language"_s);
         d.replyLanguage = languageValue(o, u"reply_language"_s);
         d.learnDialog = o.value(u"learn_dialog"_s).toBool(true);
+        d.curiosity = o.value(u"curiosity"_s).toBool(true);
         d.trackActivity = o.value(u"track_activity"_s).toBool(false);
         d.trackTitles = o.value(u"track_titles"_s).toBool(false);
         d.shareActivity = o.value(u"share_activity"_s).toBool(false);
@@ -92,12 +93,12 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"language"_s, data.language);
     o.insert(u"reply_language"_s, data.replyLanguage);
     o.insert(u"learn_dialog"_s, data.learnDialog);
+    o.insert(u"curiosity"_s, data.curiosity);
     o.insert(u"track_activity"_s, data.trackActivity);
     o.insert(u"track_titles"_s, data.trackTitles);
     o.insert(u"share_activity"_s, data.shareActivity);
-    f.write(QJsonDocument(o).toJson(QJsonDocument::Indented));
-
-    if (!f.commit())
+    const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
+    if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));
     return true;
 }

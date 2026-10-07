@@ -18,6 +18,7 @@ Rectangle {
     readonly property var activity: memory.activity || ({})
     readonly property var today: activity.today || ({ total: 0, apps: [], categories: [] })
     readonly property var trackingState: memory.settings || ({})
+    readonly property var curiosity: memory.curiosity || ({})
 
     color: Theme.panel
     radius: 22
@@ -86,32 +87,45 @@ Rectangle {
                     font.pixelSize: 12
                 }
                 SynapseGraph { id: neural; Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 150; graphData: panel.chat.graph }
-                SectionTitle { text: qsTr("Teach the assistant") }
-                Hint { text: qsTr("Save a question and the right answer. You can also correct me in chat: \"no, the correct answer is …\".") }
-                TextField {
-                    id: trainingQuestion
-                    Layout.fillWidth: true
-                    placeholderText: qsTr("Question or phrase")
-                    color: Theme.text; placeholderTextColor: Theme.textDim; maximumLength: 4096
-                    background: Rectangle { color: Theme.bg; radius: 10; border.color: trainingQuestion.activeFocus ? Theme.accent : Theme.border }
-                }
-                ScrollView {
-                    Layout.fillWidth: true; Layout.preferredHeight: 80
-                    TextArea {
-                        id: trainingAnswer
-                        placeholderText: qsTr("The right answer (up to 4096 characters)")
-                        color: Theme.text; placeholderTextColor: Theme.textDim; wrapMode: TextEdit.Wrap
-                        background: Rectangle { color: Theme.bg; radius: 10; border.color: Theme.border }
-                    }
-                }
+                // Memory fills itself; teaching by hand is optional and folded away.
                 RowLayout {
+                    Layout.fillWidth: true
+                    Hint { text: qsTr("I learn by myself from our chats, your answers and your activity.") }
+                    DarkButton { text: "↻"; onClicked: panel.chat.refreshGraph(); Accessible.name: qsTr("Refresh") }
+                }
+                DarkButton {
+                    id: teachToggle
+                    property bool open: false
+                    text: (open ? "▾ " : "▸ ") + qsTr("Teach an exact answer")
+                    onClicked: open = !open
+                }
+                ColumnLayout {
+                    visible: teachToggle.open
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Hint { text: qsTr("Save a question and the right answer. You can also correct me in chat: \"no, the correct answer is …\".") }
+                    TextField {
+                        id: trainingQuestion
+                        Layout.fillWidth: true
+                        placeholderText: qsTr("Question or phrase")
+                        color: Theme.text; placeholderTextColor: Theme.textDim; maximumLength: 4096
+                        background: Rectangle { color: Theme.bg; radius: 10; border.color: trainingQuestion.activeFocus ? Theme.accent : Theme.border }
+                    }
+                    ScrollView {
+                        Layout.fillWidth: true; Layout.preferredHeight: 80
+                        TextArea {
+                            id: trainingAnswer
+                            placeholderText: qsTr("The right answer (up to 4096 characters)")
+                            color: Theme.text; placeholderTextColor: Theme.textDim; wrapMode: TextEdit.Wrap
+                            background: Rectangle { color: Theme.bg; radius: 10; border.color: Theme.border }
+                        }
+                    }
                     DarkButton {
                         text: panel.chat.learningBusy ? qsTr("Saving…") : qsTr("Create links")
                         primary: true
                         enabled: !panel.chat.learningBusy && trainingQuestion.text.trim().length > 0 && trainingAnswer.text.trim().length > 0 && trainingAnswer.text.length <= 4096
                         onClicked: panel.chat.teach(trainingQuestion.text, trainingAnswer.text)
                     }
-                    DarkButton { text: "↻"; onClicked: panel.chat.refreshGraph(); Accessible.name: qsTr("Refresh") }
                 }
                 Label { text: panel.chat.learningStatus; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12; visible: text.length > 0 }
             }
@@ -123,6 +137,32 @@ Rectangle {
                     text: panel.trackingState.learnDialog === false
                           ? qsTr("Learning from chat is off. Only notes you add here are kept.")
                           : qsTr("Learned from our conversations. Remove anything that is wrong — Claude sees this list.")
+                }
+                // Curiosity: what Jarvis would like to know next.
+                Rectangle {
+                    visible: !!(panel.curiosity.pending || panel.curiosity.next)
+                    Layout.fillWidth: true
+                    implicitHeight: curiousColumn.implicitHeight + 24
+                    radius: 14
+                    color: Theme.bg
+                    border.color: Theme.nodeTopic
+                    ColumnLayout {
+                        id: curiousColumn
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 6
+                        Label { text: panel.curiosity.pending ? qsTr("WAITING FOR YOUR ANSWER") : qsTr("I'M CURIOUS"); color: Theme.nodeTopic; font.pixelSize: 10; font.letterSpacing: 2 }
+                        Label {
+                            text: panel.curiosity.pending || panel.curiosity.next || ""
+                            color: Theme.text; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText
+                        }
+                        DarkButton {
+                            visible: !panel.curiosity.pending
+                            text: qsTr("Ask me in chat")
+                            enabled: !panel.chat.busy
+                            onClicked: panel.chat.askMeSomething()
+                        }
+                    }
                 }
                 ListView {
                     id: factList
@@ -246,7 +286,7 @@ Rectangle {
                     Hint {
                         visible: panel.settings.trackActivity && text.length > 0
                         text: Texts.trackingStatus(panel.trackingState.status)
-                        color: panel.trackingState.status === "kwin" ? Theme.textDim : Theme.danger
+                        color: (panel.trackingState.status === "kwin" || panel.trackingState.status === "no-kwin") ? Theme.textDim : Theme.danger
                     }
 
                     // Now

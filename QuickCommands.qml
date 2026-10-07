@@ -35,10 +35,10 @@ QtObject {
 
     // Returns "" or an error message for the user.
     function run(id, fallbackLabel, chat, desktop, lang) {
+        if (id.indexOf("ask:") === 0 && chat.busy)
+            return qsTr("Jarvis is still answering.")
         chat.recordAction(id, label(id, fallbackLabel))
         if (id.indexOf("ask:") === 0) {
-            if (chat.busy)
-                return qsTr("Jarvis is still answering.")
             chat.send(question(id.substring(4), lang))
             return ""
         }

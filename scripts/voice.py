@@ -68,7 +68,7 @@ def setup(root, model=MODEL):
                 temp = Path(temp)
                 archive = temp / "model.zip"
                 url = f"https://alphacephei.com/vosk/models/{model}.zip"
-                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.7"})
+                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.8"})
                 with urllib.request.urlopen(request, timeout=60) as response, archive.open("wb") as out:
                     if not response.url.startswith("https://"):
                         raise ValueError(message("https"))

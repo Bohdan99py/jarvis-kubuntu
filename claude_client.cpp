@@ -126,6 +126,36 @@ void ClaudeClient::ask(const QString &userText, Lang lang, bool forcedLanguage, 
             [this, reply, userText, ru] { handleReply(reply, userText, ru); });
 }
 
+void ClaudeClient::extract(const QString &system, const QString &userText, int maxTokens)
+{
+    if (m_extracting || !isConfigured())
+        return;
+    m_extracting = true;
+    QJsonObject body;
+    body.insert(u"model"_s, m_model);
+    body.insert(u"max_tokens"_s, maxTokens);
+    body.insert(u"system"_s, system);
+    body.insert(u"messages"_s, QJsonArray{QJsonObject{{u"role"_s, u"user"_s}, {u"content"_s, userText}}});
+
+    QNetworkRequest req(QUrl(u"https://api.anthropic.com/v1/messages"_s));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, u"application/json"_s);
+    req.setRawHeader("x-api-key", m_apiKey.toUtf8());
+    req.setRawHeader("anthropic-version", "2023-06-01");
+    req.setTransferTimeout(kTimeoutMs);
+    QNetworkReply *reply = m_net.post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply] {
+        reply->deleteLater();
+        m_extracting = false;
+        const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+        const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString text;
+        for (const QJsonValue &v : obj.value(u"content"_s).toArray())
+            if (v.toObject().value(u"type"_s).toString() == u"text")
+                text += v.toObject().value(u"text"_s).toString();
+        emit extracted(reply->error() == QNetworkReply::NoError && status == 200, text);
+    });
+}
+
 void ClaudeClient::handleReply(QNetworkReply *reply, const QString &userText, bool ru)
 {
     reply->deleteLater();

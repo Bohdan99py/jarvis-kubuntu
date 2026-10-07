@@ -31,6 +31,8 @@ QtObject {
         case "dislikes": return qsTr("Dislikes")
         case "skill": return qsTr("Codes in")
         case "uses": return qsTr("Uses")
+        case "goal": return qsTr("Goal")
+        case "active_hours": return qsTr("Active hours")
         default: return qsTr("Note")
         }
     }
@@ -39,6 +41,9 @@ QtObject {
         switch (source) {
         case "dialog": return qsTr("from our chat")
         case "claude": return qsTr("noted by Claude")
+        case "reflection": return qsTr("noticed in our chats")
+        case "curiosity": return qsTr("you answered my question")
+        case "activity": return qsTr("from your activity")
         default: return qsTr("you asked to remember")
         }
     }
@@ -57,7 +62,7 @@ QtObject {
         if (status === "kwin")
             return qsTr("Watching the focused window through KWin.")
         if (status === "no-kwin")
-            return qsTr("KWin is not available: activity tracking needs a KDE Plasma session.")
+            return qsTr("Waiting for KWin: tracking starts by itself as soon as the Plasma session is ready. Outside KDE Plasma it stays off.")
         if (status && status.indexOf("error:") === 0)
             return qsTr("Could not start tracking: %1").arg(status.substring(6))
         return ""

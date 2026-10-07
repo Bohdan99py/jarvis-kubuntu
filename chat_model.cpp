@@ -268,6 +268,36 @@ void ChatModel::recordAction(const QString &id, const QString &label)
     QDBusConnection::sessionBus().asyncCall(msg, 3000);
 }
 
+void ChatModel::retranslate()
+{
+    if (m_messages.size() == 1 && !m_messages.first().fromUser) {
+        beginResetModel();
+        m_messages.clear();
+        endResetModel();
+        addGreeting();
+    }
+}
+
+void ChatModel::askMeSomething()
+{
+    if (m_busy)
+        return;
+    auto show = [this](const QString &question, const QString &error) {
+        const QString text = !error.isEmpty() ? error
+                             : question.isEmpty() ? tr("I know the basics about you already. Tell me something new!")
+                                                  : question;
+        append(text, /*fromUser=*/false);
+        m_lastReply = text;
+        emit lastReplyChanged();
+        emit assistantReply(text);
+        refreshMemory();
+    };
+    if (!daemonConnected())
+        show(m_assistant.curiousQuestion(), {});
+    else
+        callDaemon(QStringLiteral("Curious"), {}, show);
+}
+
 void ChatModel::onDaemonMemoryChanged()
 {
     refreshMemory();

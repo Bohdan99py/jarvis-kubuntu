@@ -30,9 +30,15 @@ public:
     // about the user, relevant taught answers, optional activity.
     void ask(const QString &userText, Lang lang, bool forcedLanguage, const QString &context = {});
 
+    // A one-off request outside the conversation (memory reflection): no
+    // history is read or written. Result arrives in extracted().
+    void extract(const QString &system, const QString &userText, int maxTokens);
+    bool extracting() const noexcept { return m_extracting; }
+
 signals:
     // On success `text` is the answer, otherwise a human-readable error.
     void finished(bool ok, const QString &text);
+    void extracted(bool ok, const QString &text);
 
 private:
     struct Turn
@@ -51,6 +57,7 @@ private:
     QList<Turn> m_history;
     QString m_apiKey;
     QString m_model;
+    bool m_extracting = false;
 };
 
 } // namespace jarvis

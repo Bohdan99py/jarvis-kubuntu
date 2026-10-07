@@ -67,7 +67,7 @@ const QList<Pattern> &patterns()
 bool singleValued(const QString &slot)
 {
     static const QSet<QString> single = {u"name"_s, u"location"_s, u"occupation"_s,
-                                        u"project"_s, u"birthday"_s};
+                                        u"project"_s, u"birthday"_s, u"goal"_s, u"active_hours"_s};
     return single.contains(slot);
 }
 
@@ -225,7 +225,7 @@ QList<KnowledgeStore::Learned> KnowledgeStore::observe(const QString &message, b
             // Keep the user's own capitalisation: same offsets in the original text.
             const bool shortValue = p.slot == u"likes" || p.slot == u"dislikes" || p.slot == u"uses" || p.slot == u"skill";
             QString value = cleanValue(trimmed.mid(m.capturedStart(1), m.capturedLength(1)), shortValue);
-            if (value.size() < 2)
+            if (!check(value).isEmpty())
                 continue;
             if (p.slot == u"name" && value.front().isLower())
                 value[0] = value.front().toUpper();
@@ -265,21 +265,75 @@ QList<KnowledgeStore::Learned> KnowledgeStore::observe(const QString &message, b
     return learned;
 }
 
-QString KnowledgeStore::remember(const QString &input, const QString &source)
+bool KnowledgeStore::knownSlot(const QString &slot)
 {
-    const QString value = input.simplified();
-    if (value.size() < 3)
+    static const QSet<QString> slots_ = {u"name"_s, u"location"_s, u"occupation"_s, u"project"_s,
+                                         u"birthday"_s, u"likes"_s, u"dislikes"_s, u"skill"_s, u"uses"_s,
+                                         u"goal"_s, u"active_hours"_s, u"note"_s};
+    return slots_.contains(slot);
+}
+
+QString KnowledgeStore::check(const QString &value)
+{
+    if (value.size() < 2)
         return u"short"_s;
     if (value.size() > kMaxFactChars)
         return u"long"_s;
     if (text::looksSensitive(value))
         return u"sensitive"_s;
+    // Facts go back into Claude's system prompt: nothing that reads like markup
+    // or an instruction may be stored, whoever proposed it.
+    static const QRegularExpression injection(
+        u"[<>{}]|ignore (?:all|any|previous|the above)|system prompt|you are now|assistant must|"
+        u"игнорируй|системн\\w* (?:промпт|инструкц)|ты теперь"_s,
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::UseUnicodePropertiesOption);
+    if (injection.match(value).hasMatch())
+        return u"unsafe"_s;
+    return {};
+}
+
+QString KnowledgeStore::learn(const QString &slot, const QString &input, const QString &source, double confidence)
+{
+    QString value = input.simplified();
+    value.remove(QRegularExpression(u"[\\x00-\\x1f\\x7f]"_s));
+    if (!knownSlot(slot))
+        return u"slot"_s;
+    if (const QString error = check(value); !error.isEmpty())
+        return error;
     QJsonObject root = load();
     QJsonArray facts = root.value(u"facts"_s).toArray();
-    upsertFact(facts, u"note"_s, value, source, source == u"manual" ? 1.0 : 0.7);
+    upsertFact(facts, slot, value, source, confidence);
     root[u"version"_s] = 1;
     root[u"facts"_s] = facts;
     return save(root) ? QString() : u"io"_s;
+}
+
+QString KnowledgeStore::remember(const QString &input, const QString &source)
+{
+    if (input.simplified().size() < 3)
+        return u"short"_s;
+    return learn(u"note"_s, input, source, source == u"manual" ? 1.0 : 0.7);
+}
+
+bool KnowledgeStore::hasSlot(const QString &slot) const
+{
+    for (const auto &v : load().value(u"facts"_s).toArray())
+        if (v.toObject().value(u"slot"_s).toString() == slot)
+            return true;
+    return false;
+}
+
+QJsonObject KnowledgeStore::curiosityState() const
+{
+    return load().value(u"curiosity"_s).toObject();
+}
+
+void KnowledgeStore::setCuriosityState(const QJsonObject &state)
+{
+    QJsonObject root = load();
+    root[u"version"_s] = 1;
+    root[u"curiosity"_s] = state;
+    save(root);
 }
 
 int KnowledgeStore::forget(const QString &query, int maxMatches)
@@ -354,6 +408,8 @@ QString KnowledgeStore::slotLabel(const QString &slot, Lang lang)
         {u"dislikes"_s, {u"Не нравится"_s, u"Dislikes"_s}},
         {u"skill"_s, {u"Пишет на"_s, u"Codes in"_s}},
         {u"uses"_s, {u"Использует"_s, u"Uses"_s}},
+        {u"goal"_s, {u"Цель"_s, u"Goal"_s}},
+        {u"active_hours"_s, {u"Активные часы"_s, u"Active hours"_s}},
         {u"note"_s, {u"Заметка"_s, u"Note"_s}},
     };
     const auto it = labels.constFind(slot);
@@ -367,7 +423,10 @@ QString KnowledgeStore::profileForPrompt(int maxChars) const
     QString out;
     for (const auto &v : facts()) {
         const QJsonObject f = v.toObject();
-        const QString line = u"- "_s + f.value(u"slot"_s).toString() + u": "_s + f.value(u"value"_s).toString() + u'\n';
+        // Older files may predate the markup filter: neutralise angle brackets on the way out.
+        QString value = f.value(u"value"_s).toString();
+        value.replace(u'<', u'‹').replace(u'>', u'›');
+        const QString line = u"- "_s + f.value(u"slot"_s).toString() + u": "_s + value + u'\n';
         if (out.size() + line.size() > maxChars)
             break;
         out += line;

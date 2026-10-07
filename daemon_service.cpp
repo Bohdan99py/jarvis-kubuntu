@@ -3,6 +3,7 @@
 #include <QDBusConnection>
 #include <QCoreApplication>
 #include <QDBusError>
+#include <QDBusMessage>
 #include <QDebug>
 
 #include "dbus_names.h"
@@ -114,7 +115,19 @@ void DaemonAdaptor::RecordAction(const QString &id, const QString &label)
 
 void DaemonAdaptor::WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId)
 {
+    // Any process of the user could call this; only KWin knows the real focus.
+    const DaemonService &ctx = *m_service;
+    if (!ctx.calledFromDBus() || !ctx.bridge().isKWin(ctx.message().service())) {
+        if (ctx.calledFromDBus())
+            ctx.sendErrorReply(QDBusError::AccessDenied, QStringLiteral("window reports are accepted from KWin only"));
+        return;
+    }
     m_service->assistant().windowActivated(caption.left(1000), appClass.left(200), desktopId.left(200));
+}
+
+QString DaemonAdaptor::Curious()
+{
+    return m_service->assistant().curiousQuestion();
 }
 
 QString DaemonAdaptor::Version()

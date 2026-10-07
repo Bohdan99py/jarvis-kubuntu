@@ -91,6 +91,7 @@ QString AppSettings::setLanguage(const QString &language)
     jarvis::applyUiLanguage(d.language);
     if (QQmlEngine *engine = qmlEngine(this))
         engine->retranslate();
+    emit languageApplied();
     return {};
 }
 
@@ -106,6 +107,8 @@ QString AppSettings::setOption(const QString &name, bool value)
     jarvis::ConfigData d = jarvis::Config::loadFileOnly();
     if (name == QLatin1String("learnDialog"))
         d.learnDialog = value;
+    else if (name == QLatin1String("curiosity"))
+        d.curiosity = value;
     else if (name == QLatin1String("trackActivity"))
         d.trackActivity = value;
     else if (name == QLatin1String("trackTitles"))

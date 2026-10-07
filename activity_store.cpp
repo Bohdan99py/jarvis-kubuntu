@@ -637,8 +637,12 @@ QString ActivityStore::promptContext(qint64 nowMs) const
         out += u"Focused application: %1 (%2), for %3"_s.arg(
             m_current.name, categoryName(m_current.category, Lang::En),
             formatDuration(double(nowMs - m_current.since) / 1000.0, Lang::En));
-        if (!m_current.title.isEmpty())
-            out += u", window title: \"%1\""_s.arg(m_current.title);
+        if (!m_current.title.isEmpty()) {
+            // Titles come from web pages and documents: never let them look like markup.
+            QString title = m_current.title;
+            title.remove(QRegularExpression(u"[<>{}\"]"_s));
+            out += u", window title: \"%1\""_s.arg(title);
+        }
         out += u".\n"_s;
     }
     const auto list = todayApps(nowMs);
@@ -654,6 +658,51 @@ QString ActivityStore::promptContext(qint64 nowMs) const
         out += u"Most used today: "_s + parts.join(u", "_s) + u".\n"_s;
     }
     return out;
+}
+
+QStringList ActivityStore::heavyApps(double minSeconds) const
+{
+    QList<std::pair<double, QString>> list;
+    const QJsonObject apps = m_root.value(u"apps"_s).toObject();
+    for (auto it = apps.begin(); it != apps.end(); ++it) {
+        const QJsonObject a = it.value().toObject();
+        if (a.value(u"seconds"_s).toDouble() >= minSeconds && a.value(u"category"_s).toString() != u"system")
+            list.append({a.value(u"seconds"_s).toDouble(), a.value(u"name"_s).toString(it.key())});
+    }
+    std::sort(list.begin(), list.end(), std::greater<>());
+    QStringList out;
+    for (const auto &[seconds, name] : list)
+        out.append(name);
+    return out;
+}
+
+bool ActivityStore::activeHours(int *from, int *to) const
+{
+    double hours[24] = {};
+    double total = 0;
+    const QJsonObject apps = m_root.value(u"apps"_s).toObject();
+    for (auto it = apps.begin(); it != apps.end(); ++it) {
+        const QJsonArray h = it.value().toObject().value(u"hours"_s).toArray();
+        for (int i = 0; i < 24 && i < h.size(); ++i) {
+            hours[i] += h.at(i).toDouble();
+            total += h.at(i).toDouble();
+        }
+    }
+    // Needs a few days of data before it means anything.
+    if (total < 10 * 3600)
+        return false;
+    for (int length = 1; length <= 24; ++length)
+        for (int start = 0; start < 24; ++start) {
+            double sum = 0;
+            for (int i = 0; i < length; ++i)
+                sum += hours[(start + i) % 24];
+            if (sum >= 0.7 * total) {
+                *from = start;
+                *to = (start + length) % 24;
+                return true;
+            }
+        }
+    return false;
 }
 
 } // namespace jarvis

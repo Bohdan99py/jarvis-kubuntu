@@ -22,6 +22,7 @@ class AppSettings : public QObject
     Q_PROPERTY(QString uiLanguage READ uiLanguage NOTIFY changed FINAL)
     Q_PROPERTY(QString replyLanguage READ replyLanguage NOTIFY changed FINAL)
     Q_PROPERTY(bool learnDialog READ learnDialog NOTIFY changed FINAL)
+    Q_PROPERTY(bool curiosity READ curiosity NOTIFY changed FINAL)
     Q_PROPERTY(bool trackActivity READ trackActivity NOTIFY changed FINAL)
     Q_PROPERTY(bool trackTitles READ trackTitles NOTIFY changed FINAL)
     Q_PROPERTY(bool shareActivity READ shareActivity NOTIFY changed FINAL)
@@ -37,6 +38,7 @@ public:
     QString uiLanguage() const;
     QString replyLanguage() const { return m_data.replyLanguage; }
     bool learnDialog() const { return m_data.learnDialog; }
+    bool curiosity() const { return m_data.curiosity; }
     bool trackActivity() const { return m_data.trackActivity; }
     bool trackTitles() const { return m_data.trackTitles; }
     bool shareActivity() const { return m_data.shareActivity; }
@@ -48,12 +50,14 @@ public:
     // Applies the interface language immediately (retranslates QML).
     Q_INVOKABLE QString setLanguage(const QString &language);
     Q_INVOKABLE QString setReplyLanguage(const QString &language);
-    // name: learnDialog, trackActivity, trackTitles, shareActivity.
+    // name: learnDialog, curiosity, trackActivity, trackTitles, shareActivity.
     Q_INVOKABLE QString setOption(const QString &name, bool value);
 
 signals:
     void changed();
     void saved();
+    // The interface language was switched (after QML retranslation).
+    void languageApplied();
 
 private:
     void refresh(bool notify);

@@ -1,5 +1,7 @@
 #include "desktop_controller.h"
 #include "runtime_paths.h"
+#include "config.h"
+#include "language.h"
 #include <QDesktopServices>
 #include <QDBusConnection>
 #include <memory>
@@ -60,7 +62,8 @@ void DesktopController::openSkillsFolder() {
 void DesktopController::update() {
     if(updating())return;
     m_updateBuffer.clear();m_updateStatus=tr("Checking for updates…");
-    m_updater.start("python3",{jarvisScript("update.py"),"--current",version(),"--cache",QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/updates"});
+    const QString lang=jarvis::languageCode(jarvis::resolveLanguage(jarvis::Config::loadFileOnly().language));
+    m_updater.start(systemPython(),{jarvisScript("update.py"),"--current",version(),"--cache",QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/updates","--lang",lang});
     m_timeout.start(300000);emit updateChanged();
 }
 void DesktopController::readUpdateEvents() {

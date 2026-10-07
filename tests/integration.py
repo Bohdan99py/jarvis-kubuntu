@@ -1,4 +1,6 @@
-import subprocess, os, json, time, shutil, tempfile
+import subprocess, os, json, time, shutil, tempfile, sys
+sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
+from fake_kwin import FakeKWin
 from pathlib import Path
 base=Path.cwd()
 build=Path(os.environ.get('JARVIS_TEST_BUILD', str(base/'build')))
@@ -21,6 +23,12 @@ def ask(text,wait=.9):
  monitor=subprocess.Popen(['gdbus','monitor','--session','--dest','org.jarvis.Daemon1'],stdout=subprocess.PIPE,text=True)
  time.sleep(.2);call('Ask',text);time.sleep(wait);monitor.terminate()
  return monitor.communicate(timeout=3)[0]
+def wait_for(check,message,timeout=5):
+ deadline=time.time()+timeout
+ while time.time()<deadline:
+  if check(): return
+  time.sleep(.1)
+ raise AssertionError(message)
 def start():
  proc=subprocess.Popen([str(build/'jarvisd')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
  time.sleep(.15)
@@ -74,6 +82,17 @@ try:
  assert not any(f['id']==fact_id for f in memory()['facts'])
  assert memory()['topics'],'topics learned from messages'
 
+ # Curiosity: after a couple of messages Jarvis asks, then remembers the answer
+ assert call('Forget','facts').strip()=="('',)"
+ ask('привет')
+ out=ask('как дела')
+ assert 'обращаться' in out,out
+ out=ask('Алекс')
+ assert 'Приятно познакомиться, Алекс' in out,out
+ assert any(f['slot']=='name' and f['value']=='Алекс' and f['source']=='curiosity' for f in memory()['facts'])
+ assert unquote(call('Curious')),'another question is ready'
+ assert memory()['curiosity'].get('pending'),'question waiting for an answer'
+
  # Corrections teach the previous question
  ask('Какой мой любимый цвет?')
  assert 'исправил' in ask('нет, правильно: синий')
@@ -85,19 +104,37 @@ try:
  # Actions and activity
  call('RecordAction','launch:terminal','Terminal');call('RecordAction','launch:terminal','Terminal')
  assert 'launch:terminal' in [s['id'] for s in memory()['activity']['suggestions']]
- call('WindowActivated','main.cpp — jarvis','code','code')
- assert 'current' not in memory()['activity'],'tracking is opt-in'
  assert 'off' in ask('what am I doing')
+ # Tracking on before KWin exists (login race): the daemon waits for KWin.
  write_config(track_activity=True,track_titles=True);call('ReloadConfig')
- assert memory()['settings']['status']=='no-kwin','no KWin on the test bus'
- call('WindowActivated','main.cpp — jarvis','code','code')
+ assert memory()['settings']['status']=='no-kwin','no KWin on the test bus yet'
+ kwin=FakeKWin()
+ wait_for(lambda: memory()['settings']['status']=='kwin','script loaded when KWin appears')
+ script=kwin.scripts['jarvis-activity']
+ assert '"org.jarvis.Daemon1"' in script and '%SERVICE%' not in script,'service name substituted'
+ assert kwin.starts==1
+ # Only KWin may report windows.
+ try:
+  call('WindowActivated','fake','code','code');raise AssertionError('foreign window report accepted')
+ except subprocess.CalledProcessError:
+  pass
+ assert 'current' not in memory()['activity']
+ kwin.report('main.cpp — jarvis','code','code')
  current=memory()['activity']['current']
  assert current['category']=='coding' and current['title']=='main.cpp — jarvis',current
  assert 'coding' in ask('what am I doing')
- call('WindowActivated','Private Browsing — Mozilla Firefox','firefox','firefox')
+ kwin.report('Private Browsing — Mozilla Firefox','firefox','firefox')
  assert 'title' not in memory()['activity']['current'],'private titles dropped'
- call('WindowActivated','','plasmashell','org.kde.plasmashell')
+ kwin.report('','plasmashell','org.kde.plasmashell')
  assert 'current' not in memory()['activity']
+ # KWin restarts: the script is loaded again.
+ kwin.close()
+ wait_for(lambda: memory()['settings']['status']=='no-kwin','KWin gone')
+ kwin=FakeKWin()
+ wait_for(lambda: 'jarvis-activity' in kwin.scripts,'script reloaded after KWin restart')
+ # Turning tracking off unloads the script.
+ write_config(track_activity=False);call('ReloadConfig')
+ wait_for(lambda: 'jarvis-activity' not in kwin.scripts,'script unloaded')
  assert call('Forget','activity').strip()=="('',)"
  assert memory()['activity']['today']['apps']==[]
 

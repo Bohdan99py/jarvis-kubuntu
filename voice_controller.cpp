@@ -45,7 +45,7 @@ void VoiceController::start(const QString &python,const QStringList &args,int ti
     if(busy())return;
     m_receivedError=false;m_buffer.clear();m_worker.start(python,args);m_timeout.start(timeout);emit changed();
 }
-void VoiceController::setup() { if(busy())return;m_status=tr("Downloading voice components…");start("python3",{jarvisScript("voice.py"),"setup","--root",root(),"--lang",m_language},600000); }
+void VoiceController::setup() { if(busy())return;m_status=tr("Downloading voice components…");start(systemPython(),{jarvisScript("voice.py"),"setup","--root",root(),"--lang",m_language},600000); }
 void VoiceController::listen() {
     if(busy())return;
     if(!ready()){m_status=tr("First press \"Install voice\" in settings.");emit changed();return;}
@@ -60,7 +60,7 @@ void VoiceController::stop() {
 }
 void VoiceController::speak(const QString &text) {
     if(!m_enabled || text.trimmed().isEmpty() || busy() || speaking())return;
-    m_speech.start("/usr/bin/python3",{jarvisScript("speak.py")});
+    m_speech.start(systemPython(),{jarvisScript("speak.py")});
     m_speech.write(text.left(6000).toUtf8());m_speech.closeWriteChannel();
 }
 void VoiceController::readEvents() {

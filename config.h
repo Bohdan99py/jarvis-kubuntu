@@ -14,6 +14,8 @@ struct ConfigData
     QString replyLanguage = QStringLiteral("auto");
     // Learn facts and topics from the conversation itself.
     bool learnDialog = true;
+    // Jarvis asks questions now and then to learn about the user.
+    bool curiosity = true;
     // Opt-in: watch the focused window through KWin.
     bool trackActivity = false;
     // Opt-in on top of trackActivity: keep window titles, not only app names.

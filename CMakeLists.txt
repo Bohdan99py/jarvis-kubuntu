@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.7.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.8.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -50,6 +50,8 @@ qt_add_library(jarvis_core STATIC
     knowledge_store.h
     knowledge_store.cpp
     activity_store.h
+    curiosity.h
+    curiosity.cpp
     activity_store.cpp
     skill_store.h
     skill_store.cpp

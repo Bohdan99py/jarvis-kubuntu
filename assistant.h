@@ -9,6 +9,7 @@
 #include "chat_engine.h"
 #include "claude_client.h"
 #include "config.h"
+#include "curiosity.h"
 #include "knowledge_store.h"
 #include "language.h"
 #include "learning_store.h"
@@ -45,6 +46,8 @@ public:
     // A fact id, "facts" (all facts and topics) or "activity" (activity log).
     QString forget(const QString &what);
     void recordAction(const QString &id, const QString &label);
+    // "Ask me something": the next curious question, marked as asked; "" if none.
+    QString curiousQuestion();
 
     // From the desktop bridge (jarvisd only).
     void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
@@ -76,6 +79,13 @@ private:
     QString buildContext(const QString &question) const;
     QString absorbClaudeReply(const QString &text);
     void notifyActivity();
+    bool curious() const { return m_config.learnDialog && m_config.curiosity; }
+    QJsonArray topTopics(int max) const;
+    Curiosity::Question nextQuestion(const QJsonObject &state, Lang lang);
+    void rememberTurn(const QString &question, const QString &answer);
+    void reflect();
+    void absorbReflection(bool ok, const QString &text);
+    void learnFromActivity();
 
     ConfigData m_config;
     SkillStore m_skills;
@@ -87,6 +97,11 @@ private:
     QQueue<Request> m_queue;
     QTimer m_activityTick;
     QTimer m_activityNotify;
+    QTimer m_reflectTimer;
+    QList<std::pair<QString, QString>> m_transcript;
+    Curiosity::Question m_offered;
+    qint64 m_lastReflection = 0;
+    int m_newTurns = 0;
     QString m_trackingStatus;
     QString m_currentText;
     QString m_lastQuestion;

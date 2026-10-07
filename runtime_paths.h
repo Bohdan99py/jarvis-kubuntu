@@ -11,3 +11,5 @@ inline QString jarvisDataFile(const QString &relative) {
     return QString(JARVIS_SOURCE_DIR)+"/"+relative;
 }
 inline QString jarvisScript(const QString &name) { return jarvisDataFile("scripts/"+name); }
+// The system interpreter, not whatever "python3" comes first in PATH.
+inline QString systemPython() { return QFileInfo::exists("/usr/bin/python3") ? QStringLiteral("/usr/bin/python3") : QStringLiteral("python3"); }

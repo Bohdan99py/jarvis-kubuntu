@@ -34,8 +34,20 @@ public:
     // topic statistics. Questions and sensitive text teach nothing.
     QList<Learned> observe(const QString &message, bool facts);
 
-    // Stores a note. `source` is "manual" or "claude". Returns an error text.
+    // Stores a fact in `slot`. Sources: "dialog", "manual", "claude",
+    // "reflection", "curiosity", "activity". Returns "" or an error code:
+    // "short", "long", "sensitive", "unsafe", "slot", "io".
+    QString learn(const QString &slot, const QString &value, const QString &source, double confidence);
+    // learn("note", …) with the confidence of an explicit request.
     QString remember(const QString &text, const QString &source);
+    bool hasSlot(const QString &slot) const;
+    static bool knownSlot(const QString &slot);
+    // "" when the value may be stored, otherwise an error code (see learn).
+    static QString check(const QString &value);
+
+    // State of the curiosity engine, kept with the facts it learns.
+    QJsonObject curiosityState() const;
+    void setCuriosityState(const QJsonObject &state);
     // Removes facts matching `query`: an id, whole words of the value, or a
     // large word overlap. When more than `maxMatches` facts match by text,
     // nothing is removed and the negated count is returned.

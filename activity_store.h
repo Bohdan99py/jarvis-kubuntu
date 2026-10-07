@@ -53,6 +53,10 @@ public:
     QString todayText(Lang lang, qint64 nowMs, bool tracking) const;
     // English context block for Claude.
     QString promptContext(qint64 nowMs) const;
+    // Habits for long-term memory: apps used for at least `minSeconds` in
+    // total, and the shortest span of hours holding 70% of all recorded time.
+    QStringList heavyApps(double minSeconds) const;
+    bool activeHours(int *from, int *to) const;
 
     static QString category(const QString &appClass, const QString &desktopId);
     static bool privateTitle(const QString &caption);

@@ -133,9 +133,17 @@ Dialog {
                     OptionSwitch {
                         objectName: "learnDialogSwitch"
                         text: qsTr("Learn from our conversations and my actions in Jarvis")
-                        hint: qsTr("Facts like your name, tools and projects, topics you talk about, corrections (\"no, the correct answer is …\") and the quick actions you use. Passwords, keys and card numbers are never stored.")
+                        hint: qsTr("Facts like your name, tools and projects, topics you talk about, corrections (\"no, the correct answer is …\") and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation and keeps what matters. Passwords, keys and card numbers are never stored.")
                         checked: center.settings.learnDialog
                         onToggled: center.report(center.settings.setOption("learnDialog", checked))
+                    }
+                    OptionSwitch {
+                        objectName: "curiositySwitch"
+                        text: qsTr("Curiosity: Jarvis asks questions to get to know me")
+                        hint: qsTr("Now and then — at most every ten minutes and never in the middle of a task — Jarvis asks about you, your projects or an app you use a lot, and remembers the answer. Ignore a question to skip it.")
+                        enabled: center.settings.learnDialog
+                        checked: center.settings.curiosity
+                        onToggled: center.report(center.settings.setOption("curiosity", checked))
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     OptionSwitch {

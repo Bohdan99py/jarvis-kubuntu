@@ -42,6 +42,10 @@
         <source>Forgotten.</source>
         <translation>Забыто.</translation>
     </message>
+    <message>
+        <source>I know the basics about you already. Tell me something new!</source>
+        <translation>Основное о вас я уже знаю. Расскажите что-нибудь новое!</translation>
+    </message>
 </context>
 <context>
     <name>ControlCenter</name>
@@ -144,8 +148,16 @@ The recognized text appears in the input field — send it with Enter.</source>
         <translation>Учиться на наших разговорах и моих действиях в Jarvis</translation>
     </message>
     <message>
-        <source>Facts like your name, tools and projects, topics you talk about, corrections (&quot;no, the correct answer is …&quot;) and the quick actions you use. Passwords, keys and card numbers are never stored.</source>
-        <translation>Факты — имя, инструменты, проекты, — темы разговоров, исправления («нет, правильно: …») и быстрые действия, которыми вы пользуетесь. Пароли, ключи и номера карт не сохраняются никогда.</translation>
+        <source>Facts like your name, tools and projects, topics you talk about, corrections (&quot;no, the correct answer is …&quot;) and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation and keeps what matters. Passwords, keys and card numbers are never stored.</source>
+        <translation>Факты — имя, инструменты, проекты, — темы разговоров, исправления («нет, правильно: …») и быстрые действия, которыми вы пользуетесь. С ключом Claude Jarvis ещё и пересматривает завершённый разговор и сохраняет важное. Пароли, ключи и номера карт не сохраняются никогда.</translation>
+    </message>
+    <message>
+        <source>Curiosity: Jarvis asks questions to get to know me</source>
+        <translation>Любопытство: Jarvis задаёт вопросы, чтобы узнать меня</translation>
+    </message>
+    <message>
+        <source>Now and then — at most every ten minutes and never in the middle of a task — Jarvis asks about you, your projects or an app you use a lot, and remembers the answer. Ignore a question to skip it.</source>
+        <translation>Время от времени — не чаще раза в десять минут и не посреди задачи — Jarvis спрашивает о вас, ваших проектах или программе, в которой вы много работаете, и запоминает ответ. Чтобы пропустить вопрос, просто не отвечайте на него.</translation>
     </message>
     <message>
         <source>See which application I&apos;m working in</source>
@@ -419,10 +431,6 @@ A KDE menu entry and a system tray icon</source>
         <translation>Примеров: %1  ·  Фактов: %2  ·  Связей: %3</translation>
     </message>
     <message>
-        <source>Teach the assistant</source>
-        <translation>Обучить ассистента</translation>
-    </message>
-    <message>
         <source>Save a question and the right answer. You can also correct me in chat: &quot;no, the correct answer is …&quot;.</source>
         <translation>Сохраните вопрос и правильный ответ. Исправлять меня можно и в чате: «нет, правильно: …».</translation>
     </message>
@@ -447,12 +455,32 @@ A KDE menu entry and a system tray icon</source>
         <translation>Обновить</translation>
     </message>
     <message>
+        <source>I learn by myself from our chats, your answers and your activity.</source>
+        <translation>Я учусь сам: на наших разговорах, ваших ответах и вашей активности.</translation>
+    </message>
+    <message>
+        <source>Teach an exact answer</source>
+        <translation>Научить точному ответу</translation>
+    </message>
+    <message>
         <source>Learning from chat is off. Only notes you add here are kept.</source>
         <translation>Обучение на разговорах выключено. Сохраняются только заметки, добавленные здесь.</translation>
     </message>
     <message>
         <source>Learned from our conversations. Remove anything that is wrong — Claude sees this list.</source>
         <translation>Узнал из наших разговоров. Удалите неверное — Claude видит этот список.</translation>
+    </message>
+    <message>
+        <source>WAITING FOR YOUR ANSWER</source>
+        <translation>ЖДУ ВАШЕГО ОТВЕТА</translation>
+    </message>
+    <message>
+        <source>I&apos;M CURIOUS</source>
+        <translation>МНЕ ИНТЕРЕСНО</translation>
+    </message>
+    <message>
+        <source>Ask me in chat</source>
+        <translation>Спроси меня в чате</translation>
     </message>
     <message>
         <source>Forget this</source>
@@ -804,6 +832,14 @@ Chat with me or add a first example</source>
         <translation>Использует</translation>
     </message>
     <message>
+        <source>Goal</source>
+        <translation>Цель</translation>
+    </message>
+    <message>
+        <source>Active hours</source>
+        <translation>Активные часы</translation>
+    </message>
+    <message>
         <source>Note</source>
         <translation>Заметка</translation>
     </message>
@@ -814,6 +850,18 @@ Chat with me or add a first example</source>
     <message>
         <source>noted by Claude</source>
         <translation>отметил Claude</translation>
+    </message>
+    <message>
+        <source>noticed in our chats</source>
+        <translation>заметил в разговорах</translation>
+    </message>
+    <message>
+        <source>you answered my question</source>
+        <translation>ответ на мой вопрос</translation>
+    </message>
+    <message>
+        <source>from your activity</source>
+        <translation>по вашей активности</translation>
     </message>
     <message>
         <source>you asked to remember</source>
@@ -840,8 +888,8 @@ Chat with me or add a first example</source>
         <translation>Слежу за активным окном через KWin.</translation>
     </message>
     <message>
-        <source>KWin is not available: activity tracking needs a KDE Plasma session.</source>
-        <translation>KWin недоступен: для отслеживания нужен сеанс KDE Plasma.</translation>
+        <source>Waiting for KWin: tracking starts by itself as soon as the Plasma session is ready. Outside KDE Plasma it stays off.</source>
+        <translation>Жду KWin: отслеживание включится само, как только сеанс Plasma будет готов. Вне KDE Plasma оно не работает.</translation>
     </message>
     <message>
         <source>Could not start tracking: %1</source>

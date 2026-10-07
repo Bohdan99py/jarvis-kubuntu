@@ -55,6 +55,10 @@ public:
     Q_INVOKABLE void forget(const QString &what);
     // A Jarvis action the user triggered; feeds suggestions.
     Q_INVOKABLE void recordAction(const QString &id, const QString &label);
+    // Jarvis asks one of its curious questions in the chat.
+    Q_INVOKABLE void askMeSomething();
+    // After a language switch: re-greet if the chat is still untouched.
+    Q_INVOKABLE void retranslate();
     QString memory() const { return m_memory; }
     QString memoryStatus() const { return m_memoryStatus; }
     QString lastReply() const { return m_lastReply; }
