@@ -268,6 +268,24 @@ void ChatModel::recordAction(const QString &id, const QString &label)
     QDBusConnection::sessionBus().asyncCall(msg, 3000);
 }
 
+void ChatModel::feedback(bool good)
+{
+    if (m_busy)
+        return;
+    auto show = [this](const QString &text, const QString &error) {
+        const QString reply = error.isEmpty() ? text : error;
+        if (reply.isEmpty())
+            return;
+        append(reply, /*fromUser=*/false);
+        refreshMemory();
+        refreshGraph();
+    };
+    if (!daemonConnected())
+        show(m_assistant.feedback(good), {});
+    else
+        callDaemon(QStringLiteral("Feedback"), {good}, show);
+}
+
 void ChatModel::retranslate()
 {
     if (m_messages.size() == 1 && !m_messages.first().fromUser) {

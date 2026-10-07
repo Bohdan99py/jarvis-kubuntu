@@ -59,6 +59,8 @@ public:
     Q_INVOKABLE void askMeSomething();
     // After a language switch: re-greet if the chat is still untouched.
     Q_INVOKABLE void retranslate();
+    // 👍 / 👎 on Jarvis's last answer: Jarvis learns from it and replies.
+    Q_INVOKABLE void feedback(bool good);
     QString memory() const { return m_memory; }
     QString memoryStatus() const { return m_memoryStatus; }
     QString lastReply() const { return m_lastReply; }

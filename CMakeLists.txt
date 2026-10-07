@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.8.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.9.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,6 +18,7 @@ find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 DBus 
 qt_standard_project_setup(REQUIRES 6.4)
 
 include(GNUInstallDirs)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 configure_file(build_config.h.in build_config.h @ONLY)
 
 function(jarvis_warnings target)
@@ -52,6 +53,8 @@ qt_add_library(jarvis_core STATIC
     activity_store.h
     curiosity.h
     curiosity.cpp
+    code_store.h
+    code_store.cpp
     activity_store.cpp
     skill_store.h
     skill_store.cpp
@@ -98,6 +101,8 @@ qt_add_executable(jarvisd
     daemon_service.cpp
     activity_bridge.h
     activity_bridge.cpp
+    ide_server.h
+    ide_server.cpp
     runtime_paths.h
     dbus_names.h
 )
@@ -163,6 +168,18 @@ qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg)
 install(TARGETS jarvis jarvisd jv_sysinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES scripts/voice.py scripts/update.py scripts/speak.py DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/scripts)
 install(FILES kwin/activity.js DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/kwin)
+
+# VS Code extension, packed as .vsix without Node (vscode/make_vsix.py).
+set(JARVIS_VSIX "${CMAKE_CURRENT_BINARY_DIR}/jarvis-vscode.vsix")
+set(JARVIS_VSCODE_FILES vscode/package.json vscode/extension.js vscode/lib.js vscode/package.nls.json
+    vscode/package.nls.ru.json vscode/README.md vscode/make_vsix.py)
+add_custom_command(OUTPUT "${JARVIS_VSIX}"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/vscode/make_vsix.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/vscode" "${PROJECT_VERSION}" "${JARVIS_VSIX}"
+    DEPENDS ${JARVIS_VSCODE_FILES}
+    VERBATIM)
+add_custom_target(vscode_extension ALL DEPENDS "${JARVIS_VSIX}")
+install(FILES "${JARVIS_VSIX}" DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/vscode)
 install(FILES icons/org.jarvis.Jarvis.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 install(FILES org.jarvis.Jarvis.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
 
@@ -184,8 +201,11 @@ if(BUILD_TESTING)
     add_executable(jarvis_core_tests tests/core_tests.cpp)
     target_link_libraries(jarvis_core_tests PRIVATE jarvis_core)
     add_test(NAME core COMMAND jarvis_core_tests)
-    find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_test(NAME helpers COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_helpers.py)
+    find_program(JARVIS_NODE NAMES node nodejs)
+    if(JARVIS_NODE)
+        add_test(NAME vscode COMMAND ${JARVIS_NODE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/vscode_lib_test.js)
+    endif()
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
 endif()

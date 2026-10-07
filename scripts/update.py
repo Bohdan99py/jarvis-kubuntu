@@ -40,7 +40,7 @@ def emit(kind, **kwargs):
     print(json.dumps(dict(event=kind, **kwargs), ensure_ascii=False), flush=True)
 
 def request(url):
-    return urllib.request.Request(url, headers={"User-Agent": "Jarvis-Updater/0.8", "Accept": "application/vnd.github+json"})
+    return urllib.request.Request(url, headers={"User-Agent": "Jarvis-Updater/0.9", "Accept": "application/vnd.github+json"})
 
 def version(value):
     match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", value)

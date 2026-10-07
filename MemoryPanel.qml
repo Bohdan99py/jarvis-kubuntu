@@ -19,6 +19,7 @@ Rectangle {
     readonly property var today: activity.today || ({ total: 0, apps: [], categories: [] })
     readonly property var trackingState: memory.settings || ({})
     readonly property var curiosity: memory.curiosity || ({})
+    readonly property var code: memory.code || ({ languages: [], projects: [], errors: [], lessons: [], lessonCount: 0, connected: 0 })
 
     color: Theme.panel
     radius: 22
@@ -62,7 +63,7 @@ Rectangle {
             Layout.fillWidth: true
             background: null
             Repeater {
-                model: [qsTr("Synapses"), qsTr("About me"), qsTr("Activity")]
+                model: [qsTr("Synapses"), qsTr("About me"), qsTr("Activity"), qsTr("Code")]
                 TabButton {
                     id: tab
                     required property string modelData
@@ -465,6 +466,153 @@ Rectangle {
                         Layout.topMargin: 6
                         DarkButton { text: qsTr("Privacy…"); onClicked: panel.privacyRequested() }
                         DarkButton { text: qsTr("Clear history"); danger: true; onClicked: panel.chat.forget("activity") }
+                    }
+                }
+            }
+
+            // ---------- Code ----------
+            ScrollView {
+                id: codeScroll
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    width: codeScroll.availableWidth
+                    spacing: 10
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: vsColumn.implicitHeight + 24
+                        radius: 14
+                        color: Theme.bg
+                        border.color: panel.code.connected > 0 ? Theme.accent : Theme.border
+                        ColumnLayout {
+                            id: vsColumn
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 6
+                            Label {
+                                text: panel.code.connected > 0 ? qsTr("VS Code is connected") : qsTr("Jarvis in VS Code")
+                                color: panel.code.connected > 0 ? Theme.accent : Theme.text
+                                font.bold: true; font.pixelSize: 15
+                            }
+                            Hint {
+                                text: panel.code.connected > 0
+                                      ? qsTr("Select code and use Jarvis from the context menu or Ctrl+Alt+J. Rate answers with 👍/👎 — good solutions become lessons.")
+                                      : qsTr("The extension lets Jarvis explain and fix code, write tests and learn your languages, projects and solutions.")
+                            }
+                            DarkButton {
+                                visible: panel.desktop.vscodeAvailable
+                                text: panel.code.connected > 0 ? qsTr("Reinstall the extension") : qsTr("Install the VS Code extension")
+                                primary: panel.code.connected === 0
+                                onClicked: panel.desktop.installVsCodeExtension()
+                            }
+                            Hint { visible: !panel.desktop.vscodeAvailable; text: qsTr("VS Code was not found. Install it (for example from Discover) and come back.") }
+                            Hint { visible: panel.desktop.vscodeStatus.length > 0; text: panel.desktop.vscodeStatus; color: Theme.accent }
+                        }
+                    }
+
+                    SectionTitle { text: qsTr("Languages"); visible: panel.code.languages.length > 0 }
+                    Repeater {
+                        model: panel.code.languages
+                        ColumnLayout {
+                            id: langRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 3
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label { text: langRow.modelData.name; color: Theme.text; font.pixelSize: 13; Layout.fillWidth: true }
+                                Label { text: Texts.duration(langRow.modelData.seconds); color: Theme.textDim; font.pixelSize: 12 }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 5; radius: 3; color: Theme.border
+                                Rectangle {
+                                    width: parent.width * langRow.modelData.seconds / Math.max(1, panel.code.languages[0].seconds)
+                                    height: parent.height; radius: 3; color: Theme.categoryColor("coding")
+                                }
+                            }
+                        }
+                    }
+
+                    SectionTitle { text: qsTr("Projects"); visible: panel.code.projects.length > 0 }
+                    Repeater {
+                        model: panel.code.projects
+                        ColumnLayout {
+                            id: projectRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Label { text: projectRow.modelData.name; color: Theme.text; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true; textFormat: Text.PlainText }
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: 4
+                                Repeater {
+                                    model: projectRow.modelData.frameworks || []
+                                    Chip { required property var modelData; text: modelData; tint: Theme.nodeFact }
+                                }
+                            }
+                        }
+                    }
+
+                    SectionTitle { text: qsTr("Errors you meet most"); visible: panel.code.errors.length > 0 }
+                    Repeater {
+                        model: panel.code.errors
+                        Label {
+                            required property var modelData
+                            text: "×" + modelData.count + "  " + modelData.message
+                            color: Theme.textDim; font.pixelSize: 12; elide: Text.ElideRight; Layout.fillWidth: true; textFormat: Text.PlainText
+                        }
+                    }
+
+                    SectionTitle { text: qsTr("Lessons learned: %1").arg(panel.code.lessonCount || 0) }
+                    Hint {
+                        visible: (panel.code.lessons || []).length === 0
+                        text: qsTr("Solutions to your problems appear here: fixes Jarvis made, answers you rated 👍 and snippets you taught. Similar problems reuse them, even offline.")
+                    }
+                    Repeater {
+                        model: panel.code.lessons
+                        Rectangle {
+                            id: lessonRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            implicitHeight: lessonColumn.implicitHeight + 16
+                            radius: 12
+                            color: Theme.bg
+                            border.color: Theme.border
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 6
+                                ColumnLayout {
+                                    id: lessonColumn
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    Label {
+                                        text: (lessonRow.modelData.language || "") + " · " + Texts.lessonSource(lessonRow.modelData.source)
+                                        color: Theme.nodeFact; font.pixelSize: 11
+                                    }
+                                    Label {
+                                        text: lessonRow.modelData.problem
+                                        color: Theme.text; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight
+                                        Layout.fillWidth: true; textFormat: Text.PlainText
+                                    }
+                                }
+                                ToolButton {
+                                    text: "×"
+                                    onClicked: panel.chat.forget("lesson:" + lessonRow.modelData.id)
+                                    Accessible.name: qsTr("Forget this")
+                                    contentItem: Text { text: "×"; color: Theme.textDim; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                    background: Rectangle { radius: 12; color: parent.hovered ? Theme.hover : "transparent" }
+                                }
+                            }
+                        }
+                    }
+                    DarkButton {
+                        Layout.topMargin: 6
+                        visible: panel.code.languages.length > 0 || (panel.code.lessonCount || 0) > 0
+                        text: qsTr("Forget everything about my code")
+                        danger: true
+                        onClicked: panel.chat.forget("code")
                     }
                 }
             }

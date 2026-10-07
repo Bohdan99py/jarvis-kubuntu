@@ -1,0 +1,11 @@
+{
+  "description": "Ask Jarvis about your code, fix errors and write tests. Jarvis learns your languages, projects and the solutions that work for you.",
+  "cmd.ask": "Ask",
+  "cmd.explain": "Explain Selection",
+  "cmd.fix": "Fix Selection",
+  "cmd.tests": "Write Tests for Selection",
+  "cmd.error": "Explain Errors Here",
+  "cmd.teach": "Teach Jarvis This Solution",
+  "cfg.learn": "Tell Jarvis which languages and projects you work on and which errors you hit, so it learns your programming (stays on this computer; code is sent only by your commands).",
+  "cfg.socket": "Path to the Jarvis daemon socket. Empty: $XDG_RUNTIME_DIR/jarvis-ide.sock."
+}

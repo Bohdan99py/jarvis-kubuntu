@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QHash>
+#include <QJsonObject>
 #include <QObject>
 #include <QQueue>
 #include <QString>
@@ -8,6 +10,7 @@
 #include "activity_store.h"
 #include "chat_engine.h"
 #include "claude_client.h"
+#include "code_store.h"
 #include "config.h"
 #include "curiosity.h"
 #include "knowledge_store.h"
@@ -48,6 +51,19 @@ public:
     void recordAction(const QString &id, const QString &label);
     // "Ask me something": the next curious question, marked as asked; "" if none.
     QString curiousQuestion();
+    // 👍 / 👎 on the last chat answer. Returns Jarvis's reaction.
+    QString feedback(bool good);
+
+    // ---- Programming (VS Code extension) ----
+    // mode: ask, explain, fix, tests, error. context: language, file, project,
+    // selection, diagnostics[{line, severity, message}]. Reply via replyReady.
+    quint64 askCode(const QString &mode, const QString &text, const QJsonObject &context);
+    void codeActivity(const QString &language, const QString &project);
+    void codeWorkspace(const QString &project, const QStringList &languages, const QStringList &frameworks);
+    void codeDiagnostic(const QString &language, const QString &project, const QString &message);
+    QString teachCode(const QString &language, const QString &problem, const QString &solution);
+    QString rateCode(quint64 requestId, bool good);
+    void setIdeClients(int count);
 
     // From the desktop bridge (jarvisd only).
     void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
@@ -67,6 +83,15 @@ private:
     {
         quint64 id;
         QString text;
+        QString mode;        // empty for chat, otherwise a code request
+        QJsonObject context; // code requests only
+    };
+    struct CodeAnswer
+    {
+        QString language;
+        QString problem;
+        QString answer;
+        QString lessonId;
     };
 
     static constexpr int kSmallTalkMaxWords = 4;
@@ -86,6 +111,10 @@ private:
     void reflect();
     void absorbReflection(bool ok, const QString &text);
     void learnFromActivity();
+    void startCode(const Request &r);
+    void finishCode(bool ok, const QString &text);
+    void learnFromCode();
+    QString learnedToday(Lang lang) const;
 
     ConfigData m_config;
     SkillStore m_skills;
@@ -94,6 +123,14 @@ private:
     ActivityStore m_activity;
     ChatEngine m_engine;
     ClaudeClient m_claude;
+    ClaudeClient m_coder;
+    CodeStore m_code;
+    QHash<quint64, CodeAnswer> m_codeAnswers;
+    CodeAnswer m_pendingCode;
+    QString m_pendingMode;
+    int m_ideClients = 0;
+    int m_codeBeats = 0;
+    qint64 m_correctionAt = 0; // 👎 given: the next message is the right answer
     QQueue<Request> m_queue;
     QTimer m_activityTick;
     QTimer m_activityNotify;

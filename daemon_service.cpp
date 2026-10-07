@@ -15,6 +15,7 @@ namespace jarvis {
 DaemonService::DaemonService(QObject *parent)
     : QObject(parent)
     , m_bridge(&m_assistant, dbus::daemonService())
+    , m_ide(&m_assistant, IdeServer::defaultPath(dbus::daemonService()))
 {
     new DaemonAdaptor(this); // child of this; exported with the object
     connect(&m_assistant, &Assistant::replyReady, this, &DaemonService::replyReady);
@@ -45,6 +46,9 @@ bool DaemonService::start(QString *error)
     // The KWin script calls back into this name, so load it only once we own it.
     applyUiLanguage(m_assistant.config().language);
     m_bridge.apply(m_assistant.config().trackActivity);
+    QString ideError;
+    if (!m_ide.start(&ideError))
+        qWarning().noquote() << "IDE socket unavailable:" << ideError; // chat keeps working
     return true;
 }
 
@@ -128,6 +132,11 @@ void DaemonAdaptor::WindowActivated(const QString &caption, const QString &appCl
 QString DaemonAdaptor::Curious()
 {
     return m_service->assistant().curiousQuestion();
+}
+
+QString DaemonAdaptor::Feedback(bool good)
+{
+    return m_service->assistant().feedback(good);
 }
 
 QString DaemonAdaptor::Version()

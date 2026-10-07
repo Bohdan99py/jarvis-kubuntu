@@ -15,8 +15,9 @@ def write_config(**values):
 def call(method,*args):
  return subprocess.check_output(['gdbus','call','--session','--dest','org.jarvis.Daemon1','--object-path','/org/jarvis/Daemon1','--method','org.jarvis.Daemon1.'+method,*args],text=True)
 def unquote(output):
- # gdbus prints ('…',) — the payload is JSON or a plain message.
- return output.strip()[2:-3].replace("\\'","'").replace('\\\\','\\')
+ # gdbus prints a GVariant tuple such as ('…',) or ("…",); close enough to a Python literal.
+ import ast
+ return ast.literal_eval(output.strip())[0]
 def memory():
  return json.loads(unquote(call('Memory')))
 def ask(text,wait=.9):
@@ -29,6 +30,22 @@ def wait_for(check,message,timeout=5):
   if check(): return
   time.sleep(.1)
  raise AssertionError(message)
+class Ide:
+ """The VS Code extension's side of the IDE socket."""
+ def __init__(self):
+  import socket
+  self.sock=socket.socket(socket.AF_UNIX);self.sock.settimeout(5);self.sock.connect(str(scratch/'run/jarvis-ide.sock'))
+  self.buffer=b'';self.next=1
+ def send(self,message):
+  self.sock.sendall((json.dumps(message)+'\n').encode())
+ def request(self,message):
+  message=dict(message,id=self.next);self.next+=1;self.send(message)
+  while True:
+   while b'\n' not in self.buffer: self.buffer+=self.sock.recv(65536)
+   line,self.buffer=self.buffer.split(b'\n',1)
+   reply=json.loads(line)
+   if reply.get('id')==message['id']: return reply
+ def close(self): self.sock.close()
 def start():
  proc=subprocess.Popen([str(build/'jarvisd')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
  time.sleep(.15)
@@ -92,6 +109,49 @@ try:
  assert any(f['slot']=='name' and f['value']=='Алекс' and f['source']=='curiosity' for f in memory()['facts'])
  assert unquote(call('Curious')),'another question is ready'
  assert memory()['curiosity'].get('pending'),'question waiting for an answer'
+
+ # Programming: the VS Code extension's socket
+ sock=scratch/'run/jarvis-ide.sock'
+ assert sock.exists() and sock.stat().st_mode & 0o077 == 0,'IDE socket is owner-only'
+ ide=Ide()
+ hello=ide.request({'type':'hello','client':'test'})
+ assert hello['type']=='hello' and hello['claude'] is False,hello
+ wait_for(lambda: memory()['code']['connected']==1,'IDE client counted')
+ ide.send({'type':'workspace','project':'demo','languages':['cpp'],'frameworks':['Qt 6','CMake']})
+ ide.send({'type':'activity','language':'cpp','project':'demo'})
+ ide.send({'type':'diagnostic','language':'cpp','project':'demo','message':"'foo' was not declared in this scope"})
+ wait_for(lambda: memory()['code']['projects'] and memory()['code']['errors'],'project and error recorded')
+ assert memory()['code']['projects'][0]['frameworks']==['Qt 6','CMake']
+ assert any(f['value']=='Qt 6' and f['source']=='vscode' for f in memory()['facts']),'frameworks become facts'
+ taught=ide.request({'type':'teach','language':'cpp','problem':"'foo' was not declared in this scope",'solution':'Include the header that declares it.'})
+ assert taught['ok'],taught
+ assert not ide.request({'type':'teach','language':'cpp','problem':'deploy','solution':'token ghp_abcdefghijklmnop'})['ok'],'secrets refused'
+ reply=ide.request({'type':'ask','mode':'error','text':'','context':{'language':'cpp','file':'main.cpp','project':'demo','selection':'bar();',
+  'diagnostics':[{'line':3,'severity':'error','message':"'bar' was not declared in this scope"}]}})
+ assert reply['ok'] and 'Include the header' in reply['text'],reply
+ rated=ide.request({'type':'rate','request':reply['request'],'good':True})
+ assert rated['ok'] and rated['text'],rated
+ assert not ide.request({'type':'ask','mode':'fix','text':'','context':{}})['ok'],'empty request rejected'
+ assert not ide.request({'type':'ask','mode':'rm -rf','text':'x','context':{}})['ok'],'unknown mode rejected'
+ assert memory()['code']['lessonCount']==1
+ # The real extension code, with a stub of the VS Code API.
+ node=os.environ.get('JARVIS_NODE') or shutil.which('node')
+ if node:
+  node_env=os.environ.copy();node_env['JARVIS_SOCKET']=str(sock)
+  if 'ELECTRON' in node or node.endswith('/code'): node_env['ELECTRON_RUN_AS_NODE']='1'
+  out=subprocess.run([node,str(Path(__file__).resolve().parent/'vscode_client_test.js')],env=node_env,capture_output=True,text=True,timeout=60)
+  assert out.returncode==0,out.stdout+out.stderr
+  print(out.stdout.strip())
+ ide.close()
+ wait_for(lambda: memory()['code']['connected']==0,'IDE client gone')
+
+ # 👍/👎 in chat
+ ask('Как зовут моего кота?')
+ assert 'правильно' in unquote(call('Feedback','false'))
+ assert 'Спасибо' in ask('Барсик')
+ assert 'Барсик' in ask('Как зовут моего кота?')
+ assert unquote(call('Feedback','true'))
+ assert 'Алекс' in ask('что ты узнал сегодня')
 
  # Corrections teach the previous question
  ask('Какой мой любимый цвет?')

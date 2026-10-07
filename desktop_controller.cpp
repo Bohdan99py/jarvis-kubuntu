@@ -6,6 +6,7 @@
 #include <QDBusConnection>
 #include <memory>
 #include <QDir>
+#include <QFileInfo>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -115,4 +116,29 @@ QString DesktopController::launchApplication(const QString &desktopId) {
         if(!QStandardPaths::findExecutable(tool).isEmpty() && QProcess::startDetached(tool,{"--application",desktopId})) return {};
     if(!QStandardPaths::findExecutable("gio").isEmpty() && QProcess::startDetached("gio",{"launch",file})) return {};
     return tr("Could not start %1.").arg(desktopId);
+}
+QString DesktopController::vscodeCli() {
+    for(const QString &name:{QStringLiteral("code"),QStringLiteral("codium"),QStringLiteral("code-insiders")})
+        if(const QString path=QStandardPaths::findExecutable(name);!path.isEmpty()) return path;
+    for(const QString &path:{QStringLiteral("/snap/bin/code"),QStringLiteral("/usr/share/code/bin/code")})
+        if(QFileInfo(path).isExecutable()) return path;
+    return {};
+}
+QString DesktopController::vsixPath() {
+    const QString installed=jarvisDataFile("vscode/jarvis-vscode.vsix");
+    if(QFileInfo::exists(installed)) return installed;
+    return QString(JARVIS_BINARY_DIR)+"/jarvis-vscode.vsix"; // development build
+}
+void DesktopController::installVsCodeExtension() {
+    if(m_vscode.state()!=QProcess::NotRunning) return;
+    const QString cli=vscodeCli(), vsix=vsixPath();
+    if(cli.isEmpty()) {m_vscodeStatus=tr("VS Code is not installed.");emit vscodeChanged();return;}
+    if(!QFileInfo::exists(vsix)) {m_vscodeStatus=tr("The extension package is missing: %1").arg(vsix);emit vscodeChanged();return;}
+    m_vscodeStatus=tr("Installing the extension…");emit vscodeChanged();
+    connect(&m_vscode,&QProcess::finished,this,[this](int code,QProcess::ExitStatus){
+        m_vscodeStatus=code==0?tr("Extension installed. In open VS Code windows run \"Developer: Reload Window\"; the status bar shows Jarvis when it is connected.")
+                              :tr("VS Code could not install the extension: %1").arg(QString::fromUtf8(m_vscode.readAllStandardError()).trimmed().left(300));
+        emit vscodeChanged();
+    },Qt::SingleShotConnection);
+    m_vscode.start(cli,{"--install-extension",vsix,"--force"});
 }

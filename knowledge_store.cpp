@@ -235,6 +235,17 @@ QList<KnowledgeStore::Learned> KnowledgeStore::observe(const QString &message, b
         }
     }
 
+    // Forgetting: weak facts learned automatically that nothing confirmed for
+    // 90 days fade away; reinforced facts (confidence ≥ 0.7) and notes stay.
+    static const QSet<QString> automatic = {u"dialog"_s, u"reflection"_s, u"activity"_s, u"vscode"_s, u"claude"_s};
+    constexpr double kFadeMs = 90.0 * 24 * 3600 * 1000;
+    for (int i = facts.size() - 1; i >= 0; --i) {
+        const QJsonObject f = facts.at(i).toObject();
+        if (automatic.contains(f.value(u"source"_s).toString()) && f.value(u"confidence"_s).toDouble() < 0.7
+            && double(nowMs()) - f.value(u"seen"_s).toDouble() > kFadeMs)
+            facts.removeAt(i);
+    }
+
     // Topics: what the user talks about, as word counts and co-occurrence.
     QJsonObject topics = root.value(u"topics"_s).toObject();
     QJsonObject links = root.value(u"links"_s).toObject();

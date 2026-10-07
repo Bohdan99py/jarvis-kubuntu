@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.8
+# Jarvis for Kubuntu · 0.9
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.8.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.9.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -46,6 +46,21 @@ Off by default. Turn it on in Control center → Memory or in the Activity tab.
 - Ask "what am I doing" or "what did I do today" — answered locally.
 - "Tell Claude what I'm doing" (separate switch) adds the focused app and today's summary to Claude requests.
 - If the service starts before Plasma (typical at login), the daemon waits for KWin and connects by itself, and reloads the script when KWin restarts. Window reports are accepted only from the owner of `org.kde.KWin`.
+
+## Programming and VS Code
+
+The Code tab → "Install the VS Code extension" installs the Jarvis extension (`/usr/share/jarvis/vscode/jarvis-vscode.vsix`). After "Developer: Reload Window" Jarvis appears in the VS Code status bar.
+
+- Commands (palette → "Jarvis", editor context menu, `Ctrl+Alt+J`): ask, explain, fix, write tests, explain errors here, teach Jarvis a solution. Answers open beside the editor; code can be inserted or replace the selection in one click.
+- **Lessons**: Claude's fixes and error explanations, answers rated 👍 and snippets you teach are kept. A similar error later (compared without names and numbers) gets the lesson as a proven solution — or, without a Claude key, as the answer. 👎 drops the lesson.
+- **What Jarvis learns by itself** (`jarvis.learnFromCoding`): time per language and project, frameworks from project files, frequent compiler errors. Languages, frameworks and the project become facts in "About me".
+- Code goes to Claude only when you run a command. The socket `$XDG_RUNTIME_DIR/jarvis-ide.sock` is owner-only and the daemon checks the peer UID.
+
+## More self-learning
+
+- 👍 under a chat answer saves it as an example (works offline); 👎 makes Jarvis ask for the right answer and remember your reply.
+- "What did you learn today" lists today's new facts and lessons.
+- Weak automatically learned facts that nothing confirmed for 90 days fade away.
 
 ## Security
 

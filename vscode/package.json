@@ -1,0 +1,60 @@
+{
+  "name": "jarvis-vscode",
+  "displayName": "Jarvis for VS Code",
+  "description": "%description%",
+  "version": "0.0.0",
+  "publisher": "jarvis-kubuntu",
+  "license": "SEE LICENSE IN README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bohdan99py/jarvis-kubuntu"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      { "command": "jarvis.ask", "title": "%cmd.ask%", "category": "Jarvis" },
+      { "command": "jarvis.explain", "title": "%cmd.explain%", "category": "Jarvis" },
+      { "command": "jarvis.fix", "title": "%cmd.fix%", "category": "Jarvis" },
+      { "command": "jarvis.tests", "title": "%cmd.tests%", "category": "Jarvis" },
+      { "command": "jarvis.error", "title": "%cmd.error%", "category": "Jarvis" },
+      { "command": "jarvis.teach", "title": "%cmd.teach%", "category": "Jarvis" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "jarvis.explain", "when": "editorHasSelection", "group": "jarvis@1" },
+        { "command": "jarvis.fix", "when": "editorHasSelection", "group": "jarvis@2" },
+        { "command": "jarvis.tests", "when": "editorHasSelection", "group": "jarvis@3" },
+        { "command": "jarvis.error", "group": "jarvis@4" },
+        { "command": "jarvis.teach", "when": "editorHasSelection", "group": "jarvis@5" }
+      ]
+    },
+    "keybindings": [
+      { "command": "jarvis.ask", "key": "ctrl+alt+j" }
+    ],
+    "configuration": {
+      "title": "Jarvis",
+      "properties": {
+        "jarvis.learnFromCoding": {
+          "type": "boolean",
+          "default": true,
+          "description": "%cfg.learn%"
+        },
+        "jarvis.socketPath": {
+          "type": "string",
+          "default": "",
+          "description": "%cfg.socket%"
+        }
+      }
+    }
+  }
+}

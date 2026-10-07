@@ -44,7 +44,16 @@ QtObject {
         case "reflection": return qsTr("noticed in our chats")
         case "curiosity": return qsTr("you answered my question")
         case "activity": return qsTr("from your activity")
+        case "vscode": return qsTr("from VS Code")
         default: return qsTr("you asked to remember")
+        }
+    }
+
+    function lessonSource(source) {
+        switch (source) {
+        case "claude": return qsTr("fix by Claude")
+        case "feedback": return qsTr("you rated 👍")
+        default: return qsTr("you taught me")
         }
     }
 

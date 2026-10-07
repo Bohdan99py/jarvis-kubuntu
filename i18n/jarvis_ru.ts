@@ -336,6 +336,26 @@ A KDE menu entry and a system tray icon</source>
         <source>Could not start %1.</source>
         <translation>Не удалось запустить %1.</translation>
     </message>
+    <message>
+        <source>VS Code is not installed.</source>
+        <translation>VS Code не установлен.</translation>
+    </message>
+    <message>
+        <source>The extension package is missing: %1</source>
+        <translation>Нет пакета расширения: %1</translation>
+    </message>
+    <message>
+        <source>Installing the extension…</source>
+        <translation>Установка расширения…</translation>
+    </message>
+    <message>
+        <source>Extension installed. In open VS Code windows run &quot;Developer: Reload Window&quot;; the status bar shows Jarvis when it is connected.</source>
+        <translation>Расширение установлено. В открытых окнах VS Code выполните «Developer: Reload Window»; когда Jarvis подключится, он появится в строке состояния.</translation>
+    </message>
+    <message>
+        <source>VS Code could not install the extension: %1</source>
+        <translation>VS Code не смог установить расширение: %1</translation>
+    </message>
 </context>
 <context>
     <name>Main</name>
@@ -400,6 +420,14 @@ A KDE menu entry and a system tray icon</source>
         <translation>☰  Меню</translation>
     </message>
     <message>
+        <source>Helpful: remember this answer</source>
+        <translation>Помогло: запомнить этот ответ</translation>
+    </message>
+    <message>
+        <source>Wrong: tell me the right answer</source>
+        <translation>Неверно: расскажу правильный ответ</translation>
+    </message>
+    <message>
         <source>Write a message…</source>
         <translation>Напиши сообщение…</translation>
     </message>
@@ -453,6 +481,10 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Refresh</source>
         <translation>Обновить</translation>
+    </message>
+    <message>
+        <source>Code</source>
+        <translation>Код</translation>
     </message>
     <message>
         <source>I learn by myself from our chats, your answers and your activity.</source>
@@ -557,6 +589,58 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Clear history</source>
         <translation>Очистить историю</translation>
+    </message>
+    <message>
+        <source>VS Code is connected</source>
+        <translation>VS Code подключён</translation>
+    </message>
+    <message>
+        <source>Jarvis in VS Code</source>
+        <translation>Jarvis в VS Code</translation>
+    </message>
+    <message>
+        <source>Select code and use Jarvis from the context menu or Ctrl+Alt+J. Rate answers with 👍/👎 — good solutions become lessons.</source>
+        <translation>Выделите код и вызовите Jarvis из контекстного меню или по Ctrl+Alt+J. Оценивайте ответы 👍/👎 — удачные решения становятся уроками.</translation>
+    </message>
+    <message>
+        <source>The extension lets Jarvis explain and fix code, write tests and learn your languages, projects and solutions.</source>
+        <translation>Расширение позволяет Jarvis объяснять и исправлять код, писать тесты и изучать ваши языки, проекты и решения.</translation>
+    </message>
+    <message>
+        <source>Reinstall the extension</source>
+        <translation>Переустановить расширение</translation>
+    </message>
+    <message>
+        <source>Install the VS Code extension</source>
+        <translation>Установить расширение VS Code</translation>
+    </message>
+    <message>
+        <source>VS Code was not found. Install it (for example from Discover) and come back.</source>
+        <translation>VS Code не найден. Установите его (например, через Discover) и возвращайтесь.</translation>
+    </message>
+    <message>
+        <source>Languages</source>
+        <translation>Языки</translation>
+    </message>
+    <message>
+        <source>Projects</source>
+        <translation>Проекты</translation>
+    </message>
+    <message>
+        <source>Errors you meet most</source>
+        <translation>Частые ошибки</translation>
+    </message>
+    <message>
+        <source>Lessons learned: %1</source>
+        <translation>Выученных уроков: %1</translation>
+    </message>
+    <message>
+        <source>Solutions to your problems appear here: fixes Jarvis made, answers you rated 👍 and snippets you taught. Similar problems reuse them, even offline.</source>
+        <translation>Здесь появляются решения ваших задач: исправления Jarvis, ответы с 👍 и фрагменты, которым вы научили. Для похожих задач они используются снова, даже без интернета.</translation>
+    </message>
+    <message>
+        <source>Forget everything about my code</source>
+        <translation>Забыть всё о моём коде</translation>
     </message>
     <message>
         <source>Forget everything about you?</source>
@@ -864,8 +948,24 @@ Chat with me or add a first example</source>
         <translation>по вашей активности</translation>
     </message>
     <message>
+        <source>from VS Code</source>
+        <translation>из VS Code</translation>
+    </message>
+    <message>
         <source>you asked to remember</source>
         <translation>вы попросили запомнить</translation>
+    </message>
+    <message>
+        <source>fix by Claude</source>
+        <translation>исправление Claude</translation>
+    </message>
+    <message>
+        <source>you rated 👍</source>
+        <translation>вы оценили 👍</translation>
+    </message>
+    <message>
+        <source>you taught me</source>
+        <translation>вы научили</translation>
     </message>
     <message>
         <source>&lt;1 min</source>
@@ -964,6 +1064,10 @@ Chat with me or add a first example</source>
     <message>
         <source>Nothing to forget: the entry was not found.</source>
         <translation>Нечего забывать: запись не найдена.</translation>
+    </message>
+    <message>
+        <source>The lesson needs a problem and a solution and must not contain secrets.</source>
+        <translation>Для урока нужны задача и решение, и в них не должно быть секретов.</translation>
     </message>
     <message>
         <source>Cannot create folder %1</source>

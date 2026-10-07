@@ -7,6 +7,7 @@
 
 #include "activity_bridge.h"
 #include "assistant.h"
+#include "ide_server.h"
 
 namespace jarvis {
 
@@ -42,6 +43,7 @@ signals:
 private:
     Assistant m_assistant;
     ActivityBridge m_bridge;
+    IdeServer m_ide;
 };
 
 // D-Bus face of DaemonService: interface org.jarvis.Daemon1
@@ -54,6 +56,7 @@ private:
 //   method Forget(s) -> s     fact id, "facts" or "activity" ("" = ok)
 //   method RecordAction(s, s) a Jarvis action the user triggered (id, label)
 //   method Curious() -> s     a question Jarvis wants to ask now ("" = none)
+//   method Feedback(b) -> s   👍/👎 on the last chat answer; returns Jarvis's reaction
 //   method WindowActivated(s, s, s)  focused window; accepted only from KWin
 //   method ReloadConfig()     re-read ~/.config/jarvis/config.json
 //   method Quit()             stop the daemon (clean exit, systemd will not restart it)
@@ -78,6 +81,7 @@ public slots:
     QString Forget(const QString &what);
     void RecordAction(const QString &id, const QString &label);
     QString Curious();
+    QString Feedback(bool good);
     void WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
     void ReloadConfig();
     void Quit();

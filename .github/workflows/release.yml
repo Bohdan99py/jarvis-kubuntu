@@ -42,7 +42,7 @@ jobs:
       - name: Test core, memory, translations, updater and D-Bus
         run: |
           ctest --test-dir build --output-on-failure
-          JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.conf -- python3 tests/integration.py
+          JARVIS_NODE="$(command -v node)" JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.conf -- python3 tests/integration.py
           desktop-file-validate org.jarvis.Jarvis.desktop
       - name: QML smoke test
         env:

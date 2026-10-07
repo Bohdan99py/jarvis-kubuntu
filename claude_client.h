@@ -23,6 +23,11 @@ public:
     ~ClaudeClient() override = default;
 
     void configure(const QString &apiKey, const QString &model);
+    // For specialised clients (code): replace the Jarvis persona, keep no
+    // conversation history, allow longer answers.
+    void setSystemPrompt(const QString &prompt) { m_system = prompt; }
+    void setKeepHistory(bool keep) { m_keepHistory = keep; }
+    void setMaxTokens(int tokens) { m_maxTokens = tokens; }
     bool isConfigured() const noexcept { return !m_apiKey.isEmpty(); }
     QString model() const { return m_model; }
 
@@ -57,6 +62,9 @@ private:
     QList<Turn> m_history;
     QString m_apiKey;
     QString m_model;
+    QString m_system;
+    int m_maxTokens = kMaxTokens;
+    bool m_keepHistory = true;
     bool m_extracting = false;
 };
 

@@ -216,11 +216,34 @@ ApplicationWindow {
                 required property string text
                 required property bool fromUser
                 required property string time
+                required property int index
 
                 readonly property real maxBubble: width * 0.78
+                // 👍/👎 under Jarvis's latest answer (not the greeting).
+                readonly property bool rateable: !fromUser && index > 0 && index === ListView.view.count - 1 && !chatModel.busy
 
                 width: ListView.view.width
-                height: bubble.height
+                height: bubble.height + (rateable ? rateRow.height + 4 : 0)
+
+                Row {
+                    id: rateRow
+                    visible: row.rateable
+                    x: 22
+                    y: bubble.height + 4
+                    spacing: 6
+                    Repeater {
+                        model: [{label: "👍", good: true}, {label: "👎", good: false}]
+                        ToolButton {
+                            required property var modelData
+                            text: modelData.label
+                            implicitHeight: 26
+                            onClicked: chatModel.feedback(modelData.good)
+                            ToolTip.visible: hovered
+                            ToolTip.text: modelData.good ? qsTr("Helpful: remember this answer") : qsTr("Wrong: tell me the right answer")
+                            background: Rectangle { radius: 13; color: parent.hovered ? Theme.hover : Theme.botBubble }
+                        }
+                    }
+                }
 
                 // Measures the natural single-line width so short messages get narrow bubbles.
                 TextMetrics {
