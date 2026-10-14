@@ -65,6 +65,10 @@ class Study(unittest.TestCase):
         self.assertEqual(study.clean_segment('  Bonjour   à tous. '),'Bonjour à tous.')
         self.assertEqual(study.clean_segment("Sous-titres réalisés par la communauté d'Amara.org"),'')
         self.assertEqual(study.clean_segment('...'),'')
+        self.assertEqual(study.clean_segment(', '.join(["d'électronique et de programmation"]*12)),'','loops dropped')
+        terms="Cours de systèmes embarqués, d'électronique et de programmation : microcontrôleur, STM32, registre, GPIO"
+        self.assertEqual(study.clean_segment("Cours de systèmes embarqués, d'électronique et de programmation.",terms),'','echoed hotwords dropped')
+        self.assertEqual(study.clean_segment("On configure le microcontrôleur STM32 et le GPIO.",terms),"On configure le microcontrôleur STM32 et le GPIO.")
     def test_chunker_cuts_at_pauses(self):
         import array, math
         def tone(seconds, amplitude):

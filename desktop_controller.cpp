@@ -8,6 +8,8 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QFile>
+#include <QSaveFile>
+#include <QSettings>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkReply>
@@ -16,6 +18,13 @@
 #include <QStandardPaths>
 
 DesktopController::DesktopController(QObject *parent):QObject(parent) {
+    // Autostart is on by default: set it up once, then follow the user's choice.
+    // Only for an installed Jarvis, so a development build never registers itself.
+    QSettings settings;
+    if(trayUnitInstalled() && !settings.value("autostart/configured",false).toBool()) {
+        settings.setValue("autostart/configured",true);
+        setAutostart(true);
+    }
     m_updateStatus=tr("Version %1 · updates from GitHub Releases").arg(version());
     m_timeout.setSingleShot(true);
     connect(&m_timeout,&QTimer::timeout,this,[this]{m_updater.kill();m_updateStatus=tr("The update server did not answer in time.");emit updateChanged();});
@@ -101,7 +110,38 @@ void DesktopController::restartDaemon() {
     connect(process,&QProcess::errorOccurred,this,[this,process](QProcess::ProcessError){m_updateStatus=process->errorString();emit updateChanged();process->deleteLater();});
     process->start("systemctl",{"--user","restart","jarvis.service"});
 }
+QString DesktopController::autostartFile() {
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)+"/autostart/jarvis-tray.desktop";
+}
+bool DesktopController::trayUnitInstalled() {
+    return QFileInfo::exists(QCoreApplication::applicationDirPath()+"/../share/systemd/user/jarvis-tray.service");
+}
+bool DesktopController::autostart() const { return QFileInfo::exists(autostartFile()); }
+void DesktopController::setAutostart(bool on) {
+    const bool unit=trayUnitInstalled();
+    if(on) {
+        QDir().mkpath(QFileInfo(autostartFile()).absolutePath());
+        QSaveFile f(autostartFile());
+        // With the systemd unit, systemd sessions start that (X-systemd-skip); others run this entry.
+        const QByteArray entry="[Desktop Entry]\nType=Application\nName=J.A.R.V.I.S.\nComment=Jarvis in the system tray\n"
+            "Exec="+QCoreApplication::applicationFilePath().toUtf8()+" --tray\nIcon=org.jarvis.Jarvis\nTerminal=false\n"
+            "X-KDE-autostart-after=panel\nX-GNOME-Autostart-enabled=true\n"+(unit?"X-systemd-skip=true\n":"");
+        if(f.open(QIODevice::WriteOnly) && f.write(entry)==entry.size()) f.commit();
+    } else {
+        QFile::remove(autostartFile());
+    }
+    if(unit) QProcess::startDetached("systemctl",{"--user",on?"enable":"disable","jarvis-tray.service"});
+    emit autostartChanged();
+}
+bool DesktopController::takeTrayHint() {
+    QSettings settings;
+    if(settings.value("tray/hintShown",false).toBool()) return false;
+    settings.setValue("tray/hintShown",true);
+    return true;
+}
 void DesktopController::restart() {
+    // Under the tray unit systemd restarts Jarvis: a detached copy would be left outside the unit.
+    if(qEnvironmentVariableIsSet("JARVIS_TRAY_SERVICE") && QProcess::startDetached("systemctl",{"--user","restart","jarvis-tray.service"})) return;
     // Release the desktop name before launching so the new process creates fresh windows.
     QDBusConnection::sessionBus().unregisterService("org.jarvis.Desktop1");
     if(QProcess::startDetached(QCoreApplication::applicationFilePath(),{}))QCoreApplication::quit();

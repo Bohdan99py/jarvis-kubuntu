@@ -19,7 +19,9 @@ static QString factValue(const QJsonArray &facts,const QString &slot) {
 }
 static void skills() {
     jarvis::SkillStore skills;
-    require(skills.list().size()==5,"five bundled skills");
+    require(skills.list().size()==6,"six bundled skills");
+    require(skills.prompt().contains("embedded systems engineer"),"embedded skill on by default");
+    require(!skills.recall(QStringLiteral("Чем отличается SPI от I2C?")).isEmpty(),"embedded local example");
     require(!skills.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"built-in local example");
     require(skills.setEnabled("electronics",false).isEmpty(),"disable skill");
     require(skills.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"disabled skill cannot answer");

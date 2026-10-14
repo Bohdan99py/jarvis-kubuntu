@@ -15,6 +15,9 @@ class DesktopController : public QObject {
     Q_PROPERTY(QString version READ version CONSTANT)
     Q_PROPERTY(QString vscodeStatus READ vscodeStatus NOTIFY vscodeChanged)
     Q_PROPERTY(bool vscodeAvailable READ vscodeAvailable CONSTANT)
+    // Start in the tray at login: an XDG autostart entry plus, where installed,
+    // the systemd user unit jarvis-tray.service (restarts Jarvis if it crashes).
+    Q_PROPERTY(bool autostart READ autostart WRITE setAutostart NOTIFY autostartChanged)
 public:
     explicit DesktopController(QObject *parent=nullptr);
     ~DesktopController() override;
@@ -25,6 +28,10 @@ public:
     QString version() const;
     QString vscodeStatus() const { return m_vscodeStatus; }
     bool vscodeAvailable() const { return !vscodeCli().isEmpty(); }
+    bool autostart() const;
+    void setAutostart(bool on);
+    // True once: the first time the window is closed, explain that Jarvis stays in the tray.
+    Q_INVOKABLE bool takeTrayHint();
     // Installs the bundled Jarvis extension with `code --install-extension`.
     Q_INVOKABLE void installVsCodeExtension();
     Q_INVOKABLE void setSkillEnabled(const QString &id,bool enabled);
@@ -45,11 +52,14 @@ signals:
     void quickRequested();
     void mainRequested();
     void vscodeChanged();
+    void autostartChanged();
 private:
     void installSkill(const QByteArray &bytes);
     QString launchApplication(const QString &desktopId);
     static QString vscodeCli();
     static QString vsixPath();
+    static QString autostartFile();
+    static bool trayUnitInstalled();
     void readUpdateEvents();
     jarvis::SkillStore m_skills;
     QNetworkAccessManager m_network;

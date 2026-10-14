@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.10
+# Jarvis for Kubuntu · 0.11
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,10 +9,14 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.10.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.11.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
+
+## Autostart and the tray
+
+Start Jarvis once from the menu after installing: from then on it starts in the tray at every login and keeps running. The user unit `jarvis-tray.service` (systemd, with the Plasma graphical session) restarts it after a crash; sessions without systemd use `~/.config/autostart/jarvis-tray.desktop`. Closing the window only hides it (a lesson keeps recording); "Quit" in the tray menu ends it. At logout Jarvis exits cleanly and saves a recording in progress. Turn it off in Control center → Application.
 
 ## Language
 
@@ -38,6 +42,10 @@ Stored in `${XDG_DATA_HOME:-~/.local/share}/jarvis/` (folder 0700, files 0600) a
 
 The graph shows up to 48 words: teal from examples, orange from facts, violet from topics.
 
+## Embedded systems specialist
+
+The "Embedded systems" skill (on by default) makes Jarvis an engineer and mentor: microcontrollers (STM32, AVR/Arduino, ESP32, RP2040…), C/C++ firmware (registers, interrupts, DMA, timers, linker scripts), RTOS, buses (UART, SPI, I2C, CAN, USB), schematics and electronics (pull-ups, decoupling, power, MOSFET switches, op-amps, protection, datasheets, PCB basics) and debugging (SWD/JTAG, OpenOCD, GDB, scope, logic analyzer). Common questions are answered locally, offline. The VS Code assistant knows firmware too.
+
 ## French studies: lessons, translation, flashcards
 
 The **Français** button in the window header (or menu → French studies) opens the study window.
@@ -48,7 +56,9 @@ The **Français** button in the window header (or menu → French studies) opens
 - **PDF** — text from `pdftotext` (scans through Tesseract when `tesseract-ocr-fra` is installed), translated by Claude paragraph by paragraph into a new PDF (bilingual or Russian only) and a `.txt` in `Documents/Jarvis/French/pdf`.
 - **Flashcards** with spaced repetition (simplified SM-2): Again / Hard / Good / Easy (keys 1–4, Space shows the answer). Claude fills in translations. The deck lives in `~/.local/share/jarvis/vocabulary.json`; Jarvis knows you study French and which words are hard for you, and can quiz you in chat.
 
-Recognition is Whisper (faster-whisper) on this computer; audio is never uploaded. Setup → Install recognition downloads the program from PyPI (about 450 MB) and a model from Hugging Face (base ~145 MB, small ~480 MB recommended, medium ~1.5 GB) into `~/.local/share/jarvis/study`. Recording works without it. Only text (transcripts, phrases, PDF text) goes to Anthropic, for translation and notes.
+Recognition is Whisper (faster-whisper) on this computer; audio is never uploaded. Setup → Install recognition downloads the program from PyPI (about 450 MB) and a model from Hugging Face into `~/.local/share/jarvis/study`: by default **large-v3-turbo** (~1.6 GB), best for technical French and several times faster than real time, with small (~480 MB) next to it for live phrases.
+
+**Technical French.** "Subject of the lessons" (Setup tab) lists French terms Whisper expects when transcribing a recording — embedded systems, electronics and programming by default — so jargon is spelled right; add your courses' words. A filter drops loops and echoed terms. Claude translates with standard Russian engineering terminology, keeps code, register names and formulas, and fixes misrecognized terms from context. Recording works without it. Only text (transcripts, phrases, PDF text) goes to Anthropic, for translation and notes.
 
 ## Activity: Jarvis sees what you do
 

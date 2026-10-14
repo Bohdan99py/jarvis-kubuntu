@@ -74,6 +74,8 @@ class StudyController : public QObject
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY setupChanged)
     Q_PROPERTY(bool autoTranslate READ autoTranslate WRITE setAutoTranslate NOTIFY setupChanged)
     Q_PROPERTY(bool speakTranslation READ speakTranslation WRITE setSpeakTranslation NOTIFY setupChanged)
+    // French terms of the lessons' subject: Whisper expects them (embedded systems by default).
+    Q_PROPERTY(QString glossary READ glossary WRITE setGlossary NOTIFY setupChanged)
     // The long job (setup, import, transcription, translation, notes, PDF); one at a time.
     Q_PROPERTY(bool busy READ busy NOTIFY statusChanged)
     Q_PROPERTY(QString job READ job NOTIFY statusChanged)
@@ -117,6 +119,9 @@ public:
     void setAutoTranslate(bool on);
     bool speakTranslation() const { return m_speakTranslation; }
     void setSpeakTranslation(bool on);
+    QString glossary() const;
+    void setGlossary(const QString &glossary);
+    Q_INVOKABLE void resetGlossary();
 
     bool busy() const { return !m_job.isEmpty(); }
     QString job() const { return m_job; }
@@ -215,6 +220,7 @@ private:
     using Translated = std::function<void(bool ok, const QStringList &out, const QString &error)>;
 
     QString root() const;
+    QString liveModel() const;
     QString recordingsDir() const;
     void setStatus(const QString &status, double progress = -1);
     void startJob(const QString &job, const QString &status);
@@ -244,6 +250,7 @@ private:
     QString m_language = QStringLiteral("ru");
     bool m_autoTranslate = true;
     bool m_speakTranslation = false;
+    QString m_glossary; // null: the built-in embedded systems terms
     bool m_claudeReady = false;
     QString m_claudeModel;
     QString m_apiKey;

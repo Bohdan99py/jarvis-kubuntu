@@ -719,27 +719,58 @@ ApplicationWindow {
                     width: Math.min(760, setupScroll.availableWidth)
                     spacing: 14
                     Title { text: win.study.ready ? qsTr("French recognition is ready") : qsTr("French speech recognition") }
-                    Hint { font.pixelSize: 13; text: qsTr("Jarvis recognizes French with Whisper (faster-whisper) on this computer: lesson audio is never uploaded. Setup downloads the program from PyPI (about 450 MB) and the chosen model from Hugging Face into ~/.local/share/jarvis/study.") }
+                    Hint { font.pixelSize: 13; text: qsTr("Jarvis recognizes French with Whisper (faster-whisper) on this computer: lesson audio is never uploaded. Setup downloads the program from PyPI (about 450 MB) and the chosen model from Hugging Face into ~/.local/share/jarvis/study. large-v3-turbo recognizes technical French best and transcribes a lecture several times faster than real time on a modern processor.") }
                     RowLayout {
                         spacing: 12
                         Label { text: qsTr("Model"); color: Theme.text }
                         ComboBox {
                             id: modelCombo
-                            Layout.preferredWidth: 380
-                            model: [qsTr("Fast — base, ~145 MB, rougher"), qsTr("Balanced — small, ~480 MB (recommended)"), qsTr("Accurate — medium, ~1.5 GB, slow on CPU")]
-                            currentIndex: ["base", "small", "medium"].indexOf(win.study.model)
+                            Layout.preferredWidth: 460
+                            model: [qsTr("Fast — base, ~145 MB, rougher"), qsTr("Balanced — small, ~480 MB"), qsTr("Accurate — medium, ~1.5 GB, slow on CPU"),
+                                    qsTr("Best — large-v3-turbo, ~1.6 GB (recommended for lectures)")]
+                            currentIndex: ["base", "small", "medium", "large-v3-turbo"].indexOf(win.study.model)
                             enabled: !win.study.busy
-                            onActivated: index => win.study.model = ["base", "small", "medium"][index]
+                            onActivated: index => win.study.model = ["base", "small", "medium", "large-v3-turbo"][index]
                             contentItem: Text { leftPadding: 12; text: modelCombo.displayText; color: Theme.text; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
                             background: Rectangle { implicitHeight: 38; radius: 10; color: Theme.panel; border.color: modelCombo.activeFocus ? Theme.accent : Theme.border }
                         }
                     }
+                    Hint { font.pixelSize: 13; visible: win.study.model === "medium" || win.study.model === "large-v3-turbo"; text: qsTr("The heavy model transcribes whole recordings; live phrases use small, which is installed next to it (another ~480 MB).") }
                     DarkButton {
                         objectName: "studySetupButton"
                         text: win.study.ready ? qsTr("Check the installation") : qsTr("Install recognition")
                         primary: !win.study.ready
                         enabled: !win.study.busy
                         onClicked: win.study.setup()
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Title { text: qsTr("Subject of the lessons") }
+                    Hint { font.pixelSize: 13; text: qsTr("French terms Whisper should expect. They make it spell jargon correctly — \"microcontrôleur\", \"condensateur de découplage\", \"bus I2C\". Set up for embedded systems, electronics and programming; add the words of your courses.") }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 120
+                        radius: 12
+                        color: Theme.panel
+                        border.color: glossaryInput.activeFocus ? Theme.accent : Theme.border
+                        ScrollView {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            TextArea {
+                                id: glossaryInput
+                                objectName: "glossaryInput"
+                                text: win.study.glossary
+                                wrapMode: TextEdit.Wrap
+                                color: Theme.text
+                                selectByMouse: true
+                                background: null
+                                onEditingFinished: win.study.glossary = text
+                            }
+                        }
+                    }
+                    RowLayout {
+                        spacing: 8
+                        DarkButton { text: qsTr("Save terms"); enabled: glossaryInput.text !== win.study.glossary; onClicked: win.study.glossary = glossaryInput.text }
+                        DarkButton { text: qsTr("Reset to embedded systems"); onClicked: { win.study.resetGlossary(); glossaryInput.text = win.study.glossary } }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Title { text: qsTr("Translation and notes") }

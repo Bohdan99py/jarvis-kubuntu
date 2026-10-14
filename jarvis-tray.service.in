@@ -1,0 +1,27 @@
+[Unit]
+Description=J.A.R.V.I.S. tray application
+# Started with the graphical session (Plasma 5.25+ and other systemd-managed
+# sessions), stopped with it. Sessions without systemd use the XDG autostart
+# entry the application writes instead (it carries X-systemd-skip=true).
+PartOf=graphical-session.target
+After=graphical-session.target plasma-plasmashell.service
+ConditionEnvironment=|WAYLAND_DISPLAY
+ConditionEnvironment=|DISPLAY
+# No endless restarts when the session has no display.
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+ExecStart=@JARVIS_BINDIR@/jarvis --tray
+Environment=JARVIS_TRAY_SERVICE=1
+# A crash brings the tray back; "Quit" (a clean exit) stays quit.
+Restart=on-failure
+RestartSec=3
+# Applications started from Jarvis outlive it.
+KillMode=process
+# Time to finish a lesson recording on logout.
+TimeoutStopSec=15
+Slice=app.slice
+
+[Install]
+WantedBy=graphical-session.target

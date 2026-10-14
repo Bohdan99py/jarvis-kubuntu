@@ -205,6 +205,13 @@ Dialog {
                             onActivated: index => center.settings.setReplyLanguage(["auto", "ru", "en"][index])
                         }
                     }
+                    OptionSwitch {
+                        objectName: "autostartSwitch"
+                        text: qsTr("Start with the system in the tray and keep running")
+                        hint: qsTr("Jarvis starts in the system tray when you log in and comes back by itself if it crashes. Closing the window only hides it; \"Quit\" in the tray menu ends it.")
+                        checked: center.desktop.autostart
+                        onToggled: center.desktop.autostart = checked
+                    }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Label { text: qsTr("Updates: Bohdan99py/jarvis-kubuntu"); color: Theme.textDim }
                     Label { text: qsTr("The button downloads a verified package and opens Discover. Confirm the system installation, then restart the service and the application."); color: Theme.textDim; Layout.fillWidth: true; wrapMode: Text.Wrap }

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.10.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.11.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,7 +74,7 @@ qt_add_library(jarvis_core STATIC
     assistant.cpp
 )
 target_include_directories(jarvis_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.json skills/electronics.json skills/games.json skills/conversation.json skills/writing.json)
+qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.json skills/electronics.json skills/embedded.json skills/games.json skills/conversation.json skills/writing.json)
 target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Network jarvis_sys)
 jarvis_warnings(jarvis_core)
 
@@ -195,6 +195,8 @@ install(CODE [[
     set(JARVIS_BINDIR "${CMAKE_INSTALL_PREFIX}/${JARVIS_BINDIR_REL}")
     configure_file("${JARVIS_SOURCE_DIR}/jarvis.service.in"
         "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${JARVIS_DATADIR_REL}/systemd/user/jarvis.service" @ONLY)
+    configure_file("${JARVIS_SOURCE_DIR}/jarvis-tray.service.in"
+        "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${JARVIS_DATADIR_REL}/systemd/user/jarvis-tray.service" @ONLY)
     configure_file("${JARVIS_SOURCE_DIR}/org.jarvis.Daemon1.service.in"
         "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${JARVIS_DATADIR_REL}/dbus-1/services/org.jarvis.Daemon1.service" @ONLY)
 ]])

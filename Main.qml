@@ -11,7 +11,7 @@ ApplicationWindow {
     height: 820
     minimumWidth: 1000
     minimumHeight: 700
-    visible: !startQuick
+    visible: !startQuick && !startTray
     title: qsTr("J.A.R.V.I.S.")
     color: Theme.bg
 
@@ -25,6 +25,7 @@ ApplicationWindow {
     QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; settings: appSettings; onVoiceSetupRequested: { quickBar.hide(); root.show(); controlCenter.showVoice() } }
     ControlCenter { id: controlCenter; objectName: "controlCenter"; desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings; onApiSettingsRequested: settingsDialog.open() }
     Platform.SystemTrayIcon {
+        id: tray
         Component.onCompleted: visible = true
         icon.source: "qrc:/icons/org.jarvis.Jarvis.svg"
         tooltip: qsTr("Jarvis — personal assistant")
@@ -35,6 +36,15 @@ ApplicationWindow {
             Platform.MenuItem { text: qsTr("French studies"); onTriggered: studyWindow.showTab(0) }
             Platform.MenuItem { text: qsTr("Quit"); onTriggered: Qt.quit() }
         }
+    }
+    // At login Jarvis may start before the panel: show the icon once the tray exists.
+    Timer {
+        property int tries: 0
+        interval: 3000
+        repeat: true
+        running: !tray.available && tries < 60
+        // `available` may not notify: check it on every tick and stop once it is there.
+        onTriggered: { if (tray.available) { tray.visible = false; tray.visible = true; tries = 60 } else tries++ }
     }
     Connections {
         target: desktopBridge
@@ -79,7 +89,9 @@ ApplicationWindow {
         }
     }
 
-    Component.onCompleted: { if(startQuick) quickBar.reveal(); else input.forceActiveFocus() }
+    Component.onCompleted: { if(startQuick) quickBar.reveal(); else if(!startTray) input.forceActiveFocus() }
+    // Closing the window keeps Jarvis running in the tray (lessons keep recording).
+    onClosing: { if(desktopBridge.takeTrayHint()) tray.showMessage(qsTr("Jarvis keeps running"), qsTr("Jarvis stays in the system tray. Click the icon to open it; \"Quit\" in its menu ends it.")) }
 
     // ---------- Main menu ----------
     Menu {

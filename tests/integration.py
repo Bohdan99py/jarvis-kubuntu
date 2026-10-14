@@ -217,6 +217,7 @@ try:
     assert gui.poll() is None, 'GUI exited during startup'
     subprocess.run([str(build/'jarvis')],env=gui_env,check=True,timeout=5,stdout=log,stderr=log)
     assert gui.poll() is None, 'first GUI must stay running'
+    subprocess.run([str(build/'jarvis'),'--tray'],env=gui_env,check=True,timeout=5,stdout=log,stderr=log)
    finally:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()

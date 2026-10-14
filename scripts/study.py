@@ -35,7 +35,10 @@ import wave
 
 RATE = 16000
 FRAME = 480  # 30 ms
-MODELS = {"base": 145, "small": 484, "medium": 1530}  # approximate download size, MB
+MODELS = {"base": 145, "small": 484, "medium": 1530, "large-v3-turbo": 1620}  # approximate download size, MB
+# Heavy models are for whole recordings; live phrases use "small", installed alongside.
+HEAVY = {"medium", "large-v3-turbo"}
+
 PACKAGES = ["faster-whisper==1.2.1", "av>=12,<17"]
 MAX_RECORDING = 4 * 3600
 MAX_PDF_PAGES = 500
@@ -113,11 +116,22 @@ def timestamp(seconds):
     return f"{h}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
 
 
-def clean_segment(text):
-    """Whitespace-normalized text, or "" for Whisper's silence inventions."""
+def clean_segment(text, hotwords=""):
+    """Whitespace-normalized text, or "" for Whisper's inventions: silence
+    phrases, loops ("de programmation, de programmation, …") and the hotwords
+    echoed back instead of speech."""
+    import zlib
     text = " ".join(text.split())
     if not text or HALLUCINATIONS.search(text) or not any(c.isalpha() for c in text):
         return ""
+    raw = text.encode("utf-8")
+    if len(raw) > 60 and len(raw) / len(zlib.compress(raw)) > 2.4:
+        return ""
+    if hotwords:
+        flat = lambda value: re.sub(r"\W+", " ", value.lower()).strip()
+        said, terms = flat(text), flat(hotwords)
+        if any(said[i:i + 40] in terms for i in range(0, max(1, len(said) - 39), 10)):
+            return ""
     return text
 
 
@@ -259,6 +273,12 @@ def directory_size(path):
 
 
 def setup(root, model):
+    for name in [model] + (["small"] if model in HEAVY else []):
+        install(root, name)
+    event("ready", text=message("ready"))
+
+
+def install(root, model):
     import fcntl
     import venv
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -305,13 +325,13 @@ def setup(root, model):
         state["models"] = sorted(set(state.get("models", [])) | {model})
         state["packages"] = PACKAGES
         ready.write_text(json.dumps(state), encoding="utf-8")
-        event("ready", text=message("ready"))
 
 
 def transcribe_audio(model, audio, offset=0.0, prompt=None, live=False):
     """[{start, end, text}] for a path or a float32 array. Live phrases get the
     previous phrase as a prompt and no temperature fallback, so one bad phrase
-    cannot stall the stream."""
+    cannot stall the stream. No hotwords here: on short phrases without the
+    fallback the model tends to read them back instead of the speech."""
     # The VAD filter stays on: it is the best guard against text invented from noise.
     segments, _ = model.transcribe(audio, language="fr", beam_size=5, vad_filter=True, initial_prompt=prompt,
                                    condition_on_previous_text=not live, temperature=0.0 if live else
@@ -329,15 +349,17 @@ def pcm_to_float(data):
     return numpy.frombuffer(data, dtype=numpy.int16).astype(numpy.float32) / 32768.0
 
 
-def transcribe(root, model_name, audio):
+def transcribe(root, model_name, audio, hotwords=None):
     event("status", text=message("loading"))
     model = load_model(root, model_name)
     event("status", text=message("transcribing"))
-    segments_iter, info = model.transcribe(str(audio), language="fr", beam_size=5, vad_filter=True)
+    # Hotwords go into every 30 s window; the temperature fallback re-decodes a window that loops.
+    segments_iter, info = model.transcribe(str(audio), language="fr", beam_size=5, vad_filter=True,
+                                           hotwords=hotwords or None)
     duration = info.duration or 0
     segments = []
     for s in segments_iter:
-        text = clean_segment(s.text)
+        text = clean_segment(s.text, hotwords or "")
         if not text:
             continue
         segment = {"start": round(s.start, 2), "end": round(s.end, 2), "text": text}
@@ -619,6 +641,8 @@ def main():
     parser.add_argument("--start", type=float, default=0.0)
     parser.add_argument("--end", type=float, default=0.0)
     parser.add_argument("--lang", choices=sorted(MESSAGES), default="ru")
+    # Terms of the lessons' subject that Whisper should expect (whole-file transcription).
+    parser.add_argument("--hotwords", default="")
     args = parser.parse_args()
     global LANG
     LANG = args.lang
@@ -632,7 +656,7 @@ def main():
             stop_on_stdin()
             listen(args.root, args.model, args.device)
         elif args.mode == "transcribe":
-            transcribe(args.root, args.model, args.source)
+            transcribe(args.root, args.model, args.source, args.hotwords)
         elif args.mode == "import":
             import_audio(args.source, args.out)
         elif args.mode == "play":

@@ -216,6 +216,14 @@ The recognized text appears in the input field — send it with Enter.</source>
         <translation>Как в моём сообщении</translation>
     </message>
     <message>
+        <source>Start with the system in the tray and keep running</source>
+        <translation>Запускаться вместе с системой в трее и работать постоянно</translation>
+    </message>
+    <message>
+        <source>Jarvis starts in the system tray when you log in and comes back by itself if it crashes. Closing the window only hides it; &quot;Quit&quot; in the tray menu ends it.</source>
+        <translation>Jarvis запускается в трее при входе в систему и сам перезапускается после сбоя. Закрытие окна только прячет его; «Выход» в меню значка в трее завершает работу.</translation>
+    </message>
+    <message>
         <source>Updates: Bohdan99py/jarvis-kubuntu</source>
         <translation>Обновления: Bohdan99py/jarvis-kubuntu</translation>
     </message>
@@ -382,6 +390,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Quit</source>
         <translation>Выход</translation>
+    </message>
+    <message>
+        <source>Jarvis keeps running</source>
+        <translation>Jarvis продолжает работать</translation>
+    </message>
+    <message>
+        <source>Jarvis stays in the system tray. Click the icon to open it; &quot;Quit&quot; in its menu ends it.</source>
+        <translation>Jarvis остаётся в трее. Нажмите на значок, чтобы открыть окно; «Выход» в его меню завершает работу.</translation>
     </message>
     <message>
         <source>French studies: lessons, translation, flashcards</source>
@@ -1362,8 +1378,8 @@ Esc — скрыть окно.</translation>
         <translation>Распознавание французской речи</translation>
     </message>
     <message>
-        <source>Jarvis recognizes French with Whisper (faster-whisper) on this computer: lesson audio is never uploaded. Setup downloads the program from PyPI (about 450 MB) and the chosen model from Hugging Face into ~/.local/share/jarvis/study.</source>
-        <translation>Jarvis распознаёт французский с помощью Whisper (faster-whisper) прямо на этом компьютере: звук занятий никуда не отправляется. Установка скачает программу из PyPI (около 450 МБ) и выбранную модель с Hugging Face в ~/.local/share/jarvis/study.</translation>
+        <source>Jarvis recognizes French with Whisper (faster-whisper) on this computer: lesson audio is never uploaded. Setup downloads the program from PyPI (about 450 MB) and the chosen model from Hugging Face into ~/.local/share/jarvis/study. large-v3-turbo recognizes technical French best and transcribes a lecture several times faster than real time on a modern processor.</source>
+        <translation>Jarvis распознаёт французский с помощью Whisper (faster-whisper) прямо на этом компьютере: звук занятий никуда не отправляется. Установка скачает программу из PyPI (около 450 МБ) и выбранную модель с Hugging Face в ~/.local/share/jarvis/study. large-v3-turbo лучше всех распознаёт технический французский и на современном процессоре расшифровывает лекцию в несколько раз быстрее её длительности.</translation>
     </message>
     <message>
         <source>Model</source>
@@ -1374,12 +1390,20 @@ Esc — скрыть окно.</translation>
         <translation>Быстрая — base, ~145 МБ, грубее</translation>
     </message>
     <message>
-        <source>Balanced — small, ~480 MB (recommended)</source>
-        <translation>Сбалансированная — small, ~480 МБ (рекомендуется)</translation>
-    </message>
-    <message>
         <source>Accurate — medium, ~1.5 GB, slow on CPU</source>
         <translation>Точная — medium, ~1,5 ГБ, медленная на CPU</translation>
+    </message>
+    <message>
+        <source>Balanced — small, ~480 MB</source>
+        <translation>Сбалансированная — small, ~480 МБ</translation>
+    </message>
+    <message>
+        <source>Best — large-v3-turbo, ~1.6 GB (recommended for lectures)</source>
+        <translation>Лучшая — large-v3-turbo, ~1,6 ГБ (рекомендуется для лекций)</translation>
+    </message>
+    <message>
+        <source>The heavy model transcribes whole recordings; live phrases use small, which is installed next to it (another ~480 MB).</source>
+        <translation>Большая модель расшифровывает записи целиком, а фразы на лету распознаёт small — она ставится рядом (ещё ~480 МБ).</translation>
     </message>
     <message>
         <source>Check the installation</source>
@@ -1388,6 +1412,22 @@ Esc — скрыть окно.</translation>
     <message>
         <source>Install recognition</source>
         <translation>Установить распознавание</translation>
+    </message>
+    <message>
+        <source>Subject of the lessons</source>
+        <translation>Тема занятий</translation>
+    </message>
+    <message>
+        <source>French terms Whisper should expect. They make it spell jargon correctly — &quot;microcontrôleur&quot;, &quot;condensateur de découplage&quot;, &quot;bus I2C&quot;. Set up for embedded systems, electronics and programming; add the words of your courses.</source>
+        <translation>Французские термины, которые Whisper должен ожидать: с ними он правильно пишет профессиональную лексику — «microcontrôleur», «condensateur de découplage», «bus I2C». Уже настроено на встроенные системы, электронику и программирование; добавьте слова из своих курсов.</translation>
+    </message>
+    <message>
+        <source>Save terms</source>
+        <translation>Сохранить термины</translation>
+    </message>
+    <message>
+        <source>Reset to embedded systems</source>
+        <translation>Вернуть встроенные системы</translation>
     </message>
     <message>
         <source>Translation and notes</source>
