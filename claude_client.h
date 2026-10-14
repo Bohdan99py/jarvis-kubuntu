@@ -28,6 +28,8 @@ public:
     void setSystemPrompt(const QString &prompt) { m_system = prompt; }
     void setKeepHistory(bool keep) { m_keepHistory = keep; }
     void setMaxTokens(int tokens) { m_maxTokens = tokens; }
+    // Off for clients whose system prompt sets the output language itself (translation).
+    void setLanguageHint(bool on) { m_languageHint = on; }
     bool isConfigured() const noexcept { return !m_apiKey.isEmpty(); }
     QString model() const { return m_model; }
 
@@ -65,6 +67,7 @@ private:
     QString m_system;
     int m_maxTokens = kMaxTokens;
     bool m_keepHistory = true;
+    bool m_languageHint = true;
     bool m_extracting = false;
 };
 

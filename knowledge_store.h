@@ -12,6 +12,8 @@ namespace jarvis {
 // Long-term memory about the user, learned from the conversation:
 //  * facts — "name", "uses", "likes", explicit "remember that …" notes and
 //    notes Claude flagged with <memory> tags;
+//  * episodes — one-paragraph summaries of finished conversations, so Jarvis
+//    remembers what was discussed, not only who the user is;
 //  * topics — content words of the user's messages and how often they occur
 //    together (no raw messages are stored).
 // ${XDG_DATA_HOME}/jarvis/knowledge.json, file 0600, atomic writes. Every call
@@ -23,6 +25,8 @@ public:
     static constexpr int kMaxFactChars = 300;
     static constexpr int kMaxTopics = 400;
     static constexpr int kMaxLinks = 1200;
+    static constexpr int kMaxEpisodes = 150;
+    static constexpr int kMaxEpisodeChars = 500;
 
     struct Learned
     {
@@ -35,7 +39,8 @@ public:
     QList<Learned> observe(const QString &message, bool facts);
 
     // Stores a fact in `slot`. Sources: "dialog", "manual", "claude",
-    // "reflection", "curiosity", "activity". Returns "" or an error code:
+    // "reflection", "curiosity", "activity", "vscode", "study". Liking what was
+    // disliked (and vice versa) replaces the opposite fact. Returns "" or an error code:
     // "short", "long", "sensitive", "unsafe", "slot", "io".
     QString learn(const QString &slot, const QString &value, const QString &source, double confidence);
     // learn("note", …) with the confidence of an explicit request.
@@ -44,6 +49,7 @@ public:
     static bool knownSlot(const QString &slot);
     // "" when the value may be stored, otherwise an error code (see learn).
     static QString check(const QString &value);
+    static QString checkText(const QString &value, int maxChars);
 
     // State of the curiosity engine, kept with the facts it learns.
     QJsonObject curiosityState() const;
@@ -56,8 +62,20 @@ public:
 
     QJsonArray facts() const;
     QJsonObject topics() const;
-    // "name: Bohdan\nuses: Kate\n…" for the system prompt; capped.
-    QString profileForPrompt(int maxChars = 1800) const;
+    // "name: Bohdan\nuses: Kate\n…" for the system prompt; capped. With a
+    // question, the facts that matter for it come first (core facts, word
+    // overlap, confidence, recency), so a long memory still fits.
+    QString profileForPrompt(int maxChars = 1800, const QString &question = {}) const;
+
+    // Conversation summaries ("episodes"), newest first.
+    QString addEpisode(const QString &summary, qint64 when);
+    QJsonArray episodes() const;
+    bool forgetEpisode(const QString &id);
+    // Summaries related to `question` plus the latest one if it is recent;
+    // "" when there is nothing worth adding to the prompt.
+    QString episodesForPrompt(const QString &question, qint64 now, int maxChars = 900) const;
+    // Human answer to "what did we talk about?".
+    QString describeEpisodes(Lang lang, int max = 5) const;
     // Human answer to "what do you know about me?".
     QString describe(Lang lang, int max = 15) const;
 

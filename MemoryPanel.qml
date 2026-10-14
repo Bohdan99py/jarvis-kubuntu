@@ -15,6 +15,7 @@ Rectangle {
     readonly property var memory: { try { return JSON.parse(chat.memory) } catch (e) { return ({}) } }
     readonly property var facts: memory.facts || []
     readonly property var topics: memory.topics || []
+    readonly property var episodes: memory.episodes || []
     readonly property var activity: memory.activity || ({})
     readonly property var today: activity.today || ({ total: 0, apps: [], categories: [] })
     readonly property var trackingState: memory.settings || ({})
@@ -233,6 +234,33 @@ Rectangle {
                         Chip { required property var modelData; text: modelData.word + " · " + modelData.count; tint: Theme.nodeTopic }
                     }
                 }
+                SectionTitle { text: qsTr("Our recent conversations"); visible: panel.episodes.length > 0 }
+                Repeater {
+                    model: panel.episodes.slice(0, 3)
+                    RowLayout {
+                        id: episodeRow
+                        required property var modelData
+                        Layout.fillWidth: true
+                        spacing: 6
+                        Label {
+                            text: new Date(episodeRow.modelData.created).toLocaleDateString(Qt.locale(panel.settings.uiLanguage === "en" ? "en_US" : "ru_RU"), Locale.ShortFormat) + " — " + episodeRow.modelData.text
+                            color: Theme.textDim
+                            font.pixelSize: 12
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 3
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                            Layout.fillWidth: true
+                        }
+                        ToolButton {
+                            Layout.alignment: Qt.AlignTop
+                            onClicked: panel.chat.forget("episode:" + episodeRow.modelData.id)
+                            Accessible.name: qsTr("Forget this conversation")
+                            contentItem: Text { text: "×"; color: Theme.textDim; font.pixelSize: 16; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                            background: Rectangle { radius: 10; color: parent.hovered ? Theme.hover : "transparent" }
+                        }
+                    }
+                }
                 RowLayout {
                     Layout.fillWidth: true
                     TextField {
@@ -249,7 +277,7 @@ Rectangle {
                 RowLayout {
                     Layout.fillWidth: true
                     Label { text: panel.chat.memoryStatus; color: Theme.accent; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    DarkButton { text: qsTr("Forget all"); danger: true; enabled: panel.facts.length > 0 || panel.topics.length > 0; onClicked: forgetDialog.open() }
+                    DarkButton { text: qsTr("Forget all"); danger: true; enabled: panel.facts.length > 0 || panel.topics.length > 0 || panel.episodes.length > 0; onClicked: forgetDialog.open() }
                 }
             }
 
@@ -629,7 +657,7 @@ Rectangle {
         modal: true
         title: qsTr("Forget everything about you?")
         standardButtons: Dialog.Yes | Dialog.No
-        Label { text: qsTr("Facts and conversation topics will be deleted. Taught examples and activity history stay."); wrapMode: Text.Wrap; width: 360 }
+        Label { text: qsTr("Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay."); wrapMode: Text.Wrap; width: 360 }
         onAccepted: panel.chat.forget("facts")
     }
 }

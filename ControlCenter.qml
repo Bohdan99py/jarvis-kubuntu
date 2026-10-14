@@ -133,7 +133,7 @@ Dialog {
                     OptionSwitch {
                         objectName: "learnDialogSwitch"
                         text: qsTr("Learn from our conversations and my actions in Jarvis")
-                        hint: qsTr("Facts like your name, tools and projects, topics you talk about, corrections (\"no, the correct answer is …\") and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation and keeps what matters. Passwords, keys and card numbers are never stored.")
+                        hint: qsTr("Facts like your name, tools and projects, topics you talk about, corrections (\"no, the correct answer is …\") and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation, keeps what matters and a short summary, and recalls related earlier conversations later. Passwords, keys and card numbers are never stored.")
                         checked: center.settings.learnDialog
                         onToggled: center.report(center.settings.setOption("learnDialog", checked))
                     }
@@ -169,7 +169,7 @@ Dialog {
                     }
                     Label { id: optionStatus; visible: text.length > 0; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
-                    Label { text: qsTr("Try in chat: \"what do you know about me\", \"what am I doing\", \"what did I do today\", \"forget …\"."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label { text: qsTr("Try in chat: \"what do you know about me\", \"what did we talk about\", \"what am I doing\", \"what did I do today\", \"forget …\"."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
                     RowLayout {
                         DarkButton { text: qsTr("Clear activity history"); danger: true; onClicked: center.chat.forget("activity") }
                         DarkButton { text: qsTr("Forget facts and topics"); danger: true; onClicked: confirmForget.open() }
@@ -236,7 +236,7 @@ Dialog {
         modal: true
         title: qsTr("Forget everything about you?")
         standardButtons: Dialog.Yes | Dialog.No
-        Label { text: qsTr("Facts and conversation topics will be deleted. Taught examples and activity history stay."); wrapMode: Text.Wrap; width: 360 }
+        Label { text: qsTr("Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay."); wrapMode: Text.Wrap; width: 360 }
         onAccepted: center.chat.forget("facts")
     }
 }

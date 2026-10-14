@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Speak through a dedicated Speech Dispatcher connection; stop only our own speech."""
+"""Speak through a dedicated Speech Dispatcher connection; stop only our own speech.
+
+Usage: speak.py [ru|en|fr] < text — without a language the text's script decides."""
 import signal
 import sys
 import threading
@@ -22,7 +24,8 @@ def main():
         text = sys.stdin.read(6000)
         if not text.strip():
             return 0
-        client.set_language(language(text))
+        forced = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in ('ru', 'en', 'fr') else None
+        client.set_language(forced or language(text))
         client.speak(text, callback=lambda *_args, **_kwargs: finished.set(),
                      event_types=(speechd.CallbackType.END, speechd.CallbackType.CANCEL))
         if not finished.wait(300):

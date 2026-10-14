@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QLocale>
 #include <QMap>
 #include <QRegularExpression>
 #include <QSaveFile>
@@ -60,6 +61,27 @@ const QList<Pattern> &patterns()
         {rx(u"(?:i code in|i program in|i write code in|i write in)\\s+([\\p{L}+#.]{1,20})"_s), u"skill"_s},
         {rx(u"(?:я использую|я пользуюсь|у меня стоит|у меня установлен[аоы]?)\\s+(.{2,60})"_s), u"uses"_s},
         {rx(u"(?:i use|i'm using|i am using)\\s+(.{2,60})"_s), u"uses"_s},
+    };
+    return list;
+}
+
+// "I no longer use X": the user takes a fact back. Matching facts in these slots are removed.
+struct Retraction
+{
+    QRegularExpression re;
+    QStringList slots_;
+};
+
+const QList<Retraction> &retractions()
+{
+    static const QList<Retraction> list = {
+        {rx(u"(?:я больше не|я уже не|больше не)\\s+(?:пользуюсь|использую|работаю (?:в|с|со))\\s+(.{2,60})"_s), {u"uses"_s}},
+        {rx(u"(?:я больше не|я уже не)\\s+(?:люблю|обожаю)\\s+(.{2,60})"_s), {u"likes"_s}},
+        {rx(u"(?:я больше не|я уже не)\\s+(?:работаю над|делаю)\\s+(.{2,60})"_s), {u"project"_s}},
+        {rx(u"(?:я закончил|я закончила|я завершил|я завершила)\\s+(?:проект|работу над)\\s+(.{2,60})"_s), {u"project"_s}},
+        {rx(u"(?:i no longer use|i stopped using|i quit using|i don't use|i do not use)\\s+(.{2,60})"_s), {u"uses"_s}},
+        {rx(u"(?:i no longer like|i stopped liking)\\s+(.{2,60})"_s), {u"likes"_s}},
+        {rx(u"(?:i no longer work on|i stopped working on|i'm done with|i am done with|i finished)\\s+(.{2,60})"_s), {u"project"_s}},
     };
     return list;
 }
@@ -153,6 +175,18 @@ void KnowledgeStore::upsertFact(QJsonArray &facts, const QString &slot, const QS
                                 const QString &source, double confidence)
 {
     const QString key = text::normalize(value);
+    // "I like X" after "I don't like X" (and back): the newer statement wins.
+    const QString opposite = slot == u"likes" ? u"dislikes"_s : slot == u"dislikes" ? u"likes"_s : QString();
+    if (!opposite.isEmpty()) {
+        const QSet<QString> words = text::stems(value);
+        for (int i = facts.size() - 1; i >= 0; --i) {
+            const QJsonObject f = facts.at(i).toObject();
+            const QString other = f.value(u"value"_s).toString();
+            if (f.value(u"slot"_s).toString() == opposite
+                && (text::normalize(other) == key || text::overlap(words, text::stems(other)) >= 0.6))
+                facts.removeAt(i);
+        }
+    }
     for (int i = 0; i < facts.size(); ++i) {
         QJsonObject f = facts.at(i).toObject();
         if (f.value(u"slot"_s).toString() != slot)
@@ -215,6 +249,26 @@ QList<KnowledgeStore::Learned> KnowledgeStore::observe(const QString &message, b
         // Same length as `trimmed`, so match offsets map back to the user's spelling.
         QString lower = trimmed;
         lower.replace(u'’', u'\'');
+        for (const Retraction &r : retractions()) {
+            const auto m = r.re.match(lower);
+            if (!m.hasMatch())
+                continue;
+            static const QRegularExpression anymore(u"\\s+(?:any ?more|больше|уже)$"_s, QRegularExpression::CaseInsensitiveOption);
+            QString value = cleanValue(m.captured(1), true);
+            value.remove(anymore);
+            const QString needle = text::normalize(value);
+            const QSet<QString> words = text::stems(value);
+            if (needle.size() < 2)
+                continue;
+            for (int i = facts.size() - 1; i >= 0; --i) {
+                const QJsonObject f = facts.at(i).toObject();
+                const QString known = text::normalize(f.value(u"value"_s).toString());
+                if (r.slots_.contains(f.value(u"slot"_s).toString())
+                    && (known.contains(needle) || needle.contains(known)
+                        || text::overlap(words, text::stems(known)) >= 0.5))
+                    facts.removeAt(i);
+            }
+        }
         QSet<QString> filled;
         for (const Pattern &p : patterns()) {
             if (filled.contains(p.slot))
@@ -280,15 +334,20 @@ bool KnowledgeStore::knownSlot(const QString &slot)
 {
     static const QSet<QString> slots_ = {u"name"_s, u"location"_s, u"occupation"_s, u"project"_s,
                                          u"birthday"_s, u"likes"_s, u"dislikes"_s, u"skill"_s, u"uses"_s,
-                                         u"goal"_s, u"active_hours"_s, u"note"_s};
+                                         u"goal"_s, u"active_hours"_s, u"studies"_s, u"note"_s};
     return slots_.contains(slot);
 }
 
 QString KnowledgeStore::check(const QString &value)
 {
+    return checkText(value, kMaxFactChars);
+}
+
+QString KnowledgeStore::checkText(const QString &value, int maxChars)
+{
     if (value.size() < 2)
         return u"short"_s;
-    if (value.size() > kMaxFactChars)
+    if (value.size() > maxChars)
         return u"long"_s;
     if (text::looksSensitive(value))
         return u"sensitive"_s;
@@ -421,6 +480,7 @@ QString KnowledgeStore::slotLabel(const QString &slot, Lang lang)
         {u"uses"_s, {u"Использует"_s, u"Uses"_s}},
         {u"goal"_s, {u"Цель"_s, u"Goal"_s}},
         {u"active_hours"_s, {u"Активные часы"_s, u"Active hours"_s}},
+        {u"studies"_s, {u"Изучает"_s, u"Studies"_s}},
         {u"note"_s, {u"Заметка"_s, u"Note"_s}},
     };
     const auto it = labels.constFind(slot);
@@ -429,20 +489,145 @@ QString KnowledgeStore::slotLabel(const QString &slot, Lang lang)
     return ru ? it->first : it->second;
 }
 
-QString KnowledgeStore::profileForPrompt(int maxChars) const
+QString KnowledgeStore::profileForPrompt(int maxChars, const QString &question) const
 {
-    QString out;
+    // Core facts first, then what the question is about, then strong and fresh facts.
+    static const QSet<QString> core = {u"name"_s, u"occupation"_s, u"project"_s, u"location"_s, u"goal"_s, u"studies"_s};
+    const QSet<QString> wanted = text::stems(question);
+    const double t = double(nowMs());
+    QList<std::pair<double, QJsonObject>> ranked;
     for (const auto &v : facts()) {
         const QJsonObject f = v.toObject();
+        const QString slot = f.value(u"slot"_s).toString();
+        const QSet<QString> words = text::stems(slot + u' ' + f.value(u"value"_s).toString());
+        double score = core.contains(slot) ? 3.0 : 0.0;
+        if (!wanted.isEmpty()) {
+            const double o = text::overlap(wanted, words);
+            score += o * 6.0 + (o > 0 ? 1.0 : 0.0);
+        }
+        score += f.value(u"confidence"_s).toDouble();
+        score += std::min(5, f.value(u"hits"_s).toInt()) * 0.1;
+        if (f.value(u"source"_s).toString() == u"manual")
+            score += 0.5;
+        const double ageDays = (t - f.value(u"seen"_s).toDouble()) / (24.0 * 3600 * 1000);
+        score += ageDays < 7 ? 0.5 : ageDays < 30 ? 0.25 : 0.0;
+        ranked.append({score, f});
+    }
+    std::stable_sort(ranked.begin(), ranked.end(), [](const auto &a, const auto &b) { return a.first > b.first; });
+    QString out;
+    for (const auto &[score, f] : std::as_const(ranked)) {
         // Older files may predate the markup filter: neutralise angle brackets on the way out.
         QString value = f.value(u"value"_s).toString();
         value.replace(u'<', u'‹').replace(u'>', u'›');
         const QString line = u"- "_s + f.value(u"slot"_s).toString() + u": "_s + value + u'\n';
         if (out.size() + line.size() > maxChars)
+            continue; // a shorter, less relevant fact may still fit
+        out += line;
+    }
+    return out;
+}
+
+QString KnowledgeStore::addEpisode(const QString &input, qint64 when)
+{
+    QString summary = input.simplified();
+    summary.remove(QRegularExpression(u"[\\x00-\\x1f\\x7f]"_s));
+    if (summary.size() < 10)
+        return u"short"_s;
+    summary = summary.left(kMaxEpisodeChars);
+    // Same filter as facts, with a longer limit: summaries also go back into the prompt.
+    if (const QString error = checkText(summary, kMaxEpisodeChars); !error.isEmpty())
+        return error;
+    QJsonObject root = load();
+    QJsonArray list = root.value(u"episodes"_s).toArray();
+    const QJsonObject entry{{u"id"_s, QUuid::createUuid().toString(QUuid::WithoutBraces).left(8)},
+                            {u"text"_s, summary}, {u"created"_s, double(when)}};
+    // The same conversation summarised again (it went on): replace the last summary.
+    if (!list.isEmpty()) {
+        const QJsonObject last = list.last().toObject();
+        if (when - qint64(last.value(u"created"_s).toDouble()) < 6 * 3600 * 1000
+            && text::overlap(text::stems(summary), text::stems(last.value(u"text"_s).toString())) >= 0.5) {
+            QJsonObject replaced = entry;
+            replaced[u"id"_s] = last.value(u"id"_s);
+            list[list.size() - 1] = replaced;
+            root[u"episodes"_s] = list;
+            return save(root) ? QString() : u"io"_s;
+        }
+    }
+    list.append(entry);
+    while (list.size() > kMaxEpisodes)
+        list.removeAt(0);
+    root[u"version"_s] = 1;
+    root[u"episodes"_s] = list;
+    return save(root) ? QString() : u"io"_s;
+}
+
+QJsonArray KnowledgeStore::episodes() const
+{
+    const QJsonArray list = load().value(u"episodes"_s).toArray();
+    QJsonArray out;
+    for (int i = list.size() - 1; i >= 0; --i)
+        out.append(list.at(i));
+    return out;
+}
+
+bool KnowledgeStore::forgetEpisode(const QString &id)
+{
+    QJsonObject root = load();
+    QJsonArray list = root.value(u"episodes"_s).toArray();
+    for (int i = 0; i < list.size(); ++i) {
+        if (list.at(i).toObject().value(u"id"_s).toString() == id) {
+            list.removeAt(i);
+            root[u"episodes"_s] = list;
+            return save(root);
+        }
+    }
+    return false;
+}
+
+QString KnowledgeStore::episodesForPrompt(const QString &question, qint64 now, int maxChars) const
+{
+    const QJsonArray list = episodes();
+    if (list.isEmpty())
+        return {};
+    const QSet<QString> wanted = text::stems(question);
+    QList<std::pair<double, QJsonObject>> picked;
+    for (int i = 0; i < list.size(); ++i) {
+        const QJsonObject e = list.at(i).toObject();
+        const double o = text::overlap(wanted, text::stems(e.value(u"text"_s).toString()));
+        const bool latest = i == 0 && now - qint64(e.value(u"created"_s).toDouble()) < 3LL * 24 * 3600 * 1000;
+        if (o >= 0.08 || latest)
+            picked.append({o + (latest ? 0.05 : 0.0), e});
+    }
+    std::stable_sort(picked.begin(), picked.end(), [](const auto &a, const auto &b) { return a.first > b.first; });
+    QString out;
+    for (int i = 0; i < picked.size() && i < 3; ++i) {
+        const QJsonObject &e = picked.at(i).second;
+        QString textValue = e.value(u"text"_s).toString();
+        textValue.replace(u'<', u'‹').replace(u'>', u'›');
+        const QString line = u"- "_s + QDateTime::fromMSecsSinceEpoch(qint64(e.value(u"created"_s).toDouble())).toString(u"yyyy-MM-dd"_s)
+                             + u": "_s + textValue + u'\n';
+        if (out.size() + line.size() > maxChars)
             break;
         out += line;
     }
     return out;
+}
+
+QString KnowledgeStore::describeEpisodes(Lang lang, int max) const
+{
+    const bool ru = lang == Lang::Ru;
+    const QJsonArray list = episodes();
+    if (list.isEmpty())
+        return ru ? u"Я пока не помню наших прошлых разговоров: с ключом Claude я записываю их краткое содержание, когда разговор заканчивается."_s
+                  : u"I don't remember earlier conversations yet: with a Claude key I note a short summary when a conversation ends."_s;
+    QStringList lines;
+    const QLocale locale(ru ? QLocale::Russian : QLocale::English);
+    for (int i = 0; i < list.size() && i < max; ++i) {
+        const QJsonObject e = list.at(i).toObject();
+        const QDateTime when = QDateTime::fromMSecsSinceEpoch(qint64(e.value(u"created"_s).toDouble()));
+        lines.append(u"• "_s + locale.toString(when.date(), QLocale::ShortFormat) + u" — "_s + e.value(u"text"_s).toString());
+    }
+    return (ru ? u"Недавно мы говорили:\n"_s : u"Recently we talked about:\n"_s) + lines.join(u'\n');
 }
 
 QString KnowledgeStore::describe(Lang lang, int max) const

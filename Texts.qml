@@ -33,6 +33,7 @@ QtObject {
         case "uses": return qsTr("Uses")
         case "goal": return qsTr("Goal")
         case "active_hours": return qsTr("Active hours")
+        case "studies": return qsTr("Studies")
         default: return qsTr("Note")
         }
     }
@@ -45,6 +46,7 @@ QtObject {
         case "curiosity": return qsTr("you answered my question")
         case "activity": return qsTr("from your activity")
         case "vscode": return qsTr("from VS Code")
+        case "study": return qsTr("from your studies")
         default: return qsTr("you asked to remember")
         }
     }

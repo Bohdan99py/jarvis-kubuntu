@@ -53,7 +53,7 @@ private:
 //   method Graph() -> s       memory graph JSON
 //   method Memory() -> s      facts, topics, activity and learning settings JSON
 //   method Remember(s) -> s   store a note about the user ("" = ok)
-//   method Forget(s) -> s     fact id, "facts" or "activity" ("" = ok)
+//   method Forget(s) -> s     fact id, "facts", "activity", "code", "lesson:<id>" or "episode:<id>" ("" = ok)
 //   method RecordAction(s, s) a Jarvis action the user triggered (id, label)
 //   method Curious() -> s     a question Jarvis wants to ask now ("" = none)
 //   method Feedback(b) -> s   👍/👎 on the last chat answer; returns Jarvis's reaction

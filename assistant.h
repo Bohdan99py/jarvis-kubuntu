@@ -17,6 +17,7 @@
 #include "language.h"
 #include "learning_store.h"
 #include "skill_store.h"
+#include "vocab_store.h"
 
 namespace jarvis {
 
@@ -46,7 +47,8 @@ public:
     QString memoryJson();
     // "" on success, otherwise a message for the user.
     QString remember(const QString &text);
-    // A fact id, "facts" (all facts and topics) or "activity" (activity log).
+    // A fact id, "facts" (all facts, summaries and topics), "activity" (activity
+    // log), "code", "lesson:<id>" or "episode:<id>".
     QString forget(const QString &what);
     void recordAction(const QString &id, const QString &label);
     // "Ask me something": the next curious question, marked as asked; "" if none.
@@ -120,6 +122,7 @@ private:
     SkillStore m_skills;
     LearningStore m_memory;
     KnowledgeStore m_knowledge;
+    VocabStore m_vocab; // read only: the study window owns the flashcards
     ActivityStore m_activity;
     ChatEngine m_engine;
     ClaudeClient m_claude;

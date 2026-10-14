@@ -98,6 +98,14 @@ try:
  assert call('Forget',fact_id).strip()=="('',)"
  assert not any(f['id']==fact_id for f in memory()['facts'])
  assert memory()['topics'],'topics learned from messages'
+ # Conversation summaries: none without Claude, and a missing one cannot be forgotten
+ assert 'прошлых разговоров' in ask('о чём мы говорили'),'episodes command answered locally'
+ assert memory()['episodes']==[]
+ assert 'not found' in call('Forget','episode:nope')
+ # Contradictions: the newer statement wins
+ ask('I like jazz');ask("I don't like jazz")
+ assert not any(f['slot']=='likes' and f['value']=='jazz' for f in memory()['facts'])
+ assert any(f['slot']=='dislikes' and f['value']=='jazz' for f in memory()['facts'])
 
  # Curiosity: after a couple of messages Jarvis asks, then remembers the answer
  assert call('Forget','facts').strip()=="('',)"

@@ -20,6 +20,8 @@ ApplicationWindow {
     }
 
     VoiceController { id: voiceEngine; language: appSettings.uiLanguage }
+    StudyController { id: study; language: appSettings.uiLanguage; onMemoryLearned: chatModel.refreshMemory() }
+    StudyWindow { id: studyWindow; objectName: "studyWindow"; study: study; onApiSettingsRequested: { root.show(); root.raise(); settingsDialog.open() } }
     QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; settings: appSettings; onVoiceSetupRequested: { quickBar.hide(); root.show(); controlCenter.showVoice() } }
     ControlCenter { id: controlCenter; objectName: "controlCenter"; desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings; onApiSettingsRequested: settingsDialog.open() }
     Platform.SystemTrayIcon {
@@ -30,6 +32,7 @@ ApplicationWindow {
         menu: Platform.Menu {
             Platform.MenuItem { text: qsTr("Quick commands"); onTriggered: quickBar.reveal() }
             Platform.MenuItem { text: qsTr("Open Jarvis"); onTriggered: { root.show(); root.raise(); root.requestActivate() } }
+            Platform.MenuItem { text: qsTr("French studies"); onTriggered: studyWindow.showTab(0) }
             Platform.MenuItem { text: qsTr("Quit"); onTriggered: Qt.quit() }
         }
     }
@@ -46,7 +49,7 @@ ApplicationWindow {
 
     AppSettings {
         id: appSettings
-        onSaved: chatModel.reloadConfig()
+        onSaved: { chatModel.reloadConfig(); study.reloadConfig() }
         onLanguageApplied: chatModel.retranslate()
     }
 
@@ -91,6 +94,7 @@ ApplicationWindow {
             border.color: Theme.border
         }
 
+        DarkMenuItem { text: qsTr("French studies: lessons, translation, flashcards"); onTriggered: studyWindow.showTab(0) }
         DarkMenuItem { text: qsTr("Skills, voice, memory and updates"); onTriggered: controlCenter.open() }
         DarkMenuItem { text: qsTr("Quick commands · Meta+J"); onTriggered: quickBar.reveal() }
         DarkMenuItem {
@@ -185,6 +189,13 @@ ApplicationWindow {
 
                 Item { Layout.fillWidth: true }
 
+                DarkButton {
+                    text: study.vocabStats.due > 0 ? qsTr("Français · %1").arg(study.vocabStats.due) : qsTr("Français")
+                    onClicked: studyWindow.showTab(0)
+                    ToolTip.visible: hovered
+                    ToolTip.text: study.recording ? qsTr("Recording a lesson…") : qsTr("French studies: lessons, translation, flashcards")
+                    Rectangle { visible: study.recording; width: 10; height: 10; radius: 5; color: Theme.danger; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 2 }
+                }
                 DarkButton { text: "⌕"; onClicked: quickBar.reveal(); Accessible.name: qsTr("Quick commands") }
                 DarkButton {
                     id: menuBtn

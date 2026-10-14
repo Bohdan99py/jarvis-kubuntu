@@ -148,8 +148,16 @@ The recognized text appears in the input field — send it with Enter.</source>
         <translation>Учиться на наших разговорах и моих действиях в Jarvis</translation>
     </message>
     <message>
-        <source>Facts like your name, tools and projects, topics you talk about, corrections (&quot;no, the correct answer is …&quot;) and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation and keeps what matters. Passwords, keys and card numbers are never stored.</source>
-        <translation>Факты — имя, инструменты, проекты, — темы разговоров, исправления («нет, правильно: …») и быстрые действия, которыми вы пользуетесь. С ключом Claude Jarvis ещё и пересматривает завершённый разговор и сохраняет важное. Пароли, ключи и номера карт не сохраняются никогда.</translation>
+        <source>Facts like your name, tools and projects, topics you talk about, corrections (&quot;no, the correct answer is …&quot;) and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation, keeps what matters and a short summary, and recalls related earlier conversations later. Passwords, keys and card numbers are never stored.</source>
+        <translation>Факты вроде имени, программ и проектов, темы разговоров, исправления («нет, правильно: …») и быстрые действия, которыми вы пользуетесь. С ключом Claude Jarvis ещё и перечитывает законченный разговор, сохраняет важное и краткое содержание, а потом вспоминает связанные прошлые разговоры. Пароли, ключи и номера карт не сохраняются никогда.</translation>
+    </message>
+    <message>
+        <source>Try in chat: &quot;what do you know about me&quot;, &quot;what did we talk about&quot;, &quot;what am I doing&quot;, &quot;what did I do today&quot;, &quot;forget …&quot;.</source>
+        <translation>Попробуйте в чате: «что ты обо мне знаешь», «о чём мы говорили», «что я делаю», «что я делал сегодня», «забудь …».</translation>
+    </message>
+    <message>
+        <source>Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay.</source>
+        <translation>Факты, краткое содержание разговоров и темы будут удалены. Обученные примеры, карточки и история активности останутся.</translation>
     </message>
     <message>
         <source>Curiosity: Jarvis asks questions to get to know me</source>
@@ -182,10 +190,6 @@ The recognized text appears in the input field — send it with Enter.</source>
     <message>
         <source>Adds the focused application (and title, if kept) and today&apos;s top apps to requests sent to Anthropic, so answers fit your current work.</source>
         <translation>Добавляет активное приложение (и заголовок, если он сохраняется) и самые используемые сегодня программы к запросам в Anthropic, чтобы ответы учитывали текущую работу.</translation>
-    </message>
-    <message>
-        <source>Try in chat: &quot;what do you know about me&quot;, &quot;what am I doing&quot;, &quot;what did I do today&quot;, &quot;forget …&quot;.</source>
-        <translation>Попробуйте в чате: «что ты обо мне знаешь», «что я делаю», «чем я занимался сегодня», «забудь …».</translation>
     </message>
     <message>
         <source>Clear activity history</source>
@@ -268,10 +272,6 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Forget everything about you?</source>
         <translation>Забыть всё о вас?</translation>
-    </message>
-    <message>
-        <source>Facts and conversation topics will be deleted. Taught examples and activity history stay.</source>
-        <translation>Факты и темы разговоров будут удалены. Обучающие примеры и история активности останутся.</translation>
     </message>
 </context>
 <context>
@@ -376,8 +376,16 @@ A KDE menu entry and a system tray icon</source>
         <translation>Открыть Jarvis</translation>
     </message>
     <message>
+        <source>French studies</source>
+        <translation>Французский</translation>
+    </message>
+    <message>
         <source>Quit</source>
         <translation>Выход</translation>
+    </message>
+    <message>
+        <source>French studies: lessons, translation, flashcards</source>
+        <translation>Французский: занятия, перевод, карточки</translation>
     </message>
     <message>
         <source>Skills, voice, memory and updates</source>
@@ -414,6 +422,18 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source> · Claude</source>
         <translation> · Claude</translation>
+    </message>
+    <message>
+        <source>Français · %1</source>
+        <translation>Français · %1</translation>
+    </message>
+    <message>
+        <source>Français</source>
+        <translation>Français</translation>
+    </message>
+    <message>
+        <source>Recording a lesson…</source>
+        <translation>Идёт запись занятия…</translation>
     </message>
     <message>
         <source>☰  Menu</source>
@@ -525,6 +545,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Frequent topics</source>
         <translation>Частые темы</translation>
+    </message>
+    <message>
+        <source>Our recent conversations</source>
+        <translation>Наши недавние разговоры</translation>
+    </message>
+    <message>
+        <source>Forget this conversation</source>
+        <translation>Забыть этот разговор</translation>
     </message>
     <message>
         <source>Something to remember about you</source>
@@ -647,8 +675,8 @@ A KDE menu entry and a system tray icon</source>
         <translation>Забыть всё о вас?</translation>
     </message>
     <message>
-        <source>Facts and conversation topics will be deleted. Taught examples and activity history stay.</source>
-        <translation>Факты и темы разговоров будут удалены. Обучающие примеры и история активности останутся.</translation>
+        <source>Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay.</source>
+        <translation>Факты, краткое содержание разговоров и темы будут удалены. Обученные примеры, карточки и история активности останутся.</translation>
     </message>
 </context>
 <context>
@@ -793,6 +821,608 @@ Esc — скрыть окно.</translation>
     </message>
 </context>
 <context>
+    <name>StudyController</name>
+    <message>
+        <source>Recording failed. Check the microphone.</source>
+        <translation>Запись не удалась. Проверьте микрофон.</translation>
+    </message>
+    <message>
+        <source>First install French speech recognition on the Setup tab.</source>
+        <translation>Сначала установите распознавание французского на вкладке «Настройка».</translation>
+    </message>
+    <message>
+        <source>Translation and notes need a Claude API key: Jarvis → Menu → Claude API settings.</source>
+        <translation>Для перевода и конспектов нужен ключ Claude API: Jarvis → Меню → Настройки Claude API.</translation>
+    </message>
+    <message>
+        <source>Preparing the installation…</source>
+        <translation>Подготовка установки…</translation>
+    </message>
+    <message>
+        <source>Stopped.</source>
+        <translation>Остановлено.</translation>
+    </message>
+    <message>
+        <source>Failed: %1</source>
+        <translation>Ошибка: %1</translation>
+    </message>
+    <message>
+        <source>unknown error</source>
+        <translation>неизвестная ошибка</translation>
+    </message>
+    <message>
+        <source>French recognition is ready. Record a lesson or import an audio file.</source>
+        <translation>Распознавание французского готово. Запишите занятие или импортируйте аудиофайл.</translation>
+    </message>
+    <message>
+        <source>Transcript ready.</source>
+        <translation>Расшифровка готова.</translation>
+    </message>
+    <message>
+        <source>No text was found in the PDF.</source>
+        <translation>В PDF не найден текст.</translation>
+    </message>
+    <message>
+        <source>Translating %1 pages (%2 characters)…</source>
+        <translation>Перевожу страниц: %1 (символов: %2)…</translation>
+    </message>
+    <message>
+        <source>Cannot create the folder %1.</source>
+        <translation>Не удалось создать папку %1.</translation>
+    </message>
+    <message>
+        <source>Loading recognition and starting the microphone…</source>
+        <translation>Загружаю распознавание и включаю микрофон…</translation>
+    </message>
+    <message>
+        <source>Starting the microphone…</source>
+        <translation>Включаю микрофон…</translation>
+    </message>
+    <message>
+        <source>Recording with live transcription. Speak or let the teacher speak.</source>
+        <translation>Идёт запись с расшифровкой на лету. Говорите сами или слушайте преподавателя.</translation>
+    </message>
+    <message>
+        <source>Recording…</source>
+        <translation>Идёт запись…</translation>
+    </message>
+    <message>
+        <source>Saved: %1 (%2).</source>
+        <translation>Сохранено: %1 (%2).</translation>
+    </message>
+    <message>
+        <source>The file was not found.</source>
+        <translation>Файл не найден.</translation>
+    </message>
+    <message>
+        <source>Converting %1…</source>
+        <translation>Преобразую %1…</translation>
+    </message>
+    <message>
+        <source>Loading the recognition model…</source>
+        <translation>Загружаю модель распознавания…</translation>
+    </message>
+    <message>
+        <source>Transcribe the recording first.</source>
+        <translation>Сначала расшифруйте запись.</translation>
+    </message>
+    <message>
+        <source>Already translated.</source>
+        <translation>Уже переведено.</translation>
+    </message>
+    <message>
+        <source>Translating into Russian…</source>
+        <translation>Перевожу на русский…</translation>
+    </message>
+    <message>
+        <source>Translation ready.</source>
+        <translation>Перевод готов.</translation>
+    </message>
+    <message>
+        <source>Part of the text was not translated: %1 Press &quot;Translate&quot; again to finish.</source>
+        <translation>Часть текста не переведена: %1 Нажмите «Перевести» ещё раз, чтобы закончить.</translation>
+    </message>
+    <message>
+        <source>Writing lesson notes…</source>
+        <translation>Пишу конспект занятия…</translation>
+    </message>
+    <message>
+        <source>Notes ready. New flashcards: %1.</source>
+        <translation>Конспект готов. Новых карточек: %1.</translation>
+    </message>
+    <message>
+        <source>No speech recognized. Try again, a little closer to the microphone.</source>
+        <translation>Речь не распознана. Попробуйте ещё раз, чуть ближе к микрофону.</translation>
+    </message>
+    <message>
+        <source>Translation needs a Claude API key.</source>
+        <translation>Для перевода нужен ключ Claude API.</translation>
+    </message>
+    <message>
+        <source>Reading %1…</source>
+        <translation>Читаю %1…</translation>
+    </message>
+    <message>
+        <source>Translated from French by Jarvis (Claude) · %1</source>
+        <translation>Перевод с французского: Jarvis (Claude) · %1</translation>
+    </message>
+    <message>
+        <source>page %1</source>
+        <translation>страница %1</translation>
+    </message>
+    <message>
+        <source>Done: %1</source>
+        <translation>Готово: %1</translation>
+    </message>
+    <message>
+        <source>Saved with %1 untranslated paragraphs (marked […]): %2</source>
+        <translation>Сохранено, но абзацев без перевода: %1 (отмечены […]): %2</translation>
+    </message>
+    <message>
+        <source>Added: %1</source>
+        <translation>Добавлено: %1</translation>
+    </message>
+    <message>
+        <source>&quot;%1&quot; is already in your flashcards.</source>
+        <translation>«%1» уже есть в карточках.</translation>
+    </message>
+    <message>
+        <source>Too long: up to 300 characters per side.</source>
+        <translation>Слишком длинно: до 300 символов на сторону.</translation>
+    </message>
+    <message>
+        <source>This text cannot be stored.</source>
+        <translation>Такой текст сохранить нельзя.</translation>
+    </message>
+    <message>
+        <source>The deck is full (5000 cards).</source>
+        <translation>Колода заполнена (5000 карточек).</translation>
+    </message>
+    <message>
+        <source>Enter the word and its translation.</source>
+        <translation>Введите слово и перевод.</translation>
+    </message>
+    <message>
+        <source>Enter the translation too: automatic translation needs a Claude API key.</source>
+        <translation>Введите и перевод: для автоматического перевода нужен ключ Claude API.</translation>
+    </message>
+    <message>
+        <source>Looking up &quot;%1&quot;…</source>
+        <translation>Ищу перевод «%1»…</translation>
+    </message>
+    <message>
+        <source>Could not translate &quot;%1&quot;. Enter the translation yourself.</source>
+        <translation>Не удалось перевести «%1». Введите перевод сами.</translation>
+    </message>
+    <message>
+        <source>Saved.</source>
+        <translation>Сохранено.</translation>
+    </message>
+</context>
+<context>
+    <name>StudyWindow</name>
+    <message>
+        <source>French studies — Jarvis</source>
+        <translation>Французский — Jarvis</translation>
+    </message>
+    <message>
+        <source>%1 min</source>
+        <translation>%1 мин</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ч</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 дн.</translation>
+    </message>
+    <message>
+        <source>%1 mo</source>
+        <translation>%1 мес.</translation>
+    </message>
+    <message>
+        <source>%1 y</source>
+        <translation>%1 г.</translation>
+    </message>
+    <message>
+        <source>Recording now</source>
+        <translation>Идёт запись</translation>
+    </message>
+    <message>
+        <source>Import a lesson recording</source>
+        <translation>Импорт записи занятия</translation>
+    </message>
+    <message>
+        <source>Audio and video (*.wav *.mp3 *.m4a *.ogg *.opus *.flac *.aac *.wma *.mp4 *.mkv *.webm *.mov)</source>
+        <translation>Аудио и видео (*.wav *.mp3 *.m4a *.ogg *.opus *.flac *.aac *.wma *.mp4 *.mkv *.webm *.mov)</translation>
+    </message>
+    <message>
+        <source>All files (*)</source>
+        <translation>Все файлы (*)</translation>
+    </message>
+    <message>
+        <source>Choose a French PDF</source>
+        <translation>Выберите PDF на французском</translation>
+    </message>
+    <message>
+        <source>PDF documents (*.pdf)</source>
+        <translation>Документы PDF (*.pdf)</translation>
+    </message>
+    <message>
+        <source>Move the recording to the trash?</source>
+        <translation>Переместить запись в корзину?</translation>
+    </message>
+    <message>
+        <source>%1 and its transcript, translation and notes go to the trash.</source>
+        <translation>%1 вместе с расшифровкой, переводом и конспектом будет перемещена в корзину.</translation>
+    </message>
+    <message>
+        <source>Studies</source>
+        <translation>Учёба</translation>
+    </message>
+    <message>
+        <source>Lessons</source>
+        <translation>Занятия</translation>
+    </message>
+    <message>
+        <source>Translator</source>
+        <translation>Переводчик</translation>
+    </message>
+    <message>
+        <source>Flashcards</source>
+        <translation>Карточки</translation>
+    </message>
+    <message>
+        <source>Setup</source>
+        <translation>Настройка</translation>
+    </message>
+    <message>
+        <source>■  Stop</source>
+        <translation>■  Стоп</translation>
+    </message>
+    <message>
+        <source>●  Record</source>
+        <translation>●  Запись</translation>
+    </message>
+    <message>
+        <source>Transcribe while recording</source>
+        <translation>Расшифровывать во время записи</translation>
+    </message>
+    <message>
+        <source>The live text is a quick draft. After the lesson, Transcribe gives the accurate version.</source>
+        <translation>Текст на лету — быстрый черновик. После занятия «Расшифровать» даст точную версию.</translation>
+    </message>
+    <message>
+        <source>Translate into Russian automatically</source>
+        <translation>Сразу переводить на русский</translation>
+    </message>
+    <message>
+        <source>Read translations aloud</source>
+        <translation>Озвучивать перевод</translation>
+    </message>
+    <message>
+        <source>Recording works now. For French transcription install recognition on the Setup tab.</source>
+        <translation>Запись уже работает. Для расшифровки французского установите распознавание на вкладке «Настройка».</translation>
+    </message>
+    <message>
+        <source>Import audio…</source>
+        <translation>Импорт аудио…</translation>
+    </message>
+    <message>
+        <source>Folder</source>
+        <translation>Папка</translation>
+    </message>
+    <message>
+        <source>No recordings yet. Press Record at the start of a lesson or import a file.</source>
+        <translation>Записей пока нет. Нажмите «Запись» в начале занятия или импортируйте файл.</translation>
+    </message>
+    <message>
+        <source>FR text</source>
+        <translation>текст FR</translation>
+    </message>
+    <message>
+        <source>RU</source>
+        <translation>RU</translation>
+    </message>
+    <message>
+        <source>notes</source>
+        <translation>конспект</translation>
+    </message>
+    <message>
+        <source>Transcript</source>
+        <translation>Расшифровка</translation>
+    </message>
+    <message>
+        <source>■ Stop</source>
+        <translation>■ Стоп</translation>
+    </message>
+    <message>
+        <source>▶ Listen</source>
+        <translation>▶ Слушать</translation>
+    </message>
+    <message>
+        <source>Transcribe</source>
+        <translation>Расшифровать</translation>
+    </message>
+    <message>
+        <source>Translate</source>
+        <translation>Перевести</translation>
+    </message>
+    <message>
+        <source>Notes and words</source>
+        <translation>Конспект и слова</translation>
+    </message>
+    <message>
+        <source>Open text</source>
+        <translation>Открыть текст</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Notes</source>
+        <translation>Конспект</translation>
+    </message>
+    <message>
+        <source>+ Flashcard: «%1»</source>
+        <translation>+ В карточки: «%1»</translation>
+    </message>
+    <message>
+        <source>Add the selected French words to your flashcards; Claude fills in the translation</source>
+        <translation>Добавить выделенные французские слова в карточки; перевод подставит Claude</translation>
+    </message>
+    <message>
+        <source>Listening… French phrases appear here a few seconds after they are spoken.</source>
+        <translation>Слушаю… Французские фразы появляются здесь через несколько секунд после того, как прозвучали.</translation>
+    </message>
+    <message>
+        <source>Recording without live transcription. Transcribe it after you stop.</source>
+        <translation>Запись без расшифровки на лету. Расшифруйте её после остановки.</translation>
+    </message>
+    <message>
+        <source>Choose a recording on the left.</source>
+        <translation>Выберите запись слева.</translation>
+    </message>
+    <message>
+        <source>The transcript is empty: no French speech was recognized.</source>
+        <translation>Расшифровка пуста: французская речь не распознана.</translation>
+    </message>
+    <message>
+        <source>Not transcribed yet. Press Transcribe — recognition runs on this computer.</source>
+        <translation>Ещё не расшифровано. Нажмите «Расшифровать» — распознавание идёт на этом компьютере.</translation>
+    </message>
+    <message>
+        <source>Listen to this phrase</source>
+        <translation>Прослушать эту фразу</translation>
+    </message>
+    <message>
+        <source>Claude is writing the notes…</source>
+        <translation>Claude пишет конспект…</translation>
+    </message>
+    <message>
+        <source>No notes yet. &quot;Notes and words&quot; asks Claude for a Russian summary of the lesson — topic, grammar, useful phrases, homework — and adds the key words to your flashcards.</source>
+        <translation>Конспекта пока нет. «Конспект и слова» попросит Claude кратко изложить занятие по-русски — тема, грамматика, полезные фразы, домашнее задание — и добавит ключевые слова в карточки.</translation>
+    </message>
+    <message>
+        <source>Phrase or speech</source>
+        <translation>Фраза или речь</translation>
+    </message>
+    <message>
+        <source>Type French (or Russian — it is translated into French), or press the microphone and speak French: the phrase is recognized here and translated by Claude.</source>
+        <translation>Напишите по-французски (или по-русски — тогда переведу на французский) либо нажмите микрофон и скажите фразу по-французски: она распознается здесь, а переведёт её Claude.</translation>
+    </message>
+    <message>
+        <source>Bonjour, je voudrais…</source>
+        <translation>Bonjour, je voudrais…</translation>
+    </message>
+    <message>
+        <source>🎤  Speak French</source>
+        <translation>🎤  Сказать по-французски</translation>
+    </message>
+    <message>
+        <source>🔊 French</source>
+        <translation>🔊 По-французски</translation>
+    </message>
+    <message>
+        <source>Speech input needs French recognition (Setup tab).</source>
+        <translation>Для голосового ввода нужно распознавание французского (вкладка «Настройка»).</translation>
+    </message>
+    <message>
+        <source>🔊 Listen</source>
+        <translation>🔊 Прослушать</translation>
+    </message>
+    <message>
+        <source>Edit the recognized phrase</source>
+        <translation>Исправить распознанную фразу</translation>
+    </message>
+    <message>
+        <source>+ Flashcard</source>
+        <translation>+ В карточки</translation>
+    </message>
+    <message>
+        <source>PDF document</source>
+        <translation>Документ PDF</translation>
+    </message>
+    <message>
+        <source>The text is taken from the PDF (scanned pages are recognized with Tesseract if tesseract-ocr-fra is installed), translated by Claude paragraph by paragraph and saved as a new PDF and a text file in Documents/Jarvis/French/pdf.</source>
+        <translation>Текст берётся из PDF (сканы распознаются Tesseract, если установлен tesseract-ocr-fra), Claude переводит его по абзацам, результат сохраняется новым PDF и текстовым файлом в Документы/Jarvis/French/pdf.</translation>
+    </message>
+    <message>
+        <source>Choose PDF…</source>
+        <translation>Выбрать PDF…</translation>
+    </message>
+    <message>
+        <source>No file chosen</source>
+        <translation>Файл не выбран</translation>
+    </message>
+    <message>
+        <source>Bilingual: each French paragraph followed by its translation</source>
+        <translation>Двуязычный: после каждого французского абзаца — его перевод</translation>
+    </message>
+    <message>
+        <source>Translate PDF</source>
+        <translation>Перевести PDF</translation>
+    </message>
+    <message>
+        <source>Open result</source>
+        <translation>Открыть результат</translation>
+    </message>
+    <message>
+        <source>Translation needs a Claude API key.</source>
+        <translation>Для перевода нужен ключ Claude API.</translation>
+    </message>
+    <message>
+        <source>To review</source>
+        <translation>Повторить</translation>
+    </message>
+    <message>
+        <source>Reviewed today</source>
+        <translation>Сегодня</translation>
+    </message>
+    <message>
+        <source>Learned</source>
+        <translation>Выучено</translation>
+    </message>
+    <message>
+        <source>All cards</source>
+        <translation>Всего</translation>
+    </message>
+    <message>
+        <source>No flashcards yet. Add words on the right, select words in a transcript, or let &quot;Notes and words&quot; pick them from a lesson.</source>
+        <translation>Карточек пока нет. Добавьте слова справа, выделите их в расшифровке или нажмите «Конспект и слова» — слова подберутся из занятия.</translation>
+    </message>
+    <message>
+        <source>Nothing to review right now. Come back later — words return just before you would forget them.</source>
+        <translation>Сейчас повторять нечего. Возвращайтесь позже — слова приходят как раз перед тем, как вы бы их забыли.</translation>
+    </message>
+    <message>
+        <source>Pronounce</source>
+        <translation>Произнести</translation>
+    </message>
+    <message>
+        <source>Show the answer  ·  Space</source>
+        <translation>Показать ответ  ·  Пробел</translation>
+    </message>
+    <message>
+        <source>Again</source>
+        <translation>Снова</translation>
+    </message>
+    <message>
+        <source>Hard</source>
+        <translation>Трудно</translation>
+    </message>
+    <message>
+        <source>Good</source>
+        <translation>Хорошо</translation>
+    </message>
+    <message>
+        <source>Easy</source>
+        <translation>Легко</translation>
+    </message>
+    <message>
+        <source>Key %1</source>
+        <translation>Клавиша %1</translation>
+    </message>
+    <message>
+        <source>Add a word</source>
+        <translation>Добавить слово</translation>
+    </message>
+    <message>
+        <source>French: la bibliothèque</source>
+        <translation>По-французски: la bibliothèque</translation>
+    </message>
+    <message>
+        <source>Russian (empty: Claude translates)</source>
+        <translation>По-русски (пусто — переведёт Claude)</translation>
+    </message>
+    <message>
+        <source>Russian translation</source>
+        <translation>Перевод на русский</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <source>Search the deck…</source>
+        <translation>Поиск по карточкам…</translation>
+    </message>
+    <message>
+        <source>Delete card</source>
+        <translation>Удалить карточку</translation>
+    </message>
+    <message>
+        <source>French recognition is ready</source>
+        <translation>Распознавание французского готово</translation>
+    </message>
+    <message>
+        <source>French speech recognition</source>
+        <translation>Распознавание французской речи</translation>
+    </message>
+    <message>
+        <source>Jarvis recognizes French with Whisper (faster-whisper) on this computer: lesson audio is never uploaded. Setup downloads the program from PyPI (about 450 MB) and the chosen model from Hugging Face into ~/.local/share/jarvis/study.</source>
+        <translation>Jarvis распознаёт французский с помощью Whisper (faster-whisper) прямо на этом компьютере: звук занятий никуда не отправляется. Установка скачает программу из PyPI (около 450 МБ) и выбранную модель с Hugging Face в ~/.local/share/jarvis/study.</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Модель</translation>
+    </message>
+    <message>
+        <source>Fast — base, ~145 MB, rougher</source>
+        <translation>Быстрая — base, ~145 МБ, грубее</translation>
+    </message>
+    <message>
+        <source>Balanced — small, ~480 MB (recommended)</source>
+        <translation>Сбалансированная — small, ~480 МБ (рекомендуется)</translation>
+    </message>
+    <message>
+        <source>Accurate — medium, ~1.5 GB, slow on CPU</source>
+        <translation>Точная — medium, ~1,5 ГБ, медленная на CPU</translation>
+    </message>
+    <message>
+        <source>Check the installation</source>
+        <translation>Проверить установку</translation>
+    </message>
+    <message>
+        <source>Install recognition</source>
+        <translation>Установить распознавание</translation>
+    </message>
+    <message>
+        <source>Translation and notes</source>
+        <translation>Перевод и конспекты</translation>
+    </message>
+    <message>
+        <source>Claude is connected. Transcripts, phrases and PDF text (never audio) are sent to Anthropic for translation and notes.</source>
+        <translation>Claude подключён. Для перевода и конспектов в Anthropic отправляются расшифровки, фразы и текст PDF (но никогда не звук).</translation>
+    </message>
+    <message>
+        <source>Add a Claude API key to translate into Russian and to get lesson notes. Transcription and flashcards work without it.</source>
+        <translation>Добавьте ключ Claude API, чтобы переводить на русский и получать конспекты. Расшифровка и карточки работают и без него.</translation>
+    </message>
+    <message>
+        <source>Claude API settings</source>
+        <translation>Настройки Claude API</translation>
+    </message>
+    <message>
+        <source>Where things are</source>
+        <translation>Где что лежит</translation>
+    </message>
+    <message>
+        <source>Recordings, transcripts (.fr.txt), translations (.ru.txt), notes (.notes.md) and translated PDFs: %1. Flashcards: ~/.local/share/jarvis/vocabulary.json. Jarvis remembers that you study French and can quiz you in chat: &quot;quiz me on my French words&quot;.</source>
+        <translation>Записи, расшифровки (.fr.txt), переводы (.ru.txt), конспекты (.notes.md) и переведённые PDF: %1. Карточки: ~/.local/share/jarvis/vocabulary.json. Jarvis помнит, что вы учите французский, и может проверить вас в чате: «проверь мои французские слова».</translation>
+    </message>
+    <message>
+        <source>Open the folder</source>
+        <translation>Открыть папку</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+</context>
+<context>
     <name>SynapseGraph</name>
     <message>
         <source>fact about you</source>
@@ -924,6 +1554,10 @@ Chat with me or add a first example</source>
         <translation>Активные часы</translation>
     </message>
     <message>
+        <source>Studies</source>
+        <translation>Изучает</translation>
+    </message>
+    <message>
         <source>Note</source>
         <translation>Заметка</translation>
     </message>
@@ -950,6 +1584,10 @@ Chat with me or add a first example</source>
     <message>
         <source>from VS Code</source>
         <translation>из VS Code</translation>
+    </message>
+    <message>
+        <source>from your studies</source>
+        <translation>из ваших занятий</translation>
     </message>
     <message>
         <source>you asked to remember</source>
@@ -1084,10 +1722,6 @@ Chat with me or add a first example</source>
     <message>
         <source>A question and an answer are required, up to 4096 characters each.</source>
         <translation>Нужны вопрос и ответ, до 4096 символов каждый.</translation>
-    </message>
-    <message>
-        <source>Memory limit reached: 500 examples.</source>
-        <translation>Лимит памяти: 500 примеров.</translation>
     </message>
     <message>
         <source>Cannot create the memory folder.</source>
