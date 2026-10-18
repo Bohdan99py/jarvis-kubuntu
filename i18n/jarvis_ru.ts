@@ -48,6 +48,29 @@
     </message>
 </context>
 <context>
+    <name>CodeBlock</name>
+    <message>
+        <source>code</source>
+        <translation>код</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Скопировано</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <source>Saved — show</source>
+        <translation>Сохранено — показать</translation>
+    </message>
+    <message>
+        <source>Save as file</source>
+        <translation>Сохранить файлом</translation>
+    </message>
+</context>
+<context>
     <name>ControlCenter</name>
     <message>
         <source>Control center</source>
@@ -68,14 +91,6 @@
     <message>
         <source>Application</source>
         <translation>Приложение</translation>
-    </message>
-    <message>
-        <source>Turn on the topics you need. Examples work locally, richer answers come from Claude.</source>
-        <translation>Подключайте нужные темы. Примеры работают локально, расширенные ответы — через Claude.</translation>
-    </message>
-    <message>
-        <source>About</source>
-        <translation>О навыке</translation>
     </message>
     <message>
         <source>Import JSON</source>
@@ -166,6 +181,22 @@ The recognized text appears in the input field — send it with Enter.</source>
     <message>
         <source>Autonomy</source>
         <translation>Автономность</translation>
+    </message>
+    <message>
+        <source>Turn on the topics you need. Open a tile for its calculators, formulas and ready answers — they work without the internet.</source>
+        <translation>Включите нужные темы. Откройте плитку — там калькуляторы, формулы и готовые ответы, они работают без интернета.</translation>
+    </message>
+    <message>
+        <source>%1 calc.</source>
+        <translation>калькуляторов: %1</translation>
+    </message>
+    <message>
+        <source>%1 formulas</source>
+        <translation>формул: %1</translation>
+    </message>
+    <message>
+        <source>%1 answers</source>
+        <translation>ответов: %1</translation>
     </message>
     <message>
         <source>Now and then — at most every ten minutes and never in the middle of a task — Jarvis asks about you, your projects or an app you use a lot, and remembers the answer. Ignore a question to skip it.</source>
@@ -350,14 +381,6 @@ A KDE menu entry and a system tray icon</source>
         <translation>Навыки Jarvis (*.json)</translation>
     </message>
     <message>
-        <source>Skill</source>
-        <translation>Навык</translation>
-    </message>
-    <message>
-        <source>Local examples: %1</source>
-        <translation>Локальных примеров: %1</translation>
-    </message>
-    <message>
         <source>Forget everything about you?</source>
         <translation>Забыть всё о вас?</translation>
     </message>
@@ -492,6 +515,18 @@ A KDE menu entry and a system tray icon</source>
         <translation>Голос</translation>
     </message>
     <message>
+        <source>Attach files</source>
+        <translation>Прикрепить файлы</translation>
+    </message>
+    <message>
+        <source>Images, PDF, code, schematics (*.png *.jpg *.jpeg *.gif *.webp *.pdf *.kicad_sch *.kicad_pcb *.kicad_pro *.net *.sim1 *.simu *.c *.h *.cpp *.hpp *.ino *.py *.js *.qml *.json *.txt *.md *.csv *.log *.sh *.cmake *.v *.vhd *.s *.ld *.rs *.go *.cir *.ioc CMakeLists.txt Makefile)</source>
+        <translation>Картинки, PDF, код, схемы (*.png *.jpg *.jpeg *.gif *.webp *.pdf *.kicad_sch *.kicad_pcb *.kicad_pro *.net *.sim1 *.simu *.c *.h *.cpp *.hpp *.ino *.py *.js *.qml *.json *.txt *.md *.csv *.log *.sh *.cmake *.v *.vhd *.s *.ld *.rs *.go *.cir *.ioc CMakeLists.txt Makefile)</translation>
+    </message>
+    <message>
+        <source>All files (*)</source>
+        <translation>Все файлы (*)</translation>
+    </message>
+    <message>
         <source>Jarvis keeps running</source>
         <translation>Jarvis продолжает работать</translation>
     </message>
@@ -556,12 +591,28 @@ A KDE menu entry and a system tray icon</source>
         <translation>☰  Меню</translation>
     </message>
     <message>
+        <source>Drop files to attach them</source>
+        <translation>Отпустите, чтобы прикрепить файлы</translation>
+    </message>
+    <message>
         <source>Helpful: remember this answer</source>
         <translation>Помогло: запомнить этот ответ</translation>
     </message>
     <message>
         <source>Wrong: tell me the right answer</source>
         <translation>Неверно: расскажу правильный ответ</translation>
+    </message>
+    <message>
+        <source>Copied</source>
+        <translation>Скопировано</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <source>Attach files: photos, PDF datasheets, code, KiCad and SimulIDE schematics. You can also drop them onto the chat.</source>
+        <translation>Прикрепить файлы: фото, даташиты в PDF, код, схемы KiCad и SimulIDE. Можно просто перетащить их в чат.</translation>
     </message>
     <message>
         <source>Write a message…</source>
@@ -962,6 +1013,45 @@ Esc — скрыть окно.</translation>
     <message>
         <source>Save</source>
         <translation>Сохранить</translation>
+    </message>
+</context>
+<context>
+    <name>SkillPage</name>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>Calculators</source>
+        <translation>Калькуляторы</translation>
+    </message>
+    <message>
+        <source>Formulas</source>
+        <translation>Формулы</translation>
+    </message>
+    <message>
+        <source>Answers</source>
+        <translation>Ответы</translation>
+    </message>
+    <message>
+        <source>Instructions</source>
+        <translation>Инструкция</translation>
+    </message>
+    <message>
+        <source>This skill has no calculators.</source>
+        <translation>У этого навыка нет калькуляторов.</translation>
+    </message>
+    <message>
+        <source>Jarvis answers these questions instantly, even without the internet. Click one to read the answer.</source>
+        <translation>На эти вопросы Jarvis отвечает сразу, даже без интернета. Нажмите на вопрос, чтобы прочитать ответ.</translation>
+    </message>
+    <message>
+        <source>Ask in chat</source>
+        <translation>Спросить в чате</translation>
+    </message>
+    <message>
+        <source>What Claude is told when this skill is on:</source>
+        <translation>Что получает Claude, когда навык включён:</translation>
     </message>
 </context>
 <context>
@@ -1940,10 +2030,6 @@ Chat with me or add a first example</source>
         <translation>Не удалось создать папку памяти.</translation>
     </message>
     <message>
-        <source>The skill file is larger than 64 KB.</source>
-        <translation>Файл навыка больше 64 КБ.</translation>
-    </message>
-    <message>
         <source>A skill must be a JSON object.</source>
         <translation>Навык должен быть JSON-объектом.</translation>
     </message>
@@ -1960,8 +2046,16 @@ Chat with me or add a first example</source>
         <translation>examples должен быть массивом.</translation>
     </message>
     <message>
-        <source>Up to 50 examples per skill.</source>
-        <translation>До 50 примеров на навык.</translation>
+        <source>The skill file is larger than 160 KB.</source>
+        <translation>Файл навыка больше 160 КБ.</translation>
+    </message>
+    <message>
+        <source>Unknown calculator: %1</source>
+        <translation>Неизвестный калькулятор: %1</translation>
+    </message>
+    <message>
+        <source>Up to 150 examples per skill.</source>
+        <translation>Не больше 150 примеров в навыке.</translation>
     </message>
     <message>
         <source>Each example needs a question and an answer up to 4096 characters.</source>
@@ -1986,6 +2080,42 @@ Chat with me or add a first example</source>
     <message>
         <source>Cannot create the skills folder.</source>
         <translation>Не удалось создать папку навыков.</translation>
+    </message>
+    <message>
+        <source>Cannot read %1</source>
+        <translation>Не удалось прочитать %1</translation>
+    </message>
+    <message>
+        <source>%1 is not a regular file</source>
+        <translation>%1 — не обычный файл</translation>
+    </message>
+    <message>
+        <source>%1: the schematic next to the project was not found</source>
+        <translation>%1: рядом с проектом нет файла схемы</translation>
+    </message>
+    <message>
+        <source>%1 is larger than 20 MB</source>
+        <translation>%1 больше 20 МБ</translation>
+    </message>
+    <message>
+        <source>%1 is larger than 25 MB</source>
+        <translation>%1 больше 25 МБ</translation>
+    </message>
+    <message>
+        <source>%1 is too large</source>
+        <translation>%1 слишком большой</translation>
+    </message>
+    <message>
+        <source>%1 is a binary file: attach an image, a PDF, a schematic or text</source>
+        <translation>%1 — двоичный файл: прикрепите картинку, PDF, схему или текст</translation>
+    </message>
+    <message>
+        <source>%1: could not read the schematic</source>
+        <translation>%1: не удалось прочитать схему</translation>
+    </message>
+    <message>
+        <source>%1 is not UTF-8 text</source>
+        <translation>%1 — не текст в UTF-8</translation>
     </message>
 </context>
 </TS>

@@ -35,6 +35,9 @@ DaemonClient::DaemonClient(QObject *parent)
     bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
                 QString(jarvis::dbus::kInterface), QStringLiteral("Reply"), this,
                 SLOT(onReplySignal(quint64, QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("Progress"), this,
+                SLOT(onProgressSignal(quint64, QString)));
 }
 
 void DaemonClient::tryStartDaemon()
@@ -48,7 +51,7 @@ void DaemonClient::tryStartDaemon()
     QDBusConnection::sessionBus().asyncCall(msg, kCallTimeoutMs); // result is irrelevant
 }
 
-void DaemonClient::ask(const QString &text)
+void DaemonClient::ask(const QString &text, const QStringList &files)
 {
     if (m_waiting)
         return;
@@ -59,8 +62,10 @@ void DaemonClient::ask(const QString &text)
 
     QDBusMessage msg = QDBusMessage::createMethodCall(
         QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
-        QString(jarvis::dbus::kInterface), QStringLiteral("Ask"));
+        QString(jarvis::dbus::kInterface), files.isEmpty() ? QStringLiteral("Ask") : QStringLiteral("AskFiles"));
     msg << text;
+    if (!files.isEmpty())
+        msg << files;
 
     auto *watcher = new QDBusPendingCallWatcher(
         QDBusConnection::sessionBus().asyncCall(msg, kCallTimeoutMs), this);
@@ -108,6 +113,14 @@ void DaemonClient::onReplySignal(quint64 id, const QString &reply)
     m_timeout.stop();
     m_waiting = false;
     emit replyReady(reply);
+}
+
+void DaemonClient::onProgressSignal(quint64 id, const QString &text)
+{
+    if (!m_waiting || id == 0 || id != m_pendingId)
+        return;
+    m_timeout.start(); // still writing: keep waiting
+    emit replyProgress(text);
 }
 
 void DaemonClient::setAvailable(bool available)

@@ -20,7 +20,7 @@ public:
     // is no installed .service file). Asynchronous.
     void tryStartDaemon();
 
-    void ask(const QString &text);
+    void ask(const QString &text, const QStringList &files = {});
 
     // Tell the daemon to re-read its config file (fire and forget).
     void reloadConfig();
@@ -31,17 +31,21 @@ public:
 signals:
     void availabilityChanged(bool available);
     void replyReady(const QString &reply);
+    // The answer so far, while it is written.
+    void replyProgress(const QString &textSoFar);
     void failed(const QString &reason);
 
 private slots:
     void onReplySignal(quint64 id, const QString &reply);
+    void onProgressSignal(quint64 id, const QString &text);
 
 private:
     void setAvailable(bool available);
     void fail(const QString &reason);
 
     static constexpr int kCallTimeoutMs = 3000;
-    static constexpr int kReplyTimeoutMs = 90000; // Claude may take up to 60 s
+    // Silence this long ends the wait; every piece of a streaming answer restarts it.
+    static constexpr int kReplyTimeoutMs = 120000;
 
     QDBusServiceWatcher m_watcher;
     QTimer m_timeout;

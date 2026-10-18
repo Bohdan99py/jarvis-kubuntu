@@ -36,6 +36,12 @@ public:
         TextRole = Qt::UserRole + 1,
         FromUserRole,
         TimeRole,
+        // Jarvis's text as Markdown that cannot load anything (images, HTML).
+        MarkdownRole,
+        // Jarvis's answer split into [{kind: "text", markdown} | {kind: "code", lang, file, code}].
+        SegmentsRole,
+        // Names of the files attached to a user message.
+        FilesRole,
     };
     Q_ENUM(Role)
 
@@ -49,6 +55,11 @@ public:
     bool daemonConnected() const noexcept { return m_daemon.isAvailable(); }
 
     Q_INVOKABLE void send(const QString &text);
+    // With attachments: file URLs or paths (images, PDF, code, KiCad and SimulIDE files).
+    Q_INVOKABLE void sendWithFiles(const QString &text, const QVariantList &files);
+    // Saves code from an answer into ~/Documents/Jarvis/Files; returns the path or "".
+    Q_INVOKABLE QString saveFile(const QString &name, const QString &content, const QString &language) const;
+    Q_INVOKABLE void showInFolder(const QString &path) const;
     Q_INVOKABLE void clear();
     Q_INVOKABLE void refreshGraph();
     Q_INVOKABLE void teach(const QString &question, const QString &answer);
@@ -71,6 +82,8 @@ public:
     Q_INVOKABLE void addTask(const QString &text);
     // done, remove, snooze, reopen
     Q_INVOKABLE void taskAction(const QString &id, const QString &action);
+    // Plain text to the clipboard (code from an answer).
+    Q_INVOKABLE void copyText(const QString &text) const;
     QString memory() const { return m_memory; }
     QString memoryStatus() const { return m_memoryStatus; }
     QString lastReply() const { return m_lastReply; }
@@ -102,14 +115,16 @@ private:
         QString text;
         QString time;
         bool fromUser;
+        QStringList files = {};
     };
 
     static constexpr int kMaxMessages = 500;
 
-    void append(QString text, bool fromUser);
+    void append(QString text, bool fromUser, QStringList files = {});
     void setBusy(bool busy);
     void addGreeting();
     void onReply(const QString &reply);
+    void onProgress(const QString &textSoFar);
     void onDaemonFailed(const QString &reason);
     // Background change: refresh now, or later if no window shows memory.
     void backgroundChange(bool graph);
@@ -138,5 +153,7 @@ private:
     Notifier m_notifier;
     QHash<QString, QString> m_noticeBodies;
     QString m_pendingText;
+    QStringList m_pendingFiles;
+    int m_streamRow = -1; // the answer being written, shown as it grows
     bool m_busy = false;
 };

@@ -10,6 +10,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QTimer>
 #include "desktop_controller.h"
 #include "notifier.h"
@@ -63,5 +64,17 @@ int main(int argc,char *argv[]) {
     engine.rootContext()->setContextProperty("notifier",&notifier);
     QObject::connect(&engine,&QQmlApplicationEngine::objectCreated,&app,[](QObject *object,const QUrl &){if(!object)QCoreApplication::exit(EXIT_FAILURE);},Qt::QueuedConnection);
     engine.load(QUrl("qrc:/qt/qml/Jarvis/Main.qml"));
+    // Development aid for checking the UI without a display:
+    // JARVIS_UI_SNAPSHOT=out.png [JARVIS_UI_SNAPSHOT_SAY=text] saves the main window and exits.
+    if(const QString shot=qEnvironmentVariable("JARVIS_UI_SNAPSHOT");!shot.isEmpty()) {
+        QTimer::singleShot(1500,&app,[&engine,shot]{
+            auto *window=qobject_cast<QQuickWindow*>(engine.rootObjects().value(0));
+            if(!window){QCoreApplication::exit(2);return;}
+            window->show();
+            if(QObject *chat=window->findChild<QObject*>("chatModel"))
+                QMetaObject::invokeMethod(chat,"say",Q_ARG(QString,qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SAY")));
+            QTimer::singleShot(1500,window,[window,shot]{window->grabWindow().save(shot);QCoreApplication::quit();});
+        });
+    }
     return app.exec();
 }

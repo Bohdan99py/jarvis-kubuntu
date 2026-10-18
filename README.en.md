@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.13
+# Jarvis for Kubuntu · 0.14
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.13.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.14.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -49,6 +49,14 @@ Write the way you speak — in chat, in the quick bar or in the Tasks tab of the
 Reminders arrive as KDE notifications from the background daemon — even with the window closed — with "Snooze 10 min" and "Done" buttons; reminders missed while the computer was off come at the next start. Plasma's "Do not disturb" applies.
 
 **Jarvis speaks up by itself** (Control center → Autonomy), at most every half hour, never 23:00–7:00 or during games and videos: a break after 1–2 hours without a pause (needs activity tracking), French flashcards due for review, a curious question when you have not talked for a while, and a morning plan. **Daily memory review** (with a Claude key): once a day Claude merges duplicate facts, drops outdated ones and notes goals and habits; facts you added yourself are never deleted. While hidden, the app also tells you when an answer, a transcription, a PDF translation or the voice setup is ready, and checks for new releases twice a day.
+
+## Skills, calculators and formulas
+
+Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, plus conversation, philosophy, games and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas` and per-example `aliases`.
+
+## Files, code and schematics
+
+The paperclip (or drag and drop) attaches up to 8 files to a question: images, PDF datasheets, source code and text, KiCad schematics (`.kicad_sch` — with `kicad-cli` Jarvis sends the full netlist of all sheets and a PDF of the drawing), boards (`.kicad_pcb`), netlists (`.net`) and SimulIDE circuits (`.sim1`). Schematics reach Claude as parts and nets, so it checks connections net by net; without a key Jarvis still lists them. Code in answers gets its own blocks with syntax colours, Copy and Save as file (into `~/Documents/Jarvis/Files`).
 
 ## Embedded systems specialist
 

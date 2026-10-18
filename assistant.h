@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QQueue>
+#include <QStringList>
 #include <QString>
 #include <QTimer>
 
@@ -37,7 +38,8 @@ public:
     explicit Assistant(QObject *parent = nullptr);
     ~Assistant() override;
 
-    quint64 ask(const QString &input);
+    // `files`: paths of attachments (images, PDF, code, schematics), up to 8.
+    quint64 ask(const QString &input, const QStringList &files = {});
     void reloadConfig();
     const ConfigData &config() const { return m_config; }
     QString teach(const QString &q, const QString &a);
@@ -90,6 +92,8 @@ public:
 
 signals:
     void replyReady(quint64 id, const QString &reply);
+    // The answer to `id` so far, while Claude writes it (hidden tags removed).
+    void replyProgress(quint64 id, const QString &textSoFar);
     // Facts, examples or topics changed (graph and lists need a refresh).
     void memoryChanged();
     // Activity data changed; throttled.
@@ -108,6 +112,7 @@ private:
         QString text;
         QString mode;        // empty for chat, otherwise a code request
         QJsonObject context; // code requests only
+        QStringList files;   // attachments of a chat request
     };
     struct CodeAnswer
     {
@@ -121,6 +126,8 @@ private:
 
     void startNext();
     void answer(const Request &r, Lang lang);
+    // A question with attached files: straight to Claude (or a local summary of schematics).
+    void answerWithFiles(const Request &r, Lang lang);
     // Reminders and tasks in chat. False when `text` is not about them; true when
     // the request is answered (now, or later once Claude has read the time).
     bool handleTaskCommand(const Request &r, Lang lang);

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Jarvis
 import Qt.labs.platform as Platform
+import QtQuick.Dialogs as Dialogs
 
 ApplicationWindow {
     id: root
@@ -17,6 +18,7 @@ ApplicationWindow {
 
     ChatModel {
         id: chatModel
+        objectName: "chatModel"
         // Memory and the graph only need to follow background changes while shown.
         liveUpdates: (root.visible && root.visibility !== Window.Minimized) || quickBar.visible
     }
@@ -169,12 +171,31 @@ ApplicationWindow {
         onActivated: Qt.quit()
     }
 
+    // Files waiting to go with the next message (URLs).
+    property var pendingFiles: []
+    function attach(urls) {
+        const next = root.pendingFiles.slice()
+        for (let i = 0; i < urls.length && next.length < 8; ++i)
+            if (next.map(String).indexOf(String(urls[i])) < 0)
+                next.push(urls[i])
+        root.pendingFiles = next
+    }
+    function fileName(url) { return decodeURIComponent(String(url).split("/").pop()) }
     function submit() {
         const t = input.text.trim()
-        if (t.length === 0 || chatModel.busy)
+        if ((t.length === 0 && root.pendingFiles.length === 0) || chatModel.busy)
             return
-        chatModel.send(t)
+        chatModel.sendWithFiles(t, root.pendingFiles)
         input.text = ""
+        root.pendingFiles = []
+    }
+    Dialogs.FileDialog {
+        id: attachDialog
+        title: qsTr("Attach files")
+        fileMode: Dialogs.FileDialog.OpenFiles
+        nameFilters: [qsTr("Images, PDF, code, schematics (*.png *.jpg *.jpeg *.gif *.webp *.pdf *.kicad_sch *.kicad_pcb *.kicad_pro *.net *.sim1 *.simu *.c *.h *.cpp *.hpp *.ino *.py *.js *.qml *.json *.txt *.md *.csv *.log *.sh *.cmake *.v *.vhd *.s *.ld *.rs *.go *.cir *.ioc CMakeLists.txt Makefile)"),
+                      qsTr("All files (*)")]
+        onAccepted: root.attach(selectedFiles)
     }
 
     Connections {
@@ -321,100 +342,203 @@ ApplicationWindow {
         }
 
         // ---------- Messages ----------
-        ListView {
-            id: list
+        DropArea {
+            id: fileDrop
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            spacing: 8
-            topMargin: 12
-            bottomMargin: 12
-            boundsBehavior: Flickable.StopAtBounds
-            model: chatModel
+            keys: ["text/uri-list"]
+            onDropped: drop => { if (drop.hasUrls) { root.attach(drop.urls); drop.accept() } }
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 8
+                z: 2
+                visible: fileDrop.containsDrag
+                radius: 18
+                color: Qt.rgba(0.31, 0.85, 0.83, 0.10)
+                border.color: Theme.accent
+                border.width: 2
+                Label { anchors.centerIn: parent; text: qsTr("Drop files to attach them"); color: Theme.accent; font.pixelSize: 18 }
+            }
+            ListView {
+                id: list
+                anchors.fill: parent
+                clip: true
+                spacing: 8
+                topMargin: 12
+                bottomMargin: 12
+                boundsBehavior: Flickable.StopAtBounds
+                model: chatModel
 
-            ScrollBar.vertical: ScrollBar {}
+                ScrollBar.vertical: ScrollBar {}
 
-            onCountChanged: Qt.callLater(list.positionViewAtEnd)
+                onCountChanged: { stickToEnd = true; Qt.callLater(list.positionViewAtEnd) }
+                // A streaming answer grows in place: follow it unless the user scrolled up to read.
+                property bool stickToEnd: true
+                onMovementEnded: stickToEnd = atYEnd
+                onContentHeightChanged: if (stickToEnd && !moving) Qt.callLater(list.positionViewAtEnd)
 
-            delegate: Item {
-                id: row
+                delegate: Item {
+                    id: row
 
-                required property string text
-                required property bool fromUser
-                required property string time
-                required property int index
+                    required property string text
+                    required property string markdown
+                    required property var segments
+                    required property var files
+                    required property bool fromUser
+                    required property string time
+                    required property int index
 
-                readonly property real maxBubble: width * 0.78
-                // 👍/👎 under Jarvis's latest answer (not the greeting).
-                readonly property bool rateable: !fromUser && index > 0 && index === ListView.view.count - 1 && !chatModel.busy
+                    readonly property real maxBubble: width * 0.78
+                    // 👍/👎 under Jarvis's latest answer (not the greeting).
+                    readonly property bool rateable: !fromUser && index > 0 && index === ListView.view.count - 1 && !chatModel.busy
 
-                width: ListView.view.width
-                height: bubble.height + (rateable ? rateRow.height + 4 : 0)
+                    width: ListView.view.width
+                    height: bubble.height + (rateable ? rateRow.height + 4 : 0)
 
-                Row {
-                    id: rateRow
-                    visible: row.rateable
-                    x: 22
-                    y: bubble.height + 4
-                    spacing: 6
-                    Repeater {
-                        model: [{label: "👍", good: true}, {label: "👎", good: false}]
-                        ToolButton {
-                            required property var modelData
-                            text: modelData.label
-                            implicitHeight: 26
-                            onClicked: chatModel.feedback(modelData.good)
-                            ToolTip.visible: hovered
-                            ToolTip.text: modelData.good ? qsTr("Helpful: remember this answer") : qsTr("Wrong: tell me the right answer")
-                            background: Rectangle { radius: 13; color: parent.hovered ? Theme.hover : Theme.botBubble }
+                    Row {
+                        id: rateRow
+                        visible: row.rateable
+                        x: 22
+                        y: bubble.height + 4
+                        spacing: 6
+                        Repeater {
+                            model: [{label: "👍", good: true}, {label: "👎", good: false}]
+                            ToolButton {
+                                required property var modelData
+                                text: modelData.label
+                                implicitHeight: 26
+                                onClicked: chatModel.feedback(modelData.good)
+                                ToolTip.visible: hovered
+                                ToolTip.text: modelData.good ? qsTr("Helpful: remember this answer") : qsTr("Wrong: tell me the right answer")
+                                background: Rectangle { radius: 13; color: parent.hovered ? Theme.hover : Theme.botBubble }
+                            }
                         }
                     }
-                }
 
-                // Measures the natural single-line width so short messages get narrow bubbles.
-                TextMetrics {
-                    id: metrics
-                    font.pixelSize: Theme.fontSize
-                    text: row.text
-                }
-
-                Rectangle {
-                    id: bubble
-                    x: row.fromUser ? row.width - width - 16 : 16
-                    width: Math.min(Math.max(metrics.advanceWidth, stamp.contentWidth) + 28, row.maxBubble)
-                    height: body.contentHeight + stamp.contentHeight + 22
-                    radius: 18
-                    color: row.fromUser ? Theme.userBubble : Theme.botBubble
-
-                    NumberAnimation on opacity {
-                        from: 0
-                        to: 1
-                        duration: 280
-                    }
-
-                    Text {
-                        id: body
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: 14
-                        anchors.topMargin: 8
-                        text: row.text
-                        textFormat: Text.PlainText
-                        wrapMode: Text.Wrap
-                        color: Theme.text
+                    // Measures the natural single-line width so short messages get narrow bubbles.
+                    TextMetrics {
+                        id: metrics
                         font.pixelSize: Theme.fontSize
+                        text: row.text
                     }
+                    readonly property bool hasCode: !row.fromUser && row.segments.some(segment => segment.kind === "code")
 
-                    Text {
-                        id: stamp
-                        anchors.top: body.bottom
-                        anchors.topMargin: 2
-                        anchors.right: parent.right
-                        anchors.rightMargin: 14
-                        text: row.time
-                        color: Qt.rgba(1, 1, 1, 0.45)
-                        font.pixelSize: 10
+                    Rectangle {
+                        id: bubble
+                        x: row.fromUser ? row.width - width - 16 : 16
+                        width: row.hasCode ? row.maxBubble
+                                           : Math.min(Math.max(metrics.advanceWidth, filesLine.implicitWidth,
+                                                               stamp.contentWidth + (copyButton.visible ? copyButton.width + 16 : 0)) + 28, row.maxBubble)
+                        height: content.implicitHeight + stamp.contentHeight + 22
+                        radius: 18
+                        color: row.fromUser ? Theme.userBubble : Theme.botBubble
+
+                        NumberAnimation on opacity {
+                            from: 0
+                            to: 1
+                            duration: 280
+                        }
+
+                        // Selectable text; answers render Markdown, code gets its own blocks.
+                        Column {
+                            id: content
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.margins: 14
+                            anchors.topMargin: 8
+                            spacing: 8
+                            TextEdit {
+                                visible: row.fromUser && row.text.length > 0
+                                width: parent.width
+                                text: row.fromUser ? row.text : ""
+                                textFormat: TextEdit.PlainText
+                                readOnly: true
+                                selectByMouse: true
+                                selectionColor: Theme.accent
+                                selectedTextColor: Theme.bg
+                                wrapMode: TextEdit.Wrap
+                                color: Theme.text
+                                font.pixelSize: Theme.fontSize
+                            }
+                            Text {
+                                id: filesLine
+                                visible: row.files.length > 0
+                                width: Math.min(implicitWidth, parent.width)
+                                text: "📎 " + row.files.join("  ·  ")
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                font.pixelSize: 12
+                                wrapMode: Text.Wrap
+                            }
+                            Repeater {
+                                model: row.fromUser ? [] : row.segments
+                                delegate: Item {
+                                    id: segment
+                                    required property var modelData
+                                    width: content.width
+                                    height: modelData.kind === "code" ? (codeLoader.item ? codeLoader.item.implicitHeight : 0) : prose.implicitHeight
+                                    TextEdit {
+                                        id: prose
+                                        visible: segment.modelData.kind === "text"
+                                        width: parent.width
+                                        text: visible ? segment.modelData.markdown : ""
+                                        textFormat: TextEdit.MarkdownText
+                                        readOnly: true
+                                        selectByMouse: true
+                                        selectionColor: Theme.accent
+                                        selectedTextColor: Theme.bg
+                                        wrapMode: TextEdit.Wrap
+                                        color: Theme.text
+                                        font.pixelSize: Theme.fontSize
+                                        onLinkActivated: link => { if (/^https?:\/\//.test(link)) Qt.openUrlExternally(link) }
+                                    }
+                                    Loader {
+                                        id: codeLoader
+                                        active: segment.modelData.kind === "code"
+                                        width: parent.width
+                                        sourceComponent: CodeBlock {
+                                            width: segment.width
+                                            code: segment.modelData.code || ""
+                                            lang: segment.modelData.lang || ""
+                                            file: segment.modelData.file || ""
+                                            chat: chatModel
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            id: copyButton
+                            visible: !row.fromUser && row.index > 0
+                            anchors.verticalCenter: stamp.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 14
+                            text: copied ? qsTr("Copied") : qsTr("Copy")
+                            property bool copied: false
+                            color: copyMouse.containsMouse ? Theme.accent : Qt.rgba(1, 1, 1, 0.45)
+                            font.pixelSize: 10
+                            MouseArea {
+                                id: copyMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: { chatModel.copyText(row.text); copyButton.copied = true; copyReset.restart() }
+                            }
+                            Timer { id: copyReset; interval: 1500; onTriggered: copyButton.copied = false }
+                        }
+
+                        Text {
+                            id: stamp
+                            anchors.top: content.bottom
+                            anchors.topMargin: 2
+                            anchors.right: parent.right
+                            anchors.rightMargin: 14
+                            text: row.time
+                            color: Qt.rgba(1, 1, 1, 0.45)
+                            font.pixelSize: 10
+                        }
                     }
                 }
             }
@@ -462,6 +586,43 @@ ApplicationWindow {
 
         Label { Layout.fillWidth: true; visible: voiceEngine.busy || voiceEngine.recording; text: voiceEngine.status; color: Theme.accent; wrapMode: Text.Wrap; padding: 8 }
 
+        // Files waiting to be sent.
+        Flow {
+            Layout.fillWidth: true
+            Layout.leftMargin: 14
+            Layout.rightMargin: 14
+            visible: root.pendingFiles.length > 0
+            spacing: 6
+            Repeater {
+                model: root.pendingFiles
+                Rectangle {
+                    id: fileChip
+                    required property var modelData
+                    required property int index
+                    width: chipRow.implicitWidth + 16
+                    height: 28
+                    radius: 14
+                    color: Theme.selected
+                    border.color: Theme.border
+                    Row {
+                        id: chipRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Text { text: "📎 " + root.fileName(fileChip.modelData); color: Theme.text; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                        Text {
+                            text: "×"; color: removeMouse.containsMouse ? Theme.accent : Theme.textDim; font.pixelSize: 15
+                            anchors.verticalCenter: parent.verticalCenter
+                            MouseArea {
+                                id: removeMouse
+                                anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: { const next = root.pendingFiles.slice(); next.splice(fileChip.index, 1); root.pendingFiles = next }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // ---------- Input ----------
         Rectangle {
             Layout.fillWidth: true
@@ -479,6 +640,20 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 12
                 spacing: 10
+
+                ToolButton {
+                    Layout.fillHeight: true
+                    implicitWidth: 44
+                    text: "📎"
+                    font.pixelSize: 18
+                    enabled: !chatModel.busy
+                    onClicked: attachDialog.open()
+                    Accessible.name: qsTr("Attach files")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 400
+                    ToolTip.text: qsTr("Attach files: photos, PDF datasheets, code, KiCad and SimulIDE schematics. You can also drop them onto the chat.")
+                    background: Rectangle { radius: 20; color: parent.hovered ? Theme.hover : Theme.bg; border.color: Theme.border }
+                }
 
                 TextField {
                     id: input
@@ -511,7 +686,7 @@ ApplicationWindow {
                     Layout.fillHeight: true
                     text: qsTr("Send")
                     primary: true
-                    enabled: !chatModel.busy && input.text.trim().length > 0
+                    enabled: !chatModel.busy && (input.text.trim().length > 0 || root.pendingFiles.length > 0)
                     onClicked: root.submit()
                 }
             }

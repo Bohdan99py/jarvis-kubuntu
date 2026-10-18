@@ -1,0 +1,196 @@
+{
+ "schema": 1,
+ "id": "programming",
+ "image": "programming",
+ "color": "#5aa2f0",
+ "name": "Программирование",
+ "name_en": "Programming",
+ "description": "C, C++, Python, Qt, Linux, git и отладка: код, объяснения, поиск ошибок.",
+ "description_en": "C, C++, Python, Qt, Linux, git and debugging: code, explanations, finding bugs.",
+ "prompt": "Act as a senior software engineer and mentor. Languages and tools: C, modern C++ (RAII, smart pointers, move semantics, templates, STL, undefined behaviour), Python, Qt/QML, CMake, Linux (shell, processes, permissions, systemd), git, debugging (gdb, valgrind, sanitizers, logging), testing, algorithms and complexity. When writing code: give complete, compilable code in fenced blocks with the language tag; when the user wants a file, put the file name after the language tag (```cpp main.cpp) so Jarvis can save it; keep the user's style and existing APIs; explain the key decisions briefly after the code. When fixing: find the root cause, show the corrected code and say why the bug happened. When the user attaches source files, refer to them by name and line. Never invent APIs; say when the answer depends on a version. Prefer simple, readable solutions over clever ones.",
+ "tools": [
+  "bases"
+ ],
+ "formulas": [
+  {
+   "title": "Установить бит",
+   "formula": "x |= (1u << n);",
+   "title_en": "Set a bit"
+  },
+  {
+   "title": "Сбросить бит",
+   "formula": "x &= ~(1u << n);",
+   "title_en": "Clear a bit"
+  },
+  {
+   "title": "Инвертировать бит",
+   "formula": "x ^= (1u << n);",
+   "title_en": "Toggle a bit"
+  },
+  {
+   "title": "Проверить бит",
+   "formula": "if (x & (1u << n)) { … }",
+   "title_en": "Test a bit"
+  },
+  {
+   "title": "Маска из n младших битов",
+   "formula": "mask = (1u << n) − 1;",
+   "title_en": "Low n-bit mask"
+  },
+  {
+   "title": "Сложность алгоритмов",
+   "formula": "O(1) < O(log n) < O(n) < O(n·log n) < O(n²) < O(2ⁿ)",
+   "note": "Поиск в отсортированном массиве — O(log n), сортировка — O(n·log n).",
+   "title_en": "Complexity"
+  },
+  {
+   "title": "git: начать ветку",
+   "formula": "git switch -c feature/имя",
+   "title_en": "git: new branch"
+  },
+  {
+   "title": "git: отменить незакоммиченное в файле",
+   "formula": "git restore файл",
+   "title_en": "git: discard file changes"
+  },
+  {
+   "title": "git: поправить последний коммит",
+   "formula": "git commit --amend",
+   "note": "Только если коммит ещё не отправлен.",
+   "title_en": "git: amend last commit"
+  },
+  {
+   "title": "gdb: основное",
+   "formula": "run · bt · frame N · print var · break file:line · next · step · continue",
+   "title_en": "gdb basics"
+  },
+  {
+   "title": "Поиск ошибок памяти",
+   "formula": "g++ -g -fsanitize=address,undefined …;  valgrind ./app",
+   "title_en": "Memory error tools"
+  },
+  {
+   "title": "Права в Linux",
+   "formula": "chmod 644 файл (rw-r--r--);  chmod 755 скрипт (rwxr-xr-x)",
+   "note": "r = 4, w = 2, x = 1 для владельца, группы, остальных.",
+   "title_en": "Linux permissions"
+  }
+ ],
+ "examples": [
+  {
+   "question": "Что такое указатель?",
+   "answer": "Указатель — переменная, хранящая адрес другой переменной. `int x = 5; int *p = &x;` — p указывает на x, `*p` читает или меняет x. nullptr — «никуда». Опасности: разыменование nullptr или висячего указателя (на освобождённую память) — неопределённое поведение. В C++ вместо «голых» владеющих указателей используйте std::unique_ptr и std::shared_ptr.",
+   "aliases": [
+    "указатель",
+    "pointer"
+   ]
+  },
+  {
+   "question": "Чем ссылка отличается от указателя?",
+   "answer": "Ссылка (`int &r = x;`) — другое имя для существующего объекта: всегда инициализирована, не может быть null и не переназначается. Указатель может быть nullptr, его можно перенаправить и использовать арифметику. Для параметров функций, которые не могут быть пустыми, лучше ссылки (const & для чтения).",
+   "aliases": [
+    "ссылка и указатель",
+    "reference vs pointer"
+   ]
+  },
+  {
+   "question": "Что такое стек и куча?",
+   "answer": "Стек — память для локальных переменных и вызовов функций: выделяется и освобождается автоматически, очень быстро, но размер ограничен (обычно 1–8 МБ, на МК — единицы КБ). Куча — динамическая память (new/malloc), размер большой, время жизни задаёте вы. Ошибки: переполнение стека (глубокая рекурсия, большие массивы), утечки и фрагментация кучи.",
+   "aliases": [
+    "стек и куча",
+    "stack vs heap"
+   ]
+  },
+  {
+   "question": "Что такое RAII?",
+   "answer": "RAII (Resource Acquisition Is Initialization) — ресурс захватывается в конструкторе объекта и освобождается в деструкторе. Так память, файлы, мьютексы освобождаются автоматически при выходе из области видимости, даже при исключении. Примеры: std::unique_ptr, std::lock_guard, std::fstream.",
+   "aliases": [
+    "raii"
+   ]
+  },
+  {
+   "question": "Что такое умные указатели?",
+   "answer": "std::unique_ptr — единственный владелец, освобождает объект в деструкторе, только перемещается (std::move). std::shared_ptr — общее владение со счётчиком ссылок. std::weak_ptr — наблюдатель за shared_ptr без владения, разрывает циклы. Создавайте через std::make_unique / std::make_shared.",
+   "aliases": [
+    "умные указатели",
+    "smart pointers",
+    "unique_ptr"
+   ]
+  },
+  {
+   "question": "Как найти причину segmentation fault?",
+   "answer": "1. Соберите с отладочной информацией: `-g -O0`.\n2. Запустите в gdb: `gdb ./app`, `run`, после падения `bt` — стек вызовов покажет строку.\n3. Включите AddressSanitizer: `-fsanitize=address,undefined` — он сообщит о выходе за границы массива, use-after-free и т. п. с точной строкой.\n4. Или valgrind: `valgrind ./app`.\nЧастые причины: nullptr, выход за массив, висячий указатель, переполнение стека.",
+   "aliases": [
+    "segfault",
+    "segmentation fault",
+    "ошибка сегментации"
+   ]
+  },
+  {
+   "question": "Чем процесс отличается от потока?",
+   "answer": "Процесс — отдельная программа со своей памятью; процессы изолированы и общаются через каналы, сокеты, D-Bus. Потоки — несколько ходов выполнения внутри одного процесса с общей памятью: обмен быстрый, но нужна синхронизация (мьютексы, атомики), иначе гонки данных.",
+   "aliases": [
+    "процесс и поток",
+    "process vs thread"
+   ]
+  },
+  {
+   "question": "Что такое мьютекс?",
+   "answer": "Мьютекс — замок, который в каждый момент может держать только один поток: так защищают общие данные от одновременной записи. В C++: `std::mutex m; { std::lock_guard lock(m); ... }` — замок снимется автоматически. Опасности: взаимная блокировка (deadlock), если два потока берут два мьютекса в разном порядке.",
+   "aliases": [
+    "мьютекс",
+    "mutex"
+   ]
+  },
+  {
+   "question": "Что такое git rebase?",
+   "answer": "`git rebase main` переносит ваши коммиты ветки поверх свежего main — история становится линейной. `git merge` вместо этого создаёт коммит слияния и не переписывает историю. Правило: не делайте rebase коммитов, которые уже отправлены и используются другими.",
+   "aliases": [
+    "rebase",
+    "rebase или merge",
+    "git rebase vs merge"
+   ]
+  },
+  {
+   "question": "Как отменить последний коммит?",
+   "answer": "Если коммит не отправлен: `git reset --soft HEAD~1` — коммит отменён, изменения остались в индексе. `git reset --hard HEAD~1` — удалит и изменения (осторожно!). Если уже отправлен — `git revert HEAD`: создаёт новый коммит, отменяющий изменения, история не переписывается.",
+   "aliases": [
+    "отменить коммит",
+    "undo last commit"
+   ]
+  },
+  {
+   "question": "Что такое сложность алгоритма?",
+   "answer": "Сложность O(…) показывает, как растёт время (или память) с ростом входа n. O(1) — константа, O(log n) — бинарный поиск, O(n) — проход по массиву, O(n log n) — хорошая сортировка, O(n²) — вложенные циклы. На 1 000 000 элементов O(n²) — это 10¹² операций, O(n log n) — около 2·10⁷.",
+   "aliases": [
+    "сложность алгоритма",
+    "big o",
+    "o большое"
+   ]
+  },
+  {
+   "question": "Что такое сигналы и слоты в Qt?",
+   "answer": "Сигналы и слоты — механизм событий Qt: объект испускает сигнал (`emit valueChanged(v)`), а подключённые слоты вызываются. Подключение: `connect(sender, &Sender::valueChanged, receiver, &Receiver::onValue);`. Между потоками вызов автоматически ставится в очередь потока получателя. Класс должен иметь Q_OBJECT.",
+   "aliases": [
+    "сигналы и слоты",
+    "qt signals and slots"
+   ]
+  },
+  {
+   "question": "Как работает CMake?",
+   "answer": "CMake генерирует файлы сборки (Ninja, Make) из CMakeLists.txt. Минимум:\n```cmake\ncmake_minimum_required(VERSION 3.21)\nproject(app CXX)\nadd_executable(app main.cpp)\n```\nСборка: `cmake -S . -B build -G Ninja` и `cmake --build build`. Библиотеки подключают через find_package и target_link_libraries.",
+   "aliases": [
+    "cmake",
+    "как пользоваться cmake"
+   ]
+  },
+  {
+   "question": "Что такое неопределённое поведение?",
+   "answer": "Неопределённое поведение (UB) в C/C++ — операции, результат которых стандарт не определяет: выход за границы массива, переполнение знакового int, разыменование nullptr, чтение неинициализированной переменной, гонка данных. Программа может «работать», падать или вести себя странно только с оптимизацией. Ловите UB с -fsanitize=undefined,address и предупреждениями -Wall -Wextra.",
+   "aliases": [
+    "ub",
+    "undefined behavior"
+   ]
+  }
+ ]
+}

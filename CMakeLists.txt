@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.13.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.14.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,6 +66,10 @@ qt_add_library(jarvis_core STATIC
     reminder_parser.cpp
     task_store.h
     task_store.cpp
+    calc_engine.h
+    calc_engine.cpp
+    attachments.h
+    attachments.cpp
     chat_engine.h
     chat_engine.cpp
     system_info.h
@@ -78,8 +82,8 @@ qt_add_library(jarvis_core STATIC
     assistant.cpp
 )
 target_include_directories(jarvis_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.json skills/electronics.json skills/embedded.json skills/games.json skills/conversation.json skills/writing.json)
-target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Network jarvis_sys)
+qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.json skills/electronics.json skills/embedded.json skills/physics.json skills/programming.json skills/games.json skills/conversation.json skills/writing.json)
+target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Gui Qt6::Network jarvis_sys)
 jarvis_warnings(jarvis_core)
 
 # Russian translation of the English source strings (C++ and QML). Only
@@ -142,6 +146,8 @@ qt_add_qml_module(jarvis
         DarkMenuItem.qml
         SettingsDialog.qml
         StudyWindow.qml
+        SkillPage.qml
+        CodeBlock.qml
     SOURCES
         voice_controller.h
         voice_controller.cpp
@@ -159,6 +165,8 @@ qt_add_qml_module(jarvis
         app_settings.cpp
         notifier.h
         notifier.cpp
+        code_highlighter.h
+        code_highlighter.cpp
 )
 
 target_link_libraries(jarvis PRIVATE
@@ -171,7 +179,10 @@ target_link_libraries(jarvis PRIVATE
     Qt6::DBus
 )
 jarvis_warnings(jarvis)
-qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg)
+qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg
+    icons/skills/electronics.svg icons/skills/physics.svg icons/skills/embedded.svg icons/skills/programming.svg
+    icons/skills/philosophy.svg icons/skills/games.svg icons/skills/conversation.svg icons/skills/writing.svg
+    icons/skills/default.svg)
 
 # ---------------------------------------------------------------------------
 # Install: binaries, launcher, systemd user unit, D-Bus activation file.

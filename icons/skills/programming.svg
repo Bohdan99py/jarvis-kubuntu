@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5aa2f0" stop-opacity=".30"/><stop offset="1" stop-color="#0c1523" stop-opacity="1"/></linearGradient>
+<radialGradient id="h" cx=".75" cy=".3" r=".6"><stop offset="0" stop-color="#5aa2f0" stop-opacity=".35"/><stop offset="1" stop-color="#5aa2f0" stop-opacity="0"/></radialGradient></defs>
+<rect width="320" height="160" fill="#101b2b"/><rect width="320" height="160" fill="url(#g)"/><rect width="320" height="160" fill="url(#h)"/>
+<g fill="none" stroke="#5aa2f0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<rect x="50" y="25" width="220" height="115" rx="10" fill="#5aa2f0" fill-opacity=".08"/>
+<path d="M50 45h220"/><circle cx="65" cy="35" r="3" fill="#f07a8f" stroke="none"/><circle cx="77" cy="35" r="3" fill="#f0b45a" stroke="none"/><circle cx="89" cy="35" r="3" fill="#3fb27f" stroke="none"/>
+<path d="M75 65h40M125 65h60M90 82h70M170 82h30M90 99h50M75 116h25" stroke-width="5" stroke-opacity=".55"/>
+<path d="M215 85l-14 14 14 14M245 85l14 14-14 14M236 80l-12 38" stroke-width="3.5"/>
+</g></svg>

@@ -88,15 +88,18 @@ bool DaemonService::start(QString *error)
     return true;
 }
 
-quint64 DaemonService::ask(const QString &text)
+quint64 DaemonService::ask(const QString &text, const QStringList &files)
 {
-    if (text.isEmpty() || text.size() > kMaxRequestChars) {
-        qWarning().nospace() << "rejected request (" << text.size() << " chars)";
+    if ((text.isEmpty() && files.isEmpty()) || text.size() > kMaxRequestChars || files.size() > 8) {
+        qWarning().nospace() << "rejected request (" << text.size() << " chars, " << files.size() << " files)";
         return 0;
     }
-    const quint64 id = m_assistant.ask(text);
-    // Log the size only, never the content.
-    qInfo().nospace() << "request #" << id << " (" << text.size() << " chars)";
+    for (const QString &f : files)
+        if (f.size() > 4096 || !f.startsWith(u'/'))
+            return 0;
+    const quint64 id = m_assistant.ask(text, files);
+    // Log the size only, never the content or the file names.
+    qInfo().nospace() << "request #" << id << " (" << text.size() << " chars, " << files.size() << " files)";
     return id;
 }
 
@@ -121,6 +124,7 @@ DaemonAdaptor::DaemonAdaptor(DaemonService *service)
 {
     setAutoRelaySignals(false);
     connect(service, &DaemonService::replyReady, this, &DaemonAdaptor::Reply);
+    connect(&service->assistant(), &Assistant::replyProgress, this, &DaemonAdaptor::Progress);
     connect(&service->assistant(), &Assistant::memoryChanged, this, &DaemonAdaptor::MemoryChanged);
     connect(&service->assistant(), &Assistant::activityChanged, this, &DaemonAdaptor::ActivityChanged);
 }
@@ -128,6 +132,11 @@ DaemonAdaptor::DaemonAdaptor(DaemonService *service)
 quint64 DaemonAdaptor::Ask(const QString &text)
 {
     return m_service->ask(text);
+}
+
+quint64 DaemonAdaptor::AskFiles(const QString &text, const QStringList &files)
+{
+    return m_service->ask(text, files);
 }
 
 QString DaemonAdaptor::Teach(const QString &q, const QString &a) { return m_service->teach(q, a); }

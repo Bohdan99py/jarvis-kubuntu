@@ -29,7 +29,7 @@ public:
     bool start(QString *error);
 
     // Returns the request id, or 0 if the request was rejected.
-    quint64 ask(const QString &text);
+    quint64 ask(const QString &text, const QStringList &files = {});
     void reloadConfig();
 
     QString teach(const QString &q, const QString &a) { return m_assistant.teach(q, a); }
@@ -54,6 +54,7 @@ private:
 
 // D-Bus face of DaemonService: interface org.jarvis.Daemon1
 //   method Ask(s) -> t        queue a request, returns its id (0 = rejected)
+//   method AskFiles(s, as) -> t  the same with attached files (paths, up to 8)
 //   method Version() -> s
 //   method Teach(s, s) -> s   save a question/answer example ("" = ok)
 //   method Graph() -> s       memory graph JSON
@@ -69,6 +70,7 @@ private:
 //   method ReloadConfig()     re-read ~/.config/jarvis/config.json
 //   method Quit()             stop the daemon (clean exit, systemd will not restart it)
 //   signal Reply(t, s)        answer for request id
+//   signal Progress(t, s)     the answer so far, while Claude writes it
 //   signal MemoryChanged()    facts/examples/topics changed
 //   signal ActivityChanged()  activity data changed (throttled)
 class DaemonAdaptor : public QDBusAbstractAdaptor
@@ -81,6 +83,7 @@ public:
 
 public slots:
     quint64 Ask(const QString &text);
+    quint64 AskFiles(const QString &text, const QStringList &files);
     QString Version();
     QString Teach(const QString &question, const QString &answer);
     QString Graph();
@@ -98,6 +101,7 @@ public slots:
 
 signals:
     void Reply(quint64 id, const QString &text);
+    void Progress(quint64 id, const QString &text);
     void MemoryChanged();
     void ActivityChanged();
 

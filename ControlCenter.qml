@@ -72,24 +72,78 @@ Dialog {
 
             // ---------- Skills ----------
             ColumnLayout {
-                Label { text: qsTr("Turn on the topics you need. Examples work locally, richer answers come from Claude."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                ListView {
-                    Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 10
+                spacing: 10
+                Label { text: qsTr("Turn on the topics you need. Open a tile for its calculators, formulas and ready answers — they work without the internet."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                GridView {
+                    id: skillGrid
+                    objectName: "skillGrid"
+                    Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+                    readonly property int columns: Math.max(1, Math.floor(width / 230))
+                    cellWidth: Math.floor(width / columns)
+                    cellHeight: 236
                     model: center.desktop.skills
                     ScrollBar.vertical: ScrollBar {}
-                    delegate: Rectangle {
-                        id: skill
+                    delegate: Item {
+                        id: tile
                         required property var modelData
-                        width: ListView.view.width; height: 86; radius: 14; color: Theme.bg; border.color: Theme.border
-                        RowLayout {
-                            anchors.fill: parent; anchors.margins: 14
-                            ColumnLayout {
-                                Layout.fillWidth: true; spacing: 4
-                                Label { text: center.skillText(skill.modelData, "name"); color: Theme.text; font.pixelSize: 17; font.bold: true; textFormat: Text.PlainText }
-                                Label { text: center.skillText(skill.modelData, "description"); color: Theme.textDim; Layout.fillWidth: true; elide: Text.ElideRight; textFormat: Text.PlainText }
+                        readonly property color tint: modelData.color || Theme.accent
+                        width: skillGrid.cellWidth
+                        height: skillGrid.cellHeight
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            radius: 16
+                            clip: true
+                            color: Theme.bg
+                            border.color: tileMouse.containsMouse ? tile.tint : Theme.border
+                            opacity: tile.modelData.enabled ? 1 : 0.6
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                            MouseArea { id: tileMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: skillPage.show(tile.modelData) }
+                            Image {
+                                id: art
+                                anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+                                anchors.margins: 1
+                                height: 104
+                                source: "qrc:/icons/skills/" + (tile.modelData.image || "default") + ".svg"
+                                sourceSize.width: 320
+                                fillMode: Image.PreserveAspectCrop
+                                scale: tileMouse.containsMouse ? 1.04 : 1
+                                Behavior on scale { NumberAnimation { duration: 180 } }
                             }
-                            DarkButton { text: qsTr("About"); onClicked: { details.skill=skill.modelData; details.open() } }
-                            Switch { checked: skill.modelData.enabled; onClicked: center.desktop.setSkillEnabled(skill.modelData.id, checked); Accessible.name: center.skillText(skill.modelData, "name") }
+                            ColumnLayout {
+                                anchors.left: parent.left; anchors.right: parent.right; anchors.top: art.bottom; anchors.bottom: parent.bottom
+                                anchors.margins: 12; anchors.topMargin: 8
+                                spacing: 3
+                                Label { text: center.skillText(tile.modelData, "name"); color: Theme.text; font.pixelSize: 16; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true; textFormat: Text.PlainText }
+                                Label {
+                                    text: center.skillText(tile.modelData, "description")
+                                    color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight
+                                    Layout.fillWidth: true; textFormat: Text.PlainText
+                                }
+                                Item { Layout.fillHeight: true }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Label {
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                        font.pixelSize: 11
+                                        color: tile.tint
+                                        text: {
+                                            const parts = []
+                                            const tools = (tile.modelData.tools || []).length, formulas = (tile.modelData.formulas || []).length
+                                            if (tools > 0) parts.push(qsTr("%1 calc.").arg(tools))
+                                            if (formulas > 0) parts.push(qsTr("%1 formulas").arg(formulas))
+                                            parts.push(qsTr("%1 answers").arg((tile.modelData.examples || []).length))
+                                            return parts.join(" · ")
+                                        }
+                                    }
+                                    Switch {
+                                        checked: tile.modelData.enabled
+                                        onClicked: center.desktop.setSkillEnabled(tile.modelData.id, checked)
+                                        Accessible.name: center.skillText(tile.modelData, "name")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -98,7 +152,7 @@ Dialog {
                     TextField { id: skillUrl; Layout.fillWidth: true; placeholderText: "https://…/skill.json"; placeholderTextColor: Theme.textDim; selectByMouse: true; color: Theme.text; background: Rectangle { color: Theme.bg; radius: 8 } }
                     DarkButton { text: qsTr("Fetch"); enabled: skillUrl.text.trim().length>0; onClicked: center.desktop.fetchSkill(skillUrl.text.trim()) }
                 }
-                Label { text: center.desktop.skillStatus; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText }
+                Label { text: center.desktop.skillStatus; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText; visible: text.length > 0 }
             }
 
             // ---------- Voice ----------
@@ -298,12 +352,12 @@ Dialog {
         DarkButton { Layout.alignment: Qt.AlignRight; text: qsTr("Done"); onClicked: center.close() }
     }
     FileDialog { id: skillFile; title: qsTr("Import skill"); nameFilters: [qsTr("Jarvis skills (*.json)")]; onAccepted: center.desktop.importSkill(selectedFile) }
-    Dialog {
-        id: details
-        property var skill: ({})
-        anchors.centerIn: Overlay.overlay; width: Math.min(600, center.width-30); height: 380; modal: true
-        title: center.skillText(skill, "name") || qsTr("Skill"); standardButtons: Dialog.Close
-        ScrollView { anchors.fill: parent; TextArea { readOnly: true; wrapMode: TextEdit.Wrap; text: (details.skill.prompt || "") + "\n\n" + qsTr("Local examples: %1").arg((details.skill.examples || []).length) } }
+    SkillPage {
+        id: skillPage
+        desktop: center.desktop
+        chat: center.chat
+        english: center.english
+        onAskRequested: question => { skillPage.close(); center.close(); center.chat.send(question) }
     }
     Dialog {
         id: confirmForget

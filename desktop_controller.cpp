@@ -2,6 +2,7 @@
 #include "runtime_paths.h"
 #include "config.h"
 #include "language.h"
+#include "calc_engine.h"
 #include <QDesktopServices>
 #include <QDBusConnection>
 #include <memory>
@@ -88,6 +89,19 @@ void DesktopController::fetchSkill(const QUrl &url) {
         else installSkill(*bytes);
         reply->deleteLater();
     });
+}
+QVariantList DesktopController::calculators(const QStringList &ids) const {
+    const auto lang=jarvis::resolveLanguage(jarvis::Config::loadFileOnly().language);
+    QVariantList out;
+    for(const QString &id:ids) {
+        const auto d=jarvis::Calculators::definition(id,lang);
+        if(!d.isEmpty()) out.append(d.toVariantMap());
+    }
+    return out;
+}
+QVariantMap DesktopController::calculate(const QString &id,const QVariantMap &values) const {
+    const auto lang=jarvis::resolveLanguage(jarvis::Config::loadFileOnly().language);
+    return jarvis::Calculators::compute(id,QJsonObject::fromVariantMap(values),lang).toVariantMap();
 }
 void DesktopController::openSkillsFolder() {
     const QString path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/jarvis/skills";

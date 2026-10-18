@@ -3,6 +3,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QVariantList>
+#include <QVariantMap>
 #include <QNetworkAccessManager>
 #include "skill_store.h"
 class DesktopController : public QObject {
@@ -38,6 +39,9 @@ public:
     Q_INVOKABLE void importSkill(const QUrl &url);
     Q_INVOKABLE void fetchSkill(const QUrl &url);
     Q_INVOKABLE void openSkillsFolder();
+    // Calculators of a skill ("tools") in the interface language, and one calculation.
+    Q_INVOKABLE QVariantList calculators(const QStringList &ids) const;
+    Q_INVOKABLE QVariantMap calculate(const QString &id, const QVariantMap &values) const;
     Q_INVOKABLE void update();
     Q_INVOKABLE void restart();
     Q_INVOKABLE void searchWeb(const QString &query);

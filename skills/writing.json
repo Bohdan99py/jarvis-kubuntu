@@ -1,15 +1,17 @@
 {
-  "schema": 1,
-  "id": "writing",
-  "name": "Письмо",
-  "name_en": "Writing",
-  "description": "Редактирование, письма и ясный текст.",
-  "description_en": "Editing, letters and clear prose.",
-  "prompt": "For writing and editing, preserve the intended meaning and voice. Clarify audience and purpose when needed. Provide the actual revised text and avoid inventing facts or quotations.",
-  "examples": [
-    {
-      "question": "Как написать хорошее письмо?",
-      "answer": "Начни с цели письма, добавь нужный контекст и заверши конкретным следующим шагом. Короткие абзацы и ясная тема помогут адресату быстро понять просьбу."
-    }
-  ]
+ "schema": 1,
+ "id": "writing",
+ "name": "Письмо",
+ "name_en": "Writing",
+ "description": "Редактирование, письма и ясный текст.",
+ "description_en": "Editing, letters and clear prose.",
+ "prompt": "For writing and editing, preserve the intended meaning and voice. Clarify audience and purpose when needed. Provide the actual revised text and avoid inventing facts or quotations.",
+ "examples": [
+  {
+   "question": "Как написать хорошее письмо?",
+   "answer": "Начни с цели письма, добавь нужный контекст и заверши конкретным следующим шагом. Короткие абзацы и ясная тема помогут адресату быстро понять просьбу."
+  }
+ ],
+ "image": "writing",
+ "color": "#e46fb8"
 }

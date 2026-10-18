@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0b45a" stop-opacity=".30"/><stop offset="1" stop-color="#0c1523" stop-opacity="1"/></linearGradient>
+<radialGradient id="h" cx=".75" cy=".3" r=".6"><stop offset="0" stop-color="#f0b45a" stop-opacity=".35"/><stop offset="1" stop-color="#f0b45a" stop-opacity="0"/></radialGradient></defs>
+<rect width="320" height="160" fill="#101b2b"/><rect width="320" height="160" fill="url(#g)"/><rect width="320" height="160" fill="url(#h)"/>
+<g fill="none" stroke="#f0b45a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<rect x="115" y="40" width="90" height="80" rx="6" fill="#f0b45a" fill-opacity=".12"/>
+<circle cx="130" cy="55" r="4"/>
+<path d="M130 40V28M145 40V28M160 40V28M175 40V28M190 40V28M130 120v12M145 120v12M160 120v12M175 120v12M190 120v12"/>
+<path d="M115 60H95M115 80H95M115 100H95M205 60h20M205 80h20M205 100h20"/>
+<path d="M95 60H55V30M95 100H40M225 60h35l15-15h20M225 100h55" stroke-opacity=".7"/>
+<circle cx="55" cy="30" r="4" fill="#f0b45a"/><circle cx="40" cy="100" r="4" fill="#f0b45a"/><circle cx="295" cy="45" r="4" fill="#f0b45a"/>
+<text x="137" y="88" font-family="monospace" font-size="15" fill="#f0b45a" stroke="none" opacity=".9">MCU</text>
+</g></svg>

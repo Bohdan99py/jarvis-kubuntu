@@ -247,6 +247,22 @@ try:
  assert 9*60*1000 < snoozed['due']-time.time()*1000 <= 10*60*1000,snoozed
  notifications.invoke(note['id']+1000,'done') # someone else's notification: ignored
 
+ # Offline calculators, skill knowledge and attachments
+ out=ask('делитель 12В 10к 4,7к')
+ assert '3,84 В' in out,out
+ out=ask('U=5 R=220')
+ assert '22,7 мА' in out or '22.7 mA' in out,out
+ assert 'Первый закон' in ask('законы Кирхгофа'),'skill alias answered locally'
+ sim=scratch/'led.sim1'
+ sim.write_text('<circuit version="1.0.0"><item itemtype="Battery" CircId="Battery-1" Voltage="5 V"/>'
+  '<item itemtype="Resistor" CircId="Resistor-2" Resistance="220 Ω"/>'
+  '<item itemtype="Connector" uid="Connector-3" startpinid="Battery-1-rPin" endpinid="Resistor-2-lPin"/></circuit>')
+ monitor=subprocess.Popen(['gdbus','monitor','--session','--dest','org.jarvis.Daemon1'],stdout=subprocess.PIPE,text=True)
+ time.sleep(.2);call('AskFiles','что это за схема?',"['%s']"%sim);time.sleep(.9);monitor.terminate()
+ out=monitor.communicate(timeout=3)[0]
+ assert 'Battery-1.rPin, Resistor-2.lPin' in out and 'Resistance=220' in out,out
+ assert "(uint64 0,)" in call('AskFiles','x',"['relative/path.txt']"),'relative paths rejected'
+
  # GUI starts in quick mode, single instance, no QML errors (Russian and English UI)
  gui_env=env.copy();gui_env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software')
  for language in ('ru','en'):
@@ -263,7 +279,7 @@ try:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()
    assert not any(error in ui_log for error in ('failed to load','ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),ui_log
- print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, actions, activity, GUI ru/en')
+ print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, GUI ru/en')
 finally:
  proc.terminate();proc.wait(timeout=3)
  shutil.rmtree(scratch)
