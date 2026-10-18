@@ -400,13 +400,14 @@ QString Attachments::simulide(const QByteArray &circuit, QString *summary)
         if (xml.name() != u"item")
             continue;
         const auto a = xml.attributes();
-        const QString type = a.value(u"itemtype").toString();
-        QString id = a.value(u"CircId").toString();
-        for (const char16_t *key : {u"id", u"objectName", u"uid"})
+        // QStringLiteral: Qt 6.4 has no value(char16_t literal) overload.
+        const QString type = a.value(QStringLiteral("itemtype")).toString();
+        QString id = a.value(QStringLiteral("CircId")).toString();
+        for (const QString &key : {QStringLiteral("id"), QStringLiteral("objectName"), QStringLiteral("uid")})
             if (id.isEmpty())
                 id = a.value(key).toString();
         if (type == u"Connector") {
-            wires.append({a.value(u"startpinid").toString(), a.value(u"endpinid").toString()});
+            wires.append({a.value(QStringLiteral("startpinid")).toString(), a.value(QStringLiteral("endpinid")).toString()});
         } else if (type == u"Node") {
             nodes.insert(id);
         } else if (!type.isEmpty() && !id.isEmpty()) {

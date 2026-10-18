@@ -40,7 +40,7 @@ jobs:
       - name: Build
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DJARVIS_DISTRO=${{ matrix.os }}
-          cmake --build build --parallel 4
+          cmake --build build --parallel 4 -- -k 0  # report every failing file, not just the first
       - name: Test core, memory, translations, updater and D-Bus
         run: |
           ctest --test-dir build --output-on-failure
