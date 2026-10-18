@@ -29,10 +29,10 @@ ChatModel::ChatModel(QObject *parent)
     m_daemon.tryStartDaemon();
     connect(&m_daemon, &DaemonClient::availabilityChanged, this, [this] { refreshGraph(); refreshMemory(); });
     connect(&m_assistant, &jarvis::Assistant::memoryChanged, this, [this] {
-        if (!daemonConnected()) { refreshGraph(); refreshMemory(); }
+        if (!daemonConnected()) backgroundChange(true);
     });
     connect(&m_assistant, &jarvis::Assistant::activityChanged, this, [this] {
-        if (!daemonConnected()) refreshMemory();
+        if (!daemonConnected()) backgroundChange(false);
     });
     QDBusConnection bus = QDBusConnection::sessionBus();
     bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath), QString(jarvis::dbus::kInterface),
@@ -168,6 +168,7 @@ void ChatModel::refreshGraph()
         QDBusPendingReply<QString> result=*w;
         w->deleteLater();
         if (result.isError()) m_learningStatus=result.error().message();
+        else if (m_graph == result.value()) return;
         else m_graph=result.value();
         emit graphChanged();
     });
@@ -207,16 +208,23 @@ void ChatModel::callDaemon(const QString &method, const QVariantList &args,
 
 void ChatModel::refreshMemory()
 {
+    // Every window re-reads the whole memory on memoryChanged: skip identical copies.
     if (!daemonConnected()) {
-        m_memory = m_assistant.memoryJson();
-        emit memoryChanged();
+        QString memory = m_assistant.memoryJson();
+        if (memory != m_memory) {
+            m_memory = std::move(memory);
+            emit memoryChanged();
+        }
         return;
     }
     callDaemon(QStringLiteral("Memory"), {}, [this](const QString &result, const QString &error) {
-        if (error.isEmpty())
+        if (error.isEmpty()) {
+            if (result == m_memory)
+                return;
             m_memory = result;
-        else
+        } else {
             m_memoryStatus = error;
+        }
         emit memoryChanged();
     });
 }
@@ -318,11 +326,32 @@ void ChatModel::askMeSomething()
 
 void ChatModel::onDaemonMemoryChanged()
 {
-    refreshMemory();
-    refreshGraph();
+    backgroundChange(true);
 }
 
 void ChatModel::onDaemonActivityChanged()
 {
+    backgroundChange(false);
+}
+
+void ChatModel::backgroundChange(bool graph)
+{
+    m_memoryStale = true;
+    m_graphStale = m_graphStale || graph;
+    if (!m_liveUpdates)
+        return;
+    m_memoryStale = false;
     refreshMemory();
+    if (std::exchange(m_graphStale, false))
+        refreshGraph();
+}
+
+void ChatModel::setLiveUpdates(bool live)
+{
+    if (m_liveUpdates == live)
+        return;
+    m_liveUpdates = live;
+    emit liveUpdatesChanged();
+    if (live && m_memoryStale)
+        backgroundChange(false);
 }

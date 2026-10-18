@@ -17,6 +17,8 @@ ApplicationWindow {
 
     ChatModel {
         id: chatModel
+        // Memory and the graph only need to follow background changes while shown.
+        liveUpdates: (root.visible && root.visibility !== Window.Minimized) || quickBar.visible
     }
 
     VoiceController { id: voiceEngine; language: appSettings.uiLanguage }
@@ -171,11 +173,14 @@ ApplicationWindow {
                     radius: 7
                     color: Theme.accent
 
+                    // Pulses only while thinking: an endless animation makes the
+                    // window redraw every frame, even when nothing else changes.
                     SequentialAnimation on opacity {
-                        running: true
+                        running: chatModel.busy
                         loops: Animation.Infinite
-                        NumberAnimation { to: 0.35; duration: chatModel.busy ? 350 : 1400; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 1.0; duration: chatModel.busy ? 350 : 1400; easing.type: Easing.InOutSine }
+                        alwaysRunToEnd: true
+                        NumberAnimation { to: 0.35; duration: 350; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 1.0; duration: 350; easing.type: Easing.InOutSine }
                     }
                 }
 

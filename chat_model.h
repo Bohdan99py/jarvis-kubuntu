@@ -26,6 +26,9 @@ class ChatModel : public QAbstractListModel
     Q_PROPERTY(bool daemonConnected READ daemonConnected NOTIFY daemonConnectedChanged FINAL)
     Q_PROPERTY(QString memory READ memory NOTIFY memoryChanged FINAL)
     Q_PROPERTY(QString memoryStatus READ memoryStatus NOTIFY memoryChanged FINAL)
+    // False while no window shows memory: background changes (activity, daemon
+    // updates) are then only noted and fetched once a window shows up again.
+    Q_PROPERTY(bool liveUpdates READ liveUpdates WRITE setLiveUpdates NOTIFY liveUpdatesChanged FINAL)
 
 public:
     enum Role {
@@ -67,6 +70,8 @@ public:
     QString graph() const { return m_graph; }
     QString learningStatus() const { return m_learningStatus; }
     bool learningBusy() const { return m_learningBusy; }
+    bool liveUpdates() const { return m_liveUpdates; }
+    void setLiveUpdates(bool live);
     // Re-read the config file here and in the daemon (after the settings dialog saved).
     Q_INVOKABLE void reloadConfig();
     // Stop the background daemon (the window keeps working in local mode).
@@ -79,6 +84,7 @@ signals:
     void busyChanged();
     void daemonConnectedChanged();
     void memoryChanged();
+    void liveUpdatesChanged();
 
 private:
     struct Message
@@ -95,6 +101,8 @@ private:
     void addGreeting();
     void onReply(const QString &reply);
     void onDaemonFailed(const QString &reason);
+    // Background change: refresh now, or later if no window shows memory.
+    void backgroundChange(bool graph);
     void callDaemon(const QString &method, const QVariantList &args,
                     const std::function<void(const QString &result, const QString &error)> &done);
 
@@ -109,6 +117,9 @@ private:
     QString m_memory = QStringLiteral("{}");
     QString m_memoryStatus;
     bool m_learningBusy = false;
+    bool m_liveUpdates = true;
+    bool m_memoryStale = false;
+    bool m_graphStale = false;
     QList<Message> m_messages;
     DaemonClient m_daemon;
     jarvis::Assistant m_assistant;

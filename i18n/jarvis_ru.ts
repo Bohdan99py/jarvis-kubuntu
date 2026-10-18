@@ -1483,12 +1483,56 @@ Chat with me or add a first example</source>
 Поговорите со мной или добавьте первый пример</translation>
     </message>
     <message>
+        <source>Find a word…</source>
+        <translation>Найти слово…</translation>
+    </message>
+    <message>
+        <source>All links</source>
+        <translation>Все связи</translation>
+    </message>
+    <message>
+        <source>Strong links</source>
+        <translation>Сильные связи</translation>
+    </message>
+    <message>
+        <source>Show every link, or only the two strongest of each word</source>
+        <translation>Показать все связи или только две самые сильные у каждого слова</translation>
+    </message>
+    <message>
+        <source>Click to hide or show</source>
+        <translation>Нажмите, чтобы скрыть или показать</translation>
+    </message>
+    <message>
+        <source>Zoom in</source>
+        <translation>Приблизить</translation>
+    </message>
+    <message>
+        <source>Zoom out</source>
+        <translation>Отдалить</translation>
+    </message>
+    <message>
+        <source>Show everything</source>
+        <translation>Показать всё</translation>
+    </message>
+    <message>
         <source>weight %1</source>
         <translation>вес %1</translation>
     </message>
     <message>
-        <source>Words that appear together · up to 48 nodes</source>
-        <translation>Слова и совместные упоминания · до 48 узлов</translation>
+        <source>links: %1</source>
+        <translation>связей: %1</translation>
+    </message>
+    <message>
+        <source>+%1 more</source>
+        <translation>ещё %1</translation>
+    </message>
+    <message>
+        <source>No links yet: this word has not come up together with others.</source>
+        <translation>Связей пока нет: это слово ещё не встречалось вместе с другими.</translation>
+    </message>
+    <message>
+        <source>Click a word to see its links · drag to move · wheel to zoom · double-click to fit</source>
+        <translation>Нажмите на слово, чтобы увидеть связи · тяните, чтобы двигать · колесо — масштаб · двойной щелчок — всё</translation>
     </message>
     <message>
         <source>examples</source>

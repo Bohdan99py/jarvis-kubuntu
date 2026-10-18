@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.11
+# Jarvis for Kubuntu · 0.12
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.11.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.12.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -40,7 +40,7 @@ Stored in `${XDG_DATA_HOME:-~/.local/share}/jarvis/` (folder 0700, files 0600) a
 - **Curiosity** — now and then (after a few messages, at most every 10 minutes, each question at most monthly) Jarvis asks about what it doesn't know yet: your name, your project, what you do in an app you spend hours in, a topic you keep mentioning, your goal. The next message, unless it is a question or a request, is taken as the answer. "Ask me in chat" in the About me tab asks right away; turn it off in Control center → Memory.
 - **Conversation topics** — counts of meaningful words in your messages (messages themselves are not stored).
 
-The graph shows up to 48 words: teal from examples, orange from facts, violet from topics.
+The graph shows up to 48 words: teal from examples, orange from facts, violet from topics. Words that come up together form clusters. Each word shows its two strongest links by default; "All links" shows the rest. Click a word to highlight its links and list its neighbours in a card below, each one a step further. The wheel zooms, dragging pans (nodes can be dragged too), a double-click zooms in on a word or shows everything; search and a filter by kind (click the legend) are at the top.
 
 ## Embedded systems specialist
 
