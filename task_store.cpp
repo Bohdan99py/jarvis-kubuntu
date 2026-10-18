@@ -294,7 +294,7 @@ QString TaskStore::promptSummary(qint64 now, int maxItems) const
         const qint64 at = ms(o, u"due"_s);
         const QString repeat = o.value(u"repeat"_s).toString();
         lines.append(u"- "_s
-                     + (at > 0 ? QLocale::c().toString(local(at), u"ddd yyyy-MM-dd HH:mm"_s) + (repeat.isEmpty() ? QString() : u" (" + repeat + u')')
+                     + (at > 0 ? QLocale::c().toString(local(at), u"ddd yyyy-MM-dd HH:mm"_s) + (repeat.isEmpty() ? QString() : u" ("_s + repeat + u')')
                                : u"to-do"_s)
                      + u": "_s + o.value(u"text"_s).toString());
     }
