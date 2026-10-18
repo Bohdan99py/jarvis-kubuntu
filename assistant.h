@@ -17,6 +17,7 @@
 #include "language.h"
 #include "learning_store.h"
 #include "skill_store.h"
+#include "task_store.h"
 #include "vocab_store.h"
 
 namespace jarvis {
@@ -67,6 +68,21 @@ public:
     QString rateCode(quint64 requestId, bool good);
     void setIdeClients(int count);
 
+    // ---- Autonomy ----
+    // Background work — reminders, hints, the daily memory review — runs only
+    // where this assistant is the active brain: in jarvisd, or in a GUI that
+    // has no daemon. Off by default.
+    void setAutonomous(bool on);
+    bool autonomous() const noexcept { return m_autonomous; }
+    // The user chose `action` on the notification `key` (see notice()).
+    // Returns what the GUI should open: "", "main", "tasks", "study", "curious" or "memory".
+    QString noticeAction(const QString &key, const QString &action);
+    // Tasks panel: a phrase like "tomorrow at 9 call mum" (the trigger word is
+    // optional). Returns Jarvis's confirmation or what went wrong.
+    QString addTask(const QString &text);
+    // action: done, remove, snooze (10 minutes). "" on success.
+    QString taskAction(const QString &id, const QString &action);
+
     // From the desktop bridge (jarvisd only).
     void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
     void setScreenLocked(bool locked);
@@ -79,6 +95,11 @@ signals:
     // Activity data changed; throttled.
     void activityChanged();
     void configReloaded();
+    // A desktop notification to show:
+    //   {key, kind, title, body, actions: [[id, label], …]}
+    // kind: reminder, break, study, curious, morning, insight. The id "default"
+    // is a click on the notification itself. Answers go to noticeAction().
+    void notice(const QJsonObject &notice);
 
 private:
     struct Request
@@ -99,6 +120,21 @@ private:
     static constexpr int kSmallTalkMaxWords = 4;
 
     void startNext();
+    void answer(const Request &r, Lang lang);
+    // Reminders and tasks in chat. False when `text` is not about them; true when
+    // the request is answered (now, or later once Claude has read the time).
+    bool handleTaskCommand(const Request &r, Lang lang);
+    QString scheduleReminder(const QString &what, qint64 due, const QString &repeat, Lang lang);
+    void absorbPlan(bool ok, const QString &text);
+    void autonomyTick();
+    void deliverDue(qint64 t);
+    void proactiveHints(qint64 t);
+    void morningSummary(qint64 t, Lang lang);
+    void reviewMemory();
+    void absorbReview(const QJsonObject &result);
+    void emitNotice(const QString &key, const QString &kind, const QString &title, const QString &body,
+                    const QList<std::pair<QString, QString>> &actions);
+    Lang uiLang() const;
     void finish(quint64 id, const QString &reply, bool rememberable);
     void finishLater(quint64 id, const QString &reply, bool rememberable, int delayMs);
     Lang replyLanguage(const QString &text);
@@ -128,6 +164,20 @@ private:
     ClaudeClient m_claude;
     ClaudeClient m_coder;
     CodeStore m_code;
+    TaskStore m_tasks;
+    // Short structured jobs: reading the time of a reminder, the memory review.
+    ClaudeClient m_planner;
+    enum class PlanJob { None, Reminder, Review };
+    PlanJob m_planJob = PlanJob::None;
+    Request m_planRequest;
+    Lang m_planLang = Lang::En;
+    QTimer m_autonomyTick;
+    bool m_autonomous = false;
+    qint64 m_autonomySince = 0;
+    qint64 m_lastChat = 0;
+    // "напомни купить молоко" — "когда?" — "в 6 вечера": the text waits for its time.
+    QString m_awaitingTime;
+    qint64 m_awaitingSince = 0;
     QHash<quint64, CodeAnswer> m_codeAnswers;
     CodeAnswer m_pendingCode;
     QString m_pendingMode;

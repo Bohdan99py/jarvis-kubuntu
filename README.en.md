@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.12
+# Jarvis for Kubuntu · 0.13
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.12.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.13.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -41,6 +41,14 @@ Stored in `${XDG_DATA_HOME:-~/.local/share}/jarvis/` (folder 0700, files 0600) a
 - **Conversation topics** — counts of meaningful words in your messages (messages themselves are not stored).
 
 The graph shows up to 48 words: teal from examples, orange from facts, violet from topics. Words that come up together form clusters. Each word shows its two strongest links by default; "All links" shows the rest. Click a word to highlight its links and list its neighbours in a card below, each one a step further. The wheel zooms, dragging pans (nodes can be dragged too), a double-click zooms in on a word or shows everything; search and a filter by kind (click the legend) are at the top.
+
+## Reminders, tasks and notifications
+
+Write the way you speak — in chat, in the quick bar or in the Tasks tab of the memory panel: "remind me tomorrow at 9 to call mum", "in 20 minutes check the build", "on Friday at 10am standup", "every weekday at 8:30 exercise", "every Monday at 10 plan the week", "add a task buy solder", "my reminders", "cancel the reminder about the standup". Times are read on this computer; what the rules miss ("after lunch") goes to Claude when a key is set, otherwise Jarvis asks "when?". Claude sees your open tasks and sets reminders you ask for in free form; each one is confirmed with a ⏰ line under the answer.
+
+Reminders arrive as KDE notifications from the background daemon — even with the window closed — with "Snooze 10 min" and "Done" buttons; reminders missed while the computer was off come at the next start. Plasma's "Do not disturb" applies.
+
+**Jarvis speaks up by itself** (Control center → Autonomy), at most every half hour, never 23:00–7:00 or during games and videos: a break after 1–2 hours without a pause (needs activity tracking), French flashcards due for review, a curious question when you have not talked for a while, and a morning plan. **Daily memory review** (with a Claude key): once a day Claude merges duplicate facts, drops outdated ones and notes goals and habits; facts you added yourself are never deleted. While hidden, the app also tells you when an answer, a transcription, a PDF translation or the voice setup is ready, and checks for new releases twice a day.
 
 ## Embedded systems specialist
 

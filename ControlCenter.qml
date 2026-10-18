@@ -13,9 +13,12 @@ Dialog {
     signal apiSettingsRequested()
     function showVoice() { tabs.currentIndex=1; open() }
     function showMemory() { tabs.currentIndex=2; open() }
+    function showApp() { tabs.currentIndex=4; open() }
     readonly property bool english: settings.uiLanguage === "en"
     function skillText(skill, field) { return english && skill[field + "_en"] ? skill[field + "_en"] : skill[field] }
-    function report(error) { optionStatus.text = error }
+    // The last error of a switch; shown on the Memory and Autonomy tabs.
+    property string optionError: ""
+    function report(error) { optionError = error }
 
     title: qsTr("Control center")
     modal: true; anchors.centerIn: Overlay.overlay
@@ -54,7 +57,7 @@ Dialog {
         TabBar {
             id: tabs; objectName: "controlTabs"; Layout.fillWidth: true; background: null; spacing: 4
             Repeater {
-                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Application")]
+                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Autonomy"), qsTr("Application")]
                 TabButton {
                     id: tabButton
                     required property string modelData
@@ -167,7 +170,7 @@ Dialog {
                         checked: center.settings.shareActivity
                         onToggled: center.report(center.settings.setOption("shareActivity", checked))
                     }
-                    Label { id: optionStatus; visible: text.length > 0; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label { text: center.optionError; visible: text.length > 0; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Label { text: qsTr("Try in chat: \"what do you know about me\", \"what did we talk about\", \"what am I doing\", \"what did I do today\", \"forget …\"."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
                     RowLayout {
@@ -175,6 +178,71 @@ Dialog {
                         DarkButton { text: qsTr("Forget facts and topics"); danger: true; onClicked: confirmForget.open() }
                     }
                     Label { text: center.chat.memoryStatus; visible: text.length > 0; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                }
+            }
+
+            // ---------- Autonomy ----------
+            ScrollView {
+                id: autonomyScroll
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    width: autonomyScroll.availableWidth
+                    spacing: 12
+                    Label { text: qsTr("Autonomy and notifications"); color: Theme.text; font.pixelSize: 22; font.bold: true }
+                    Label { text: qsTr("Jarvis keeps working in the background: it delivers reminders, speaks up when it has something useful to say and tidies its memory. Notifications follow Plasma's \"Do not disturb\" mode."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label { text: qsTr("Reminders always come, even with the window closed. Try in chat: \"remind me tomorrow at 9 to call mum\", \"in 20 minutes check the build\", \"every weekday at 8:30 exercise\", \"add a task buy solder\", \"my reminders\"."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    OptionSwitch {
+                        objectName: "proactiveSwitch"
+                        text: qsTr("Jarvis speaks up by itself")
+                        hint: qsTr("Hints in notifications, at most one every half hour and never between 23:00 and 7:00 or while you play or watch something: a break after long work, French words due for review, a curious question when you have not talked for a while.")
+                        checked: center.settings.proactive
+                        onToggled: center.report(center.settings.setOption("proactive", checked))
+                    }
+                    RowLayout {
+                        Layout.leftMargin: 56
+                        spacing: 12
+                        enabled: center.settings.proactive && center.settings.trackActivity
+                        Label { text: qsTr("Suggest a break after"); color: parent.enabled ? Theme.text : Theme.textDim }
+                        DarkCombo {
+                            model: [qsTr("Never"), qsTr("1 hour"), qsTr("1.5 hours"), qsTr("2 hours")]
+                            currentIndex: Math.max(0, [0, 60, 90, 120].indexOf(center.settings.breakMinutes))
+                            onActivated: index => center.report(center.settings.setBreakMinutes([0, 60, 90, 120][index]))
+                        }
+                    }
+                    Label {
+                        visible: !center.settings.trackActivity
+                        Layout.leftMargin: 56
+                        text: qsTr("Breaks need \"See which application I'm working in\" on the Memory tab: that is how Jarvis knows you are at the computer.")
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                    }
+                    OptionSwitch {
+                        text: qsTr("Morning plan")
+                        hint: qsTr("When you sit down in the morning: today's reminders, open tasks and flashcards to review.")
+                        enabled: center.settings.proactive
+                        checked: center.settings.morningSummary
+                        onToggled: center.report(center.settings.setOption("morningSummary", checked))
+                    }
+                    OptionSwitch {
+                        text: qsTr("Review my memory every day")
+                        hint: qsTr("With a Claude key, once a day Jarvis sends the facts it keeps about you and short summaries of your conversations to Claude to merge duplicates, drop outdated facts and note your goals and habits. Facts you added yourself are never deleted.")
+                        enabled: center.settings.learnDialog && center.settings.hasKey
+                        checked: center.settings.deepReflection
+                        onToggled: center.report(center.settings.setOption("deepReflection", checked))
+                    }
+                    OptionSwitch {
+                        text: qsTr("Tell me when something is ready while Jarvis is hidden")
+                        hint: qsTr("An answer you were waiting for, a finished transcription or PDF translation, the voice setup.")
+                        checked: center.settings.notifyReplies
+                        onToggled: center.report(center.settings.setOption("notifyReplies", checked))
+                    }
+                    Label { text: center.optionError; visible: text.length > 0; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    DarkButton {
+                        text: qsTr("Send a test notification")
+                        onClicked: notifier.show("test", "Jarvis", qsTr("Notifications work. This is how reminders will look."), [["default", ""]])
+                    }
                 }
             }
 

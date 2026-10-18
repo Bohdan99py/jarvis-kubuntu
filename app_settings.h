@@ -26,6 +26,11 @@ class AppSettings : public QObject
     Q_PROPERTY(bool trackActivity READ trackActivity NOTIFY changed FINAL)
     Q_PROPERTY(bool trackTitles READ trackTitles NOTIFY changed FINAL)
     Q_PROPERTY(bool shareActivity READ shareActivity NOTIFY changed FINAL)
+    Q_PROPERTY(bool proactive READ proactive NOTIFY changed FINAL)
+    Q_PROPERTY(int breakMinutes READ breakMinutes NOTIFY changed FINAL)
+    Q_PROPERTY(bool morningSummary READ morningSummary NOTIFY changed FINAL)
+    Q_PROPERTY(bool deepReflection READ deepReflection NOTIFY changed FINAL)
+    Q_PROPERTY(bool notifyReplies READ notifyReplies NOTIFY changed FINAL)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -42,6 +47,11 @@ public:
     bool trackActivity() const { return m_data.trackActivity; }
     bool trackTitles() const { return m_data.trackTitles; }
     bool shareActivity() const { return m_data.shareActivity; }
+    bool proactive() const { return m_data.proactive; }
+    int breakMinutes() const { return m_data.breakMinutes; }
+    bool morningSummary() const { return m_data.morningSummary; }
+    bool deepReflection() const { return m_data.deepReflection; }
+    bool notifyReplies() const { return m_data.notifyReplies; }
 
     // An empty `apiKey` keeps the stored key. Both return "" on success,
     // otherwise a message for the user.
@@ -50,8 +60,11 @@ public:
     // Applies the interface language immediately (retranslates QML).
     Q_INVOKABLE QString setLanguage(const QString &language);
     Q_INVOKABLE QString setReplyLanguage(const QString &language);
-    // name: learnDialog, curiosity, trackActivity, trackTitles, shareActivity.
+    // name: learnDialog, curiosity, trackActivity, trackTitles, shareActivity,
+    // proactive, morningSummary, deepReflection, notifyReplies.
     Q_INVOKABLE QString setOption(const QString &name, bool value);
+    // 0 turns break reminders off.
+    Q_INVOKABLE QString setBreakMinutes(int minutes);
 
 signals:
     void changed();

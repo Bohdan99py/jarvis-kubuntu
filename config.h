@@ -22,6 +22,18 @@ struct ConfigData
     bool trackTitles = false;
     // Opt-in: add the current activity summary to Claude requests.
     bool shareActivity = false;
+    // Jarvis speaks up by itself in desktop notifications: breaks, words to
+    // review, curious questions, insights. Reminders are always delivered.
+    bool proactive = true;
+    // Suggest a break after this many minutes at the desk; 0 = never.
+    int breakMinutes = 90;
+    // A short plan for the day with the first activity in the morning.
+    bool morningSummary = true;
+    // Once a day Claude reviews long-term memory: merges duplicates, drops
+    // outdated facts and notes goals and habits.
+    bool deepReflection = true;
+    // A notification with the answer when the window is hidden (GUI only).
+    bool notifyReplies = true;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.

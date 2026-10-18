@@ -10,6 +10,8 @@
 #include <QStandardPaths>
 #include <QtGlobal>
 
+#include <algorithm>
+
 using namespace Qt::StringLiterals;
 
 namespace jarvis {
@@ -53,6 +55,11 @@ ConfigData Config::loadFileOnly()
         d.trackActivity = o.value(u"track_activity"_s).toBool(false);
         d.trackTitles = o.value(u"track_titles"_s).toBool(false);
         d.shareActivity = o.value(u"share_activity"_s).toBool(false);
+        d.proactive = o.value(u"proactive"_s).toBool(true);
+        d.breakMinutes = std::clamp(o.value(u"break_minutes"_s).toInt(90), 0, 600);
+        d.morningSummary = o.value(u"morning_summary"_s).toBool(true);
+        d.deepReflection = o.value(u"deep_reflection"_s).toBool(true);
+        d.notifyReplies = o.value(u"notify_replies"_s).toBool(true);
     }
     return d;
 }
@@ -97,6 +104,11 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"track_activity"_s, data.trackActivity);
     o.insert(u"track_titles"_s, data.trackTitles);
     o.insert(u"share_activity"_s, data.shareActivity);
+    o.insert(u"proactive"_s, data.proactive);
+    o.insert(u"break_minutes"_s, data.breakMinutes);
+    o.insert(u"morning_summary"_s, data.morningSummary);
+    o.insert(u"deep_reflection"_s, data.deepReflection);
+    o.insert(u"notify_replies"_s, data.notifyReplies);
     const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
     if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));

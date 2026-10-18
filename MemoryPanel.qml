@@ -20,6 +20,9 @@ Rectangle {
     readonly property var today: activity.today || ({ total: 0, apps: [], categories: [] })
     readonly property var trackingState: memory.settings || ({})
     readonly property var curiosity: memory.curiosity || ({})
+    readonly property var tasks: memory.tasks || []
+    readonly property int openTasks: tasks.filter(t => !(t.done > 0)).length
+    function showTab(index) { tabs.currentIndex = index }
     readonly property var code: memory.code || ({ languages: [], projects: [], errors: [], lessons: [], lessonCount: 0, connected: 0 })
 
     color: Theme.panel
@@ -64,7 +67,7 @@ Rectangle {
             Layout.fillWidth: true
             background: null
             Repeater {
-                model: [qsTr("Synapses"), qsTr("About me"), qsTr("Activity"), qsTr("Code")]
+                model: [qsTr("Synapses"), qsTr("Tasks") + (panel.openTasks > 0 ? " · " + panel.openTasks : ""), qsTr("About me"), qsTr("Activity"), qsTr("Code")]
                 TabButton {
                     id: tab
                     required property string modelData
@@ -130,6 +133,110 @@ Rectangle {
                     }
                 }
                 Label { text: panel.chat.learningStatus; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12; visible: text.length > 0 }
+            }
+
+            // ---------- Tasks ----------
+            ColumnLayout {
+                spacing: 10
+                Hint { text: qsTr("Reminders come as notifications even when the window is closed. Write the way you speak: \"tomorrow at 9 call mum\", \"in 20 minutes check the build\", \"every Monday at 10 plan the week\" — or a task without a time.") }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    TextField {
+                        id: taskInput
+                        objectName: "taskInput"
+                        Layout.fillWidth: true
+                        placeholderText: qsTr("tomorrow at 9 call mum")
+                        color: Theme.text; placeholderTextColor: Theme.textDim; maximumLength: 300
+                        background: Rectangle { color: Theme.bg; radius: 10; border.color: taskInput.activeFocus ? Theme.accent : Theme.border }
+                        onAccepted: addTaskButton.clicked()
+                    }
+                    DarkButton {
+                        id: addTaskButton
+                        text: qsTr("Add")
+                        primary: true
+                        enabled: taskInput.text.trim().length > 0
+                        onClicked: { panel.chat.addTask(taskInput.text.trim()); taskInput.text = "" }
+                    }
+                }
+                Label { text: panel.chat.memoryStatus; visible: text.length > 0; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12; textFormat: Text.PlainText }
+                ListView {
+                    id: taskList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 120
+                    clip: true
+                    spacing: 6
+                    model: panel.tasks
+                    ScrollBar.vertical: ScrollBar {}
+                    delegate: Rectangle {
+                        id: taskRow
+                        required property var modelData
+                        readonly property bool done: modelData.done > 0
+                        readonly property bool reminder: modelData.due > 0
+                        width: ListView.view.width
+                        height: taskColumn.implicitHeight + 16
+                        radius: 12
+                        color: Theme.bg
+                        border.color: taskRow.reminder && !taskRow.done ? Qt.darker(Theme.accent, 1.8) : Theme.border
+                        opacity: done ? 0.55 : 1
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 6
+                            spacing: 10
+                            // Done / not done; a finished reminder stays finished.
+                            Rectangle {
+                                width: 20; height: 20; radius: 10
+                                color: taskRow.done ? Theme.accent : "transparent"
+                                border.color: taskRow.done ? Theme.accent : Theme.textDim
+                                Text { anchors.centerIn: parent; text: "✓"; visible: taskRow.done; color: Theme.bg; font.pixelSize: 12; font.bold: true }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    enabled: !taskRow.done || !taskRow.reminder
+                                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: panel.chat.taskAction(taskRow.modelData.id, taskRow.done ? "reopen" : "done")
+                                }
+                                Accessible.name: qsTr("Done")
+                            }
+                            ColumnLayout {
+                                id: taskColumn
+                                Layout.fillWidth: true
+                                spacing: 2
+                                Label {
+                                    text: taskRow.modelData.text
+                                    color: Theme.text
+                                    font.strikeout: taskRow.done
+                                    wrapMode: Text.Wrap
+                                    textFormat: Text.PlainText
+                                    Layout.fillWidth: true
+                                }
+                                Label {
+                                    visible: taskRow.reminder && !taskRow.done
+                                    text: "⏰ " + (taskRow.modelData.when || "") + (taskRow.modelData.repeatText ? " · " + taskRow.modelData.repeatText : "")
+                                    color: Theme.accent
+                                    font.pixelSize: 11
+                                }
+                            }
+                            ToolButton {
+                                text: "×"
+                                onClicked: panel.chat.taskAction(taskRow.modelData.id, "remove")
+                                Accessible.name: qsTr("Delete")
+                                contentItem: Text { text: "×"; color: Theme.textDim; font.pixelSize: 18; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                background: Rectangle { radius: 12; color: parent.hovered ? Theme.hover : "transparent" }
+                            }
+                        }
+                    }
+                    Label {
+                        anchors.centerIn: parent
+                        width: parent.width - 20
+                        visible: taskList.count === 0
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.Wrap
+                        color: Theme.textDim
+                        text: qsTr("No reminders or tasks yet.")
+                    }
+                }
             }
 
             // ---------- About me ----------

@@ -3,6 +3,8 @@
 #include <QQmlEngine>
 #include <QRegularExpression>
 
+#include <algorithm>
+
 #include "config.h"
 #include "language.h"
 
@@ -115,7 +117,22 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.trackTitles = value;
     else if (name == QLatin1String("shareActivity"))
         d.shareActivity = value;
+    else if (name == QLatin1String("proactive"))
+        d.proactive = value;
+    else if (name == QLatin1String("morningSummary"))
+        d.morningSummary = value;
+    else if (name == QLatin1String("deepReflection"))
+        d.deepReflection = value;
+    else if (name == QLatin1String("notifyReplies"))
+        d.notifyReplies = value;
     else
         return tr("Unknown option.");
+    return store(d);
+}
+
+QString AppSettings::setBreakMinutes(int minutes)
+{
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    d.breakMinutes = std::clamp(minutes, 0, 600);
     return store(d);
 }

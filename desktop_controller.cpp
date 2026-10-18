@@ -33,8 +33,32 @@ DesktopController::DesktopController(QObject *parent):QObject(parent) {
     connect(&m_updater,&QProcess::started,this,&DesktopController::updateChanged);
     connect(&m_updater,&QProcess::errorOccurred,this,[this](QProcess::ProcessError){m_timeout.stop();m_updateStatus=m_updater.errorString();emit updateChanged();});
     connect(&m_updater,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this]{readUpdateEvents();m_timeout.stop();emit updateChanged();});
+    // A quiet check a minute after start and twice a day; installed builds only.
+    connect(&m_checker,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this]{
+        for(const auto &line:m_checker.readAllStandardOutput().split('\n')) {
+            const auto o=QJsonDocument::fromJson(line).object();
+            if(o["event"].toString()!="available")continue;
+            const QString found=o["version"].toString().left(20);
+            QSettings settings;
+            if(found.isEmpty() || settings.value("updates/notified").toString()==found)continue;
+            settings.setValue("updates/notified",found);
+            emit updateAvailable(found);
+        }
+    });
+    m_checkTimer.setInterval(12*3600*1000);
+    connect(&m_checkTimer,&QTimer::timeout,this,&DesktopController::checkForUpdates);
+    if(trayUnitInstalled()) {
+        m_checkTimer.start();
+        QTimer::singleShot(60*1000,this,&DesktopController::checkForUpdates);
+    }
 }
-DesktopController::~DesktopController(){if(updating()){m_updater.kill();m_updater.waitForFinished(1000);}}
+void DesktopController::checkForUpdates() {
+    if(updating() || m_checker.state()!=QProcess::NotRunning)return;
+    const QString lang=jarvis::languageCode(jarvis::resolveLanguage(jarvis::Config::loadFileOnly().language));
+    m_checker.start(systemPython(),{jarvisScript("update.py"),"--check","--current",version(),"--cache",
+                    QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/updates","--lang",lang});
+}
+DesktopController::~DesktopController(){if(updating()){m_updater.kill();m_updater.waitForFinished(1000);}if(m_checker.state()!=QProcess::NotRunning){m_checker.kill();m_checker.waitForFinished(1000);}}
 QString DesktopController::version() const { return QString(JARVIS_VERSION); }
 QVariantList DesktopController::skills() const { return m_skills.list().toVariantList(); }
 void DesktopController::setSkillEnabled(const QString &id,bool enabled) {

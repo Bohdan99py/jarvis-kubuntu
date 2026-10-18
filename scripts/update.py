@@ -29,6 +29,7 @@ MESSAGES = {
     "downloading": ("Загрузка и проверка пакета…", "Downloading and verifying the package…"),
     "metadata": ("Метаданные пакета не соответствуют релизу", "The package metadata does not match the release"),
     "ready": ("Пакет проверен. Подтвердите установку в Discover.", "Package verified. Confirm the installation in Discover."),
+    "available": ("Доступна новая версия", "A new version is available"),
 }
 LANG = "ru"
 
@@ -40,7 +41,7 @@ def emit(kind, **kwargs):
     print(json.dumps(dict(event=kind, **kwargs), ensure_ascii=False), flush=True)
 
 def request(url):
-    return urllib.request.Request(url, headers={"User-Agent": "Jarvis-Updater/0.12", "Accept": "application/vnd.github+json"})
+    return urllib.request.Request(url, headers={"User-Agent": "Jarvis-Updater/0.13", "Accept": "application/vnd.github+json"})
 
 def version(value):
     match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", value)
@@ -109,11 +110,13 @@ def main():
     parser.add_argument("--current", required=True)
     parser.add_argument("--cache", type=Path, required=True)
     parser.add_argument("--lang", choices=["ru", "en"], default="ru")
+    parser.add_argument("--check", action="store_true", help="only report whether a newer verified package exists")
     args = parser.parse_args()
     global LANG
     LANG = args.lang
     try:
-        emit("status", text=message("checking"))
+        if not args.check:
+            emit("status", text=message("checking"))
         with urllib.request.urlopen(request(f"https://api.github.com/repos/{REPOSITORY}/releases/latest"), timeout=20) as response:
             raw = response.read(1024 * 1024 + 1)
             if len(raw) > 1024 * 1024:
@@ -123,6 +126,9 @@ def main():
         asset = select_asset(release, args.current, platform_tag(), arch)
         if asset is None:
             emit("current", text=message("current"))
+            return 0
+        if args.check:
+            emit("available", version=release["tag_name"].removeprefix("v"), text=message("available"))
             return 0
         emit("status", text=message("downloading"))
         target = download(asset, args.cache)

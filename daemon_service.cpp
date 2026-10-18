@@ -5,6 +5,9 @@
 #include <QDBusError>
 #include <QDBusMessage>
 #include <QDebug>
+#include <QDBusPendingCallWatcher>
+#include <QJsonObject>
+#include <QTimer>
 
 #include "dbus_names.h"
 #include "build_config.h"
@@ -19,6 +22,38 @@ DaemonService::DaemonService(QObject *parent)
 {
     new DaemonAdaptor(this); // child of this; exported with the object
     connect(&m_assistant, &Assistant::replyReady, this, &DaemonService::replyReady);
+    connect(&m_assistant, &Assistant::notice, this, [this](const QJsonObject &notice) {
+        m_noticeBodies.insert(notice.value(QStringLiteral("key")).toString(), notice.value(QStringLiteral("body")).toString());
+        m_notifier.showNotice(notice);
+    });
+    connect(&m_notifier, &Notifier::actionInvoked, this, [this](const QString &key, const QString &action) {
+        const QString target = m_assistant.noticeAction(key, action);
+        if (!target.isEmpty())
+            openGui(target, target == QLatin1String("curious") ? m_noticeBodies.value(key) : QString());
+    });
+}
+
+void DaemonService::openGui(const QString &target, const QString &payload, int attempt)
+{
+    auto msg = QDBusMessage::createMethodCall(QStringLiteral("org.jarvis.Desktop1"), QStringLiteral("/org/jarvis/Desktop1"),
+                                              QStringLiteral("org.jarvis.Desktop1"), QStringLiteral("Open"));
+    msg << target << payload;
+    auto *w = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(msg, 3000), this);
+    connect(w, &QDBusPendingCallWatcher::finished, this, [this, w, target, payload, attempt] {
+        w->deleteLater();
+        if (!w->isError() || attempt >= 4)
+            return;
+        // The daemon's sandbox is no place for the GUI: systemd starts it in the session.
+        if (attempt == 0) {
+            auto start = QDBusMessage::createMethodCall(QStringLiteral("org.freedesktop.systemd1"),
+                                                        QStringLiteral("/org/freedesktop/systemd1"),
+                                                        QStringLiteral("org.freedesktop.systemd1.Manager"),
+                                                        QStringLiteral("StartUnit"));
+            start << QStringLiteral("jarvis-tray.service") << QStringLiteral("replace");
+            QDBusConnection::sessionBus().asyncCall(start, 3000);
+        }
+        QTimer::singleShot(1500, this, [this, target, payload, attempt] { openGui(target, payload, attempt + 1); });
+    });
 }
 
 bool DaemonService::start(QString *error)
@@ -46,6 +81,7 @@ bool DaemonService::start(QString *error)
     // The KWin script calls back into this name, so load it only once we own it.
     applyUiLanguage(m_assistant.config().language);
     m_bridge.apply(m_assistant.config().trackActivity);
+    m_assistant.setAutonomous(true); // reminders and hints come from here, GUI or not
     QString ideError;
     if (!m_ide.start(&ideError))
         qWarning().noquote() << "IDE socket unavailable:" << ideError; // chat keeps working
@@ -137,6 +173,20 @@ QString DaemonAdaptor::Curious()
 QString DaemonAdaptor::Feedback(bool good)
 {
     return m_service->assistant().feedback(good);
+}
+
+QString DaemonAdaptor::AddTask(const QString &text)
+{
+    if (text.size() > 1000)
+        return QStringLiteral("too long");
+    return m_service->assistant().addTask(text);
+}
+
+QString DaemonAdaptor::TaskAction(const QString &id, const QString &action)
+{
+    if (id.size() > 100 || action.size() > 20)
+        return QStringLiteral("invalid");
+    return m_service->assistant().taskAction(id, action);
 }
 
 QString DaemonAdaptor::Version()

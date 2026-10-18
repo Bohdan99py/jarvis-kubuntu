@@ -10,6 +10,7 @@
 
 #include "assistant.h"
 #include "daemon_client.h"
+#include "notifier.h"
 
 // List model for the chat view + bridge between QML and the brain.
 // If jarvisd is on the session bus, requests go to it; otherwise (or if the
@@ -64,6 +65,12 @@ public:
     Q_INVOKABLE void retranslate();
     // 👍 / 👎 on Jarvis's last answer: Jarvis learns from it and replies.
     Q_INVOKABLE void feedback(bool good);
+    // A message from Jarvis that is not an answer (a question from a notification).
+    Q_INVOKABLE void say(const QString &text);
+    // Tasks panel: "tomorrow at 9 call mum" or a plain to-do; the confirmation lands in memoryStatus.
+    Q_INVOKABLE void addTask(const QString &text);
+    // done, remove, snooze, reopen
+    Q_INVOKABLE void taskAction(const QString &id, const QString &action);
     QString memory() const { return m_memory; }
     QString memoryStatus() const { return m_memoryStatus; }
     QString lastReply() const { return m_lastReply; }
@@ -85,6 +92,9 @@ signals:
     void daemonConnectedChanged();
     void memoryChanged();
     void liveUpdatesChanged();
+    // Without a daemon this window delivers Jarvis's own notifications; a click
+    // asks the window to show "main", "tasks", "study", "curious" or "memory".
+    void openRequested(const QString &target, const QString &payload);
 
 private:
     struct Message
@@ -103,6 +113,8 @@ private:
     void onDaemonFailed(const QString &reason);
     // Background change: refresh now, or later if no window shows memory.
     void backgroundChange(bool graph);
+    // The local engine runs reminders and hints only while no daemon does.
+    void updateLocalAutonomy();
     void callDaemon(const QString &method, const QVariantList &args,
                     const std::function<void(const QString &result, const QString &error)> &done);
 
@@ -123,6 +135,8 @@ private:
     QList<Message> m_messages;
     DaemonClient m_daemon;
     jarvis::Assistant m_assistant;
+    Notifier m_notifier;
+    QHash<QString, QString> m_noticeBodies;
     QString m_pendingText;
     bool m_busy = false;
 };

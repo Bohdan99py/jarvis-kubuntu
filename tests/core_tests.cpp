@@ -12,6 +12,8 @@
 #include "skill_store.h"
 #include "learning_store.h"
 #include "vocab_store.h"
+#include "reminder_parser.h"
+#include "task_store.h"
 static void require(bool ok,const char *message) { if(!ok)qFatal("%s",message); }
 static QString factValue(const QJsonArray &facts,const QString &slot) {
     for(const auto &v:facts) if(v.toObject()["slot"].toString()==slot) return v.toObject()["value"].toString();
@@ -235,6 +237,60 @@ static void curiosity() {
     require(Curiosity::takeAnswer(s2,"a keyboard PCB",t+1,&slot,&value) && value=="KiCad: a keyboard PCB","subject kept with the answer");
     require(Curiosity::pick(facts,{},activity,s2,jarvis::Lang::En,t).id!=q.id,"asked question is not repeated");
 }
+static void reminders() {
+    using jarvis::ParsedReminder;using jarvis::ReminderParser;
+    const QDateTime now(QDate(2026,10,14),QTime(15,0)); // Wednesday
+    auto at=[&](int day,int h,int m){return QDateTime(QDate(2026,10,day),QTime(h,m));};
+    auto check=[&](const char *input,ParsedReminder::Kind kind,const QDateTime &due,const char *text,const char *repeat,const char *message){
+        const ParsedReminder r=ReminderParser::parse(QString::fromUtf8(input),now);
+        if(r.kind!=kind||(due.isValid()&&r.due!=due)||(text&&r.text!=QString::fromUtf8(text))||r.repeat!=QLatin1String(repeat))
+            qFatal("%s: kind %d due %s text '%s' repeat '%s'",message,int(r.kind),qPrintable(r.due.toString(Qt::ISODate)),qPrintable(r.text),qPrintable(r.repeat));
+    };
+    check("напомни завтра в 9 позвонить маме",ParsedReminder::Reminder,at(15,9,0),"позвонить маме","","tomorrow at 9");
+    check("Напомни мне через 20 минут проверить сборку",ParsedReminder::Reminder,now.addSecs(1200),"проверить сборку","","in 20 minutes");
+    check("напомни в 7 полить цветы",ParsedReminder::Reminder,at(14,19,0),"полить цветы","","seven in the afternoon means evening");
+    check("remind me at 6pm to call Alex",ParsedReminder::Reminder,at(14,18,0),"call Alex","","6pm");
+    check("Remind me tomorrow at 10:30 to send the report",ParsedReminder::Reminder,at(15,10,30),"send the report","","tomorrow 10:30");
+    check("напомни в пятницу в 10 утра про созвон",ParsedReminder::Reminder,at(16,10,0),"созвон","","weekday with suffix");
+    check("напоминай каждый день в 21:00 принять таблетки",ParsedReminder::Reminder,at(14,21,0),"принять таблетки","daily","daily");
+    check("remind me every Monday at 10 to plan the week",ParsedReminder::Reminder,at(19,10,0),"plan the week","weekly","weekly");
+    check("напомни по будням в 8:30 сделать зарядку",ParsedReminder::Reminder,at(15,8,30),"сделать зарядку","weekdays","weekdays");
+    check("напомни 20.10 в 18:00 сдать отчёт",ParsedReminder::Reminder,at(20,18,0),"сдать отчёт","","date");
+    check("remind me in an hour to stretch",ParsedReminder::Reminder,now.addSecs(3600),"stretch","","in an hour");
+    check("напомни через полчаса выключить чайник",ParsedReminder::Reminder,now.addSecs(1800),"выключить чайник","","half an hour");
+    check("remind me to drink water in 2 hours",ParsedReminder::Reminder,now.addSecs(7200),"drink water","","time at the end");
+    check("Джарвис, напомни вечером забрать посылку",ParsedReminder::Reminder,at(14,19,0),"забрать посылку","","evening");
+    check("напомни 25 октября в 12:00 продлить домен",ParsedReminder::Reminder,at(25,12,0),"продлить домен","","month name");
+    check("напомни купить молоко",ParsedReminder::NeedTime,{},"купить молоко","","no time");
+    check("напомни, что такое UART",ParsedReminder::None,{},nullptr,"","a question is not a reminder");
+    check("добавь задачу купить паяльник",ParsedReminder::Task,{},"купить паяльник","","task");
+    check("add a task: order resistors",ParsedReminder::Task,{},"order resistors","","English task");
+    check("Как дела?",ParsedReminder::None,{},nullptr,"","small talk");
+    require(ReminderParser::nextOccurrence(at(16,8,30),"weekdays",at(16,9,0))==at(19,8,30),"weekdays skip the weekend");
+    require(ReminderParser::nextOccurrence(at(1,21,0),"daily",at(14,22,0))==at(15,21,0),"daily catches up");
+    require(ReminderParser::describeWhen(at(14,19,0),now,jarvis::Lang::Ru)==QStringLiteral("сегодня в 19:00"),"describe today");
+    require(ReminderParser::describeWhen(at(16,10,0),now,jarvis::Lang::En)==QStringLiteral("on Friday at 10:00"),"describe weekday");
+
+    jarvis::TaskStore tasks;
+    const qint64 t=now.toMSecsSinceEpoch();
+    QString once,daily,todo;
+    require(tasks.add(QStringLiteral("позвонить маме"),t+60000,{},t,&once).isEmpty(),"add reminder");
+    require(tasks.add(QStringLiteral("принять таблетки"),t+120000,"daily",t,&daily).isEmpty(),"add daily reminder");
+    require(tasks.add(QStringLiteral("купить паяльник"),0,{},t,&todo).isEmpty(),"add task");
+    require(!tasks.add(QStringLiteral("пароль hunter2"),0,{},t).isEmpty(),"secrets refused");
+    require(!tasks.add(QStringLiteral("<ignore previous>"),0,{},t).isEmpty(),"markup refused");
+    require(tasks.due(t).isEmpty() && tasks.due(t+130000).size()==2,"due reminders");
+    require(tasks.nextDue()==t+60000,"next due");
+    tasks.fired(once,t+70000);tasks.fired(daily,t+130000);
+    require(tasks.task(once)["done"].toDouble()>0,"one-time reminder done once announced");
+    require(qint64(tasks.task(daily)["due"].toDouble())==t+120000+86400000LL,"daily reminder moves to tomorrow");
+    require(tasks.due(t+200000).isEmpty(),"nothing announced twice");
+    require(tasks.snooze(once,t+600000) && tasks.task(once)["done"].toDouble()==0,"snooze reopens");
+    require(tasks.find(QStringLiteral("паяльник")).size()==1,"find by words");
+    require(tasks.describe(jarvis::Lang::Ru,t).contains(QStringLiteral("купить паяльник")),"describe tasks");
+    require(tasks.complete(todo,t) && tasks.openCount()==2,"complete task");
+    require(tasks.remove(daily) && tasks.openCount()==1,"remove reminder");
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -249,5 +305,6 @@ int main(int argc,char **argv) {
     activity();
     safety();
     curiosity();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity";
+    reminders();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders";
 }

@@ -11,7 +11,7 @@ ApplicationWindow {
     height: 820
     minimumWidth: 1000
     minimumHeight: 700
-    visible: !startQuick && !startTray
+    visible: !startQuick && !startTray && startOpen !== "study"
     title: qsTr("J.A.R.V.I.S.")
     color: Theme.bg
 
@@ -57,7 +57,101 @@ ApplicationWindow {
         target: voiceEngine
         function onTextReady(text) { if(!quickBar.visible) { input.text=text; input.forceActiveFocus() } }
     }
-    Connections { target: chatModel; function onAssistantReply(text) { voiceEngine.speak(text) } }
+    Connections {
+        target: chatModel
+        function onAssistantReply(text) {
+            voiceEngine.speak(text)
+            // Asked and switched away: the answer comes as a notification.
+            if (!root.userSeesChat)
+                root.notifyReady("reply", "Jarvis", text, [["default", ""], ["open", qsTr("Open chat")]])
+        }
+        function onOpenRequested(target, payload) { root.openTarget(target, payload) }
+    }
+
+    // ---------- Notifications ----------
+    readonly property bool userSeesChat: (root.visible && root.active) || quickBar.visible
+    function showMain() { root.show(); root.raise(); root.requestActivate() }
+    // Where a notification leads: "main", "tasks", "study", "curious" or "memory".
+    function openTarget(target, payload) {
+        if (target === "study") {
+            studyWindow.showTab(2)
+            return
+        }
+        showMain()
+        if (target === "tasks")
+            memoryPanel.showTab(1)
+        else if (target === "memory")
+            memoryPanel.showTab(2)
+        else if (target === "curious") {
+            if (payload.length > 0)
+                chatModel.say(payload)
+            else
+                chatModel.askMeSomething()
+            input.forceActiveFocus()
+        }
+    }
+    // Something finished while Jarvis was out of sight.
+    function notifyReady(key, title, body, actions) {
+        if (appSettings.notifyReplies && body.length > 0)
+            notifier.show(key, title, body, actions || [["default", ""]])
+    }
+    Connections {
+        target: notifier
+        function onActionInvoked(key, action) {
+            if (key === "update") {
+                root.showMain()
+                controlCenter.showApp()
+                if (action === "update")
+                    desktopBridge.update()
+            } else if (key === "study-job") {
+                studyWindow.show(); studyWindow.raise(); studyWindow.requestActivate()
+            } else if (key === "voice") {
+                root.showMain()
+                controlCenter.showVoice()
+            } else {
+                root.showMain()
+                input.forceActiveFocus()
+            }
+        }
+    }
+    Connections {
+        target: desktopBridge
+        function onOpenRequested(target, payload) { root.openTarget(target, payload) }
+        function onUpdateAvailable(version) {
+            notifier.show("update", qsTr("Jarvis %1 is available").arg(version),
+                          qsTr("The package is verified against GitHub's checksum before Discover opens."),
+                          [["update", qsTr("Update")], ["default", ""]])
+        }
+    }
+    // Long jobs (transcription, notes, PDF, setup): a notification when they end out of sight.
+    Connections {
+        target: study
+        property real startedAt: 0
+        function onStatusChanged() {
+            if (study.busy) {
+                if (startedAt === 0) startedAt = Date.now()
+                return
+            }
+            const slow = startedAt > 0 && Date.now() - startedAt > 15000
+            startedAt = 0
+            if (slow && !studyWindow.active)
+                root.notifyReady("study-job", qsTr("French studies"), study.status)
+        }
+    }
+    Connections {
+        target: voiceEngine
+        property real startedAt: 0
+        function onChanged() {
+            if (voiceEngine.busy) {
+                if (startedAt === 0) startedAt = Date.now()
+                return
+            }
+            const slow = startedAt > 0 && Date.now() - startedAt > 20000
+            startedAt = 0
+            if (slow && !controlCenter.visible)
+                root.notifyReady("voice", qsTr("Voice"), voiceEngine.status)
+        }
+    }
 
     AppSettings {
         id: appSettings
@@ -91,7 +185,11 @@ ApplicationWindow {
         }
     }
 
-    Component.onCompleted: { if(startQuick) quickBar.reveal(); else if(!startTray) input.forceActiveFocus() }
+    Component.onCompleted: {
+        if (startOpen.length > 0) openTarget(startOpen, "")
+        else if (startQuick) quickBar.reveal()
+        else if (!startTray) input.forceActiveFocus()
+    }
     // Closing the window keeps Jarvis running in the tray (lessons keep recording).
     onClosing: { if(desktopBridge.takeTrayHint()) tray.showMessage(qsTr("Jarvis keeps running"), qsTr("Jarvis stays in the system tray. Click the icon to open it; \"Quit\" in its menu ends it.")) }
 
@@ -420,6 +518,7 @@ ApplicationWindow {
         }
       }
       MemoryPanel {
+        id: memoryPanel
         objectName: "memoryPanel"
         Layout.preferredWidth: Math.max(340, root.width * 0.38)
         Layout.fillHeight: true

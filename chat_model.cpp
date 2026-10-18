@@ -2,7 +2,9 @@
 
 #include <QByteArray>
 #include <QDebug>
+#include <QJsonObject>
 #include <QTime>
+#include <QTimer>
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QDBusPendingCallWatcher>
@@ -27,7 +29,18 @@ ChatModel::ChatModel(QObject *parent)
     // If the daemon is installed as a user service, this wakes it up via D-Bus
     // activation; if it is not installed, nothing happens and we stay local.
     m_daemon.tryStartDaemon();
-    connect(&m_daemon, &DaemonClient::availabilityChanged, this, [this] { refreshGraph(); refreshMemory(); });
+    connect(&m_daemon, &DaemonClient::availabilityChanged, this, [this] { refreshGraph(); refreshMemory(); updateLocalAutonomy(); });
+    connect(&m_assistant, &jarvis::Assistant::notice, this, [this](const QJsonObject &notice) {
+        m_noticeBodies.insert(notice.value(QStringLiteral("key")).toString(), notice.value(QStringLiteral("body")).toString());
+        m_notifier.showNotice(notice);
+    });
+    connect(&m_notifier, &Notifier::actionInvoked, this, [this](const QString &key, const QString &action) {
+        const QString target = m_assistant.noticeAction(key, action);
+        if (!target.isEmpty())
+            emit openRequested(target, target == QLatin1String("curious") ? m_noticeBodies.value(key) : QString());
+    });
+    // Give D-Bus activation time to bring the daemon up before deciding to stand in for it.
+    QTimer::singleShot(10000, this, &ChatModel::updateLocalAutonomy);
     connect(&m_assistant, &jarvis::Assistant::memoryChanged, this, [this] {
         if (!daemonConnected()) backgroundChange(true);
     });
@@ -332,6 +345,46 @@ void ChatModel::onDaemonMemoryChanged()
 void ChatModel::onDaemonActivityChanged()
 {
     backgroundChange(false);
+}
+
+void ChatModel::updateLocalAutonomy()
+{
+    m_assistant.setAutonomous(!daemonConnected());
+}
+
+void ChatModel::say(const QString &text)
+{
+    const QString trimmed = text.trimmed().left(1000);
+    if (!trimmed.isEmpty())
+        append(trimmed, /*fromUser=*/false);
+}
+
+void ChatModel::addTask(const QString &text)
+{
+    auto report = [this](const QString &result, const QString &error) {
+        m_memoryStatus = error.isEmpty() ? result : error;
+        emit memoryChanged();
+        refreshMemory();
+    };
+    if (!daemonConnected())
+        report(m_assistant.addTask(text), {});
+    else
+        callDaemon(QStringLiteral("AddTask"), {text.left(1000)}, report);
+}
+
+void ChatModel::taskAction(const QString &id, const QString &action)
+{
+    auto report = [this](const QString &result, const QString &error) {
+        if (!result.isEmpty() || !error.isEmpty()) {
+            m_memoryStatus = error.isEmpty() ? result : error;
+            emit memoryChanged();
+        }
+        refreshMemory();
+    };
+    if (!daemonConnected())
+        report(m_assistant.taskAction(id, action), {});
+    else
+        callDaemon(QStringLiteral("TaskAction"), {id, action}, report);
 }
 
 void ChatModel::backgroundChange(bool graph)

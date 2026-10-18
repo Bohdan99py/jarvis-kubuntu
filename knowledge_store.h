@@ -54,6 +54,9 @@ public:
     // State of the curiosity engine, kept with the facts it learns.
     QJsonObject curiosityState() const;
     void setCuriosityState(const QJsonObject &state);
+    // State of the autonomous side (hints shown, last memory review).
+    QJsonObject autonomyState() const;
+    void setAutonomyState(const QJsonObject &state);
     // Removes facts matching `query`: an id, whole words of the value, or a
     // large word overlap. When more than `maxMatches` facts match by text,
     // nothing is removed and the negated count is returned.

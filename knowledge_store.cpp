@@ -406,6 +406,19 @@ void KnowledgeStore::setCuriosityState(const QJsonObject &state)
     save(root);
 }
 
+QJsonObject KnowledgeStore::autonomyState() const
+{
+    return load().value(u"autonomy"_s).toObject();
+}
+
+void KnowledgeStore::setAutonomyState(const QJsonObject &state)
+{
+    QJsonObject root = load();
+    root[u"version"_s] = 1;
+    root[u"autonomy"_s] = state;
+    save(root);
+}
+
 int KnowledgeStore::forget(const QString &query, int maxMatches)
 {
     QJsonObject root = load();

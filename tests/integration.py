@@ -1,6 +1,7 @@
 import subprocess, os, json, time, shutil, tempfile, sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from fake_kwin import FakeKWin
+from fake_notifications import FakeNotifications
 from pathlib import Path
 base=Path.cwd()
 build=Path(os.environ.get('JARVIS_TEST_BUILD', str(base/'build')))
@@ -206,6 +207,46 @@ try:
  assert call('Forget','activity').strip()=="('',)"
  assert memory()['activity']['today']['apps']==[]
 
+ # Reminders and tasks in chat
+ out=ask('напомни завтра в 9 позвонить маме')
+ assert 'напомню завтра в 09:00' in out and 'позвонить маме' in out,out
+ reminder=[t for t in memory()['tasks'] if t['text']=='позвонить маме'][0]
+ assert reminder['when']=='tomorrow at 09:00' and reminder['due']>time.time()*1000,reminder
+ assert (scratch/'data/jarvis/tasks.json').stat().st_mode & 0o777 == 0o600
+ assert 'позвонить маме' in ask('мои напоминания')
+ assert 'Когда напомнить' in ask('напомни купить молоко'),'asks for the time'
+ out=ask('через 2 часа')
+ assert 'напомню' in out and 'купить молоко' in out,out
+ assert 'Записал задачу' in ask('добавь задачу купить паяльник')
+ assert 'Удалил' in ask('отмени напоминание про молоко')
+ assert not any(t['text']=='купить молоко' for t in memory()['tasks'])
+ assert 'what' not in ask('напомни, что такое UART'),'a question stays a question'
+ assert 'order resistors' in unquote(call('AddTask','order resistors'))
+ todo=[t for t in memory()['tasks'] if t['text']=='order resistors'][0]
+ assert todo['due']==0
+ assert call('TaskAction',todo['id'],'done').strip()=="('',)"
+ assert [t for t in memory()['tasks'] if t['id']==todo['id']][0]['done']>0
+ assert 'not found' in unquote(call('TaskAction','nope','done'))
+
+ # Notifications: a reminder that came due while the daemon was off arrives at start
+ notifications=FakeNotifications()
+ call('Quit');proc.wait(timeout=3)
+ tasks_file=scratch/'data/jarvis/tasks.json'
+ items=json.loads(tasks_file.read_text())
+ past=int(time.time()*1000)-3600*1000
+ items.append(dict(id='tmissed',text='проверить сборку',due=past,repeat='',created=past,done=0,fired=0))
+ tasks_file.write_text(json.dumps(items))
+ proc=start()
+ wait_for(lambda: notifications.find('проверить сборку'),'missed reminder notified',timeout=8)
+ note=notifications.find('проверить сборку')[0]
+ assert note['app']=='Jarvis' and 'snooze' in note['actions'] and note['timeout']==0,note
+ assert [t for t in memory()['tasks'] if t['id']=='tmissed'][0]['done']>0,'announced once'
+ notifications.invoke(note['id'],'snooze')
+ wait_for(lambda: [t for t in memory()['tasks'] if t['id']=='tmissed'][0]['done']==0,'snoozed reminder reopened')
+ snoozed=[t for t in memory()['tasks'] if t['id']=='tmissed'][0]
+ assert 9*60*1000 < snoozed['due']-time.time()*1000 <= 10*60*1000,snoozed
+ notifications.invoke(note['id']+1000,'done') # someone else's notification: ignored
+
  # GUI starts in quick mode, single instance, no QML errors (Russian and English UI)
  gui_env=env.copy();gui_env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software')
  for language in ('ru','en'):
@@ -222,7 +263,7 @@ try:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()
    assert not any(error in ui_log for error in ('failed to load','ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),ui_log
- print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, actions, activity, GUI ru/en')
+ print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, actions, activity, GUI ru/en')
 finally:
  proc.terminate();proc.wait(timeout=3)
  shutil.rmtree(scratch)

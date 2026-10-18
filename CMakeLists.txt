@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.12.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.13.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -62,6 +62,10 @@ qt_add_library(jarvis_core STATIC
     learning_store.cpp
     vocab_store.h
     vocab_store.cpp
+    reminder_parser.h
+    reminder_parser.cpp
+    task_store.h
+    task_store.cpp
     chat_engine.h
     chat_engine.cpp
     system_info.h
@@ -105,6 +109,8 @@ qt_add_executable(jarvisd
     activity_bridge.cpp
     ide_server.h
     ide_server.cpp
+    notifier.h
+    notifier.cpp
     runtime_paths.h
     dbus_names.h
 )
@@ -151,6 +157,8 @@ qt_add_qml_module(jarvis
         dbus_names.h
         app_settings.h
         app_settings.cpp
+        notifier.h
+        notifier.cpp
 )
 
 target_link_libraries(jarvis PRIVATE

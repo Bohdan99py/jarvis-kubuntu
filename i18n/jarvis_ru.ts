@@ -164,6 +164,10 @@ The recognized text appears in the input field — send it with Enter.</source>
         <translation>Любопытство: Jarvis задаёт вопросы, чтобы узнать меня</translation>
     </message>
     <message>
+        <source>Autonomy</source>
+        <translation>Автономность</translation>
+    </message>
+    <message>
         <source>Now and then — at most every ten minutes and never in the middle of a task — Jarvis asks about you, your projects or an app you use a lot, and remembers the answer. Ignore a question to skip it.</source>
         <translation>Время от времени — не чаще раза в десять минут и не посреди задачи — Jarvis спрашивает о вас, ваших проектах или программе, в которой вы много работаете, и запоминает ответ. Чтобы пропустить вопрос, просто не отвечайте на него.</translation>
     </message>
@@ -198,6 +202,82 @@ The recognized text appears in the input field — send it with Enter.</source>
     <message>
         <source>Forget facts and topics</source>
         <translation>Забыть факты и темы</translation>
+    </message>
+    <message>
+        <source>Autonomy and notifications</source>
+        <translation>Автономность и уведомления</translation>
+    </message>
+    <message>
+        <source>Jarvis keeps working in the background: it delivers reminders, speaks up when it has something useful to say and tidies its memory. Notifications follow Plasma&apos;s &quot;Do not disturb&quot; mode.</source>
+        <translation>Jarvis работает в фоне: присылает напоминания, сам подаёт голос, когда есть что-то полезное, и наводит порядок в памяти. Уведомления подчиняются режиму «Не беспокоить» в Plasma.</translation>
+    </message>
+    <message>
+        <source>Reminders always come, even with the window closed. Try in chat: &quot;remind me tomorrow at 9 to call mum&quot;, &quot;in 20 minutes check the build&quot;, &quot;every weekday at 8:30 exercise&quot;, &quot;add a task buy solder&quot;, &quot;my reminders&quot;.</source>
+        <translation>Напоминания приходят всегда, даже при закрытом окне. Попробуйте в чате: «напомни завтра в 9 позвонить маме», «через 20 минут проверь сборку», «по будням в 8:30 зарядка», «добавь задачу купить паяльник», «мои напоминания».</translation>
+    </message>
+    <message>
+        <source>Jarvis speaks up by itself</source>
+        <translation>Jarvis сам подаёт голос</translation>
+    </message>
+    <message>
+        <source>Hints in notifications, at most one every half hour and never between 23:00 and 7:00 or while you play or watch something: a break after long work, French words due for review, a curious question when you have not talked for a while.</source>
+        <translation>Подсказки в уведомлениях — не чаще раза в полчаса, никогда с 23:00 до 7:00 и пока вы играете или смотрите видео: перерыв после долгой работы, французские слова к повторению, любопытный вопрос, если вы давно не общались.</translation>
+    </message>
+    <message>
+        <source>Suggest a break after</source>
+        <translation>Предлагать перерыв через</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>Никогда</translation>
+    </message>
+    <message>
+        <source>1 hour</source>
+        <translation>1 час</translation>
+    </message>
+    <message>
+        <source>1.5 hours</source>
+        <translation>1,5 часа</translation>
+    </message>
+    <message>
+        <source>2 hours</source>
+        <translation>2 часа</translation>
+    </message>
+    <message>
+        <source>Breaks need &quot;See which application I&apos;m working in&quot; on the Memory tab: that is how Jarvis knows you are at the computer.</source>
+        <translation>Для перерывов включите «Видеть, в каком приложении я работаю» на вкладке «Память»: так Jarvis знает, что вы за компьютером.</translation>
+    </message>
+    <message>
+        <source>Morning plan</source>
+        <translation>План на утро</translation>
+    </message>
+    <message>
+        <source>When you sit down in the morning: today&apos;s reminders, open tasks and flashcards to review.</source>
+        <translation>Когда вы садитесь за компьютер утром: напоминания на сегодня, открытые задачи и карточки к повторению.</translation>
+    </message>
+    <message>
+        <source>Review my memory every day</source>
+        <translation>Пересматривать память каждый день</translation>
+    </message>
+    <message>
+        <source>With a Claude key, once a day Jarvis sends the facts it keeps about you and short summaries of your conversations to Claude to merge duplicates, drop outdated facts and note your goals and habits. Facts you added yourself are never deleted.</source>
+        <translation>С ключом Claude раз в день Jarvis отправляет Claude факты о вас и краткие пересказы разговоров, чтобы объединить дубли, убрать устаревшее и отметить ваши цели и привычки. Факты, добавленные вами вручную, не удаляются никогда.</translation>
+    </message>
+    <message>
+        <source>Tell me when something is ready while Jarvis is hidden</source>
+        <translation>Сообщать, когда что-то готово, пока Jarvis скрыт</translation>
+    </message>
+    <message>
+        <source>An answer you were waiting for, a finished transcription or PDF translation, the voice setup.</source>
+        <translation>Ответ, которого вы ждали, готовая расшифровка или перевод PDF, установка голоса.</translation>
+    </message>
+    <message>
+        <source>Send a test notification</source>
+        <translation>Отправить тестовое уведомление</translation>
+    </message>
+    <message>
+        <source>Notifications work. This is how reminders will look.</source>
+        <translation>Уведомления работают. Так будут выглядеть напоминания.</translation>
     </message>
     <message>
         <source>Interface language</source>
@@ -392,6 +472,26 @@ A KDE menu entry and a system tray icon</source>
         <translation>Выход</translation>
     </message>
     <message>
+        <source>Open chat</source>
+        <translation>Открыть чат</translation>
+    </message>
+    <message>
+        <source>Jarvis %1 is available</source>
+        <translation>Доступен Jarvis %1</translation>
+    </message>
+    <message>
+        <source>The package is verified against GitHub&apos;s checksum before Discover opens.</source>
+        <translation>Перед открытием Discover пакет сверяется с контрольной суммой GitHub.</translation>
+    </message>
+    <message>
+        <source>Update</source>
+        <translation>Обновить</translation>
+    </message>
+    <message>
+        <source>Voice</source>
+        <translation>Голос</translation>
+    </message>
+    <message>
         <source>Jarvis keeps running</source>
         <translation>Jarvis продолжает работать</translation>
     </message>
@@ -523,12 +623,40 @@ A KDE menu entry and a system tray icon</source>
         <translation>Код</translation>
     </message>
     <message>
+        <source>Tasks</source>
+        <translation>Задачи</translation>
+    </message>
+    <message>
         <source>I learn by myself from our chats, your answers and your activity.</source>
         <translation>Я учусь сам: на наших разговорах, ваших ответах и вашей активности.</translation>
     </message>
     <message>
         <source>Teach an exact answer</source>
         <translation>Научить точному ответу</translation>
+    </message>
+    <message>
+        <source>Reminders come as notifications even when the window is closed. Write the way you speak: &quot;tomorrow at 9 call mum&quot;, &quot;in 20 minutes check the build&quot;, &quot;every Monday at 10 plan the week&quot; — or a task without a time.</source>
+        <translation>Напоминания приходят уведомлениями, даже когда окно закрыто. Пишите как говорите: «завтра в 9 позвонить маме», «через 20 минут проверить сборку», «каждый понедельник в 10 план на неделю» — или задачу без времени.</translation>
+    </message>
+    <message>
+        <source>tomorrow at 9 call mum</source>
+        <translation>завтра в 9 позвонить маме</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Готово</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>No reminders or tasks yet.</source>
+        <translation>Напоминаний и задач пока нет.</translation>
     </message>
     <message>
         <source>Learning from chat is off. Only notes you add here are kept.</source>

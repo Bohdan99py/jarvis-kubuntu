@@ -306,6 +306,7 @@ void ActivityStore::windowActivated(const QString &caption, const QString &appCl
                                     const QString &desktopId, qint64 nowMs)
 {
     accrue(nowMs);
+    touchStreak(nowMs);
     const QString cls = appClass.trimmed().toLower().left(120);
     const QString desktop = desktopId.trimmed().left(120);
     const QString key = desktop.isEmpty() ? cls : desktop.toLower();
@@ -351,8 +352,28 @@ void ActivityStore::setLocked(bool locked, qint64 nowMs)
 {
     accrue(nowMs);
     m_locked = locked;
-    if (!locked)
+    if (!locked) {
         m_current.lastEvent = nowMs; // unlocking is user activity
+        touchStreak(nowMs);
+    } else {
+        m_streakLast = 0; // a locked screen is a break
+    }
+}
+
+void ActivityStore::touchStreak(qint64 nowMs)
+{
+    if (m_locked)
+        return;
+    if (m_streakLast == 0 || nowMs - m_streakLast > kIdleCapMs)
+        m_streakStart = nowMs;
+    m_streakLast = nowMs;
+}
+
+qint64 ActivityStore::workStreakMs(qint64 nowMs) const
+{
+    if (m_locked || m_streakLast == 0 || nowMs - m_streakLast > kIdleCapMs)
+        return 0;
+    return nowMs - m_streakStart;
 }
 
 void ActivityStore::stop(qint64 nowMs)

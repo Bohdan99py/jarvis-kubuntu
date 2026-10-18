@@ -45,6 +45,11 @@ public:
     void reloadIfIdle();
 
     bool hasCurrent() const { return !m_current.key.isEmpty(); }
+    // Category of the focused application ("coding", "gaming", …), "" when none.
+    QString currentCategory() const { return m_current.category; }
+    // Uninterrupted time at the desk: focus events with no lock and no pause
+    // longer than kIdleCapMs in between. 0 while away.
+    qint64 workStreakMs(qint64 nowMs) const;
     QJsonObject snapshot(qint64 nowMs) const;
     QJsonArray suggestions(qint64 nowMs, int max = 6) const;
 
@@ -87,6 +92,10 @@ private:
     QJsonObject m_root;
     Current m_current;
     QHash<QString, QString> m_names;
+    void touchStreak(qint64 nowMs);
+
+    qint64 m_streakStart = 0;
+    qint64 m_streakLast = 0;
     bool m_keepTitles = false;
     bool m_locked = false;
     bool m_dirty = false;

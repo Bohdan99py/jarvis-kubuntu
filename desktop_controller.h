@@ -43,9 +43,13 @@ public:
     Q_INVOKABLE void searchWeb(const QString &query);
     Q_INVOKABLE QString launch(const QString &id);
     Q_INVOKABLE void restartDaemon();
+    // Quietly asks GitHub whether a newer release exists (no download).
+    Q_INVOKABLE void checkForUpdates();
 public slots:
     Q_SCRIPTABLE void ShowQuick() { emit quickRequested(); }
     Q_SCRIPTABLE void ShowMain() { emit mainRequested(); }
+    // From jarvisd's notifications: "main", "tasks", "study", "curious" or "memory".
+    Q_SCRIPTABLE void Open(const QString &target, const QString &payload) { emit openRequested(target.left(20), payload.left(1000)); }
 signals:
     void skillsChanged();
     void updateChanged();
@@ -53,6 +57,9 @@ signals:
     void mainRequested();
     void vscodeChanged();
     void autostartChanged();
+    void openRequested(const QString &target, const QString &payload);
+    // A newer release exists; emitted once per version.
+    void updateAvailable(const QString &version);
 private:
     void installSkill(const QByteArray &bytes);
     QString launchApplication(const QString &desktopId);
@@ -68,5 +75,7 @@ private:
     QByteArray m_updateBuffer;
     QString m_skillStatus,m_updateStatus,m_vscodeStatus;
     QProcess m_vscode;
+    QProcess m_checker;
+    QTimer m_checkTimer;
     bool m_fetching=false;
 };
