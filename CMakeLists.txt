@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.14.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.15.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -196,7 +196,7 @@ install(FILES kwin/activity.js DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/kwin)
 # VS Code extension, packed as .vsix without Node (vscode/make_vsix.py).
 set(JARVIS_VSIX "${CMAKE_CURRENT_BINARY_DIR}/jarvis-vscode.vsix")
 set(JARVIS_VSCODE_FILES vscode/package.json vscode/extension.js vscode/lib.js vscode/package.nls.json
-    vscode/package.nls.ru.json vscode/README.md vscode/make_vsix.py)
+    vscode/package.nls.ru.json vscode/README.md vscode/make_vsix.py vscode/media/jarvis.svg vscode/media/walkthrough.svg)
 add_custom_command(OUTPUT "${JARVIS_VSIX}"
     COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/vscode/make_vsix.py"
             "${CMAKE_CURRENT_SOURCE_DIR}/vscode" "${PROJECT_VERSION}" "${JARVIS_VSIX}"

@@ -22,7 +22,10 @@ public:
     // timeoutMs: -1 = the server's default, 0 = stays until dismissed.
     Q_INVOKABLE void show(const QString &key, const QString &title, const QString &body,
                           const QVariantList &actions = {}, int timeoutMs = -1);
-    // {key, kind, title, body, actions} as emitted by jarvis::Assistant::notice.
+    // With a theme sound (reminders).
+    void showWith(const QString &key, const QString &title, const QString &body, const QVariantList &actions,
+                  int timeoutMs, bool sound);
+    // {key, kind, title, body, actions, sound} as emitted by jarvis::Assistant::notice.
     void showNotice(const QJsonObject &notice);
     Q_INVOKABLE void close(const QString &key);
 

@@ -895,7 +895,7 @@ QString Assistant::learnedToday(Lang lang) const
 
 quint64 Assistant::askCode(const QString &mode, const QString &textValue, const QJsonObject &context)
 {
-    static const QSet<QString> modes = {u"ask"_s, u"explain"_s, u"fix"_s, u"tests"_s, u"error"_s};
+    static const QSet<QString> modes = {u"ask"_s, u"explain"_s, u"fix"_s, u"tests"_s, u"error"_s, u"review"_s, u"document"_s};
     if (!modes.contains(mode) || textValue.size() > 4096 || m_queue.size() >= 32)
         return 0;
     if (textValue.trimmed().isEmpty() && context.value(u"selection"_s).toString().trimmed().isEmpty()
@@ -969,6 +969,13 @@ void Assistant::startCode(const Request &r)
         {u"tests"_s, u"Write focused unit tests for the selected code in the project's likely test framework, in one "
                      u"fenced block, then list what they cover."_s},
         {u"error"_s, u"Explain the cause of the diagnostics and show how to fix them, with corrected code if relevant."_s},
+        {u"review"_s, u"Review this code like a careful senior engineer. List findings ordered by severity — bugs first, then "
+                      u"robustness (error handling, edge cases, resource leaks, undefined behaviour, concurrency), then "
+                      u"readability — each with the line number, why it matters and a concrete fix. Say plainly when the code "
+                      u"is fine. End with corrected code only for real bugs."_s},
+        {u"document"_s, u"Add clear documentation comments in the language's usual style (Doxygen, docstrings, JSDoc) and "
+                        u"short inline comments where the logic is not obvious, without changing behaviour or formatting. "
+                        u"Return the complete commented code in one fenced block, then one line on what was documented."_s},
     };
     QString context = u"\n## Task\n"_s + tasks.value(r.mode) + u'\n';
     const QString profile = m_code.profileForPrompt();
@@ -1156,11 +1163,6 @@ void Assistant::answerWithFiles(const Request &r, Lang lang)
 
 // ---- Reminders and tasks --------------------------------------------------------
 
-Lang Assistant::uiLang() const
-{
-    return resolveLanguage(m_config.language);
-}
-
 namespace {
 
 QString taskError(const QString &code, bool ru)
@@ -1201,6 +1203,54 @@ QJsonObject jsonIn(const QString &reply)
 
 } // namespace
 
+Lang Assistant::uiLang() const
+{
+    return resolveLanguage(m_config.language);
+}
+
+ReminderOptions Assistant::reminderOptions() const
+{
+    ReminderOptions o;
+    o.morning = m_config.morningHour;
+    o.afternoon = m_config.afternoonHour;
+    o.evening = m_config.eveningHour;
+    return o;
+}
+
+QString Assistant::editTask(const QString &id, const QString &textValue, const QString &when, const QString &repeat)
+{
+    const Lang lang = uiLang();
+    const bool ru = lang == Lang::Ru;
+    const QJsonObject task = m_tasks.task(id);
+    if (task.isEmpty())
+        return ru ? u"Задача не найдена."_s : u"Task not found."_s;
+    const QString text = textValue.trimmed().isEmpty() ? task.value(u"text"_s).toString() : textValue.trimmed();
+    qint64 due = qint64(task.value(u"due"_s).toDouble());
+    QString again = repeat == u"keep" ? task.value(u"repeat"_s).toString() : repeat;
+    const QString w = when.trimmed();
+    if (w == u"-") {
+        due = 0;
+    } else if (!w.isEmpty()) {
+        const ParsedReminder p = ReminderParser::parse(u"напомни "_s + w, QDateTime::currentDateTime(), reminderOptions());
+        if (p.kind != ParsedReminder::Reminder)
+            return ru ? u"Не понял время «%1». Например: «завтра в 10», «через час», «25.12 в 9»."_s.arg(w)
+                      : u"I didn't understand the time \"%1\". For example: \"tomorrow at 10\", \"in an hour\"."_s.arg(w);
+        due = p.due.toMSecsSinceEpoch();
+        if (repeat == u"keep" && !p.repeat.isEmpty())
+            again = p.repeat;
+    }
+    if (!again.isEmpty() && !ReminderParser::validRepeat(again))
+        return ru ? u"Такой повтор я не понимаю."_s : u"I don't understand that repetition."_s;
+    if (due > 0 && due <= now() && again.isEmpty())
+        return ru ? u"Это время уже прошло."_s : u"That time has already passed."_s;
+    const QString error = m_tasks.update(id, text, due, again);
+    if (!error.isEmpty())
+        return taskError(error, ru);
+    emit memoryChanged();
+    return {};
+}
+
+
 QString Assistant::scheduleReminder(const QString &what, qint64 due, const QString &repeat, Lang lang)
 {
     const bool ru = lang == Lang::Ru;
@@ -1228,7 +1278,7 @@ bool Assistant::handleTaskCommand(const Request &r, Lang lang)
     if (!m_awaitingTime.isEmpty()) {
         const QString what = std::exchange(m_awaitingTime, QString());
         if (t - m_awaitingSince < 10 * 60 * 1000) {
-            const ParsedReminder p = ReminderParser::parse(u"напомни "_s + textValue, current);
+            const ParsedReminder p = ReminderParser::parse(u"напомни "_s + textValue, current, reminderOptions());
             if (p.kind == ParsedReminder::Reminder && p.text.split(u' ', Qt::SkipEmptyParts).size() <= 2) {
                 finishLater(r.id, scheduleReminder(what, p.due.toMSecsSinceEpoch(), p.repeat, lang), false, 150);
                 return true;
@@ -1244,6 +1294,32 @@ bool Assistant::handleTaskCommand(const Request &r, Lang lang)
                           u"what s on my list"_s, u"whats on my list"_s})) {
         finishLater(r.id, m_tasks.describe(lang, t), false, 150);
         return true;
+    }
+
+    // "перенеси напоминание про созвон на завтра в 10", "move the reminder about the call to 5pm"
+    static const QRegularExpression move = rx(
+        u"^(?:(?:джарвис|jarvis)[,\\s]+)?(?:перенеси|передвинь|сдвинь|move|reschedule|postpone)\\s+(?:the\\s+)?"
+        u"(?:напоминание|задачу|reminder|task)?\\s*(?:про|о|об|насч[её]т|about|to|for)?\\s*(.{2,}?)\\s+(?:на|to|until)\\s+(.{2,})$"_s);
+    if (const auto mv = move.match(textValue); mv.hasMatch()) {
+        const QList<QJsonObject> found = m_tasks.find(mv.captured(1));
+        if (found.size() == 1) {
+            const QJsonObject o = found.first();
+            const QString error = editTask(o.value(u"id"_s).toString(), {}, mv.captured(2), u"keep"_s);
+            const QJsonObject moved = m_tasks.task(o.value(u"id"_s).toString());
+            const QDateTime at = QDateTime::fromMSecsSinceEpoch(qint64(moved.value(u"due"_s).toDouble()));
+            finishLater(r.id, !error.isEmpty() ? error
+                                  : (ru ? u"Перенёс: %1 — %2"_s : u"Moved: %1 — %2"_s)
+                                        .arg(o.value(u"text"_s).toString(), ReminderParser::describeWhen(at, current, lang)),
+                        false, 150);
+            return true;
+        }
+        if (found.size() > 1) {
+            QStringList names;
+            for (const auto &x : found.mid(0, 5))
+                names.append(u"• "_s + x.value(u"text"_s).toString());
+            finishLater(r.id, (ru ? u"Подходит несколько — уточните:\n"_s : u"Several match — which one?\n"_s) + names.join(u'\n'), false, 150);
+            return true;
+        }
     }
 
     // "отмени напоминание про созвон", "cancel the reminder about the call"
@@ -1280,7 +1356,7 @@ bool Assistant::handleTaskCommand(const Request &r, Lang lang)
         return true;
     }
 
-    const ParsedReminder p = ReminderParser::parse(textValue, current);
+    const ParsedReminder p = ReminderParser::parse(textValue, current, reminderOptions());
     switch (p.kind) {
     case ParsedReminder::None:
         return false;
@@ -1349,7 +1425,7 @@ void Assistant::absorbPlan(bool ok, const QString &reply)
     }
     QString what = o.value(u"text"_s).toString().simplified().left(TaskStore::kMaxChars);
     if (what.isEmpty())
-        what = ReminderParser::parse(r.text, QDateTime::currentDateTime()).text;
+        what = ReminderParser::parse(r.text, QDateTime::currentDateTime(), reminderOptions()).text;
     const QDateTime at = QDateTime::fromString(o.value(u"at"_s).toString().left(25), Qt::ISODate);
     QString repeat = o.value(u"repeat"_s).toString();
     if (repeat != u"daily" && repeat != u"weekdays" && repeat != u"weekly")
@@ -1374,7 +1450,7 @@ QString Assistant::addTask(const QString &textValue)
         return taskError(u"short"_s, ru);
     // The panel has no trigger word: read the phrase as "remind me …".
     const QDateTime current = QDateTime::currentDateTime();
-    const ParsedReminder p = ReminderParser::parse(u"напомни "_s + trimmed, current);
+    const ParsedReminder p = ReminderParser::parse(u"напомни "_s + trimmed, current, reminderOptions());
     if (p.kind == ParsedReminder::Reminder)
         return scheduleReminder(p.text, p.due.toMSecsSinceEpoch(), p.repeat, lang);
     const QString error = m_tasks.add(trimmed, 0, {}, now());
@@ -1393,7 +1469,7 @@ QString Assistant::taskAction(const QString &id, const QString &action)
     else if (action == u"remove")
         ok = m_tasks.remove(id);
     else if (action == u"snooze")
-        ok = m_tasks.snooze(id, now() + 10 * 60 * 1000);
+        ok = m_tasks.snooze(id, now() + qint64(m_config.snoozeMinutes) * 60 * 1000);
     else if (action == u"reopen")
         // Only to-dos: a reminder reopened in the past would ring at once.
         ok = m_tasks.task(id).value(u"due"_s).toDouble() == 0 && m_tasks.snooze(id, 0);
@@ -1429,7 +1505,8 @@ void Assistant::emitNotice(const QString &key, const QString &kind, const QStrin
     QJsonArray list;
     for (const auto &[id, label] : actions)
         list.append(QJsonArray{id, label});
-    emit notice(QJsonObject{{u"key"_s, key}, {u"kind"_s, kind}, {u"title"_s, title}, {u"body"_s, body}, {u"actions"_s, list}});
+    emit notice(QJsonObject{{u"key"_s, key}, {u"kind"_s, kind}, {u"title"_s, title}, {u"body"_s, body}, {u"actions"_s, list},
+                            {u"sound"_s, kind == u"reminder" && m_config.reminderSound}});
 }
 
 void Assistant::autonomyTick()
@@ -1452,11 +1529,14 @@ void Assistant::deliverDue(qint64 t)
     for (const QJsonObject &o : due) {
         const QString id = o.value(u"id"_s).toString();
         const qint64 at = qint64(o.value(u"due"_s).toDouble());
-        m_tasks.fired(id, t);
+        const bool nag = o.contains(u"again"_s);
+        m_tasks.fired(id, t, qint64(m_config.nagMinutes) * 60 * 1000);
         if (++shown > 5)
             continue; // after a long time off: a few notifications, not a flood
         QString title = ru ? u"Напоминание"_s : u"Reminder"_s;
-        if (t - at > 10 * 60 * 1000) {
+        if (nag) {
+            title = ru ? u"Напоминание — ещё раз"_s : u"Reminder — once more"_s;
+        } else if (t - at > 10 * 60 * 1000) {
             const QDateTime when = QDateTime::fromMSecsSinceEpoch(at);
             const QString label = when.date() == QDate::currentDate() ? when.toString(u"HH:mm"_s)
                                                                       : locale.toString(when, u"d MMM HH:mm"_s);
@@ -1470,10 +1550,15 @@ void Assistant::deliverDue(qint64 t)
             body += u"\n"_s + (ru ? u"Следующее — %1"_s : u"Next: %1"_s)
                                   .arg(ReminderParser::describeWhen(nextAt, QDateTime::fromMSecsSinceEpoch(t), lang));
         }
-        emitNotice(u"task:"_s + id, u"reminder"_s, title, body,
-                   {{u"snooze"_s, ru ? u"Отложить на 10 мин"_s : u"Snooze 10 min"_s},
-                    {u"done"_s, ru ? u"Готово"_s : u"Done"_s},
-                    {u"default"_s, QString()}});
+        const int snooze = m_config.snoozeMinutes;
+        const QString later = snooze % 60 == 0 ? (ru ? u"Отложить на %1 ч"_s : u"Snooze %1 h"_s).arg(snooze / 60)
+                                               : (ru ? u"Отложить на %1 мин"_s : u"Snooze %1 min"_s).arg(snooze);
+        QList<std::pair<QString, QString>> actions{{u"snooze"_s, later}};
+        if (snooze != 60)
+            actions.append({u"snooze60"_s, ru ? u"Через час"_s : u"In an hour"_s});
+        actions.append({u"done"_s, ru ? u"Готово"_s : u"Done"_s});
+        actions.append({u"default"_s, QString()});
+        emitNotice(u"task:"_s + id, u"reminder"_s, title, body, actions);
     }
     emit memoryChanged();
 }
@@ -1483,8 +1568,9 @@ QString Assistant::noticeAction(const QString &key, const QString &action)
     const qint64 t = now();
     if (key.startsWith(u"task:")) {
         const QString id = key.mid(5);
-        if (action == u"snooze") {
-            if (m_tasks.snooze(id, t + 10 * 60 * 1000))
+        if (action == u"snooze" || action == u"snooze60") {
+            const qint64 minutes = action == u"snooze60" ? 60 : m_config.snoozeMinutes;
+            if (m_tasks.snooze(id, t + minutes * 60 * 1000))
                 emit memoryChanged();
             return {};
         }

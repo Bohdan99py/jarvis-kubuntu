@@ -9,7 +9,9 @@
  "examples": [
   {
    "question": "Как написать хорошее письмо?",
-   "answer": "Начни с цели письма, добавь нужный контекст и заверши конкретным следующим шагом. Короткие абзацы и ясная тема помогут адресату быстро понять просьбу."
+   "answer": "Начни с цели письма, добавь нужный контекст и заверши конкретным следующим шагом. Короткие абзацы и ясная тема помогут адресату быстро понять просьбу.",
+   "question_en": "How do I write a good email?",
+   "answer_en": "Start with the purpose, add the context that's needed and end with a concrete next step. Short paragraphs and a clear subject help the reader grasp the request quickly."
   }
  ],
  "image": "writing",

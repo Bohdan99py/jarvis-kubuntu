@@ -25,14 +25,22 @@ Notifier::Notifier(QObject *parent)
 void Notifier::show(const QString &key, const QString &title, const QString &body, const QVariantList &actions,
                     int timeoutMs)
 {
+    showWith(key, title, body, actions, timeoutMs, false);
+}
+
+void Notifier::showWith(const QString &key, const QString &title, const QString &body, const QVariantList &actions,
+                        int timeoutMs, bool sound)
+{
     QStringList flat;
     for (const QVariant &a : actions) {
         const QVariantList pair = a.toList();
         if (pair.size() == 2)
             flat << pair.at(0).toString() << pair.at(1).toString();
     }
-    const QVariantMap hints{{QStringLiteral("desktop-entry"), QStringLiteral("org.jarvis.Jarvis")},
-                            {QStringLiteral("urgency"), QVariant::fromValue<uchar>(1)}};
+    QVariantMap hints{{QStringLiteral("desktop-entry"), QStringLiteral("org.jarvis.Jarvis")},
+                      {QStringLiteral("urgency"), QVariant::fromValue<uchar>(1)}};
+    if (sound) // a theme sound, played by the notification server
+        hints.insert(QStringLiteral("sound-name"), QStringLiteral("alarm-clock-elapsed"));
     auto msg = QDBusMessage::createMethodCall(kService, kPath, kService, QStringLiteral("Notify"));
     // The body may be read as markup: text from memory or Claude stays plain.
     msg << QStringLiteral("Jarvis") << m_ids.value(key, 0u) << QStringLiteral("org.jarvis.Jarvis")
@@ -57,8 +65,9 @@ void Notifier::showNotice(const QJsonObject &notice)
         actions.append(QVariant(a.toArray().toVariantList()));
     // Reminders stay until the user reacts; hints go away by themselves.
     const bool sticky = notice.value(QStringLiteral("kind")).toString() == QLatin1String("reminder");
-    show(notice.value(QStringLiteral("key")).toString(), notice.value(QStringLiteral("title")).toString(),
-         notice.value(QStringLiteral("body")).toString(), actions, sticky ? 0 : -1);
+    showWith(notice.value(QStringLiteral("key")).toString(), notice.value(QStringLiteral("title")).toString(),
+             notice.value(QStringLiteral("body")).toString(), actions, sticky ? 0 : -1,
+             notice.value(QStringLiteral("sound")).toBool());
 }
 
 void Notifier::close(const QString &key)

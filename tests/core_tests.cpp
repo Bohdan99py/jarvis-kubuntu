@@ -36,6 +36,11 @@ static void skills() {
     require(skills.setEnabled("electronics",true).isEmpty() && skills.recall(QStringLiteral("законы кирхгофа")).contains(QStringLiteral("Первый закон")),"aliases recall");
     require(skills.similar(QStringLiteral("объясни второй закон Кирхгофа пожалуйста")).value("answer").toString().contains(QStringLiteral("Кирхгоф")),"similar example offline");
     for(const auto &v:skills.list()) require(!v.toObject()["image"].toString().isEmpty(),"every bundled skill has a picture");
+    require(skills.recall(QStringLiteral("What are Kirchhoff's laws?")).contains("Current law"),"English question, English answer");
+    require(skills.similar(QStringLiteral("tell me about Kirchhoff's laws")).value("answer").toString().contains("Voltage law"),"English similar");
+    for(const auto &v:skills.list())
+        for(const auto &e:v.toObject()["examples"].toArray())
+            require(!e.toObject()["answer_en"].toString().isEmpty(),"every bundled answer has English");
     require(skills.setEnabled("electronics",false).isEmpty(),"disable again");
     jarvis::SkillStore reopened;
     require(reopened.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"disabled state persists");
@@ -275,6 +280,24 @@ static void reminders() {
     check("добавь задачу купить паяльник",ParsedReminder::Task,{},"купить паяльник","","task");
     check("add a task: order resistors",ParsedReminder::Task,{},"order resistors","","English task");
     check("Как дела?",ParsedReminder::None,{},nullptr,"","small talk");
+    check("напоминай каждые 2 часа пить воду",ParsedReminder::Reminder,now.addSecs(7200),"пить воду","every:2h","every two hours");
+    check("напоминай по понедельникам и средам в 10 про планёрку",ParsedReminder::Reminder,at(19,10,0),"планёрку","days:1,3","chosen weekdays");
+    check("напомни по выходным в 11 полить цветы",ParsedReminder::Reminder,at(17,11,0),"полить цветы","weekends","weekends");
+    check("напоминай каждое 5 число оплатить интернет",ParsedReminder::Reminder,QDateTime(QDate(2026,11,5),QTime(9,0)),"оплатить интернет","monthly","day of the month");
+    check("напомни каждый год 20 октября про день рождения Саши",ParsedReminder::Reminder,at(20,9,0),"день рождения Саши","yearly","yearly");
+    check("remind me every Monday and Friday at 9 to back up",ParsedReminder::Reminder,at(16,9,0),"back up","days:1,5","English weekday set");
+    check("напомни за 15 минут до встречи завтра в 10",ParsedReminder::Reminder,at(15,9,45),"встречи","","lead time");
+    check("remind me every 30 minutes to stretch",ParsedReminder::Reminder,now.addSecs(1800),"stretch","every:30m","English interval");
+    {
+        jarvis::ReminderOptions early;early.morning=7;
+        const auto r=ReminderParser::parse(QStringLiteral("напомни утром позвонить"),now,early);
+        require(r.due==at(15,7,0),"configurable morning");
+    }
+    require(ReminderParser::nextOccurrence(QDateTime(QDate(2026,1,31),QTime(9,0)),"monthly",QDateTime(QDate(2026,2,1),QTime(0,0)))==QDateTime(QDate(2026,2,28),QTime(9,0)),"monthly keeps the last day");
+    require(ReminderParser::nextOccurrence(at(14,15,0),"every:2h",at(14,18,30))==at(14,19,0),"interval catches up");
+    require(ReminderParser::nextOccurrence(at(14,10,0),"days:1,3",at(14,10,0))==at(19,10,0),"weekday set");
+    require(ReminderParser::describeRepeat("days:1,3",{},jarvis::Lang::Ru)==QStringLiteral("по пн, ср"),"describe weekday set");
+    require(!ReminderParser::validRepeat("every:1m") && !ReminderParser::validRepeat("days:8") && ReminderParser::validRepeat("every:3d"),"repeat validation");
     require(ReminderParser::nextOccurrence(at(16,8,30),"weekdays",at(16,9,0))==at(19,8,30),"weekdays skip the weekend");
     require(ReminderParser::nextOccurrence(at(1,21,0),"daily",at(14,22,0))==at(15,21,0),"daily catches up");
     require(ReminderParser::describeWhen(at(14,19,0),now,jarvis::Lang::Ru)==QStringLiteral("сегодня в 19:00"),"describe today");
@@ -299,6 +322,16 @@ static void reminders() {
     require(tasks.describe(jarvis::Lang::Ru,t).contains(QStringLiteral("купить паяльник")),"describe tasks");
     require(tasks.complete(todo,t) && tasks.openCount()==2,"complete task");
     require(tasks.remove(daily) && tasks.openCount()==1,"remove reminder");
+    // Asking again until "Done": three more times, five minutes apart.
+    QString nag;
+    require(tasks.add(QStringLiteral("выключить паяльник"),t+1000,{},t,&nag).isEmpty(),"add nagging reminder");
+    tasks.fired(nag,t+1000,300000);
+    require(tasks.task(nag)["done"].toDouble()==0 && tasks.due(t+2000).isEmpty() && tasks.due(t+301001).size()==1,"asked again after five minutes");
+    for(int i=0;i<3;++i) tasks.fired(nag,t+301001+i*300000,300000);
+    require(tasks.task(nag)["done"].toDouble()>0,"gives up after three repeats");
+    require(tasks.update(nag,QStringLiteral("выключить паяльник и фен"),t+86400000,"days:1,5").isEmpty(),"edit");
+    require(tasks.task(nag)["done"].toDouble()==0 && tasks.task(nag)["repeat"].toString()=="days:1,5","edit reopens with a new repetition");
+    require(!tasks.update(nag,QStringLiteral("x"),0,{}).isEmpty() && tasks.update("missing",QStringLiteral("ok text"),0,{})=="missing","edit validation");
 }
 static void calculators() {
     using jarvis::Calculators;using jarvis::Lang;
@@ -330,6 +363,14 @@ static void calculators() {
     require(r["ok"].toBool(),"timer finds PSC/ARR");
     r=Calculators::compute("uart",{{"fclk","72M"},{"baud","115200"}},Lang::En);
     require(line(r,0)==QStringLiteral("625"),"UART BRR");
+    r=Calculators::compute("crc",{{"data","123456789"}},Lang::En);
+    require(line(r,1)=="0xF4" && line(r,2)=="0xA1" && line(r,3)=="0x29B1" && line(r,4)=="0x31C3" && line(r,5).startsWith("0x4B37") && line(r,6)=="0xCBF43926","CRC check values");
+    r=Calculators::compute("crc",{{"data","31 32 33"}},Lang::En);
+    require(line(r,0)=="bytes: 3","hex bytes");
+    r=Calculators::compute("bits",{{"value","0x4800"},{"pos","11"},{"width","2"},{"set","3"}},Lang::En);
+    require(line(r,0).startsWith("1 = 0x1") && line(r,2).startsWith("0x5800"),"bit field read and write");
+    r=Calculators::compute("epoch",{{"value","0"}},Lang::En);
+    require(line(r,3)=="1970-01-01T00:00:00Z","epoch");
     for(const auto &d:Calculators::definitions(Lang::Ru)) {
         QJsonObject values;for(const auto &i:d.toObject()["inputs"].toArray()) values[i.toObject()["id"].toString()]=i.toObject()["value"];
         if(!Calculators::compute(d.toObject()["id"].toString(),values,Lang::Ru)["ok"].toBool())

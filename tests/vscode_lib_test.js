@@ -42,5 +42,7 @@ try {
 assert.strictEqual(lib.languageOfFile('/a/b/main.cpp'), 'cpp');
 assert.strictEqual(lib.languageOfFile('/a/b/Main.qml'), 'qml');
 assert.strictEqual(lib.languageOfFile('/a/b/notes.txt'), '');
+assert.strictEqual(lib.replaceRange('int a = 1;\nint b;', 8, 9, '42'), 'int a = 42;\nint b;');
+assert.strictEqual(lib.replaceRange('abc', 5, 9, 'd'), 'abcd');
 
 console.log('PASS: vscode extension helpers');

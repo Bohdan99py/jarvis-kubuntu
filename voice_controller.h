@@ -2,6 +2,9 @@
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
+#include <QJsonObject>
+#include <QVariantList>
+#include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 class VoiceController : public QObject {
     Q_OBJECT
@@ -14,6 +17,12 @@ class VoiceController : public QObject {
     Q_PROPERTY(QString status READ status NOTIFY changed)
     // Recognition language, "ru" or "en": selects the Vosk model.
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
+    // Natural voice (Piper, local neural speech): installed, the voices to choose
+    // from ([{id, lang, name, installed}]), the chosen voice per language and the pace.
+    Q_PROPERTY(bool naturalReady READ naturalReady NOTIFY changed)
+    Q_PROPERTY(QVariantList voices READ voices NOTIFY changed)
+    Q_PROPERTY(QVariantMap chosenVoices READ chosenVoices NOTIFY changed)
+    Q_PROPERTY(double rate READ rate WRITE setRate NOTIFY changed)
 public:
     explicit VoiceController(QObject *parent=nullptr);
     ~VoiceController() override;
@@ -30,6 +39,17 @@ public:
     Q_INVOKABLE void listen();
     Q_INVOKABLE void stop();
     Q_INVOKABLE void speak(const QString &text);
+    bool naturalReady() const;
+    QVariantList voices() const;
+    QVariantMap chosenVoices() const;
+    double rate() const;
+    void setRate(double rate);
+    // Pick the voice for "ru", "en" or "fr"; download it with installNatural() if it is not installed.
+    Q_INVOKABLE void chooseVoice(const QString &lang, const QString &id);
+    // Installs Piper and the chosen voices (~63 MB each).
+    Q_INVOKABLE void installNatural();
+    // Says a sample sentence in `lang` with the chosen voice.
+    Q_INVOKABLE void preview(const QString &lang);
 signals:
     void changed();
     void languageChanged();
@@ -38,6 +58,9 @@ private:
     void start(const QString &python,const QStringList &args,int timeout);
     void readEvents();
     static QString root();
+    QJsonObject piperSettings() const;
+    void savePiperSettings(const QJsonObject &settings);
+    void say(const QString &text, const QString &lang);
     QString modelName() const;
     QProcess m_worker,m_speech;
     QTimer m_timeout;

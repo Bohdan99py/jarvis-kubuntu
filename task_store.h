@@ -28,6 +28,9 @@ public:
     bool remove(const QString &id);
     // Moves a reminder (or turns a task into one) to `until` and reopens it.
     bool snooze(const QString &id, qint64 until);
+    // Changes the text, time and repetition of an item; due 0 makes it a plain task.
+    // Returns "" or an error code like add().
+    QString update(const QString &id, const QString &text, qint64 due, const QString &repeat);
     // Open items whose text matches `query` by words; for "cancel the reminder about …".
     QList<QJsonObject> find(const QString &query) const;
 
@@ -36,8 +39,10 @@ public:
     QJsonObject task(const QString &id) const;
     // Open reminders that are due and not announced yet.
     QList<QJsonObject> due(qint64 now) const;
-    // A due reminder was announced: one-time reminders are done, repeating ones move on.
-    void fired(const QString &id, qint64 now);
+    // A due reminder was announced: one-time reminders are done (or, with
+    // `againMs`, asked again up to kMaxNags times until done), repeating ones move on.
+    void fired(const QString &id, qint64 now, qint64 againMs = 0);
+    static constexpr int kMaxNags = 3;
     // Earliest due time of an open reminder, 0 when there is none.
     qint64 nextDue() const;
     int openCount() const;

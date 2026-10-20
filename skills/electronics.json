@@ -29,7 +29,8 @@
    "title": "Закон Ома",
    "formula": "U = I·R",
    "note": "Ток через участок цепи пропорционален напряжению и обратно пропорционален сопротивлению.",
-   "title_en": "Ohm's law"
+   "title_en": "Ohm's law",
+   "note_en": "The current through a part of a circuit is proportional to the voltage and inversely proportional to the resistance."
   },
   {
    "title": "Мощность",
@@ -56,13 +57,15 @@
    "title": "Последовательное соединение",
    "formula": "R = R1 + R2 + …",
    "note": "Ток одинаковый, напряжения складываются.",
-   "title_en": "Series resistors"
+   "title_en": "Series resistors",
+   "note_en": "The same current flows; the voltages add up."
   },
   {
    "title": "Параллельное соединение",
    "formula": "1/R = 1/R1 + 1/R2 + …;  R = R1·R2/(R1+R2)",
    "note": "Напряжение одинаковое, токи складываются. Итог меньше самого маленького.",
-   "title_en": "Parallel resistors"
+   "title_en": "Parallel resistors",
+   "note_en": "The same voltage; the currents add up. The result is smaller than the smallest resistor."
   },
   {
    "title": "Делитель напряжения",
@@ -75,31 +78,36 @@
    "title": "Теорема Тевенина",
    "formula": "Uэкв = Uхх;  Rэкв = Uхх / Iкз",
    "note": "Любой линейный двухполюсник — источник Uэкв с внутренним сопротивлением Rэкв.",
-   "title_en": "Thévenin's theorem"
+   "title_en": "Thévenin's theorem",
+   "note_en": "Any linear two-terminal circuit is a source Uth with an internal resistance Rth."
   },
   {
    "title": "Теорема Нортона",
    "formula": "Iн = Iкз;  Rн = Rэкв",
    "note": "То же, но источник тока с параллельным сопротивлением.",
-   "title_en": "Norton's theorem"
+   "title_en": "Norton's theorem",
+   "note_en": "The same, as a current source with a parallel resistance."
   },
   {
    "title": "Конденсатор",
    "formula": "Q = C·U;  I = C·dU/dt;  W = C·U²/2",
    "note": "Напряжение на конденсаторе не меняется скачком.",
-   "title_en": "Capacitor"
+   "title_en": "Capacitor",
+   "note_en": "The voltage across a capacitor cannot jump."
   },
   {
    "title": "Конденсаторы последовательно и параллельно",
    "formula": "параллельно C = C1 + C2;  последовательно 1/C = 1/C1 + 1/C2",
    "note": "У конденсаторов наоборот по сравнению с резисторами.",
-   "title_en": "Capacitors in series and parallel"
+   "title_en": "Capacitors in series and parallel",
+   "note_en": "For capacitors it is the other way round compared with resistors."
   },
   {
    "title": "Катушка индуктивности",
    "formula": "U = L·dI/dt;  W = L·I²/2",
    "note": "Ток через катушку не меняется скачком — отсюда выбросы при размыкании.",
-   "title_en": "Inductor"
+   "title_en": "Inductor",
+   "note_en": "The current through an inductor cannot jump — hence the spikes when the circuit opens."
   },
   {
    "title": "Заряд RC-цепи",
@@ -112,13 +120,15 @@
    "title": "Частота среза RC-фильтра",
    "formula": "fср = 1/(2π·R·C)",
    "note": "На ней сигнал ослабляется на 3 дБ (в 0,707 раза).",
-   "title_en": "RC filter cutoff"
+   "title_en": "RC filter cutoff",
+   "note_en": "At this frequency the signal is 3 dB down (× 0.707)."
   },
   {
    "title": "Реактивное сопротивление",
    "formula": "Xc = 1/(2π·f·C);  XL = 2π·f·L",
    "note": "Конденсатор пропускает высокие частоты, катушка — низкие.",
-   "title_en": "Reactance"
+   "title_en": "Reactance",
+   "note_en": "A capacitor passes high frequencies, an inductor low ones."
   },
   {
    "title": "Импеданс RLC",
@@ -129,7 +139,8 @@
    "title": "Резонанс LC-контура",
    "formula": "f0 = 1/(2π·√(L·C))",
    "note": "На резонансе XL = Xc.",
-   "title_en": "LC resonance"
+   "title_en": "LC resonance",
+   "note_en": "At resonance XL = Xc."
   },
   {
    "title": "Переменный ток",
@@ -142,31 +153,36 @@
    "title": "Резистор для светодиода",
    "formula": "R = (Uпит − Uпр)/I",
    "note": "Uпр: красный ≈ 2 В, зелёный 2–3 В, синий и белый ≈ 3 В.",
-   "title_en": "LED resistor"
+   "title_en": "LED resistor",
+   "note_en": "Forward voltage: red ≈ 2 V, green 2–3 V, blue and white ≈ 3 V."
   },
   {
    "title": "Диод (уравнение Шокли)",
    "formula": "I = Is·(e^(U/(n·Vt)) − 1);  Vt ≈ 26 мВ",
    "note": "Кремниевый диод открывается при 0,6–0,7 В, Шоттки — 0,2–0,4 В.",
-   "title_en": "Diode equation"
+   "title_en": "Diode equation",
+   "note_en": "A silicon diode opens at 0.6–0.7 V, a Schottky at 0.2–0.4 V."
   },
   {
    "title": "Биполярный транзистор",
    "formula": "Iк = β·Iб;  Uбэ ≈ 0,65 В",
    "note": "Для ключа берите Iб в 5–10 раз больше Iк/β, чтобы транзистор насытился.",
-   "title_en": "BJT"
+   "title_en": "BJT",
+   "note_en": "As a switch, use Ib 5–10 times larger than Ic/β so the transistor saturates."
   },
   {
    "title": "MOSFET в ключевом режиме",
    "formula": "P = I²·Rds(on)",
    "note": "Rds(on) указан при определённом Ugs — для 3,3 В нужен logic-level транзистор.",
-   "title_en": "MOSFET switch"
+   "title_en": "MOSFET switch",
+   "note_en": "Rds(on) is specified at a given Ugs — for 3.3 V drive you need a logic-level part."
   },
   {
    "title": "Операционный усилитель",
    "formula": "Kинв = −Rос/Rвх;  Kнеинв = 1 + Rос/Rвх",
    "note": "Идеальный ОУ с ООС держит U+ = U− и не потребляет ток входами.",
-   "title_en": "Op-amp gain"
+   "title_en": "Op-amp gain",
+   "note_en": "An ideal op-amp with negative feedback keeps U+ = U− and draws no input current."
   },
   {
    "title": "Таймер 555 (мультивибратор)",
@@ -177,31 +193,36 @@
    "title": "Трансформатор",
    "formula": "U1/U2 = N1/N2 = I2/I1",
    "note": "Мощность на входе и выходе почти одинакова (КПД 90–98 %).",
-   "title_en": "Transformer"
+   "title_en": "Transformer",
+   "note_en": "Input and output power are almost equal (90–98% efficiency)."
   },
   {
    "title": "Линейный стабилизатор",
    "formula": "Pрасс = (Uвх − Uвых)·I",
    "note": "12 В → 5 В при 1 А — это 7 Вт тепла: нужен радиатор или импульсный преобразователь.",
-   "title_en": "Linear regulator"
+   "title_en": "Linear regulator",
+   "note_en": "12 V → 5 V at 1 A is 7 W of heat: use a heatsink or a switching converter."
   },
   {
    "title": "Тепловой расчёт",
    "formula": "Tj = Ta + P·(Rjc + Rcs + Rsa)",
    "note": "Держите Tj с запасом ниже максимума из даташита.",
-   "title_en": "Thermal"
+   "title_en": "Thermal",
+   "note_en": "Keep Tj well below the datasheet maximum."
   },
   {
    "title": "Сопротивление провода",
    "formula": "R = ρ·L/S",
    "note": "Медь ρ = 0,0175 Ом·мм²/м, алюминий 0,028.",
-   "title_en": "Wire resistance"
+   "title_en": "Wire resistance",
+   "note_en": "Copper ρ = 0.0175 Ω·mm²/m, aluminium 0.028."
   },
   {
    "title": "Децибелы",
    "formula": "дБ = 20·lg(U2/U1) = 10·lg(P2/P1)",
    "note": "+3 дБ — вдвое по мощности, +6 дБ — вдвое по напряжению.",
-   "title_en": "Decibels"
+   "title_en": "Decibels",
+   "note_en": "+3 dB doubles the power, +6 dB doubles the voltage."
   },
   {
    "title": "Энергия батареи",
@@ -218,7 +239,9 @@
     "формула закона ома",
     "what is ohms law",
     "ohms law"
-   ]
+   ],
+   "question_en": "What is Ohm's law?",
+   "answer_en": "Ohm's law: **U = I·R** — the voltage across a part of a circuit equals the current times the resistance. Hence I = U/R and R = U/I.\n\nExample: a 220 Ω resistor on 5 V → I = 5/220 ≈ 22.7 mA, power P = U·I ≈ 0.11 W.\n\nYou can calculate it right in chat: \"U=5 R=220\"."
   },
   {
    "question": "Что такое законы Кирхгофа?",
@@ -230,7 +253,9 @@
     "второй закон кирхгофа",
     "kirchhoffs laws",
     "kirchhoff law"
-   ]
+   ],
+   "question_en": "What are Kirchhoff's laws?",
+   "answer_en": "**Current law (KCL):** the currents flowing into a node equal the currents flowing out: ΣI = 0. Charge does not pile up in a node.\n\n**Voltage law (KVL):** around any closed loop the sum of EMFs equals the sum of voltage drops: ΣE = Σ(I·R).\n\nHow to use them: 1) mark the branch currents (any direction — a negative result means the current flows the other way); 2) write KCL for (nodes − 1) nodes; 3) write KVL for the independent loops; 4) solve the system.\n\nTry the \"Kirchhoff: two sources and a load\" calculator in the Electronics skill."
   },
   {
    "question": "Что такое метод узловых потенциалов?",
@@ -238,7 +263,9 @@
    "aliases": [
     "узловые потенциалы",
     "nodal analysis"
-   ]
+   ],
+   "question_en": "What is nodal analysis?",
+   "answer_en": "Nodal analysis: take one node as ground (0 V); the potentials of the other nodes are the unknowns. Write Kirchhoff's current law for every node, expressing currents through potentials: I = (φ1 − φ2)/R. You need as many equations as nodes minus one — usually fewer than with mesh analysis.\n\nFor one node with branches (E1, R1), (E2, R2) and a load R3: U = (E1/R1 + E2/R2)/(1/R1 + 1/R2 + 1/R3)."
   },
   {
    "question": "Что такое метод контурных токов?",
@@ -246,7 +273,9 @@
    "aliases": [
     "контурные токи",
     "mesh analysis"
-   ]
+   ],
+   "question_en": "What is mesh analysis?",
+   "answer_en": "Mesh analysis: give every independent loop its own \"mesh\" current and write Kirchhoff's voltage law for it: the loop's own resistance × its current − the shared resistances × the neighbouring mesh currents = the sum of EMFs in the loop. The current in a shared branch is the difference of the mesh currents. Handy when there are fewer loops than nodes."
   },
   {
    "question": "Что такое теорема Тевенина?",
@@ -255,7 +284,9 @@
     "теорема тевенина",
     "эквивалентный генератор",
     "thevenin theorem"
-   ]
+   ],
+   "question_en": "What is Thévenin's theorem?",
+   "answer_en": "Thévenin's theorem: any linear circuit, seen from two terminals, can be replaced by a voltage source Uth with a series resistance Rth.\n\n- Uth is the open-circuit voltage at the terminals;\n- Rth is the resistance between the terminals with voltage sources shorted and current sources opened (or Uoc/Isc).\n\nExample: a 10 kΩ / 10 kΩ divider from 12 V is a 6 V source with 5 kΩ inside. With a 5 kΩ load the output drops to 3 V."
   },
   {
    "question": "Что такое теорема Нортона?",
@@ -263,7 +294,9 @@
    "aliases": [
     "теорема нортона",
     "norton theorem"
-   ]
+   ],
+   "question_en": "What is Norton's theorem?",
+   "answer_en": "Norton's theorem: a linear circuit seen from two terminals can be replaced by a current source In (the short-circuit current of the terminals) with a parallel resistance Rn (the same as Thévenin's). They convert into each other with Uth = In·Rn."
   },
   {
    "question": "Что такое метод наложения?",
@@ -272,7 +305,9 @@
     "суперпозиция",
     "метод суперпозиции",
     "superposition theorem"
-   ]
+   ],
+   "question_en": "What is the superposition theorem?",
+   "answer_en": "Superposition: in a linear circuit with several sources, the current in any branch is the sum of the currents caused by each source alone. The other sources are replaced meanwhile: a voltage source by a wire, a current source by an open circuit. It does not work for power — power is not linear."
   },
   {
    "question": "Как работает делитель напряжения?",
@@ -280,7 +315,9 @@
    "aliases": [
     "делитель напряжения",
     "voltage divider"
-   ]
+   ],
+   "question_en": "How does a voltage divider work?",
+   "answer_en": "Two resistors in series between Vin and ground, the output is the middle point: **Vout = Vin·R2/(R1 + R2)** (R2 is the bottom one).\n\nExample: 12 V, R1 = 10 kΩ, R2 = 4.7 kΩ → 3.84 V.\n\nImportant: a divider is not a power supply. Its output resistance is R1‖R2, so the load must be 10+ times larger than R2 or the voltage sags. Use a regulator to power things. Calculate: \"divider 12V 10k 4.7k\"."
   },
   {
    "question": "Что такое конденсатор?",
@@ -288,7 +325,9 @@
    "aliases": [
     "конденсатор",
     "what is a capacitor"
-   ]
+   ],
+   "question_en": "What is a capacitor?",
+   "answer_en": "A capacitor is two plates separated by a dielectric; it stores charge Q = C·U and energy W = C·U²/2. The current through it is I = C·dU/dt: it blocks DC (once charged) and passes AC more easily the higher the frequency (Xc = 1/(2πfC)).\n\nTypes: ceramic (small values, decoupling, RF), electrolytic (large values, polarised, have ESR), film (precise, audio and mains filters), tantalum. Choose by capacitance, voltage rating with a 1.5–2× margin, temperature and ESR."
   },
   {
    "question": "Что такое катушка индуктивности?",
@@ -297,7 +336,9 @@
     "индуктивность",
     "дроссель",
     "what is an inductor"
-   ]
+   ],
+   "question_en": "What is an inductor?",
+   "answer_en": "An inductor stores energy in its magnetic field: W = L·I²/2. The voltage across it is U = L·dI/dt, so the current through it cannot change instantly: breaking the circuit suddenly causes a voltage spike (that is why relays and motors get a diode across them). Its AC resistance XL = 2πfL grows with frequency. Used in switching converters, filters, LC tanks and chokes."
   },
   {
    "question": "Что такое реактивное сопротивление?",
@@ -305,7 +346,9 @@
    "aliases": [
     "реактивное сопротивление",
     "reactance"
-   ]
+   ],
+   "question_en": "What is reactance?",
+   "answer_en": "Reactance is the \"resistance\" of capacitors and inductors to AC, without losing energy (it is stored and given back).\n\n- Capacitor: Xc = 1/(2π·f·C), the current leads the voltage by 90°.\n- Inductor: XL = 2π·f·L, the current lags by 90°.\n\nThe impedance of an RLC circuit: Z = √(R² + (XL − Xc)²)."
   },
   {
    "question": "Что такое резонанс?",
@@ -314,7 +357,9 @@
     "резонанс",
     "lc контур",
     "resonance"
-   ]
+   ],
+   "question_en": "What is resonance?",
+   "answer_en": "Resonance in an LC circuit is the frequency where XL = Xc: f0 = 1/(2π√(LC)). A series circuit has minimum impedance at resonance (just R) and maximum current; a parallel one has maximum impedance. The Q factor tells how sharp the peak is. Used in filters, oscillators, radios and wireless charging."
   },
   {
    "question": "Как работает диод?",
@@ -322,7 +367,9 @@
    "aliases": [
     "диод",
     "how does a diode work"
-   ]
+   ],
+   "question_en": "How does a diode work?",
+   "answer_en": "A diode conducts in one direction — from anode to cathode (the band on the body). It opens at about 0.6–0.7 V forward voltage (silicon), 0.2–0.4 V (Schottky), 1.8–3.3 V (LEDs). In reverse almost no current flows until breakdown.\n\nUses: rectifiers, reverse-polarity protection, flyback diodes on relays and motors, logic."
   },
   {
    "question": "Что такое стабилитрон?",
@@ -331,7 +378,9 @@
     "стабилитрон",
     "диод зенера",
     "zener diode"
-   ]
+   ],
+   "question_en": "What is a Zener diode?",
+   "answer_en": "A Zener diode works reverse-biased: at its Zener voltage Uz it starts to conduct and keeps the voltage almost constant. It needs a series resistor: R = (Uin − Uz)/(Iload + Iz.min). Good for simple references and protecting inputs; to power a load, a regulator is more efficient."
   },
   {
    "question": "Как работает биполярный транзистор?",
@@ -341,7 +390,9 @@
     "транзистор",
     "how does a transistor work",
     "bjt"
-   ]
+   ],
+   "question_en": "How does a bipolar transistor work?",
+   "answer_en": "A bipolar transistor (NPN/PNP) is controlled by base current: Ic = β·Ib (β is 50…300). The base–emitter junction opens at ~0.65 V.\n\nAs a switch (NPN, load in the collector, emitter to ground): Rb = (Uctrl − 0.65)/Ib, with Ib 5–10 times larger than Ic/β so the transistor saturates, Uce ≈ 0.1–0.3 V.\n\nExample: 3.3 V from an MCU, 100 mA load, β = 100 → Ib ≈ 5 mA → Rb ≈ 530 Ω, take 470 Ω."
   },
   {
    "question": "Как работает MOSFET?",
@@ -350,7 +401,9 @@
     "мосфет",
     "полевой транзистор",
     "mosfet"
-   ]
+   ],
+   "question_en": "How does a MOSFET work?",
+   "answer_en": "A MOSFET is controlled by the gate–source voltage Ugs; almost no current flows into the gate (only to charge its capacitance). When on, it is a resistance Rds(on), losses P = I²·Rds(on).\n\nAs a switch: an N-channel between the load and ground (low-side). For 3.3/5 V from an MCU use a logic-level MOSFET (Rds(on) specified at Ugs = 2.5–4.5 V, e.g. IRLZ44N, AO3400). Add 10–100 Ω in series with the gate and 10–100 kΩ gate-to-source so it stays off while the MCU resets."
   },
   {
    "question": "Чем MOSFET отличается от биполярного транзистора?",
@@ -358,7 +411,9 @@
    "aliases": [
     "mosfet или транзистор",
     "mosfet vs bjt"
-   ]
+   ],
+   "question_en": "MOSFET or bipolar transistor — what's the difference?",
+   "answer_en": "A bipolar transistor is driven by base current, a MOSFET by gate voltage.\n\n- MOSFET: almost no drive current, low losses at high current (Rds(on) is milliohms), fast; but it needs enough Ugs and a driver at high frequencies.\n- Bipolar: opens at 0.65 V, cheap and simple for small currents, but has a 0.1–0.3 V saturation drop and needs base current.\n\nAbove ~0.5 A a logic-level MOSFET is usually better."
   },
   {
    "question": "Как управлять нагрузкой от микроконтроллера?",
@@ -366,7 +421,9 @@
    "aliases": [
     "как подключить нагрузку к ардуино",
     "транзисторный ключ"
-   ]
+   ],
+   "question_en": "How do I switch a load from a microcontroller?",
+   "answer_en": "An MCU pin gives 5–20 mA, so loads are switched through a transistor:\n\n1. **N-MOSFET (logic-level)** between the load and ground: gate through 100 Ω to the pin, 10 kΩ gate-to-source to ground.\n2. **NPN transistor** for small currents: base through 1 kΩ.\n3. For inductive loads (relay, motor, solenoid) add a flyback diode across the load (cathode to +).\n4. Join the grounds of the MCU and the power side; for 230 V mains use only ready relay modules or solid-state relays with galvanic isolation."
   },
   {
    "question": "Зачем диод параллельно реле?",
@@ -374,7 +431,9 @@
    "aliases": [
     "обратный диод",
     "flyback diode"
-   ]
+   ],
+   "question_en": "Why is there a diode across a relay?",
+   "answer_en": "A relay coil is an inductor. When it is switched off, its current cannot vanish instantly, and a spike of tens to hundreds of volts appears on the switch and kills the transistor. A flyback diode (cathode to +supply, anode to the switch) lets that current circulate through the coil instead. 1N4148 or 1N4007 will do. If fast release matters, use a diode + Zener or a TVS."
   },
   {
    "question": "Что такое операционный усилитель?",
@@ -383,7 +442,9 @@
     "оу",
     "операционник",
     "op amp"
-   ]
+   ],
+   "question_en": "What is an op-amp?",
+   "answer_en": "An operational amplifier amplifies the difference of two voltages with a very large gain. With negative feedback it keeps U+ = U−, and resistors set the gain:\n\n- inverting: K = −Rf/Rin;\n- non-inverting: K = 1 + Rf/Rin;\n- follower: K = 1 (buffer).\n\nLook at the supply (rail-to-rail or not), the bandwidth (GBW) and the offset. Calculator: \"Op-amp gain\"."
   },
   {
    "question": "Что такое компаратор?",
@@ -391,7 +452,9 @@
    "aliases": [
     "компаратор",
     "comparator"
-   ]
+   ],
+   "question_en": "What is a comparator?",
+   "answer_en": "A comparator compares two voltages and outputs a logic 1 or 0. An op-amp without feedback can do it, but a dedicated comparator (LM393, LM339) is faster and often has an open-collector output — it needs a pull-up. To stop the output from chattering near the threshold, add hysteresis: positive feedback with a resistor from the output to the + input."
   },
   {
    "question": "Как работает таймер 555?",
@@ -400,7 +463,9 @@
     "555",
     "таймер 555",
     "ne555"
-   ]
+   ],
+   "question_en": "How does a 555 timer work?",
+   "answer_en": "The NE555 compares the capacitor voltage with 1/3 and 2/3 of the supply. As an astable oscillator, C charges through R1+R2 and discharges through R2:\n\n- f = 1.44/((R1 + 2·R2)·C);\n- t_high = 0.693·(R1+R2)·C, t_low = 0.693·R2·C.\n\nExample: R1 = 10 kΩ, R2 = 100 kΩ, C = 10 µF → ≈ 0.69 Hz. Calculate: \"555 10k 100k 10uF\"."
   },
   {
    "question": "Чем линейный стабилизатор отличается от импульсного?",
@@ -409,7 +474,9 @@
     "ldo или dc-dc",
     "стабилизатор напряжения",
     "linear vs switching regulator"
-   ]
+   ],
+   "question_en": "Linear or switching regulator — what's the difference?",
+   "answer_en": "A linear regulator (LDO, 7805, AMS1117) burns the extra voltage as heat: P = (Uin − Uout)·I. Simple and quiet, but efficiency = Uout/Uin.\n\nA switching regulator (buck steps down, boost steps up) switches current through an inductor, 80–95% efficient, but adds ripple and needs careful layout.\n\nRule of thumb: if voltage difference × current exceeds ~0.5–1 W, use a switcher."
   },
   {
    "question": "Что такое RC-фильтр?",
@@ -418,7 +485,9 @@
     "rc фильтр",
     "фильтр нижних частот",
     "low pass filter"
-   ]
+   ],
+   "question_en": "What is an RC filter?",
+   "answer_en": "An RC low-pass filter: a resistor in series, a capacitor to ground. It passes frequencies below fc = 1/(2πRC) and attenuates higher ones by 20 dB/decade. Swap R and C to get a high-pass filter.\n\nExample: 10 kΩ and 100 nF → fc ≈ 159 Hz. Calculate: \"rc 10k 100nF\"."
   },
   {
    "question": "Как прочитать цветовую маркировку резистора?",
@@ -427,7 +496,9 @@
     "цветовая маркировка",
     "маркировка резисторов",
     "resistor color code"
-   ]
+   ],
+   "question_en": "How do I read resistor colour bands?",
+   "answer_en": "Start from the end where the bands are closer together. 4 bands: two digits, multiplier, tolerance. 5 bands: three digits, multiplier, tolerance.\n\nDigits: black 0, brown 1, red 2, orange 3, yellow 4, green 5, blue 6, violet 7, grey 8, white 9. Multiplier: the same digit as a power of ten, gold ×0.1, silver ×0.01. Tolerance: gold ±5%, brown ±1%.\n\nExample: yellow-violet-red-gold = 47·10² = 4.7 kΩ ±5%. Type the colours in chat, or \"colour code 4.7k\"."
   },
   {
    "question": "Что такое ряд E24?",
@@ -436,7 +507,9 @@
     "ряд e12",
     "стандартные номиналы резисторов",
     "e24 series"
-   ]
+   ],
+   "question_en": "What is the E24 series?",
+   "answer_en": "E-series (E6, E12, E24, E96) are the standard values of resistors and capacitors. E12: 1.0 1.2 1.5 1.8 2.2 2.7 3.3 3.9 4.7 5.6 6.8 8.2 (×10ⁿ), ±10%. E24 adds 1.1 1.3 1.6 2.0 2.4 3.0 3.6 4.3 5.1 6.2 7.5 9.1, ±5%. E96 is for ±1% resistors. Round a computed value to the nearest one in the series."
   },
   {
    "question": "Как выбрать мощность резистора?",
@@ -444,7 +517,9 @@
    "aliases": [
     "мощность резистора",
     "resistor power rating"
-   ]
+   ],
+   "question_en": "How do I choose a resistor's power rating?",
+   "answer_en": "Compute P = I²·R = U²/R and take a resistor rated at least twice that: 0.125 W (0805), 0.25 W (1206 and the usual through-hole), 0.5 W, 1 W, 2 W. A resistor working at its limit runs hot and drifts."
   },
   {
    "question": "Как защитить схему от переполюсовки?",
@@ -452,7 +527,9 @@
    "aliases": [
     "переполюсовка",
     "reverse polarity protection"
-   ]
+   ],
+   "question_en": "How do I protect a circuit from reverse polarity?",
+   "answer_en": "Options:\n\n1. A series diode — simple, but loses 0.3–0.7 V (less with Schottky).\n2. A P-MOSFET in the positive line (drain to the input, source to the circuit, gate to ground through a resistor) — almost lossless.\n3. A diode across the input + a fuse — reversed polarity blows the fuse.\n4. A connector that physically cannot go in the wrong way."
   },
   {
    "question": "Что такое ESR конденсатора?",
@@ -460,7 +537,9 @@
    "aliases": [
     "esr",
     "эквивалентное последовательное сопротивление"
-   ]
+   ],
+   "question_en": "What is a capacitor's ESR?",
+   "answer_en": "ESR is the equivalent series resistance of a capacitor. Ripple current loses power in it, P = I²·ESR, so the capacitor heats up and filters worse. It matters for electrolytics in switching supplies: a dried-out electrolytic has a high ESR (a common fault). Ceramic and polymer capacitors have a low ESR."
   },
   {
    "question": "Как работает Н-мост?",
@@ -469,7 +548,9 @@
     "н мост",
     "h bridge",
     "управление двигателем"
-   ]
+   ],
+   "question_en": "How does an H-bridge work?",
+   "answer_en": "An H-bridge is four switches around a load (usually a motor). Turning on the diagonal pairs reverses the current and the rotation; PWM on the switches sets the speed. Never turn on both switches of one side — that is shoot-through, so drivers add dead time. Ready chips: L298N (old, lossy), TB6612FNG, DRV8833, BTS7960."
   },
   {
    "question": "Как работает трансформатор?",
@@ -477,7 +558,9 @@
    "aliases": [
     "трансформатор",
     "transformer"
-   ]
+   ],
+   "question_en": "How does a transformer work?",
+   "answer_en": "A transformer is two windings on a common core. AC in the primary creates a changing magnetic flux that induces an EMF in the secondary: U1/U2 = N1/N2, the currents the other way round: I1/I2 = N2/N1. It does not transform DC. Used to change voltage and for galvanic isolation."
   },
   {
    "question": "Что такое переменный ток?",
@@ -486,7 +569,9 @@
     "переменный ток",
     "действующее значение",
     "alternating current"
-   ]
+   ],
+   "question_en": "What is alternating current?",
+   "answer_en": "Alternating current changes direction periodically; mains is a 50 Hz sine (60 Hz in the Americas). The RMS value U = Upeak/√2: 230 V at the socket is about 325 V peak. Power with a reactive load: P = U·I·cos φ."
   },
   {
    "question": "Опасно ли напряжение 220 В?",
@@ -494,7 +579,9 @@
    "aliases": [
     "опасно ли 230 вольт",
     "безопасность сеть 220"
-   ]
+   ],
+   "question_en": "Is 230 V mains dangerous?",
+   "answer_en": "Yes. Mains voltage can kill: about 30 mA through the body is already dangerous. Rules: work only on a de-energised circuit, check with a tester that there is no voltage, don't touch a power supply board right after switching off (capacitors stay charged), use an RCD, ready modules with galvanic isolation and an enclosure. Without experience, let an electrician do the mains part."
   },
   {
    "question": "Как измерить ток мультиметром?",
@@ -502,7 +589,9 @@
    "aliases": [
     "как измерить ток",
     "мультиметр ток"
-   ]
+   ],
+   "question_en": "How do I measure current with a multimeter?",
+   "answer_en": "Current is measured in series: break the circuit and put the meter in the gap. Move the probe to the A or mA socket and pick a range with margin. Never connect the meter in current mode across a source — that is a short circuit (the fuse or the meter dies). Voltage is measured in parallel, resistance only in an unpowered circuit."
   },
   {
    "question": "Что такое земля и общий провод?",
@@ -511,7 +600,9 @@
     "общий провод",
     "gnd",
     "what is ground"
-   ]
+   ],
+   "question_en": "What are ground and the common wire?",
+   "answer_en": "The common wire (GND) is the point all voltages are measured from. All parts of a circuit that exchange signals must share a ground, otherwise the signal has no return path. Protective earth (PE) is a separate wire for the safety of the enclosure. On a PCB use a solid ground plane and short return paths."
   },
   {
    "question": "Что такое KiCad?",
@@ -520,7 +611,9 @@
     "кикад",
     "kicad",
     "как пользоваться kicad"
-   ]
+   ],
+   "question_en": "What is KiCad?",
+   "answer_en": "KiCad is free electronics design software. The workflow:\n\n1. **Schematic** (Eeschema): symbols, wires, labels, annotation, ERC check.\n2. Assign footprints.\n3. **PCB** editor: Update PCB from Schematic, placement, routing, ground pours, DRC check.\n4. Gerbers and drill files for the fab, BOM, 3D view.\n\nAttach a .kicad_sch or .kicad_pcb file with the paperclip — I'll list the parts and nets and check the schematic."
   },
   {
    "question": "Что такое SimulIDE?",
@@ -528,7 +621,9 @@
    "aliases": [
     "симулайд",
     "simulide"
-   ]
+   ],
+   "question_en": "What is SimulIDE?",
+   "answer_en": "SimulIDE is a simple real-time circuit simulator: resistors, capacitors, transistors, logic, an oscilloscope and a voltmeter, plus AVR, PIC and Arduino microcontrollers running your firmware (.hex). Great for learning and quick checks. Circuits are .sim1 files (XML) — attach one in chat and I'll list the parts and connections and help find the mistake."
   },
   {
    "question": "Чем симуляция отличается от реальной схемы?",
@@ -536,7 +631,9 @@
    "aliases": [
     "симуляция и реальность",
     "simulation vs real circuit"
-   ]
+   ],
+   "question_en": "How does a simulation differ from a real circuit?",
+   "answer_en": "A simulator uses idealised models: no parasitic capacitance or inductance of traces, no interference, no component tolerances, heating, contact bounce or soldering quality. So a circuit that works in SimulIDE or LTspice may be noisy, oscillate or overheat on a breadboard. Check your calculations against datasheets, keep margins on power and voltage, and measure with an oscilloscope."
   },
   {
    "question": "Что такое ERC и DRC?",
@@ -544,7 +641,9 @@
    "aliases": [
     "erc",
     "drc"
-   ]
+   ],
+   "question_en": "What are ERC and DRC?",
+   "answer_en": "ERC (Electrical Rules Check) checks the schematic: unconnected pins, outputs tied together, power nets without a source (KiCad uses a PWR_FLAG for that). DRC (Design Rules Check) checks the board: clearances, track widths, unrouted nets, overlaps. Run both before ordering boards."
   },
   {
    "question": "Что такое netlist?",
@@ -552,7 +651,9 @@
    "aliases": [
     "список соединений",
     "netlist"
-   ]
+   ],
+   "question_en": "What is a netlist?",
+   "answer_en": "A netlist describes a circuit without the drawing: which parts there are (R1 10k, U1 ATmega328) and which of their pins are joined in each net. KiCad uses it to carry the connections to the board, and simulators build their model from it. Attach a netlist or a schematic file and I'll check the connections net by net."
   },
   {
    "question": "Как читать электрическую схему?",
@@ -560,7 +661,9 @@
    "aliases": [
     "как читать схему",
     "how to read a schematic"
-   ]
+   ],
+   "question_en": "How do I read a schematic?",
+   "answer_en": "1. Find the supply and ground (VCC, +5V, GND) and follow where they go.\n2. Split the schematic into blocks: power, MCU, inputs, outputs, interfaces.\n3. Labels with the same name are connected even without a drawn wire.\n4. A dot at a crossing is a connection; without a dot the wires just cross.\n5. Designators: R resistor, C capacitor, L inductor, D diode, Q transistor, U integrated circuit.\n6. Check IC pins against the datasheet."
   }
  ]
 }

@@ -9,7 +9,9 @@
  "examples": [
   {
    "question": "Что такое стоицизм?",
-   "answer": "Стоицизм учит различать то, что зависит от нас, и то, что не зависит. Он предлагает сосредоточиться на собственных суждениях и поступках."
+   "answer": "Стоицизм учит различать то, что зависит от нас, и то, что не зависит. Он предлагает сосредоточиться на собственных суждениях и поступках.",
+   "question_en": "What is Stoicism?",
+   "answer_en": "Stoicism teaches telling apart what depends on us and what doesn't. It suggests focusing on our own judgements and actions."
   }
  ],
  "image": "philosophy",

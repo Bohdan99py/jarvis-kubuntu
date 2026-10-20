@@ -68,7 +68,7 @@ def setup(root, model=MODEL):
                 temp = Path(temp)
                 archive = temp / "model.zip"
                 url = f"https://alphacephei.com/vosk/models/{model}.zip"
-                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.14"})
+                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.15"})
                 with urllib.request.urlopen(request, timeout=60) as response, archive.open("wb") as out:
                     if not response.url.startswith("https://"):
                         raise ValueError(message("https"))
@@ -143,12 +143,88 @@ def recognize(model, wav=None, device="default"):
         parts.append(final)
     event("text", text=" ".join(parts))
 
+# Natural voices: Piper neural text-to-speech, run on this computer.
+PIPER = "piper-tts==1.8.0"
+VOICE_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/main/"
+MAX_VOICE = 150 * 1024 * 1024
+VOICE_MESSAGES = {
+    "ru": {"tts": "Установка естественного голоса (Piper)…", "voice": "Загрузка голоса {name} (~63 МБ)…",
+           "catalog": "Голос {name} не найден в каталоге Piper", "checksum": "Контрольная сумма голоса {name} не совпала",
+           "tts_ready": "Естественный голос готов."},
+    "en": {"tts": "Installing the natural voice (Piper)…", "voice": "Downloading the voice {name} (~63 MB)…",
+           "catalog": "The voice {name} is not in the Piper catalog", "checksum": "The checksum of the voice {name} does not match",
+           "tts_ready": "The natural voice is ready."},
+}
+
+def voice_message(key, **values):
+    return VOICE_MESSAGES.get(LANG, VOICE_MESSAGES["en"])[key].format(**values)
+
+def download(url, target, limit):
+    request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.15"})
+    with urllib.request.urlopen(request, timeout=60) as response, target.open("wb") as out:
+        if not response.url.startswith("https://"):
+            raise ValueError(message("https"))
+        total = 0
+        while chunk := response.read(1024 * 1024):
+            total += len(chunk)
+            if total > limit:
+                raise ValueError(message("big"))
+            out.write(chunk)
+
+def setup_tts(root, voices):
+    """Install Piper into the voice environment and download the chosen voices,
+    each checked against the MD5 published in the Piper catalog."""
+    import fcntl
+    import hashlib
+    import venv
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (root / ".setup.lock").open("w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        event("status", text=voice_message("tts"))
+        environment = root / "venv"
+        if not (environment / "bin/python").exists():
+            venv.EnvBuilder(with_pip=True).create(environment)
+        python = str(environment / "bin/python")
+        subprocess.run([python, "-m", "pip", "install", "--disable-pip-version-check", "--timeout", "30", PIPER],
+                       check=True, stdout=sys.stderr, timeout=900)
+        subprocess.run([python, "-c", "import piper"], check=True, timeout=60)
+        target = root / "piper"
+        target.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="download-", dir=root) as temp:
+            catalog = Path(temp) / "voices.json"
+            download(VOICE_BASE + "voices.json", catalog, 8 * 1024 * 1024)
+            entries = json.loads(catalog.read_text(encoding="utf-8"))
+            for name in voices:
+                entry = entries.get(name)
+                if not entry or not all(c.isalnum() or c in "_-" for c in name):
+                    raise ValueError(voice_message("catalog", name=name))
+                for path, info in entry["files"].items():
+                    if not path.endswith((".onnx", ".onnx.json")):
+                        continue
+                    final = target / Path(path).name
+                    if final.exists() and hashlib.md5(final.read_bytes()).hexdigest() == info["md5_digest"]:
+                        continue
+                    if path.endswith(".onnx"):
+                        event("status", text=voice_message("voice", name=name))
+                    part = Path(temp) / Path(path).name
+                    download(VOICE_BASE + path, part, MAX_VOICE)
+                    if hashlib.md5(part.read_bytes()).hexdigest() != info["md5_digest"]:
+                        raise ValueError(voice_message("checksum", name=name))
+                    part.replace(final)
+        # A voice that loads and speaks is a ready voice.
+        first = target / (voices[0] + ".onnx")
+        subprocess.run([python, "-c", "import sys; from piper import PiperVoice; list(PiperVoice.load(sys.argv[1]).synthesize('ok'))",
+                        str(first)], check=True, timeout=120, stdout=sys.stderr)
+        (target / "ready").write_text(PIPER + "\n", encoding="utf-8")
+        event("ready", text=voice_message("tts_ready"))
+
 def main():
     def terminate(signum, frame):
         raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["setup", "listen", "transcribe"])
+    parser.add_argument("mode", choices=["setup", "listen", "transcribe", "tts"])
+    parser.add_argument("--voices", default="", help="tts: Piper voices to install, comma separated")
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--wav", type=Path)
     parser.add_argument("--device", default="default")
@@ -160,6 +236,8 @@ def main():
     try:
         if args.mode == "setup":
             setup(args.root, model)
+        elif args.mode == "tts":
+            setup_tts(args.root, [v for v in args.voices.split(",") if v])
         else:
             recognize(args.root / model, args.wav if args.mode == "transcribe" else None, args.device)
     except Exception as error:

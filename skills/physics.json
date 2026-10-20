@@ -32,13 +32,15 @@
    "title": "Второй закон Ньютона",
    "formula": "F = m·a",
    "note": "Сила — векторная сумма всех сил, действующих на тело.",
-   "title_en": "Newton's second law"
+   "title_en": "Newton's second law",
+   "note_en": "The force is the vector sum of all forces acting on the body."
   },
   {
    "title": "Третий закон Ньютона",
    "formula": "F12 = −F21",
    "note": "Силы действия и противодействия равны и направлены противоположно.",
-   "title_en": "Newton's third law"
+   "title_en": "Newton's third law",
+   "note_en": "Action and reaction are equal and opposite."
   },
   {
    "title": "Сила тяжести и вес",
@@ -64,7 +66,8 @@
    "title": "Импульс",
    "formula": "p = m·v;  F·Δt = Δp",
    "note": "В замкнутой системе суммарный импульс сохраняется.",
-   "title_en": "Momentum"
+   "title_en": "Momentum",
+   "note_en": "In a closed system the total momentum is conserved."
   },
   {
    "title": "Работа и мощность",
@@ -110,13 +113,15 @@
    "title": "Количество теплоты",
    "formula": "Q = c·m·ΔT;  плавление Q = λ·m;  парообразование Q = L·m",
    "note": "Вода: c = 4200 Дж/(кг·°C), L = 2,3 МДж/кг; лёд: λ = 334 кДж/кг.",
-   "title_en": "Heat"
+   "title_en": "Heat",
+   "note_en": "Water: c = 4200 J/(kg·°C), L = 2.3 MJ/kg; ice: λ = 334 kJ/kg."
   },
   {
    "title": "Первый закон термодинамики",
    "formula": "Q = ΔU + A",
    "note": "Теплота идёт на изменение внутренней энергии и работу газа.",
-   "title_en": "First law of thermodynamics"
+   "title_en": "First law of thermodynamics",
+   "note_en": "Heat goes into internal energy and the work of the gas."
   },
   {
    "title": "Закон Кулона",
@@ -152,7 +157,8 @@
    "title": "Закон электромагнитной индукции",
    "formula": "ε = −ΔΦ/Δt;  Φ = B·S·cos α",
    "note": "Минус — правило Ленца: индукционный ток противодействует изменению потока.",
-   "title_en": "Faraday's law"
+   "title_en": "Faraday's law",
+   "note_en": "The minus is Lenz's law: the induced current opposes the change of flux."
   },
   {
    "title": "Колебания",
@@ -163,7 +169,8 @@
    "title": "Волна",
    "formula": "v = λ·f;  T = 1/f",
    "note": "Звук в воздухе ≈ 340 м/с, свет в вакууме 3·10⁸ м/с.",
-   "title_en": "Waves"
+   "title_en": "Waves",
+   "note_en": "Sound in air ≈ 340 m/s, light in vacuum 3·10⁸ m/s."
   },
   {
    "title": "Закон преломления",
@@ -194,7 +201,9 @@
     "законы ньютона",
     "три закона ньютона",
     "newtons laws"
-   ]
+   ],
+   "question_en": "What are Newton's laws?",
+   "answer_en": "1. **First (inertia):** a body keeps its velocity (or rest) unless forces act on it or they cancel out.\n2. **Second:** acceleration is proportional to the net force and inversely proportional to mass: **F = m·a**.\n3. **Third:** two bodies act on each other with equal and opposite forces: F12 = −F21 (applied to different bodies, so they don't cancel)."
   },
   {
    "question": "Что такое второй закон Ньютона?",
@@ -202,7 +211,9 @@
    "aliases": [
     "второй закон ньютона",
     "f=ma"
-   ]
+   ],
+   "question_en": "What is Newton's second law?",
+   "answer_en": "Newton's second law: **F = m·a** — the net force equals mass times acceleration. To accelerate a 2 kg body at 3 m/s² you need 6 N. In general F = Δp/Δt — force is the rate of change of momentum."
   },
   {
    "question": "Чем вес отличается от массы?",
@@ -210,7 +221,9 @@
    "aliases": [
     "вес и масса",
     "mass vs weight"
-   ]
+   ],
+   "question_en": "What is the difference between weight and mass?",
+   "answer_en": "Mass (kg) measures a body's inertia and is the same everywhere. Weight (N) is the force with which a body presses on a support or stretches a hanger; at rest on Earth P = m·g ≈ 9.81·m. In a lift accelerating upwards the weight grows, in free fall it is zero, while the mass does not change."
   },
   {
    "question": "Что такое импульс?",
@@ -219,7 +232,9 @@
     "импульс тела",
     "закон сохранения импульса",
     "momentum"
-   ]
+   ],
+   "question_en": "What is momentum?",
+   "answer_en": "Momentum p = m·v (kg·m/s) is a vector. Conservation: in a closed system the total momentum is constant. The change of momentum equals the impulse of the force: F·Δt = Δp — an airbag lengthens the impact time and so reduces the force."
   },
   {
    "question": "Что такое закон сохранения энергии?",
@@ -227,7 +242,9 @@
    "aliases": [
     "закон сохранения энергии",
     "conservation of energy"
-   ]
+   ],
+   "question_en": "What is the conservation of energy?",
+   "answer_en": "Energy is neither created nor destroyed, only converted from one form to another. In mechanics without friction Ek + Ep = const: a body falling from height h reaches the speed v = √(2gh). With friction part of the mechanical energy becomes heat."
   },
   {
    "question": "Что такое работа и мощность?",
@@ -235,7 +252,9 @@
    "aliases": [
     "работа и мощность",
     "work and power"
-   ]
+   ],
+   "question_en": "What are work and power?",
+   "answer_en": "Work A = F·s·cos α (J) is the energy a force transfers over a displacement s. Power N = A/t (W) is how fast work is done; at constant speed N = F·v. 1 kWh = 3.6 MJ."
   },
   {
    "question": "Что такое закон Архимеда?",
@@ -244,7 +263,9 @@
     "закон архимеда",
     "выталкивающая сила",
     "archimedes principle"
-   ]
+   ],
+   "question_en": "What is Archimedes' principle?",
+   "answer_en": "A body immersed in a liquid or gas feels an upward force equal to the weight of the displaced fluid: Fa = ρ·g·V. A body floats if its average density is lower than the fluid's."
   },
   {
    "question": "Что такое давление?",
@@ -253,7 +274,9 @@
     "давление",
     "закон паскаля",
     "pressure"
-   ]
+   ],
+   "question_en": "What is pressure?",
+   "answer_en": "Pressure p = F/S (Pa) is force per unit area. In a liquid p = ρ·g·h grows with depth (10 m of water ≈ 1 atm ≈ 100 kPa). Pascal's law: pressure on a fluid is transmitted equally in all directions — that is how a hydraulic press works."
   },
   {
    "question": "Что такое удельная теплоёмкость?",
@@ -261,7 +284,9 @@
    "aliases": [
     "теплоёмкость",
     "specific heat"
-   ]
+   ],
+   "question_en": "What is specific heat?",
+   "answer_en": "Specific heat c is how much heat warms 1 kg of a substance by 1 °C: Q = c·m·ΔT. Water 4200 J/(kg·°C), aluminium ≈ 900, copper ≈ 385. Heating 1 l of water from 20 to 100 °C takes 4200·1·80 = 336 kJ — about 3 minutes for a 2 kW kettle."
   },
   {
    "question": "Что такое первый закон термодинамики?",
@@ -269,7 +294,9 @@
    "aliases": [
     "первый закон термодинамики",
     "first law of thermodynamics"
-   ]
+   ],
+   "question_en": "What is the first law of thermodynamics?",
+   "answer_en": "Q = ΔU + A: the heat given to a gas goes into changing its internal energy and into the work the gas does. In an isothermal process ΔU = 0, in an adiabatic one Q = 0, at constant volume A = 0."
   },
   {
    "question": "Что такое закон Кулона?",
@@ -277,7 +304,9 @@
    "aliases": [
     "закон кулона",
     "coulombs law"
-   ]
+   ],
+   "question_en": "What is Coulomb's law?",
+   "answer_en": "Two point charges interact with the force F = k·|q1·q2|/r², k ≈ 8.99·10⁹ N·m²/C². Like charges repel, unlike ones attract. The force falls with the square of the distance: twice as far — four times weaker."
   },
   {
    "question": "Что такое электрическое поле?",
@@ -286,7 +315,9 @@
     "электрическое поле",
     "напряжённость поля",
     "electric field"
-   ]
+   ],
+   "question_en": "What is an electric field?",
+   "answer_en": "The electric field is how charges act on each other. Its strength E = F/q (V/m). For a point charge E = k·q/r², between capacitor plates E = U/d. Voltage is the work the field does moving a unit charge."
   },
   {
    "question": "Что такое магнитное поле?",
@@ -294,7 +325,9 @@
    "aliases": [
     "магнитное поле",
     "magnetic field"
-   ]
+   ],
+   "question_en": "What is a magnetic field?",
+   "answer_en": "A magnetic field is created by moving charges (currents) and magnets and is described by the flux density B (T). A current-carrying wire feels the Ampère force F = B·I·L·sin α, a moving charge the Lorentz force F = q·v·B·sin α. The direction follows the left-hand rule."
   },
   {
    "question": "Что такое электромагнитная индукция?",
@@ -304,7 +337,9 @@
     "закон фарадея",
     "правило ленца",
     "electromagnetic induction"
-   ]
+   ],
+   "question_en": "What is electromagnetic induction?",
+   "answer_en": "When the magnetic flux through a loop changes, an EMF appears in it: ε = −ΔΦ/Δt (Faraday's law). The minus is Lenz's law: the induced current opposes the change of flux. Generators, transformers, induction hobs and ignition coils work this way."
   },
   {
    "question": "Что такое закон Джоуля–Ленца?",
@@ -312,7 +347,9 @@
    "aliases": [
     "закон джоуля ленца",
     "joule heating"
-   ]
+   ],
+   "question_en": "What is Joule's law?",
+   "answer_en": "Current through a conductor releases heat Q = I²·R·t. That is why thin wires heat up at high current, and power lines use high voltage — for the same power the current is lower and the I²R losses drop."
   },
   {
    "question": "Что такое колебания?",
@@ -320,7 +357,9 @@
    "aliases": [
     "колебания",
     "oscillations"
-   ]
+   ],
+   "question_en": "What are oscillations?",
+   "answer_en": "Oscillations are repeated motion around an equilibrium. The period T is the time of one cycle, the frequency f = 1/T. Pendulum: T = 2π√(L/g), mass on a spring: T = 2π√(m/k), LC circuit: T = 2π√(LC). At resonance an external force at the natural frequency sharply increases the amplitude."
   },
   {
    "question": "Что такое волна?",
@@ -329,7 +368,9 @@
     "волна",
     "длина волны",
     "wave"
-   ]
+   ],
+   "question_en": "What is a wave?",
+   "answer_en": "A wave carries oscillations and energy through space without carrying matter. Speed v = λ·f. Longitudinal (sound) and transverse (light, waves on a string). Sound in air ≈ 340 m/s, light 300,000 km/s."
   },
   {
    "question": "Что такое преломление света?",
@@ -338,7 +379,9 @@
     "преломление",
     "закон снеллиуса",
     "refraction"
-   ]
+   ],
+   "question_en": "What is refraction of light?",
+   "answer_en": "At the boundary of two media light changes direction: n1·sin α = n2·sin β (Snell's law), where n = c/v is the refractive index (water 1.33, glass ≈ 1.5). Going into an optically less dense medium at a large angle gives total internal reflection — optical fibre relies on it."
   },
   {
    "question": "Как работает линза?",
@@ -347,7 +390,9 @@
     "линза",
     "формула линзы",
     "lens"
-   ]
+   ],
+   "question_en": "How does a lens work?",
+   "answer_en": "A converging lens brings parallel rays to the focus F. The thin lens formula: 1/F = 1/d + 1/f (d — to the object, f — to the image). Optical power D = 1/F in dioptres. Magnification = f/d."
   },
   {
    "question": "Что такое фотоэффект?",
@@ -355,7 +400,9 @@
    "aliases": [
     "фотоэффект",
     "photoelectric effect"
-   ]
+   ],
+   "question_en": "What is the photoelectric effect?",
+   "answer_en": "The photoelectric effect is light knocking electrons out of a material. A photon's energy is E = h·f, and an electron escapes only if it exceeds the work function: h·f = A + m·v²/2 (Einstein's equation). Intensity sets the number of electrons, frequency their energy. Photodiodes and solar cells work this way."
   },
   {
    "question": "Что значит E=mc²?",
@@ -363,7 +410,9 @@
    "aliases": [
     "e mc2",
     "e=mc2"
-   ]
+   ],
+   "question_en": "What does E=mc² mean?",
+   "answer_en": "Mass and energy are equivalent: E = m·c², c = 3·10⁸ m/s. Even a small mass is a huge energy: 1 g ≈ 9·10¹³ J. The mass defect in nuclear reactions explains the energy of nuclear power plants and of the Sun."
   },
   {
    "question": "Что такое ускорение свободного падения?",
@@ -371,7 +420,9 @@
    "aliases": [
     "ускорение свободного падения",
     "gravitational acceleration"
-   ]
+   ],
+   "question_en": "What is the acceleration of free fall?",
+   "answer_en": "The acceleration of bodies falling without air resistance: g ≈ 9.81 m/s² at the Earth's surface (a bit more at the poles, less at the equator). On the Moon ≈ 1.62 m/s². The fall time from height h: t = √(2h/g), the speed v = √(2gh)."
   },
   {
    "question": "Что такое КПД?",
@@ -379,7 +430,9 @@
    "aliases": [
     "кпд",
     "efficiency"
-   ]
+   ],
+   "question_en": "What is efficiency?",
+   "answer_en": "Efficiency η = useful work / work spent · 100%. It is always below 100% — part of the energy turns into heat. An electric motor 80–95%, a car engine 25–40%, an LED about 30–50% into light."
   }
  ]
 }

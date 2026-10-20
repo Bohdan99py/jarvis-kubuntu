@@ -22,24 +22,82 @@
   ],
   "contributes": {
     "commands": [
-      { "command": "jarvis.ask", "title": "%cmd.ask%", "category": "Jarvis" },
-      { "command": "jarvis.explain", "title": "%cmd.explain%", "category": "Jarvis" },
-      { "command": "jarvis.fix", "title": "%cmd.fix%", "category": "Jarvis" },
-      { "command": "jarvis.tests", "title": "%cmd.tests%", "category": "Jarvis" },
-      { "command": "jarvis.error", "title": "%cmd.error%", "category": "Jarvis" },
-      { "command": "jarvis.teach", "title": "%cmd.teach%", "category": "Jarvis" }
+      { "command": "jarvis.menu", "title": "%cmd.menu%", "category": "Jarvis", "icon": "$(hubot)" },
+      { "command": "jarvis.ask", "title": "%cmd.ask%", "category": "Jarvis", "icon": "$(comment-discussion)" },
+      { "command": "jarvis.explain", "title": "%cmd.explain%", "category": "Jarvis", "icon": "$(book)" },
+      { "command": "jarvis.fix", "title": "%cmd.fix%", "category": "Jarvis", "icon": "$(wrench)" },
+      { "command": "jarvis.tests", "title": "%cmd.tests%", "category": "Jarvis", "icon": "$(beaker)" },
+      { "command": "jarvis.document", "title": "%cmd.document%", "category": "Jarvis", "icon": "$(note)" },
+      { "command": "jarvis.review", "title": "%cmd.review%", "category": "Jarvis", "icon": "$(checklist)" },
+      { "command": "jarvis.error", "title": "%cmd.error%", "category": "Jarvis", "icon": "$(error)" },
+      { "command": "jarvis.teach", "title": "%cmd.teach%", "category": "Jarvis", "icon": "$(mortar-board)" },
+      { "command": "jarvis.openApp", "title": "%cmd.openApp%", "category": "Jarvis", "icon": "$(link-external)" },
+      { "command": "jarvis.showAnswer", "title": "%cmd.showAnswer%", "category": "Jarvis" },
+      { "command": "jarvis.fixDiagnostic", "title": "%cmd.fixDiagnostic%", "category": "Jarvis" },
+      { "command": "jarvis.clearHistory", "title": "%cmd.clearHistory%", "category": "Jarvis", "icon": "$(clear-all)" }
+    ],
+    "submenus": [
+      { "id": "jarvis.editorMenu", "label": "Jarvis" }
     ],
     "menus": {
       "editor/context": [
-        { "command": "jarvis.explain", "when": "editorHasSelection", "group": "jarvis@1" },
-        { "command": "jarvis.fix", "when": "editorHasSelection", "group": "jarvis@2" },
-        { "command": "jarvis.tests", "when": "editorHasSelection", "group": "jarvis@3" },
-        { "command": "jarvis.error", "group": "jarvis@4" },
-        { "command": "jarvis.teach", "when": "editorHasSelection", "group": "jarvis@5" }
+        { "submenu": "jarvis.editorMenu", "group": "1_jarvis@1" }
+      ],
+      "jarvis.editorMenu": [
+        { "command": "jarvis.ask", "group": "1_ask@1" },
+        { "command": "jarvis.explain", "when": "editorHasSelection", "group": "2_selection@1" },
+        { "command": "jarvis.fix", "when": "editorHasSelection", "group": "2_selection@2" },
+        { "command": "jarvis.tests", "when": "editorHasSelection", "group": "2_selection@3" },
+        { "command": "jarvis.document", "when": "editorHasSelection", "group": "2_selection@4" },
+        { "command": "jarvis.review", "group": "3_file@1" },
+        { "command": "jarvis.error", "group": "3_file@2" },
+        { "command": "jarvis.teach", "when": "editorHasSelection", "group": "4_learn@1" }
+      ],
+      "view/title": [
+        { "command": "jarvis.menu", "when": "view == jarvis.actions", "group": "navigation" },
+        { "command": "jarvis.clearHistory", "when": "view == jarvis.history", "group": "navigation" }
+      ],
+      "commandPalette": [
+        { "command": "jarvis.showAnswer", "when": "false" },
+        { "command": "jarvis.fixDiagnostic", "when": "false" }
       ]
     },
     "keybindings": [
-      { "command": "jarvis.ask", "key": "ctrl+alt+j" }
+      { "command": "jarvis.menu", "key": "ctrl+alt+j" },
+      { "command": "jarvis.ask", "key": "ctrl+alt+k" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "jarvis", "title": "Jarvis", "icon": "media/jarvis.svg" }
+      ]
+    },
+    "views": {
+      "jarvis": [
+        { "id": "jarvis.actions", "name": "%view.actions%" },
+        { "id": "jarvis.history", "name": "%view.history%" }
+      ]
+    },
+    "viewsWelcome": [
+      { "view": "jarvis.history", "contents": "%welcome.history%" }
+    ],
+    "walkthroughs": [
+      {
+        "id": "jarvis.start",
+        "title": "%walk.title%",
+        "description": "%walk.description%",
+        "steps": [
+          { "id": "connect", "title": "%walk.connect.title%", "description": "%walk.connect.text%",
+            "media": { "image": "media/walkthrough.svg", "altText": "Jarvis" } },
+          { "id": "ask", "title": "%walk.ask.title%", "description": "%walk.ask.text%",
+            "media": { "image": "media/walkthrough.svg", "altText": "Jarvis" } },
+          { "id": "selection", "title": "%walk.selection.title%", "description": "%walk.selection.text%",
+            "media": { "image": "media/walkthrough.svg", "altText": "Jarvis" } },
+          { "id": "errors", "title": "%walk.errors.title%", "description": "%walk.errors.text%",
+            "media": { "image": "media/walkthrough.svg", "altText": "Jarvis" } },
+          { "id": "learn", "title": "%walk.learn.title%", "description": "%walk.learn.text%",
+            "media": { "image": "media/walkthrough.svg", "altText": "Jarvis" } }
+        ]
+      }
     ],
     "configuration": {
       "title": "Jarvis",
@@ -48,6 +106,11 @@
           "type": "boolean",
           "default": true,
           "description": "%cfg.learn%"
+        },
+        "jarvis.lightbulb": {
+          "type": "boolean",
+          "default": true,
+          "description": "%cfg.lightbulb%"
         },
         "jarvis.socketPath": {
           "type": "string",

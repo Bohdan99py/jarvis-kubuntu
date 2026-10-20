@@ -4,6 +4,12 @@
 #include <QJsonObject>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QDir>
+#include <QHash>
+#include <QSaveFile>
+#include <QFile>
+#include <QFileInfo>
+#include <algorithm>
 
 QString VoiceController::root() { return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/jarvis/voice"; }
 VoiceController::VoiceController(QObject *parent):QObject(parent) {
@@ -60,8 +66,93 @@ void VoiceController::stop() {
 }
 void VoiceController::speak(const QString &text) {
     if(!m_enabled || text.trimmed().isEmpty() || busy() || speaking())return;
-    m_speech.start(systemPython(),{jarvisScript("speak.py")});
+    say(text,{});
+}
+void VoiceController::say(const QString &text,const QString &lang) {
+    if(speaking()){m_speech.terminate();m_speech.waitForFinished(1000);}
+    QStringList args{jarvisScript("speak.py")};
+    if(!lang.isEmpty())args.append(lang);
+    m_speech.start(systemPython(),args);
     m_speech.write(text.left(6000).toUtf8());m_speech.closeWriteChannel();
+}
+namespace {
+struct VoiceInfo { const char *id; const char *lang; const char *ru; const char *en; };
+// Piper voices worth offering: clear, single-speaker, medium quality (~63 MB each).
+const VoiceInfo kVoices[]={
+    {"ru_RU-dmitri-medium","ru","Дмитрий — мужской","Dmitri — male"},
+    {"ru_RU-denis-medium","ru","Денис — мужской","Denis — male"},
+    {"ru_RU-ruslan-medium","ru","Руслан — мужской","Ruslan — male"},
+    {"ru_RU-irina-medium","ru","Ирина — женский","Irina — female"},
+    {"en_GB-alan-medium","en","Alan — британский мужской","Alan — British male"},
+    {"en_GB-alba-medium","en","Alba — британский женский","Alba — British female"},
+    {"en_US-ryan-medium","en","Ryan — американский мужской","Ryan — American male"},
+    {"en_US-amy-medium","en","Amy — американский женский","Amy — American female"},
+    {"en_US-lessac-medium","en","Lessac — американский женский","Lessac — American female"},
+    {"fr_FR-tom-medium","fr","Tom — французский мужской","Tom — French male"},
+    {"fr_FR-siwis-medium","fr","Siwis — французский женский","Siwis — French female"},
+};
+const char *defaultVoice(const QString &lang) { return lang=="en" ? "en_GB-alan-medium" : lang=="fr" ? "fr_FR-tom-medium" : "ru_RU-dmitri-medium"; }
+}
+QJsonObject VoiceController::piperSettings() const {
+    QFile f(root()+"/piper/settings.json");
+    return f.open(QIODevice::ReadOnly) ? QJsonDocument::fromJson(f.readAll()).object() : QJsonObject{};
+}
+void VoiceController::savePiperSettings(const QJsonObject &settings) {
+    QDir().mkpath(root()+"/piper");
+    QSaveFile f(root()+"/piper/settings.json");
+    if(f.open(QIODevice::WriteOnly)){f.write(QJsonDocument(settings).toJson());f.commit();}
+    emit changed();
+}
+bool VoiceController::naturalReady() const { return QFileInfo::exists(root()+"/piper/ready") && QFileInfo::exists(root()+"/venv/bin/python"); }
+QVariantList VoiceController::voices() const {
+    QVariantList out;
+    for(const auto &v:kVoices)
+        out.append(QVariantMap{{"id",QString::fromLatin1(v.id)},{"lang",QString::fromLatin1(v.lang)},
+                               {"name",QString::fromUtf8(m_language=="en"?v.en:v.ru)},
+                               {"installed",QFileInfo::exists(root()+"/piper/"+QString::fromLatin1(v.id)+".onnx")}});
+    return out;
+}
+QVariantMap VoiceController::chosenVoices() const {
+    const auto s=piperSettings();
+    QVariantMap out;
+    for(const QString &lang:{QStringLiteral("ru"),QStringLiteral("en"),QStringLiteral("fr")})
+        out[lang]=s.value(lang).toString(QString::fromLatin1(defaultVoice(lang)));
+    return out;
+}
+double VoiceController::rate() const { return piperSettings().value("rate").toDouble(1.0); }
+void VoiceController::setRate(double rate) {
+    auto s=piperSettings();s["rate"]=std::clamp(rate,0.6,1.6);
+    for(const QString &lang:{QStringLiteral("ru"),QStringLiteral("en"),QStringLiteral("fr")}) if(!s.contains(lang)) s[lang]=chosenVoices().value(lang).toString();
+    savePiperSettings(s);
+}
+void VoiceController::chooseVoice(const QString &lang,const QString &id) {
+    bool known=false;for(const auto &v:kVoices) known=known||(QLatin1String(v.id)==id&&QLatin1String(v.lang)==lang);
+    if(!known)return;
+    auto s=piperSettings();
+    for(const QString &l:{QStringLiteral("ru"),QStringLiteral("en"),QStringLiteral("fr")}) if(!s.contains(l)) s[l]=chosenVoices().value(l).toString();
+    s[lang]=id;
+    savePiperSettings(s);
+    m_status=QFileInfo::exists(root()+"/piper/"+id+".onnx")?tr("Voice changed."):tr("Press \"Download the chosen voices\" to get this voice.");
+    emit changed();
+}
+void VoiceController::installNatural() {
+    if(busy())return;
+    const auto chosen=chosenVoices();
+    // Saved first, so speak.py knows the voices as soon as they are there.
+    auto s=piperSettings();for(auto it=chosen.cbegin();it!=chosen.cend();++it) s[it.key()]=it.value().toString();
+    if(!s.contains("rate"))s["rate"]=1.0;
+    savePiperSettings(s);
+    m_status=tr("Installing the natural voice…");
+    start(systemPython(),{jarvisScript("voice.py"),"tts","--root",root(),"--lang",m_language,
+                          "--voices",QStringList{chosen.value("ru").toString(),chosen.value("en").toString(),chosen.value("fr").toString()}.join(',')},
+          1800000);
+}
+void VoiceController::preview(const QString &lang) {
+    static const QHash<QString,QString> samples={
+        {"ru",QString::fromUtf8("Привет! Я Джарвис. Делитель из резисторов десять и четыре и семь килоом даст на выходе почти четыре вольта.")},
+        {"en",QStringLiteral("Hello, I'm Jarvis. Shall I calculate the resistor for your LED, or remind you about the meeting?")},
+        {"fr",QString::fromUtf8("Bonjour ! Je suis Jarvis. On révise un peu de vocabulaire aujourd'hui ?")}};
+    say(samples.value(lang,samples.value("en")),lang);
 }
 void VoiceController::readEvents() {
     m_buffer+=m_worker.readAllStandardOutput();

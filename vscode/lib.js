@@ -65,6 +65,13 @@ function renderText(text) {
     .replace(/\n/g, '<br>');
 }
 
+// The text with [start, end) replaced: what a file looks like with a fix applied.
+function replaceRange(text, start, end, replacement) {
+  const a = Math.max(0, Math.min(start, text.length));
+  const b = Math.max(a, Math.min(end, text.length));
+  return text.slice(0, a) + replacement + text.slice(b);
+}
+
 function readSmall(file, max = 200 * 1024) {
   try {
     const stat = fs.statSync(file);
@@ -133,4 +140,5 @@ function languageOfFile(file) {
   return EXTENSION_LANGUAGES[path.extname(file).toLowerCase()] || '';
 }
 
-module.exports = { socketCandidates, parseLines, escapeHtml, splitAnswer, renderText, detectFrameworks, languageOfFile };
+module.exports = {
+  replaceRange, socketCandidates, parseLines, escapeHtml, splitAnswer, renderText, detectFrameworks, languageOfFile };

@@ -66,6 +66,7 @@ private:
 //   method Feedback(b) -> s   👍/👎 on the last chat answer; returns Jarvis's reaction
 //   method AddTask(s) -> s    "tomorrow at 9 call mum" or a plain to-do; returns the confirmation
 //   method TaskAction(s, s) -> s  task id and done|remove|snooze|reopen ("" = ok)
+//   method EditTask(s, s, s, s) -> s  id, text, when ("" keeps, "-" no time), repeat ("keep" or a code)
 //   method WindowActivated(s, s, s)  focused window; accepted only from KWin
 //   method ReloadConfig()     re-read ~/.config/jarvis/config.json
 //   method Quit()             stop the daemon (clean exit, systemd will not restart it)
@@ -95,6 +96,7 @@ public slots:
     QString Feedback(bool good);
     QString AddTask(const QString &text);
     QString TaskAction(const QString &id, const QString &action);
+    QString EditTask(const QString &id, const QString &text, const QString &when, const QString &repeat);
     void WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
     void ReloadConfig();
     void Quit();

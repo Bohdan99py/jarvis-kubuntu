@@ -19,6 +19,7 @@
 #include "learning_store.h"
 #include "skill_store.h"
 #include "task_store.h"
+#include "reminder_parser.h"
 #include "vocab_store.h"
 
 namespace jarvis {
@@ -82,8 +83,12 @@ public:
     // Tasks panel: a phrase like "tomorrow at 9 call mum" (the trigger word is
     // optional). Returns Jarvis's confirmation or what went wrong.
     QString addTask(const QString &text);
-    // action: done, remove, snooze (10 minutes). "" on success.
+    // action: done, remove, snooze (the configured minutes), reopen. "" on success.
     QString taskAction(const QString &id, const QString &action);
+    // Edits an item from the Tasks panel. `when`: a phrase like "tomorrow at 10"
+    // ("" keeps the time, "-" makes it a task without a time); `repeat`: "keep" or
+    // a repetition code (see ParsedReminder::repeat). Returns "" or an error.
+    QString editTask(const QString &id, const QString &text, const QString &when, const QString &repeat);
 
     // From the desktop bridge (jarvisd only).
     void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
@@ -142,6 +147,7 @@ private:
     void emitNotice(const QString &key, const QString &kind, const QString &title, const QString &body,
                     const QList<std::pair<QString, QString>> &actions);
     Lang uiLang() const;
+    ReminderOptions reminderOptions() const;
     void finish(quint64 id, const QString &reply, bool rememberable);
     void finishLater(quint64 id, const QString &reply, bool rememberable, int delayMs);
     Lang replyLanguage(const QString &text);

@@ -9,59 +9,87 @@
  "examples": [
   {
    "question": "Что такое подтягивающий резистор?",
-   "answer": "Подтягивающий (pull-up) резистор соединяет вход с питанием, чтобы при разомкнутой кнопке на нём был чёткий логический уровень 1, а не «висящий» вход, ловящий наводки. Кнопку тогда подключают между входом и землёй (нажата — 0). Типично 4,7–10 кОм; у большинства МК есть встроенные (~20–50 кОм), например INPUT_PULLUP в Arduino или GPIO_PULLUP в STM32 HAL. Pull-down — то же самое, но к земле."
+   "answer": "Подтягивающий (pull-up) резистор соединяет вход с питанием, чтобы при разомкнутой кнопке на нём был чёткий логический уровень 1, а не «висящий» вход, ловящий наводки. Кнопку тогда подключают между входом и землёй (нажата — 0). Типично 4,7–10 кОм; у большинства МК есть встроенные (~20–50 кОм), например INPUT_PULLUP в Arduino или GPIO_PULLUP в STM32 HAL. Pull-down — то же самое, но к земле.",
+   "question_en": "What is a pull-up resistor?",
+   "answer_en": "A pull-up resistor connects an input to the supply so that with the button open the input reads a clean logic 1 instead of \"floating\" and picking up noise. The button then goes between the input and ground (pressed = 0). Typically 4.7–10 kΩ; most MCUs have built-in ones (~20–50 kΩ), e.g. INPUT_PULLUP in Arduino or GPIO_PULLUP in STM32 HAL. A pull-down is the same to ground."
   },
   {
    "question": "Чем отличается SPI от I2C?",
-   "answer": "I2C — две линии (SDA, SCL), адресация устройств, открытый сток с подтягивающими резисторами (обычно 4,7 кОм), 100 кГц / 400 кГц / 1 МГц, полудуплекс; удобно для многих медленных датчиков. SPI — четыре линии (SCK, MOSI, MISO и отдельный CS на каждое устройство), двухтактные выходы, десятки МГц, полный дуплекс; лучше для дисплеев, памяти, АЦП. I2C экономит выводы, SPI быстрее и проще в отладке."
+   "answer": "I2C — две линии (SDA, SCL), адресация устройств, открытый сток с подтягивающими резисторами (обычно 4,7 кОм), 100 кГц / 400 кГц / 1 МГц, полудуплекс; удобно для многих медленных датчиков. SPI — четыре линии (SCK, MOSI, MISO и отдельный CS на каждое устройство), двухтактные выходы, десятки МГц, полный дуплекс; лучше для дисплеев, памяти, АЦП. I2C экономит выводы, SPI быстрее и проще в отладке.",
+   "question_en": "SPI or I2C — what's the difference?",
+   "answer_en": "I2C: two lines (SDA, SCL), device addresses, open drain with pull-ups (usually 4.7 kΩ), 100 kHz / 400 kHz / 1 MHz, half duplex; handy for many slow sensors. SPI: four lines (SCK, MOSI, MISO and a separate CS per device), push-pull outputs, tens of MHz, full duplex; better for displays, memory, ADCs. I2C saves pins, SPI is faster and easier to debug."
   },
   {
    "question": "Что такое прерывание?",
-   "answer": "Прерывание — сигнал от периферии (таймер, вывод, UART, АЦП…), по которому процессор приостанавливает основную программу и выполняет обработчик (ISR), а потом возвращается. Правила: обработчик короткий (выставить флаг, положить байт в буфер), без задержек и printf; общие с основной программой переменные — volatile, многобайтовые читать в критической секции; не забыть сбросить флаг прерывания."
+   "answer": "Прерывание — сигнал от периферии (таймер, вывод, UART, АЦП…), по которому процессор приостанавливает основную программу и выполняет обработчик (ISR), а потом возвращается. Правила: обработчик короткий (выставить флаг, положить байт в буфер), без задержек и printf; общие с основной программой переменные — volatile, многобайтовые читать в критической секции; не забыть сбросить флаг прерывания.",
+   "question_en": "What is an interrupt?",
+   "answer_en": "An interrupt is a signal from a peripheral (timer, pin, UART, ADC…) that makes the CPU pause the main program, run a handler (ISR) and return. Rules: keep the handler short (set a flag, put a byte into a buffer), no delays or printf; variables shared with the main program are volatile, multi-byte ones are read in a critical section; don't forget to clear the interrupt flag."
   },
   {
    "question": "Зачем нужен развязывающий конденсатор?",
-   "answer": "Развязывающий (decoupling) конденсатор, обычно керамический 100 нФ, ставят как можно ближе к каждому выводу питания микросхемы. Он отдаёт короткие импульсы тока при переключениях и гасит помехи по питанию, иначе возможны сбои и сбросы МК. Часто добавляют ещё 1–10 мкФ на плату или группу микросхем."
+   "answer": "Развязывающий (decoupling) конденсатор, обычно керамический 100 нФ, ставят как можно ближе к каждому выводу питания микросхемы. Он отдаёт короткие импульсы тока при переключениях и гасит помехи по питанию, иначе возможны сбои и сбросы МК. Часто добавляют ещё 1–10 мкФ на плату или группу микросхем.",
+   "question_en": "Why do I need a decoupling capacitor?",
+   "answer_en": "A decoupling capacitor, usually a 100 nF ceramic, sits as close as possible to every supply pin of a chip. It supplies the short current spikes of switching and absorbs supply noise; without it the MCU may glitch or reset. Often 1–10 µF is added per board or group of chips."
   },
   {
    "question": "Как рассчитать резистор для светодиода?",
-   "answer": "R = (Uпит − Uсветодиода) / I. Например, питание 3,3 В, красный светодиод ~2,0 В, ток 10 мА: R = (3,3 − 2,0) / 0,01 = 130 Ом → берём ближайший 130–150 Ом. Мощность P = I² × R ≈ 0,013 Вт. Проверьте, что ток не превышает допустимый для вывода МК (часто 8–20 мА)."
+   "answer": "R = (Uпит − Uсветодиода) / I. Например, питание 3,3 В, красный светодиод ~2,0 В, ток 10 мА: R = (3,3 − 2,0) / 0,01 = 130 Ом → берём ближайший 130–150 Ом. Мощность P = I² × R ≈ 0,013 Вт. Проверьте, что ток не превышает допустимый для вывода МК (часто 8–20 мА).",
+   "question_en": "How do I calculate an LED resistor?",
+   "answer_en": "R = (Usupply − U_LED) / I. For example, a 3.3 V supply, a red LED ~2.0 V, 10 mA: R = (3.3 − 2.0) / 0.01 = 130 Ω → take 130–150 Ω. Power P = I² × R ≈ 0.013 W. Make sure the current does not exceed what the MCU pin allows (often 8–20 mA)."
   },
   {
    "question": "Что такое ШИМ?",
-   "answer": "ШИМ (PWM) — прямоугольный сигнал постоянной частоты с изменяемой скважностью (долей времени в 1). Среднее напряжение = Uпит × коэффициент заполнения. Используют для яркости светодиодов, скорости моторов, сервоприводов, ЦАП через RC-фильтр. В МК его формирует таймер: период задаёт регистр ARR (STM32), заполнение — CCR."
+   "answer": "ШИМ (PWM) — прямоугольный сигнал постоянной частоты с изменяемой скважностью (долей времени в 1). Среднее напряжение = Uпит × коэффициент заполнения. Используют для яркости светодиодов, скорости моторов, сервоприводов, ЦАП через RC-фильтр. В МК его формирует таймер: период задаёт регистр ARR (STM32), заполнение — CCR.",
+   "question_en": "What is PWM?",
+   "answer_en": "PWM is a square wave of constant frequency with a variable duty cycle (share of time at 1). The average voltage = Usupply × duty cycle. Used for LED brightness, motor speed, servos, a DAC through an RC filter. An MCU timer generates it: the ARR register sets the period (STM32), CCR the duty cycle."
   },
   {
    "question": "Что такое DMA?",
-   "answer": "DMA (прямой доступ к памяти) — блок, который сам пересылает данные между периферией и памятью без участия процессора: например, буфер АЦП, приём UART или вывод на SPI-дисплей. Процессор только настраивает канал (источник, приёмник, длину) и получает прерывание по завершению или половине буфера."
+   "answer": "DMA (прямой доступ к памяти) — блок, который сам пересылает данные между периферией и памятью без участия процессора: например, буфер АЦП, приём UART или вывод на SPI-дисплей. Процессор только настраивает канал (источник, приёмник, длину) и получает прерывание по завершению или половине буфера.",
+   "question_en": "What is DMA?",
+   "answer_en": "DMA (direct memory access) moves data between peripherals and memory without the CPU: an ADC buffer, UART reception or output to an SPI display. The CPU only sets up the channel (source, destination, length) and gets an interrupt when it is done or half done."
   },
   {
    "question": "Зачем volatile в C для микроконтроллеров?",
-   "answer": "volatile говорит компилятору, что значение может измениться вне текущего кода (в обработчике прерывания, аппаратно в регистре периферии, другой задачей RTOS), поэтому его нельзя кэшировать в регистре и выкидывать «лишние» чтения. Без volatile цикл while(!flag) после оптимизации может стать бесконечным. Атомарности volatile не даёт — для этого нужны критические секции."
+   "answer": "volatile говорит компилятору, что значение может измениться вне текущего кода (в обработчике прерывания, аппаратно в регистре периферии, другой задачей RTOS), поэтому его нельзя кэшировать в регистре и выкидывать «лишние» чтения. Без volatile цикл while(!flag) после оптимизации может стать бесконечным. Атомарности volatile не даёт — для этого нужны критические секции.",
+   "question_en": "Why use volatile in C on microcontrollers?",
+   "answer_en": "volatile tells the compiler that a value can change outside the current code (in an interrupt handler, in a peripheral register, in another RTOS task), so it must not be cached in a register or have \"redundant\" reads removed. Without volatile, `while(!flag)` can become an endless loop after optimisation. volatile does not make access atomic — use critical sections for that."
   },
   {
    "question": "Что такое watchdog?",
-   "answer": "Сторожевой таймер (watchdog) перезагружает МК, если программа вовремя его не «сбросила» (не покормила). Он спасает от зависаний: кормить его нужно в главном цикле только когда всё работает правильно, а не в прерывании таймера. В STM32 есть IWDG (независимый, от своего генератора) и WWDG (оконный)."
+   "answer": "Сторожевой таймер (watchdog) перезагружает МК, если программа вовремя его не «сбросила» (не покормила). Он спасает от зависаний: кормить его нужно в главном цикле только когда всё работает правильно, а не в прерывании таймера. В STM32 есть IWDG (независимый, от своего генератора) и WWDG (оконный).",
+   "question_en": "What is a watchdog?",
+   "answer_en": "A watchdog timer resets the MCU if the program does not \"feed\" it in time. It recovers from hangs: feed it in the main loop only when everything works, not in a timer interrupt. STM32 has the IWDG (independent, with its own oscillator) and the WWDG (window)."
   },
   {
    "question": "Что такое UART?",
-   "answer": "UART — асинхронный последовательный интерфейс: линии TX и RX (крест-накрест) и общая земля, без тактового сигнала, поэтому обе стороны настраивают одинаковую скорость (например 115200 бод) и формат 8N1. Уровни МК — 3,3 или 5 В; для RS-232 нужен преобразователь (MAX3232), для ПК — USB-UART адаптер."
+   "answer": "UART — асинхронный последовательный интерфейс: линии TX и RX (крест-накрест) и общая земля, без тактового сигнала, поэтому обе стороны настраивают одинаковую скорость (например 115200 бод) и формат 8N1. Уровни МК — 3,3 или 5 В; для RS-232 нужен преобразователь (MAX3232), для ПК — USB-UART адаптер.",
+   "question_en": "What is UART?",
+   "answer_en": "UART is an asynchronous serial interface: TX and RX lines (crossed) and a common ground, no clock, so both sides use the same speed (e.g. 115200 baud) and format 8N1. MCU levels are 3.3 or 5 V; RS-232 needs a converter (MAX3232), a PC a USB-UART adapter."
   },
   {
    "question": "Как работает АЦП?",
-   "answer": "АЦП переводит напряжение в число: код = Uвх / Uоп × (2ⁿ − 1). Для 12-битного АЦП с опорой 3,3 В шаг ≈ 0,8 мВ, 1,65 В → ~2048. Важно: не превышать опорное напряжение, учитывать сопротивление источника и время выборки, ставить RC-фильтр и усреднять. Делитель напряжения позволяет измерять большие напряжения."
+   "answer": "АЦП переводит напряжение в число: код = Uвх / Uоп × (2ⁿ − 1). Для 12-битного АЦП с опорой 3,3 В шаг ≈ 0,8 мВ, 1,65 В → ~2048. Важно: не превышать опорное напряжение, учитывать сопротивление источника и время выборки, ставить RC-фильтр и усреднять. Делитель напряжения позволяет измерять большие напряжения.",
+   "question_en": "How does an ADC work?",
+   "answer_en": "An ADC turns a voltage into a number: code = Uin / Uref × (2ⁿ − 1). A 12-bit ADC with a 3.3 V reference has a step of ≈ 0.8 mV, 1.65 V → ~2048. Mind: don't exceed the reference, consider the source impedance and the sampling time, add an RC filter and average. A voltage divider lets you measure higher voltages."
   },
   {
    "question": "Как управлять мотором с микроконтроллера?",
-   "answer": "Напрямую с вывода МК нельзя — нужен ключ. Для мотора в одну сторону: N-канальный MOSFET с логическим уровнем (например IRLZ44N, AO3400) в нижнем плече, резистор 100 Ом в затвор, 10–100 кОм затвор-исток и обратный диод параллельно мотору. Для реверса — H-мост (DRV8833, TB6612). Скорость — ШИМ. Питание мотора отдельно, земли объединить."
+   "answer": "Напрямую с вывода МК нельзя — нужен ключ. Для мотора в одну сторону: N-канальный MOSFET с логическим уровнем (например IRLZ44N, AO3400) в нижнем плече, резистор 100 Ом в затвор, 10–100 кОм затвор-исток и обратный диод параллельно мотору. Для реверса — H-мост (DRV8833, TB6612). Скорость — ШИМ. Питание мотора отдельно, земли объединить.",
+   "question_en": "How do I drive a motor from a microcontroller?",
+   "answer_en": "Not straight from a pin — you need a switch. For one direction: a logic-level N-MOSFET (e.g. IRLZ44N, AO3400) on the low side, 100 Ω into the gate, 10–100 kΩ gate-to-source and a flyback diode across the motor. For reversing — an H-bridge (DRV8833, TB6612). Speed — PWM. A separate motor supply with the grounds joined."
   },
   {
    "question": "Qu'est-ce qu'une résistance de pull-up ?",
-   "answer": "Résistance de pull-up — подтягивающий резистор: соединяет вход с питанием, чтобы без сигнала на входе была логическая 1, а не «плавающий» уровень. Типично 4,7–10 кОм; кнопку подключают между входом и массой (GND)."
+   "answer": "Résistance de pull-up — подтягивающий резистор: соединяет вход с питанием, чтобы без сигнала на входе была логическая 1, а не «плавающий» уровень. Типично 4,7–10 кОм; кнопку подключают между входом и массой (GND).",
+   "question_en": "Qu'est-ce qu'une résistance de pull-up ?",
+   "answer_en": "A pull-up resistor (résistance de pull-up) connects an input to the supply so that with no signal the input reads logic 1 instead of floating. Typically 4.7–10 kΩ; the button goes between the input and ground (masse, GND)."
   },
   {
    "question": "Что такое RTOS?",
-   "answer": "RTOS (операционная система реального времени, например FreeRTOS или Zephyr) делит программу на задачи с приоритетами и переключает их по планировщику с предсказуемыми задержками. Задачи общаются через очереди, семафоры и мьютексы. Полезно, когда много независимых действий; для простых устройств хватает суперцикла с прерываниями."
+   "answer": "RTOS (операционная система реального времени, например FreeRTOS или Zephyr) делит программу на задачи с приоритетами и переключает их по планировщику с предсказуемыми задержками. Задачи общаются через очереди, семафоры и мьютексы. Полезно, когда много независимых действий; для простых устройств хватает суперцикла с прерываниями.",
+   "question_en": "What is an RTOS?",
+   "answer_en": "An RTOS (real-time operating system, e.g. FreeRTOS or Zephyr) splits a program into prioritised tasks and switches them with a scheduler with predictable latency. Tasks talk through queues, semaphores and mutexes. Useful when many independent things happen; simple devices do fine with a super-loop and interrupts."
   },
   {
    "question": "Как рассчитать частоту таймера STM32?",
@@ -69,7 +97,9 @@
    "aliases": [
     "частота таймера",
     "psc arr"
-   ]
+   ],
+   "question_en": "How do I calculate an STM32 timer frequency?",
+   "answer_en": "Update frequency: **f = fclk/((PSC + 1)·(ARR + 1))**. Example: a 72 MHz timer, 1 kHz wanted → (PSC+1)(ARR+1) = 72,000 → PSC = 71, ARR = 999 (1 µs tick). For PWM the duty is set by CCR: D = CCR/(ARR+1). The \"MCU timer: PSC and ARR\" calculator finds the values for you."
   },
   {
    "question": "Как рассчитать скорость UART?",
@@ -78,7 +108,9 @@
     "baud rate",
     "скорость uart",
     "brr"
-   ]
+   ],
+   "question_en": "How do I calculate a UART baud divider?",
+   "answer_en": "STM32 (oversampling 16): BRR = fclk/baud, e.g. 72 MHz / 115200 = 625 (0x271). AVR: UBRR = fclk/(16·baud) − 1; at 16 MHz and 115200 the error is −3.5% — enable U2X (UBRR = 16, error +2.1%) or use a 14.7456 MHz crystal. Up to ±2% error is acceptable. Calculate: \"uart 72MHz 115200\"."
   },
   {
    "question": "Что такое дребезг контактов?",
@@ -86,7 +118,9 @@
    "aliases": [
     "дребезг",
     "debounce"
-   ]
+   ],
+   "question_en": "What is contact bounce?",
+   "answer_en": "When pressed, a mechanical button closes and opens many times for a few milliseconds — the MCU sees several presses. Fix it in software (treat the state as stable if it hasn't changed for 10–20 ms) or in hardware (an RC network of 10 kΩ + 1 µF and a Schmitt-trigger input)."
   },
   {
    "question": "Что такое I2C адрес?",
@@ -94,7 +128,9 @@
    "aliases": [
     "i2c адрес",
     "i2c address"
-   ]
+   ],
+   "question_en": "What is an I2C address?",
+   "answer_en": "Every device on an I2C bus has a 7-bit address (e.g. 0x3C for an SSD1306 OLED, 0x68 for an MPU6050). In the first byte of a transfer the address is shifted left by 1 and the low bit is read/write: 0x3C → 0x78 (write), 0x79 (read). That is why datasheets show both forms. An I2C scanner finds the addresses."
   },
   {
    "question": "Как уменьшить потребление микроконтроллера?",
@@ -102,28 +138,33 @@
    "aliases": [
     "энергопотребление мк",
     "low power"
-   ]
+   ],
+   "question_en": "How do I reduce a microcontroller's power consumption?",
+   "answer_en": "1. Sleep modes (STOP/STANDBY, deep sleep) and waking on an interrupt or RTC.\n2. A lower clock.\n3. Gate the clocks of unused peripherals.\n4. Unused pins as analog inputs or with a pull, not floating.\n5. Remove an LDO with a high quiescent current and the power LED.\n6. Compute the average current from the share of time spent active."
   }
  ],
  "image": "embedded",
  "color": "#f0b45a",
  "tools": [
-  "uart",
-  "timer",
   "adc",
-  "i2c",
   "bases",
-  "led",
+  "battery",
+  "bits",
+  "crc",
   "divider",
+  "i2c",
+  "led",
   "rc",
-  "battery"
+  "timer",
+  "uart"
  ],
  "formulas": [
   {
    "title": "Частота таймера",
    "formula": "f = fclk / ((PSC + 1)·(ARR + 1))",
    "note": "STM32: при APB-предделителе ≠ 1 частота таймера вдвое больше частоты шины.",
-   "title_en": "Timer frequency"
+   "title_en": "Timer frequency",
+   "note_en": "STM32: with an APB prescaler ≠ 1 the timer clock is twice the bus clock."
   },
   {
    "title": "Скважность ШИМ",
@@ -134,7 +175,8 @@
    "title": "UART: делитель",
    "formula": "STM32 BRR = fclk/baud;  AVR UBRR = fclk/(16·baud) − 1",
    "note": "Ошибка скорости должна быть меньше ±2 %.",
-   "title_en": "UART divider"
+   "title_en": "UART divider",
+   "note_en": "The baud error should stay within ±2%."
   },
   {
    "title": "АЦП",
@@ -145,31 +187,36 @@
    "title": "Подтяжка I2C",
    "formula": "Rmax = tr/(0,8473·Cb);  Rmin = (Vdd − 0,4)/3 мА",
    "note": "Типично 4,7 кОм для 100 кГц и 2,2 кОм для 400 кГц.",
-   "title_en": "I2C pull-ups"
+   "title_en": "I2C pull-ups",
+   "note_en": "Typically 4.7 kΩ for 100 kHz and 2.2 kΩ for 400 kHz."
   },
   {
    "title": "Ток подтягивающего резистора",
    "formula": "I = Vdd/R",
    "note": "10 кОм при 3,3 В — 0,33 мА, пока кнопка нажата.",
-   "title_en": "Pull-up current"
+   "title_en": "Pull-up current",
+   "note_en": "10 kΩ at 3.3 V draws 0.33 mA while the button is pressed."
   },
   {
    "title": "Антидребезг RC",
    "formula": "τ = R·C ≈ 5–20 мс",
    "note": "Например 10 кОм и 1 мкФ — 10 мс; с триггером Шмитта на входе.",
-   "title_en": "RC debounce"
+   "title_en": "RC debounce",
+   "note_en": "For example 10 kΩ and 1 µF give 10 ms; use a Schmitt-trigger input."
   },
   {
    "title": "Ток потребления в среднем",
    "formula": "Iср = (Iакт·tакт + Iсон·tсна)/(tакт + tсна)",
    "note": "Для батарейных устройств главное — время сна.",
-   "title_en": "Average current"
+   "title_en": "Average current",
+   "note_en": "For battery devices, sleep time matters most."
   },
   {
    "title": "Время передачи UART",
    "formula": "t = (биты на кадр)·N/baud;  8N1 = 10 бит на байт",
    "note": "115200 бод ≈ 11,5 КБ/с.",
-   "title_en": "UART transfer time"
+   "title_en": "UART transfer time",
+   "note_en": "115200 baud ≈ 11.5 KB/s."
   }
  ]
 }

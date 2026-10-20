@@ -285,11 +285,11 @@ Popup {
                         id: answerColumn
                         anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10
                         spacing: 8
-                        Label { text: (answerCard.expanded ? "▾  " : "▸  ") + answerCard.modelData.question; color: Theme.text; font.pixelSize: 14; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText }
+                        Label { text: (answerCard.expanded ? "▾  " : "▸  ") + page.text(answerCard.modelData, "question"); color: Theme.text; font.pixelSize: 14; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText }
                         TextEdit {
                             visible: answerCard.expanded
                             Layout.fillWidth: true
-                            text: answerCard.modelData.answer.replace(/</g, "&lt;")
+                            text: page.text(answerCard.modelData, "answer").replace(/</g, "&lt;")
                             textFormat: TextEdit.MarkdownText
                             readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap
                             color: Theme.text; font.pixelSize: 13; selectionColor: page.tint
@@ -297,7 +297,7 @@ Popup {
                         DarkButton {
                             visible: answerCard.expanded
                             text: qsTr("Ask in chat")
-                            onClicked: page.askRequested(answerCard.modelData.question)
+                            onClicked: page.askRequested(page.text(answerCard.modelData, "question"))
                         }
                     }
                 }

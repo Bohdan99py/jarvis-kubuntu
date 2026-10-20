@@ -94,7 +94,7 @@ QString TaskStore::add(const QString &textValue, qint64 due, const QString &repe
     if (open >= kMaxTasks)
         return u"full"_s;
     const QString newId = u"t"_s + QString::number(QRandomGenerator::global()->generate64() & 0xffffffffffffULL, 16);
-    const bool repeating = due > 0 && (repeat == u"daily" || repeat == u"weekdays" || repeat == u"weekly");
+    const bool repeating = due > 0 && !repeat.isEmpty() && ReminderParser::validRepeat(repeat);
     tasks.append(QJsonObject{{u"id"_s, newId}, {u"text"_s, value}, {u"due"_s, double(std::max<qint64>(0, due))},
                              {u"repeat"_s, repeating ? repeat : QString()}, {u"created"_s, double(now)},
                              {u"done"_s, 0}, {u"fired"_s, 0}});
@@ -113,6 +113,7 @@ bool TaskStore::complete(const QString &id, qint64 now)
         if (o.value(u"id"_s).toString() != id)
             continue;
         o[u"done"_s] = double(now);
+        o.remove(u"again"_s);
         tasks[i] = o;
         return save(tasks);
     }
@@ -151,6 +152,8 @@ bool TaskStore::snooze(const QString &id, qint64 until)
         o[u"due"_s] = double(until);
         o[u"done"_s] = 0;
         o[u"fired"_s] = 0;
+        o.remove(u"again"_s);
+        o.remove(u"nags"_s);
         tasks[i] = o;
         return save(tasks);
     }
@@ -205,14 +208,38 @@ QList<QJsonObject> TaskStore::due(qint64 now) const
     for (const auto &v : load()) {
         const QJsonObject o = v.toObject();
         const qint64 at = ms(o, u"due"_s);
-        if (at > 0 && at <= now && ms(o, u"done"_s) == 0 && ms(o, u"fired"_s) < at)
+        const qint64 again = ms(o, u"again"_s);
+        if (ms(o, u"done"_s) == 0 && ((at > 0 && at <= now && ms(o, u"fired"_s) < at) || (again > 0 && again <= now)))
             out.append(o);
     }
     std::stable_sort(out.begin(), out.end(), before);
     return out;
 }
 
-void TaskStore::fired(const QString &id, qint64 now)
+QString TaskStore::update(const QString &id, const QString &textValue, qint64 due, const QString &repeat)
+{
+    const QString value = textValue.simplified();
+    if (const QString error = KnowledgeStore::checkText(value, kMaxChars); !error.isEmpty())
+        return error;
+    QJsonArray tasks = load();
+    for (int i = 0; i < tasks.size(); ++i) {
+        QJsonObject o = tasks.at(i).toObject();
+        if (o.value(u"id"_s).toString() != id)
+            continue;
+        o[u"text"_s] = value;
+        o[u"due"_s] = double(std::max<qint64>(0, due));
+        o[u"repeat"_s] = due > 0 && ReminderParser::validRepeat(repeat) ? repeat : QString();
+        o[u"done"_s] = 0;
+        o[u"fired"_s] = 0;
+        o.remove(u"again"_s);
+        o.remove(u"nags"_s);
+        tasks[i] = o;
+        return save(tasks) ? QString() : u"io"_s;
+    }
+    return u"missing"_s;
+}
+
+void TaskStore::fired(const QString &id, qint64 now, qint64 againMs)
 {
     QJsonArray tasks = load();
     for (int i = 0; i < tasks.size(); ++i) {
@@ -222,7 +249,15 @@ void TaskStore::fired(const QString &id, qint64 now)
         const QString repeat = o.value(u"repeat"_s).toString();
         if (repeat.isEmpty()) {
             o[u"fired"_s] = double(now);
-            o[u"done"_s] = double(now);
+            const int nags = o.value(u"nags"_s).toInt() + (o.contains(u"again"_s) ? 1 : 0);
+            if (againMs > 0 && nags < kMaxNags) {
+                // Not done until the user says so: ask again later.
+                o[u"again"_s] = double(now + againMs);
+                o[u"nags"_s] = nags;
+            } else {
+                o[u"done"_s] = double(now);
+                o.remove(u"again"_s);
+            }
         } else {
             const QDateTime next = ReminderParser::nextOccurrence(local(ms(o, u"due"_s)), repeat, local(now));
             o[u"due"_s] = double(next.toMSecsSinceEpoch());

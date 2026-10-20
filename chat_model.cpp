@@ -582,6 +582,19 @@ void ChatModel::taskAction(const QString &id, const QString &action)
         callDaemon(QStringLiteral("TaskAction"), {id, action}, report);
 }
 
+void ChatModel::editTask(const QString &id, const QString &text, const QString &when, const QString &repeat)
+{
+    auto report = [this](const QString &result, const QString &error) {
+        m_memoryStatus = error.isEmpty() ? (result.isEmpty() ? tr("Saved.") : result) : error;
+        emit memoryChanged();
+        refreshMemory();
+    };
+    if (!daemonConnected())
+        report(m_assistant.editTask(id, text, when, repeat), {});
+    else
+        callDaemon(QStringLiteral("EditTask"), {id, text.left(1000), when.left(300), repeat.left(40)}, report);
+}
+
 void ChatModel::backgroundChange(bool graph)
 {
     m_memoryStale = true;

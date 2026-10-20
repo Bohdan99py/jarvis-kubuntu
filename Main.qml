@@ -227,13 +227,8 @@ ApplicationWindow {
             border.color: Theme.border
         }
 
-        DarkMenuItem { text: qsTr("French studies: lessons, translation, flashcards"); onTriggered: studyWindow.showTab(0) }
-        DarkMenuItem { text: qsTr("Skills, voice, memory and updates"); onTriggered: controlCenter.open() }
-        DarkMenuItem { text: qsTr("Quick commands · Meta+J"); onTriggered: quickBar.reveal() }
-        DarkMenuItem {
-            text: qsTr("Claude API settings…")
-            onTriggered: settingsDialog.open()
-        }
+        // French studies and quick commands have their own buttons in the header.
+        DarkMenuItem { text: qsTr("Control center…"); onTriggered: controlCenter.open() }
         DarkMenuItem {
             text: qsTr("Clear chat")
             onTriggered: chatModel.clear()
@@ -247,14 +242,6 @@ ApplicationWindow {
         DarkMenuItem {
             text: qsTr("Quit")
             onTriggered: Qt.quit()
-        }
-        DarkMenuItem {
-            text: qsTr("Quit and stop jarvisd")
-            enabled: chatModel.daemonConnected
-            onTriggered: {
-                chatModel.quitDaemon()
-                Qt.quit()
-            }
         }
     }
 
@@ -332,7 +319,14 @@ ApplicationWindow {
                     ToolTip.text: study.recording ? qsTr("Recording a lesson…") : qsTr("French studies: lessons, translation, flashcards")
                     Rectangle { visible: study.recording; width: 10; height: 10; radius: 5; color: Theme.danger; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 2 }
                 }
-                DarkButton { text: "⌕"; onClicked: quickBar.reveal(); Accessible.name: qsTr("Quick commands") }
+                DarkButton {
+                    text: "⌕"
+                    onClicked: quickBar.reveal()
+                    Accessible.name: qsTr("Quick commands")
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 400
+                    ToolTip.text: qsTr("Quick commands · Meta+J")
+                }
                 DarkButton {
                     id: menuBtn
                     text: qsTr("☰  Menu")

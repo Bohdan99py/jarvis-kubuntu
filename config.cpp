@@ -60,6 +60,12 @@ ConfigData Config::loadFileOnly()
         d.morningSummary = o.value(u"morning_summary"_s).toBool(true);
         d.deepReflection = o.value(u"deep_reflection"_s).toBool(true);
         d.notifyReplies = o.value(u"notify_replies"_s).toBool(true);
+        d.snoozeMinutes = std::clamp(o.value(u"snooze_minutes"_s).toInt(10), 1, 720);
+        d.morningHour = std::clamp(o.value(u"morning_hour"_s).toInt(9), 4, 12);
+        d.afternoonHour = std::clamp(o.value(u"afternoon_hour"_s).toInt(14), 11, 18);
+        d.eveningHour = std::clamp(o.value(u"evening_hour"_s).toInt(19), 16, 23);
+        d.reminderSound = o.value(u"reminder_sound"_s).toBool(true);
+        d.nagMinutes = std::clamp(o.value(u"nag_minutes"_s).toInt(0), 0, 120);
     }
     return d;
 }
@@ -109,6 +115,12 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"morning_summary"_s, data.morningSummary);
     o.insert(u"deep_reflection"_s, data.deepReflection);
     o.insert(u"notify_replies"_s, data.notifyReplies);
+    o.insert(u"snooze_minutes"_s, data.snoozeMinutes);
+    o.insert(u"morning_hour"_s, data.morningHour);
+    o.insert(u"afternoon_hour"_s, data.afternoonHour);
+    o.insert(u"evening_hour"_s, data.eveningHour);
+    o.insert(u"reminder_sound"_s, data.reminderSound);
+    o.insert(u"nag_minutes"_s, data.nagMinutes);
     const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
     if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));

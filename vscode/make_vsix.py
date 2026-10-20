@@ -11,7 +11,8 @@ import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-FILES = ["extension.js", "lib.js", "package.nls.json", "package.nls.ru.json", "README.md"]
+FILES = ["extension.js", "lib.js", "package.nls.json", "package.nls.ru.json", "README.md",
+         "media/jarvis.svg", "media/walkthrough.svg"]
 
 
 def main():
@@ -47,6 +48,7 @@ def main():
   <Default Extension=".json" ContentType="application/json" />
   <Default Extension=".js" ContentType="application/javascript" />
   <Default Extension=".md" ContentType="text/markdown" />
+  <Default Extension=".svg" ContentType="image/svg+xml" />
   <Default Extension=".vsixmanifest" ContentType="text/xml" />
 </Types>
 """

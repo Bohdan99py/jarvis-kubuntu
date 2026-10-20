@@ -22,17 +22,28 @@ struct ParsedReminder
     Kind kind = None;
     QString text;   // what to remind about, without the trigger and the time
     QDateTime due;  // local time; invalid for tasks
-    QString repeat; // "", "daily", "weekdays" or "weekly"
+    // "", "daily", "weekdays", "weekends", "weekly", "monthly", "yearly",
+    // "days:1,3,5" (ISO weekdays) or "every:30m" / "every:2h" / "every:3d".
+    QString repeat;
+};
+
+// What vague words mean for this user ("утром", "вечером", a day without a time).
+struct ReminderOptions
+{
+    int morning = 9;
+    int afternoon = 14;
+    int evening = 19;
 };
 
 class ReminderParser
 {
 public:
-    static ParsedReminder parse(const QString &input, const QDateTime &now);
+    static ParsedReminder parse(const QString &input, const QDateTime &now, const ReminderOptions &options = {});
+    static bool validRepeat(const QString &repeat);
 
     // "today at 18:30", "tomorrow at 09:00", "on Friday at 10:00", "in 20 min (18:05)".
     static QString describeWhen(const QDateTime &due, const QDateTime &now, Lang lang);
-    // "every day", "on weekdays", "every Monday"; "" for one-time reminders.
+    // "every day", "on weekdays", "every Monday", "every 2 hours"; "" for one-time reminders.
     static QString describeRepeat(const QString &repeat, const QDateTime &due, Lang lang);
     // The next occurrence of a repeating reminder strictly after `after`.
     static QDateTime nextOccurrence(const QDateTime &due, const QString &repeat, const QDateTime &after);

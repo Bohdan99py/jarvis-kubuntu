@@ -156,25 +156,108 @@ Dialog {
             }
 
             // ---------- Voice ----------
-            ColumnLayout {
-                spacing: 16
-                Label { text: qsTr("Talk to Jarvis"); color: Theme.text; font.pixelSize: 24; font.bold: true }
-                Label { text: qsTr("Press the microphone, say a phrase and press stop.\nThe recognized text appears in the input field — send it with Enter."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                Switch { text: qsTr("Speak answers aloud"); checked: center.voice.enabled; onClicked: center.voice.enabled=checked; palette.windowText: Theme.text }
-                RowLayout {
-                    DarkButton { text: qsTr("Test voice"); enabled: !center.voice.speaking; onClicked: { center.voice.enabled=true; center.voice.speak(qsTr("Hi! I'm Jarvis. Voice output is on.")) } }
-                    DarkButton { text: qsTr("Stop"); enabled: center.voice.speaking || center.voice.recording; onClicked: center.voice.stop() }
+            ScrollView {
+                id: voiceScroll
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    width: voiceScroll.availableWidth
+                    spacing: 12
+                    Label { text: qsTr("Jarvis's voice"); color: Theme.text; font.pixelSize: 22; font.bold: true }
+                    OptionSwitch {
+                        text: qsTr("Speak answers aloud")
+                        hint: qsTr("Code, links and tables are not read out — only what a person would say.")
+                        checked: center.voice.enabled
+                        onToggled: center.voice.enabled = checked
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: naturalColumn.implicitHeight + 28
+                        radius: 16
+                        color: Theme.bg
+                        border.color: center.voice.naturalReady ? Qt.darker(Theme.accent, 1.6) : Theme.border
+                        ColumnLayout {
+                            id: naturalColumn
+                            anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 14
+                            spacing: 10
+                            Label { text: qsTr("Natural voice"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                            Label {
+                                text: center.voice.naturalReady
+                                      ? qsTr("A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.")
+                                      : qsTr("Instead of the robotic system voice, a neural voice (Piper) that sounds like a person. It runs on this computer without the internet. The download is about 200 MB for the program and ~63 MB per voice.")
+                                color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                            GridLayout {
+                                columns: 3
+                                columnSpacing: 10
+                                rowSpacing: 8
+                                Layout.fillWidth: true
+                                Repeater {
+                                    model: [{ lang: "ru", label: qsTr("Russian") }, { lang: "en", label: qsTr("English") }, { lang: "fr", label: qsTr("French (studies)") }]
+                                    delegate: Item {
+                                        id: voiceRow
+                                        required property var modelData
+                                        readonly property var options: center.voice.voices.filter(v => v.lang === modelData.lang)
+                                        Layout.columnSpan: 3
+                                        Layout.fillWidth: true
+                                        implicitHeight: 40
+                                        Label { id: langLabel; text: voiceRow.modelData.label; color: Theme.text; width: 140; anchors.verticalCenter: parent.verticalCenter; elide: Text.ElideRight }
+                                        DarkCombo {
+                                            anchors.left: langLabel.right; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
+                                            width: Math.min(300, voiceRow.width - langLabel.width - listenButton.width - 30)
+                                            model: voiceRow.options.map(v => v.name + (v.installed ? "" : "  ⤓"))
+                                            currentIndex: Math.max(0, voiceRow.options.findIndex(v => v.id === center.voice.chosenVoices[voiceRow.modelData.lang]))
+                                            onActivated: index => center.voice.chooseVoice(voiceRow.modelData.lang, voiceRow.options[index].id)
+                                        }
+                                        DarkButton {
+                                            id: listenButton
+                                            anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                            text: qsTr("Listen")
+                                            enabled: !center.voice.busy
+                                            onClicked: center.voice.preview(voiceRow.modelData.lang)
+                                        }
+                                    }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 10
+                                Label { text: qsTr("Pace"); color: Theme.text; Layout.preferredWidth: 140 }
+                                Slider {
+                                    id: rateSlider
+                                    Layout.fillWidth: true
+                                    from: 0.7; to: 1.4; stepSize: 0.05
+                                    value: center.voice.rate
+                                    onMoved: center.voice.rate = value
+                                }
+                                Label { text: Math.round(rateSlider.value * 100) + " %"; color: Theme.textDim; Layout.preferredWidth: 50 }
+                            }
+                            DarkButton {
+                                readonly property bool missing: center.voice.voices.some(v => !v.installed && Object.values(center.voice.chosenVoices).indexOf(v.id) >= 0)
+                                visible: !center.voice.naturalReady || missing
+                                text: center.voice.naturalReady ? qsTr("Download the chosen voices") : qsTr("Install the natural voice")
+                                primary: true
+                                enabled: !center.voice.busy
+                                onClicked: center.voice.installNatural()
+                            }
+                        }
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Test voice"); enabled: !center.voice.speaking; onClicked: { center.voice.enabled = true; center.voice.speak(qsTr("Hi! I'm Jarvis. Voice output is on.")) } }
+                        DarkButton { text: qsTr("Stop"); enabled: center.voice.speaking || center.voice.recording; onClicked: center.voice.stop() }
+                    }
+                    Label { text: center.voice.status; color: Theme.accent; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText; visible: text.length > 0 }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Dictation"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label { text: qsTr("Press the microphone, say a phrase and press stop. The recognized text appears in the input field — send it with Enter."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Label {
+                        text: center.voice.ready ? qsTr("Local recognition is ready")
+                                                 : (center.voice.language === "en" ? qsTr("English recognition model") : qsTr("Russian recognition model"))
+                        color: Theme.text
+                    }
+                    Label { text: qsTr("Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognized on this computer."); color: Theme.textDim; Layout.fillWidth: true; wrapMode: Text.Wrap; font.pixelSize: 12 }
+                    DarkButton { text: center.voice.ready ? qsTr("Check voice installation") : qsTr("Install voice"); enabled: !center.voice.busy; onClicked: center.voice.setup() }
                 }
-                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
-                Label {
-                    text: center.voice.ready ? qsTr("Local recognition is ready")
-                                             : (center.voice.language === "en" ? qsTr("English recognition model") : qsTr("Russian recognition model"))
-                    color: Theme.text; font.pixelSize: 18
-                }
-                Label { text: qsTr("Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognized on this computer. Answers are spoken in their own language."); color: Theme.textDim; Layout.fillWidth: true; wrapMode: Text.Wrap }
-                DarkButton { text: center.voice.ready ? qsTr("Check voice installation") : qsTr("Install voice"); primary: true; enabled: !center.voice.busy; onClicked: center.voice.setup() }
-                Label { text: center.voice.status; color: Theme.accent; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
-                Item { Layout.fillHeight: true }
             }
 
             // ---------- Memory ----------
@@ -246,6 +329,58 @@ Dialog {
                     Label { text: qsTr("Autonomy and notifications"); color: Theme.text; font.pixelSize: 22; font.bold: true }
                     Label { text: qsTr("Jarvis keeps working in the background: it delivers reminders, speaks up when it has something useful to say and tidies its memory. Notifications follow Plasma's \"Do not disturb\" mode."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
                     Label { text: qsTr("Reminders always come, even with the window closed. Try in chat: \"remind me tomorrow at 9 to call mum\", \"in 20 minutes check the build\", \"every weekday at 8:30 exercise\", \"add a task buy solder\", \"my reminders\"."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Reminders"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    GridLayout {
+                        columns: 2
+                        columnSpacing: 16
+                        rowSpacing: 8
+                        Label { text: qsTr("\"Snooze\" button"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [5, 10, 15, 30, 60]
+                            model: values.map(v => v < 60 ? qsTr("%1 minutes").arg(v) : qsTr("1 hour"))
+                            currentIndex: Math.max(0, values.indexOf(center.settings.snoozeMinutes))
+                            onActivated: index => center.report(center.settings.setNumber("snoozeMinutes", values[index]))
+                        }
+                        Label { text: qsTr("Until I press \"Done\""); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [0, 5, 10, 15, 30]
+                            model: values.map(v => v === 0 ? qsTr("remind once") : qsTr("again every %1 min (3 times)").arg(v))
+                            currentIndex: Math.max(0, values.indexOf(center.settings.nagMinutes))
+                            onActivated: index => center.report(center.settings.setNumber("nagMinutes", values[index]))
+                        }
+                        Label { text: qsTr("\"In the morning\" means"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [5, 6, 7, 8, 9, 10, 11]
+                            model: values.map(v => v + ":00")
+                            currentIndex: Math.max(0, values.indexOf(center.settings.morningHour))
+                            onActivated: index => center.report(center.settings.setNumber("morningHour", values[index]))
+                        }
+                        Label { text: qsTr("\"In the afternoon\" means"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [12, 13, 14, 15, 16, 17]
+                            model: values.map(v => v + ":00")
+                            currentIndex: Math.max(0, values.indexOf(center.settings.afternoonHour))
+                            onActivated: index => center.report(center.settings.setNumber("afternoonHour", values[index]))
+                        }
+                        Label { text: qsTr("\"In the evening\" means"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [17, 18, 19, 20, 21, 22]
+                            model: values.map(v => v + ":00")
+                            currentIndex: Math.max(0, values.indexOf(center.settings.eveningHour))
+                            onActivated: index => center.report(center.settings.setNumber("eveningHour", values[index]))
+                        }
+                    }
+                    OptionSwitch {
+                        text: qsTr("Sound with reminders")
+                        hint: qsTr("The alarm sound of your Plasma sound theme.")
+                        checked: center.settings.reminderSound
+                        onToggled: center.report(center.settings.setOption("reminderSound", checked))
+                    }
+                    Label {
+                        text: qsTr("Repetitions you can say: every day, on weekdays, on weekends, every Monday, on Mondays and Wednesdays, every 2 hours, every 3 days, every 5th of the month, every year on 20 October; and \"15 minutes before\". A reminder can be edited with ✎ in the Tasks tab or moved in chat: \"move the reminder about the call to 5 pm\".")
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                    }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     OptionSwitch {
                         objectName: "proactiveSwitch"
@@ -341,6 +476,14 @@ Dialog {
                     Label { text: center.desktop.updateStatus; color: Theme.accent; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
                     RowLayout {
                         DarkButton { text: qsTr("Restart service"); enabled: !center.chat.busy; onClicked: center.desktop.restartDaemon() }
+                        DarkButton {
+                            text: qsTr("Stop service")
+                            enabled: center.chat.daemonConnected && !center.chat.busy
+                            onClicked: center.chat.quitDaemon()
+                            ToolTip.visible: hovered
+                            ToolTip.delay: 400
+                            ToolTip.text: qsTr("Reminders and hints pause until Jarvis or the service starts again.")
+                        }
                         DarkButton { text: qsTr("Restart Jarvis"); enabled: !center.chat.busy && !center.voice.busy && !center.desktop.updating; onClicked: center.desktop.restart() }
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }

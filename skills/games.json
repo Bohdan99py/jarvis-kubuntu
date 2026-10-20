@@ -9,7 +9,9 @@
  "examples": [
   {
    "question": "Что такое игровой цикл?",
-   "answer": "Игровой цикл последовательно считывает ввод, обновляет состояние мира и отрисовывает кадр. Этот цикл повторяется, пока игра работает."
+   "answer": "Игровой цикл последовательно считывает ввод, обновляет состояние мира и отрисовывает кадр. Этот цикл повторяется, пока игра работает.",
+   "question_en": "What is a game loop?",
+   "answer_en": "A game loop reads input, updates the state of the world and draws a frame, one after another. The loop repeats for as long as the game runs."
   }
  ],
  "image": "games",

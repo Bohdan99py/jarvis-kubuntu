@@ -7,9 +7,12 @@
  "name_en": "Programming",
  "description": "C, C++, Python, Qt, Linux, git и отладка: код, объяснения, поиск ошибок.",
  "description_en": "C, C++, Python, Qt, Linux, git and debugging: code, explanations, finding bugs.",
- "prompt": "Act as a senior software engineer and mentor. Languages and tools: C, modern C++ (RAII, smart pointers, move semantics, templates, STL, undefined behaviour), Python, Qt/QML, CMake, Linux (shell, processes, permissions, systemd), git, debugging (gdb, valgrind, sanitizers, logging), testing, algorithms and complexity. When writing code: give complete, compilable code in fenced blocks with the language tag; when the user wants a file, put the file name after the language tag (```cpp main.cpp) so Jarvis can save it; keep the user's style and existing APIs; explain the key decisions briefly after the code. When fixing: find the root cause, show the corrected code and say why the bug happened. When the user attaches source files, refer to them by name and line. Never invent APIs; say when the answer depends on a version. Prefer simple, readable solutions over clever ones.",
+ "prompt": "Act as a senior software engineer and mentor. Languages and tools: C, modern C++ (RAII, smart pointers, move semantics, templates, STL, undefined behaviour), Python, Qt/QML, CMake, Linux (shell, processes, permissions, systemd), git, debugging (gdb, valgrind, sanitizers, logging), testing, algorithms and complexity. When writing code: give complete, compilable code in fenced blocks with the language tag; when the user wants a file, put the file name after the language tag (```cpp main.cpp) so Jarvis can save it; keep the user's style and existing APIs; explain the key decisions briefly after the code. When fixing: find the root cause, show the corrected code and say why the bug happened. When the user attaches source files, refer to them by name and line. Never invent APIs; say when the answer depends on a version. Prefer simple, readable solutions over clever ones. When the user attaches source files, refer to them by file name and line; for a bug report, reproduce it in your head first, name the root cause, then give the fix. Prefer the user's toolchain: Linux, CMake, Qt, PlatformIO, arm-none-eabi-gcc, Python venvs. Jarvis's VS Code extension sends you the selection and diagnostics of the open file.",
  "tools": [
-  "bases"
+  "bases",
+  "bits",
+  "crc",
+  "epoch"
  ],
  "formulas": [
   {
@@ -41,7 +44,8 @@
    "title": "Сложность алгоритмов",
    "formula": "O(1) < O(log n) < O(n) < O(n·log n) < O(n²) < O(2ⁿ)",
    "note": "Поиск в отсортированном массиве — O(log n), сортировка — O(n·log n).",
-   "title_en": "Complexity"
+   "title_en": "Complexity",
+   "note_en": "Search in a sorted array is O(log n), sorting O(n·log n)."
   },
   {
    "title": "git: начать ветку",
@@ -57,7 +61,8 @@
    "title": "git: поправить последний коммит",
    "formula": "git commit --amend",
    "note": "Только если коммит ещё не отправлен.",
-   "title_en": "git: amend last commit"
+   "title_en": "git: amend last commit",
+   "note_en": "Only if the commit is not pushed yet."
   },
   {
    "title": "gdb: основное",
@@ -73,7 +78,59 @@
    "title": "Права в Linux",
    "formula": "chmod 644 файл (rw-r--r--);  chmod 755 скрипт (rwxr-xr-x)",
    "note": "r = 4, w = 2, x = 1 для владельца, группы, остальных.",
-   "title_en": "Linux permissions"
+   "title_en": "Linux permissions",
+   "note_en": "r = 4, w = 2, x = 1 for the owner, the group and others."
+  },
+  {
+   "title": "Поле из битов",
+   "title_en": "Bit field",
+   "formula": "v = (x >> pos) & ((1u << width) − 1)",
+   "note": "Запись: x = (x & ~(mask << pos)) | ((v & mask) << pos).",
+   "note_en": "Write: x = (x & ~(mask << pos)) | ((v & mask) << pos)."
+  },
+  {
+   "title": "Размер массива в C",
+   "title_en": "Array length in C",
+   "formula": "sizeof(a) / sizeof(a[0])",
+   "note": "Только для настоящего массива, не для указателя.",
+   "note_en": "Only for a real array, not a pointer."
+  },
+  {
+   "title": "git: посмотреть историю",
+   "title_en": "git: history",
+   "formula": "git log --oneline --graph --all"
+  },
+  {
+   "title": "git: спрятать изменения",
+   "title_en": "git: stash changes",
+   "formula": "git stash · git stash pop"
+  },
+  {
+   "title": "Python: виртуальное окружение",
+   "title_en": "Python: virtual environment",
+   "formula": "python3 -m venv .venv && . .venv/bin/activate"
+  },
+  {
+   "title": "Поиск по коду",
+   "title_en": "Search the code",
+   "formula": "grep -rn \"текст\" src/   ·   rg \"текст\""
+  },
+  {
+   "title": "Кто занял порт",
+   "title_en": "Who uses a port",
+   "formula": "ss -ltnp | grep :8080"
+  },
+  {
+   "title": "Логи сервиса",
+   "title_en": "Service logs",
+   "formula": "journalctl --user -u имя -f"
+  },
+  {
+   "title": "Последовательный порт",
+   "title_en": "Serial port",
+   "formula": "picocom -b 115200 /dev/ttyUSB0",
+   "note": "Выход: Ctrl+A, затем Ctrl+X. Нужна группа dialout.",
+   "note_en": "Exit: Ctrl+A, then Ctrl+X. Needs the dialout group."
   }
  ],
  "examples": [
@@ -83,7 +140,9 @@
    "aliases": [
     "указатель",
     "pointer"
-   ]
+   ],
+   "question_en": "What is a pointer?",
+   "answer_en": "A pointer is a variable that holds the address of another variable. `int x = 5; int *p = &x;` — p points to x, `*p` reads or changes x. nullptr points nowhere. Dangers: dereferencing nullptr or a dangling pointer (to freed memory) is undefined behaviour. In C++ use std::unique_ptr and std::shared_ptr instead of raw owning pointers."
   },
   {
    "question": "Чем ссылка отличается от указателя?",
@@ -91,7 +150,9 @@
    "aliases": [
     "ссылка и указатель",
     "reference vs pointer"
-   ]
+   ],
+   "question_en": "How is a reference different from a pointer?",
+   "answer_en": "A reference (`int &r = x;`) is another name for an existing object: always initialised, never null, never rebound. A pointer can be nullptr, can be redirected and supports arithmetic. For function parameters that cannot be empty prefer references (const & for reading)."
   },
   {
    "question": "Что такое стек и куча?",
@@ -99,14 +160,18 @@
    "aliases": [
     "стек и куча",
     "stack vs heap"
-   ]
+   ],
+   "question_en": "What are the stack and the heap?",
+   "answer_en": "The stack holds local variables and function calls: allocated and freed automatically, very fast, but limited (usually 1–8 MB, a few KB on an MCU). The heap is dynamic memory (new/malloc): large, and you decide the lifetime. Typical bugs: stack overflow (deep recursion, big arrays), heap leaks and fragmentation."
   },
   {
    "question": "Что такое RAII?",
    "answer": "RAII (Resource Acquisition Is Initialization) — ресурс захватывается в конструкторе объекта и освобождается в деструкторе. Так память, файлы, мьютексы освобождаются автоматически при выходе из области видимости, даже при исключении. Примеры: std::unique_ptr, std::lock_guard, std::fstream.",
    "aliases": [
     "raii"
-   ]
+   ],
+   "question_en": "What is RAII?",
+   "answer_en": "RAII (Resource Acquisition Is Initialization): a resource is acquired in an object's constructor and released in its destructor. Memory, files and mutexes are then released automatically when the scope ends, even on an exception. Examples: std::unique_ptr, std::lock_guard, std::fstream."
   },
   {
    "question": "Что такое умные указатели?",
@@ -115,7 +180,9 @@
     "умные указатели",
     "smart pointers",
     "unique_ptr"
-   ]
+   ],
+   "question_en": "What are smart pointers?",
+   "answer_en": "std::unique_ptr — the only owner, frees the object in its destructor, can only be moved (std::move). std::shared_ptr — shared ownership with a reference count. std::weak_ptr — watches a shared_ptr without owning it, breaks cycles. Create them with std::make_unique / std::make_shared."
   },
   {
    "question": "Как найти причину segmentation fault?",
@@ -124,7 +191,9 @@
     "segfault",
     "segmentation fault",
     "ошибка сегментации"
-   ]
+   ],
+   "question_en": "How do I find the cause of a segmentation fault?",
+   "answer_en": "1. Build with debug info: `-g -O0`.\n2. Run under gdb: `gdb ./app`, `run`, after the crash `bt` — the call stack shows the line.\n3. Enable AddressSanitizer: `-fsanitize=address,undefined` — it reports out-of-bounds, use-after-free and so on with the exact line.\n4. Or valgrind: `valgrind ./app`.\nCommon causes: nullptr, array out of bounds, a dangling pointer, stack overflow."
   },
   {
    "question": "Чем процесс отличается от потока?",
@@ -132,7 +201,9 @@
    "aliases": [
     "процесс и поток",
     "process vs thread"
-   ]
+   ],
+   "question_en": "How is a process different from a thread?",
+   "answer_en": "A process is a separate program with its own memory; processes are isolated and talk through pipes, sockets or D-Bus. Threads are several flows of execution inside one process sharing memory: fast to exchange data, but they need synchronisation (mutexes, atomics) or you get data races."
   },
   {
    "question": "Что такое мьютекс?",
@@ -140,7 +211,9 @@
    "aliases": [
     "мьютекс",
     "mutex"
-   ]
+   ],
+   "question_en": "What is a mutex?",
+   "answer_en": "A mutex is a lock only one thread can hold at a time — it protects shared data from simultaneous writes. In C++: `std::mutex m; { std::lock_guard lock(m); ... }` — the lock is released automatically. Danger: deadlock when two threads take two mutexes in different orders."
   },
   {
    "question": "Что такое git rebase?",
@@ -149,7 +222,9 @@
     "rebase",
     "rebase или merge",
     "git rebase vs merge"
-   ]
+   ],
+   "question_en": "What is git rebase?",
+   "answer_en": "`git rebase main` replays your branch's commits on top of the latest main — the history becomes linear. `git merge` instead creates a merge commit and does not rewrite history. Rule: don't rebase commits that are already pushed and used by others."
   },
   {
    "question": "Как отменить последний коммит?",
@@ -157,7 +232,9 @@
    "aliases": [
     "отменить коммит",
     "undo last commit"
-   ]
+   ],
+   "question_en": "How do I undo the last commit?",
+   "answer_en": "If it is not pushed: `git reset --soft HEAD~1` — the commit is undone, the changes stay staged. `git reset --hard HEAD~1` also throws the changes away (careful!). If it is pushed: `git revert HEAD` — a new commit that undoes the changes without rewriting history."
   },
   {
    "question": "Что такое сложность алгоритма?",
@@ -166,7 +243,9 @@
     "сложность алгоритма",
     "big o",
     "o большое"
-   ]
+   ],
+   "question_en": "What is algorithmic complexity?",
+   "answer_en": "Big-O shows how time (or memory) grows with the input size n. O(1) constant, O(log n) binary search, O(n) one pass, O(n log n) a good sort, O(n²) nested loops. For 1,000,000 items O(n²) is 10¹² operations, O(n log n) about 2·10⁷."
   },
   {
    "question": "Что такое сигналы и слоты в Qt?",
@@ -174,7 +253,9 @@
    "aliases": [
     "сигналы и слоты",
     "qt signals and slots"
-   ]
+   ],
+   "question_en": "What are signals and slots in Qt?",
+   "answer_en": "Signals and slots are Qt's event mechanism: an object emits a signal (`emit valueChanged(v)`) and the connected slots are called. Connect with `connect(sender, &Sender::valueChanged, receiver, &Receiver::onValue);`. Across threads the call is queued to the receiver's thread automatically. The class needs Q_OBJECT."
   },
   {
    "question": "Как работает CMake?",
@@ -182,7 +263,9 @@
    "aliases": [
     "cmake",
     "как пользоваться cmake"
-   ]
+   ],
+   "question_en": "How does CMake work?",
+   "answer_en": "CMake generates build files (Ninja, Make) from CMakeLists.txt. Minimal:\n```cmake\ncmake_minimum_required(VERSION 3.21)\nproject(app CXX)\nadd_executable(app main.cpp)\n```\nBuild: `cmake -S . -B build -G Ninja` and `cmake --build build`. Libraries come in with find_package and target_link_libraries."
   },
   {
    "question": "Что такое неопределённое поведение?",
@@ -190,6 +273,133 @@
    "aliases": [
     "ub",
     "undefined behavior"
+   ],
+   "question_en": "What is undefined behaviour?",
+   "answer_en": "Undefined behaviour (UB) in C/C++ is an operation the standard gives no meaning: out-of-bounds access, signed int overflow, dereferencing nullptr, reading an uninitialised variable, a data race. The program may \"work\", crash, or misbehave only with optimisation. Catch UB with -fsanitize=undefined,address and -Wall -Wextra."
+  },
+  {
+   "question": "Как пользоваться gdb?",
+   "answer": "Основное в gdb:\n- `gdb ./app` → `run аргументы`;\n- `break файл.cpp:42` или `break функция`, `info breakpoints`;\n- `next` (шаг через), `step` (внутрь), `finish` (до выхода), `continue`;\n- `print x`, `display x`, `ptype x`, `info locals`;\n- `bt` — стек вызовов, `frame N`;\n- `watch x` — остановиться, когда x изменится.\nСобирайте с `-g -O0`. Для МК — `arm-none-eabi-gdb` + OpenOCD (`target extended-remote :3333`).",
+   "question_en": "How do I use gdb?",
+   "answer_en": "gdb essentials:\n- `gdb ./app` → `run args`;\n- `break file.cpp:42` or `break function`, `info breakpoints`;\n- `next` (step over), `step` (into), `finish` (out), `continue`;\n- `print x`, `display x`, `ptype x`, `info locals`;\n- `bt` — the call stack, `frame N`;\n- `watch x` — stop when x changes.\nBuild with `-g -O0`. For an MCU: `arm-none-eabi-gdb` + OpenOCD (`target extended-remote :3333`).",
+   "aliases": [
+    "gdb",
+    "отладчик gdb",
+    "how to use gdb"
+   ]
+  },
+  {
+   "question": "Как найти утечку памяти?",
+   "answer": "1. `valgrind --leak-check=full ./app` — покажет, где выделена утёкшая память.\n2. Или собрать с `-fsanitize=address` — LeakSanitizer выведет отчёт при выходе.\n3. В C++ избегайте ручных new/delete: std::unique_ptr, контейнеры, RAII.\n4. Для долгоживущих процессов смотрите рост памяти (heaptrack, massif).",
+   "question_en": "How do I find a memory leak?",
+   "answer_en": "1. `valgrind --leak-check=full ./app` — shows where the leaked memory was allocated.\n2. Or build with `-fsanitize=address` — LeakSanitizer prints a report on exit.\n3. In C++ avoid manual new/delete: std::unique_ptr, containers, RAII.\n4. For long-running processes watch the memory grow (heaptrack, massif).",
+   "aliases": [
+    "утечка памяти",
+    "memory leak"
+   ]
+  },
+  {
+   "question": "Что такое const в C++?",
+   "answer": "`const int x` — значение не меняется. `const T &p` — функция только читает аргумент (без копии). `void f() const` — метод не меняет объект. `const int *p` — нельзя менять то, на что указывает p; `int *const p` — нельзя перенаправить p. `constexpr` — значение известно при компиляции. Правило: ставьте const везде, где можно, — компилятор поймает ошибки.",
+   "question_en": "What does const mean in C++?",
+   "answer_en": "`const int x` — the value never changes. `const T &p` — the function only reads the argument (no copy). `void f() const` — the method does not change the object. `const int *p` — you can't change what p points to; `int *const p` — you can't redirect p. `constexpr` — known at compile time. Rule: use const wherever you can — the compiler will catch mistakes.",
+   "aliases": [
+    "const",
+    "константы в c++"
+   ]
+  },
+  {
+   "question": "Что такое move-семантика?",
+   "answer": "Перемещение (`std::move`) передаёт ресурсы объекта (буфер строки, память вектора) другому объекту вместо копирования — дёшево. После перемещения исходный объект остаётся в корректном, но неопределённом состоянии. Возвращайте объекты из функций по значению — компилятор переместит или вообще уберёт копию (RVO). Для своих классов с ресурсами реализуйте move-конструктор и move-присваивание (или следуйте «правилу нуля» — используйте RAII-члены).",
+   "question_en": "What are move semantics?",
+   "answer_en": "Moving (`std::move`) hands an object's resources (a string buffer, vector memory) to another object instead of copying — cheap. The moved-from object stays valid but unspecified. Return objects from functions by value — the compiler moves or elides the copy (RVO). For your own resource-owning classes write a move constructor and move assignment (or follow the rule of zero — use RAII members).",
+   "aliases": [
+    "std::move",
+    "move semantics"
+   ]
+  },
+  {
+   "question": "Как работать с битами в C?",
+   "answer": "Установить бит: `x |= (1u << n)`; сбросить: `x &= ~(1u << n)`; инвертировать: `x ^= (1u << n)`; проверить: `if (x & (1u << n))`. Поле из нескольких битов: `(x >> pos) & ((1u << width) - 1)`; записать: `x = (x & ~(mask << pos)) | ((v & mask) << pos)`. Используйте беззнаковые типы (uint32_t) — сдвиги знаковых могут быть UB. Калькулятор «Системы счисления» покажет число в hex и двоичном.",
+   "question_en": "How do I work with bits in C?",
+   "answer_en": "Set a bit: `x |= (1u << n)`; clear: `x &= ~(1u << n)`; toggle: `x ^= (1u << n)`; test: `if (x & (1u << n))`. A multi-bit field: `(x >> pos) & ((1u << width) - 1)`; write it: `x = (x & ~(mask << pos)) | ((v & mask) << pos)`. Use unsigned types (uint32_t) — shifting signed values can be UB. The \"Number bases\" calculator shows a number in hex and binary.",
+   "aliases": [
+    "битовые операции",
+    "bit manipulation"
+   ]
+  },
+  {
+   "question": "Что такое виртуальное окружение Python?",
+   "answer": "venv — отдельная копия Python с собственными пакетами для проекта: `python3 -m venv .venv`, `source .venv/bin/activate`, `pip install -r requirements.txt`. Так зависимости разных проектов не конфликтуют, а системный Python не трогается (в Ubuntu pip в систему запрещён — PEP 668). Сохраните версии: `pip freeze > requirements.txt`.",
+   "question_en": "What is a Python virtual environment?",
+   "answer_en": "A venv is a separate copy of Python with its own packages per project: `python3 -m venv .venv`, `source .venv/bin/activate`, `pip install -r requirements.txt`. Projects' dependencies don't clash and the system Python stays untouched (Ubuntu forbids pip into the system — PEP 668). Pin versions: `pip freeze > requirements.txt`.",
+   "aliases": [
+    "venv",
+    "виртуальное окружение",
+    "python venv"
+   ]
+  },
+  {
+   "question": "Как читать трассировку ошибки Python?",
+   "answer": "Traceback читают снизу вверх: последняя строка — тип и текст исключения (`KeyError: 'name'`), над ней — строка вашего кода, где оно возникло, выше — цепочка вызовов. Частые: `NameError` — опечатка в имени, `TypeError` — не тот тип аргумента, `KeyError`/`IndexError` — нет такого ключа/индекса, `AttributeError: 'NoneType'` — функция вернула None. Пришлите traceback целиком — разберу.",
+   "question_en": "How do I read a Python traceback?",
+   "answer_en": "Read a traceback bottom-up: the last line is the exception type and message (`KeyError: 'name'`), above it the line of your code where it happened, further up the chain of calls. Common ones: `NameError` — a typo in a name, `TypeError` — wrong argument type, `KeyError`/`IndexError` — no such key/index, `AttributeError: 'NoneType'` — a function returned None. Send me the whole traceback and I'll explain it.",
+   "aliases": [
+    "traceback",
+    "ошибка python"
+   ]
+  },
+  {
+   "question": "Что такое async и await?",
+   "answer": "async/await — асинхронный код: функция `async def` может приостановиться на `await` (ожидание сети, файла, таймера), пока выполняется другое. В Python это asyncio (`asyncio.run(main())`), в JS — промисы. Подходит для множества операций ввода-вывода; для тяжёлых вычислений нужны процессы или потоки. Не вызывайте блокирующие функции (time.sleep, requests) внутри async — используйте asyncio.sleep, aiohttp.",
+   "question_en": "What are async and await?",
+   "answer_en": "async/await is asynchronous code: an `async def` function can pause at `await` (waiting for the network, a file, a timer) while something else runs. In Python that is asyncio (`asyncio.run(main())`), in JS promises. Good for many I/O operations; heavy computation needs processes or threads. Don't call blocking functions (time.sleep, requests) inside async code — use asyncio.sleep, aiohttp.",
+   "aliases": [
+    "async await",
+    "асинхронность"
+   ]
+  },
+  {
+   "question": "Как написать юнит-тест?",
+   "answer": "Тест проверяет одну функцию на известных входах: подготовка → вызов → проверка. Python: `pytest`, файл `test_x.py`, функции `test_…` с `assert`. C++: GoogleTest (`TEST(Suite, Name) { EXPECT_EQ(f(2), 4); }`) или Qt Test. Проверяйте граничные случаи (0, пустое, максимум, ошибочный ввод). Тестируйте поведение, а не внутренности. Попросите — напишу тесты к вашему файлу (скрепка).",
+   "question_en": "How do I write a unit test?",
+   "answer_en": "A test checks one function on known inputs: arrange → act → assert. Python: `pytest`, a `test_x.py` file, `test_…` functions with `assert`. C++: GoogleTest (`TEST(Suite, Name) { EXPECT_EQ(f(2), 4); }`) or Qt Test. Check edge cases (0, empty, maximum, bad input). Test behaviour, not internals. Ask me and I'll write tests for your file (paperclip).",
+   "aliases": [
+    "юнит тест",
+    "unit test",
+    "pytest"
+   ]
+  },
+  {
+   "question": "Как решить конфликт в git?",
+   "answer": "1. `git status` покажет файлы с конфликтом.\n2. В файле найдите блоки `<<<<<<<` (ваше), `=======`, `>>>>>>>` (чужое), оставьте правильный вариант, уберите маркеры.\n3. `git add файл`, затем `git commit` (при merge) или `git rebase --continue`.\n4. Передумали — `git merge --abort` / `git rebase --abort`.\nУдобно в VS Code: «Accept Current/Incoming/Both».",
+   "question_en": "How do I resolve a git conflict?",
+   "answer_en": "1. `git status` shows the conflicted files.\n2. In each file find the `<<<<<<<` (yours), `=======`, `>>>>>>>` (theirs) blocks, keep the right version and remove the markers.\n3. `git add file`, then `git commit` (for a merge) or `git rebase --continue`.\n4. Changed your mind — `git merge --abort` / `git rebase --abort`.\nVS Code helps: \"Accept Current/Incoming/Both\".",
+   "aliases": [
+    "конфликт git",
+    "merge conflict"
+   ]
+  },
+  {
+   "question": "Как работает systemd-сервис?",
+   "answer": "Юнит в `~/.config/systemd/user/имя.service` (или /etc/systemd/system для системных):\n```ini\n[Unit]\nDescription=My app\n[Service]\nExecStart=/usr/bin/myapp\nRestart=on-failure\n[Install]\nWantedBy=default.target\n```\nЗатем `systemctl --user daemon-reload`, `systemctl --user enable --now имя`. Логи: `journalctl --user -u имя -f`.",
+   "question_en": "How does a systemd service work?",
+   "answer_en": "A unit in `~/.config/systemd/user/name.service` (or /etc/systemd/system for system services):\n```ini\n[Unit]\nDescription=My app\n[Service]\nExecStart=/usr/bin/myapp\nRestart=on-failure\n[Install]\nWantedBy=default.target\n```\nThen `systemctl --user daemon-reload`, `systemctl --user enable --now name`. Logs: `journalctl --user -u name -f`.",
+   "aliases": [
+    "systemd",
+    "сервис systemd"
+   ]
+  },
+  {
+   "question": "Как прошить микроконтроллер из командной строки?",
+   "answer": "STM32: `st-flash write firmware.bin 0x08000000` (ST-Link) или `openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c \"program firmware.elf verify reset exit\"`. AVR/Arduino: `avrdude -c arduino -p m328p -P /dev/ttyUSB0 -b 115200 -U flash:w:firmware.hex`. ESP32: `esptool.py --port /dev/ttyUSB0 write_flash 0x0 firmware.bin` (или `idf.py flash`). RP2040: зажать BOOTSEL и скопировать .uf2. Доступ к порту: добавьте себя в группу `dialout`.",
+   "question_en": "How do I flash a microcontroller from the command line?",
+   "answer_en": "STM32: `st-flash write firmware.bin 0x08000000` (ST-Link) or `openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c \"program firmware.elf verify reset exit\"`. AVR/Arduino: `avrdude -c arduino -p m328p -P /dev/ttyUSB0 -b 115200 -U flash:w:firmware.hex`. ESP32: `esptool.py --port /dev/ttyUSB0 write_flash 0x0 firmware.bin` (or `idf.py flash`). RP2040: hold BOOTSEL and copy the .uf2. Port access: add yourself to the `dialout` group.",
+   "aliases": [
+    "прошивка мк",
+    "flash firmware",
+    "avrdude",
+    "openocd"
    ]
   }
  ]

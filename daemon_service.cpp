@@ -198,6 +198,13 @@ QString DaemonAdaptor::TaskAction(const QString &id, const QString &action)
     return m_service->assistant().taskAction(id, action);
 }
 
+QString DaemonAdaptor::EditTask(const QString &id, const QString &text, const QString &when, const QString &repeat)
+{
+    if (id.size() > 100 || text.size() > 1000 || when.size() > 300 || repeat.size() > 40)
+        return QStringLiteral("invalid");
+    return m_service->assistant().editTask(id, text, when, repeat);
+}
+
 QString DaemonAdaptor::Version()
 {
     return DaemonService::version();

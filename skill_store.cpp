@@ -67,6 +67,9 @@ QString SkillStore::validate(const QByteArray &bytes) {
                 return QCoreApplication::translate("jarvis", "Each example needs a question and an answer up to 4096 characters.");
         if (example.contains("aliases") && (!example["aliases"].isArray() || example["aliases"].toArray().size()>10))
             return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg("aliases");
+        for (const auto &field:{"question_en","answer_en"})
+            if (example.contains(field) && (!example[field].isString() || example[field].toString().size()>4096))
+                return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg(field);
     }
     return {};
 }
@@ -114,13 +117,28 @@ QString SkillStore::prompt() const {
     }
     return text.left(kMaxPrompt);
 }
+namespace {
+// The answer in the language of the question: Latin letters get the English one when there is one.
+QString answerFor(const QJsonObject &example, const QString &question) {
+    int cyrillic=0, latin=0;
+    for(const QChar c:question) { if(c.script()==QChar::Script_Cyrillic) ++cyrillic; else if(c.isLetter() && c.unicode()<128) ++latin; }
+    const QString en=example["answer_en"].toString();
+    return latin>cyrillic && !en.isEmpty() ? en : example["answer"].toString();
+}
+QStringList wordings(const QJsonObject &example) {
+    QStringList all{example["question"].toString()};
+    if(example.contains("question_en")) all.append(example["question_en"].toString());
+    for(const auto &alias:example["aliases"].toArray()) all.append(alias.toString());
+    return all;
+}
+}
 QString SkillStore::recall(const QString &question) const {
     const QString normalized=key(question);
     for(const auto &v:list()) {
         auto o=v.toObject(); if(!o["enabled"].toBool()) continue;
         for(const auto &e:o["examples"].toArray()) {
-            auto example=e.toObject(); if(key(example["question"].toString())==normalized) return example["answer"].toString();
-            for(const auto &alias:example["aliases"].toArray()) if(key(alias.toString())==normalized) return example["answer"].toString();
+            const auto example=e.toObject();
+            for(const QString &w:wordings(example)) if(key(w)==normalized) return answerFor(example,question);
         }
     }
     return {};
@@ -133,11 +151,14 @@ QJsonObject SkillStore::similar(const QString &question, double threshold) const
         auto o=v.toObject(); if(!o["enabled"].toBool()) continue;
         for(const auto &e:o["examples"].toArray()) {
             const auto example=e.toObject();
-            QStringList wordings{example["question"].toString()};
-            for(const auto &alias:example["aliases"].toArray()) wordings.append(alias.toString());
-            for(const QString &w:wordings) {
+            for(const QString &w:wordings(example)) {
                 const double score=text::overlap(wanted,text::stems(w));
-                if(score>=bestScore) { bestScore=score; best=QJsonObject{{"question",example["question"]},{"answer",example["answer"]},{"skill",o["name"]}}; }
+                if(score>=bestScore) {
+                    const bool en=answerFor(example,question)!=example["answer"].toString();
+                    bestScore=score;
+                    best=QJsonObject{{"question",en?example["question_en"]:example["question"]},{"answer",answerFor(example,question)},
+                                     {"skill",en&&o.contains("name_en")?o["name_en"]:o["name"]}};
+                }
             }
         }
     }

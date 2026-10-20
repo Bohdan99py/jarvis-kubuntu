@@ -219,6 +219,17 @@ Rectangle {
                                 }
                             }
                             ToolButton {
+                                visible: !taskRow.done
+                                text: "✎"
+                                onClicked: taskEditor.edit(taskRow.modelData)
+                                Accessible.name: qsTr("Edit")
+                                ToolTip.visible: hovered
+                                ToolTip.delay: 400
+                                ToolTip.text: qsTr("Change the text, time or repetition")
+                                contentItem: Text { text: "✎"; color: Theme.textDim; font.pixelSize: 15; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                                background: Rectangle { radius: 12; color: parent.hovered ? Theme.hover : "transparent" }
+                            }
+                            ToolButton {
                                 text: "×"
                                 onClicked: panel.chat.taskAction(taskRow.modelData.id, "remove")
                                 Accessible.name: qsTr("Delete")
@@ -766,5 +777,148 @@ Rectangle {
         standardButtons: Dialog.Yes | Dialog.No
         Label { text: qsTr("Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay."); wrapMode: Text.Wrap; width: 360 }
         onAccepted: panel.chat.forget("facts")
+    }
+
+    // ---------- Editing a reminder or task ----------
+    Popup {
+        id: taskEditor
+        property var task: ({})
+        readonly property var repeatKeys: ["keep", "", "daily", "weekdays", "weekends", "weekly", "monthly", "yearly", "days", "every"]
+        property var days: []
+        function edit(item) {
+            task = item
+            textField.text = item.text
+            whenField.text = ""
+            const r = item.repeat || ""
+            days = r.startsWith("days:") ? r.slice(5).split(",").map(Number) : []
+            if (r.startsWith("every:")) {
+                everyCount.value = parseInt(r.slice(6))
+                everyUnit.currentIndex = ["m", "h", "d"].indexOf(r.slice(-1))
+            }
+            repeatCombo.currentIndex = 0
+            open()
+            textField.forceActiveFocus()
+        }
+        function repeatCode() {
+            const key = repeatKeys[repeatCombo.currentIndex]
+            if (key === "days")
+                return days.length > 0 ? "days:" + days.slice().sort().join(",") : ""
+            if (key === "every")
+                return "every:" + everyCount.value + ["m", "h", "d"][everyUnit.currentIndex]
+            return key
+        }
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(460, parent ? parent.width - 30 : 460)
+        modal: true
+        padding: 18
+        background: Rectangle { color: Theme.panel; radius: 18; border.color: Theme.border }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Label { text: (taskEditor.task.due > 0 ? qsTr("Reminder") : qsTr("Task")); color: Theme.text; font.pixelSize: 18; font.bold: true }
+            TextField {
+                id: textField
+                Layout.fillWidth: true
+                maximumLength: 300
+                color: Theme.text; selectByMouse: true
+                background: Rectangle { color: Theme.bg; radius: 10; border.color: textField.activeFocus ? Theme.accent : Theme.border }
+            }
+            Label {
+                visible: taskEditor.task.due > 0
+                text: qsTr("Now: %1").arg((taskEditor.task.when || "") + (taskEditor.task.repeatText ? " · " + taskEditor.task.repeatText : ""))
+                color: Theme.textDim; font.pixelSize: 12
+            }
+            TextField {
+                id: whenField
+                Layout.fillWidth: true
+                placeholderText: qsTr("New time: tomorrow at 10, in an hour, 25.12 at 9…")
+                placeholderTextColor: Theme.textDim; color: Theme.text; selectByMouse: true
+                background: Rectangle { color: Theme.bg; radius: 10; border.color: whenField.activeFocus ? Theme.accent : Theme.border }
+            }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                Repeater {
+                    model: [{ label: qsTr("+10 min"), when: qsTr("in 10 minutes") }, { label: qsTr("+1 hour"), when: qsTr("in an hour") },
+                            { label: qsTr("This evening"), when: qsTr("today in the evening") }, { label: qsTr("Tomorrow morning"), when: qsTr("tomorrow morning") },
+                            { label: qsTr("No time"), when: "-" }]
+                    Rectangle {
+                        required property var modelData
+                        width: chipText.implicitWidth + 20; height: 26; radius: 13
+                        color: chipMouse.containsMouse ? Theme.hover : Theme.bg
+                        border.color: whenField.text === modelData.when ? Theme.accent : Theme.border
+                        Text { id: chipText; anchors.centerIn: parent; text: parent.modelData.label; color: Theme.text; font.pixelSize: 12 }
+                        MouseArea { id: chipMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: whenField.text = parent.modelData.when }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Label { text: qsTr("Repeat"); color: Theme.text }
+                ComboBox {
+                    id: repeatCombo
+                    Layout.fillWidth: true
+                    model: [qsTr("Keep as it is"), qsTr("Don't repeat"), qsTr("Every day"), qsTr("On weekdays"), qsTr("On weekends"),
+                            qsTr("Every week"), qsTr("Every month"), qsTr("Every year"), qsTr("On chosen days…"), qsTr("Every N minutes, hours or days…")]
+                    contentItem: Text { leftPadding: 10; text: repeatCombo.displayText; color: Theme.text; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
+                    background: Rectangle { implicitHeight: 36; radius: 10; color: Theme.bg; border.color: Theme.border }
+                }
+            }
+            Row {
+                visible: taskEditor.repeatKeys[repeatCombo.currentIndex] === "days"
+                spacing: 5
+                Repeater {
+                    model: [qsTr("Mon"), qsTr("Tue"), qsTr("Wed"), qsTr("Thu"), qsTr("Fri"), qsTr("Sat"), qsTr("Sun")]
+                    Rectangle {
+                        required property string modelData
+                        required property int index
+                        readonly property bool on: taskEditor.days.indexOf(index + 1) >= 0
+                        width: 46; height: 30; radius: 15
+                        color: on ? Theme.accent : Theme.bg
+                        border.color: on ? Theme.accent : Theme.border
+                        Text { anchors.centerIn: parent; text: parent.modelData; color: parent.on ? Theme.bg : Theme.text; font.pixelSize: 12; font.bold: parent.on }
+                        MouseArea {
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                const d = taskEditor.days.slice(), i = d.indexOf(parent.index + 1)
+                                if (i >= 0) d.splice(i, 1); else d.push(parent.index + 1)
+                                taskEditor.days = d
+                            }
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                visible: taskEditor.repeatKeys[repeatCombo.currentIndex] === "every"
+                spacing: 8
+                Label { text: qsTr("Every"); color: Theme.text }
+                SpinBox { id: everyCount; from: 1; to: 999; value: 2; editable: true }
+                ComboBox {
+                    id: everyUnit
+                    model: [qsTr("minutes"), qsTr("hours"), qsTr("days")]
+                    currentIndex: 1
+                    contentItem: Text { leftPadding: 10; text: everyUnit.displayText; color: Theme.text; verticalAlignment: Text.AlignVCenter }
+                    background: Rectangle { implicitHeight: 36; implicitWidth: 120; radius: 10; color: Theme.bg; border.color: Theme.border }
+                }
+            }
+            Label {
+                visible: taskEditor.repeatKeys[repeatCombo.currentIndex] === "every" && everyUnit.currentIndex === 0 && everyCount.value < 5
+                text: qsTr("At least every 5 minutes.")
+                color: Theme.danger; font.pixelSize: 12
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                DarkButton { text: qsTr("Cancel"); onClicked: taskEditor.close() }
+                DarkButton {
+                    text: qsTr("Save")
+                    primary: true
+                    enabled: textField.text.trim().length > 1
+                    onClicked: {
+                        panel.chat.editTask(taskEditor.task.id, textField.text.trim(), whenField.text.trim(), taskEditor.repeatCode())
+                        taskEditor.close()
+                    }
+                }
+            }
+        }
     }
 }

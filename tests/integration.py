@@ -227,6 +227,19 @@ try:
  assert call('TaskAction',todo['id'],'done').strip()=="('',)"
  assert [t for t in memory()['tasks'] if t['id']==todo['id']][0]['done']>0
  assert 'not found' in unquote(call('TaskAction','nope','done'))
+ # Editing and moving
+ unquote(call('AddTask','завтра в 9 полить цветы'))
+ flowers=[t for t in memory()['tasks'] if t['text']=='полить цветы'][0]
+ assert unquote(call('EditTask',flowers['id'],'полить кактус','через 2 часа','keep'))==''
+ cactus=[t for t in memory()['tasks'] if t['id']==flowers['id']][0]
+ assert cactus['text']=='полить кактус' and 7100*1000 < cactus['due']-time.time()*1000 <= 7200*1000,cactus
+ assert unquote(call('EditTask',flowers['id'],'','','days:1,3'))==''
+ assert [t for t in memory()['tasks'] if t['id']==flowers['id']][0]['repeat']=='days:1,3'
+ assert 'Не понял время' in unquote(call('EditTask',flowers['id'],'','когда-нибудь','keep')) or 'understand' in unquote(call('EditTask',flowers['id'],'','когда-нибудь','keep'))
+ out=ask('перенеси напоминание про кактус на завтра в 10')
+ assert 'кактус' in out and '10:00' in out,out
+ out=ask('напоминай по понедельникам и средам в 10 про планёрку')
+ assert 'по пн, ср' in out,out
 
  # Notifications: a reminder that came due while the daemon was off arrives at start
  notifications=FakeNotifications()

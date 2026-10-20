@@ -9,7 +9,9 @@
  "examples": [
   {
    "question": "Давай поговорим",
-   "answer": "Конечно. Что сейчас занимает твои мысли?"
+   "answer": "Конечно. Что сейчас занимает твои мысли?",
+   "question_en": "Let's talk",
+   "answer_en": "Sure. What's on your mind right now?"
   }
  ],
  "image": "conversation",

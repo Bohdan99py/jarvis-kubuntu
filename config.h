@@ -34,6 +34,14 @@ struct ConfigData
     bool deepReflection = true;
     // A notification with the answer when the window is hidden (GUI only).
     bool notifyReplies = true;
+    // Reminders: the "Snooze" button, what "утром/днём/вечером" mean, a sound,
+    // and asking again (every N minutes, up to 3 times) until "Done" is pressed; 0 = once.
+    int snoozeMinutes = 10;
+    int morningHour = 9;
+    int afternoonHour = 14;
+    int eveningHour = 19;
+    bool reminderSound = true;
+    int nagMinutes = 0;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.

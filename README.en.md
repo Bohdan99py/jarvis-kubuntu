@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.14
+# Jarvis for Kubuntu · 0.15
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.14.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.15.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -26,6 +26,10 @@ Control center → Application:
 - **Answer language**: same as your message (default), or always Russian/English. Local answers, memory commands and Claude follow it.
 
 Voice recognition uses the Vosk model for the interface language (`vosk-model-small-en-us-0.15` or `vosk-model-small-ru-0.22`, installed with the "Install voice" button). Spoken answers pick the voice by the answer's own language.
+
+## Voice
+
+Control center → Voice: "Install the natural voice" sets up [Piper](https://github.com/rhasspy/piper), a neural voice that sounds like a person and runs on this computer without the internet (about 200 MB plus ~63 MB per voice, checked against the Piper catalog). Pick a Russian, English and French voice (the French one also reads the French studies), listen and set the pace. Code, links and tables are not read out. Without Piper, Speech Dispatcher (espeak-ng) speaks. Dictation uses Vosk, also locally.
 
 ## Memory that learns
 
@@ -44,7 +48,7 @@ The graph shows up to 48 words: teal from examples, orange from facts, violet fr
 
 ## Reminders, tasks and notifications
 
-Write the way you speak — in chat, in the quick bar or in the Tasks tab of the memory panel: "remind me tomorrow at 9 to call mum", "in 20 minutes check the build", "on Friday at 10am standup", "every weekday at 8:30 exercise", "every Monday at 10 plan the week", "add a task buy solder", "my reminders", "cancel the reminder about the standup". Times are read on this computer; what the rules miss ("after lunch") goes to Claude when a key is set, otherwise Jarvis asks "when?". Claude sees your open tasks and sets reminders you ask for in free form; each one is confirmed with a ⏰ line under the answer.
+Write the way you speak — in chat, in the quick bar or in the Tasks tab of the memory panel (repetitions: every day, on weekdays, on weekends, on Mondays and Wednesdays, every 2 hours, every 3 days, every 5th of the month, every year; "15 minutes before"; "move the reminder about the call to 5 pm"): "remind me tomorrow at 9 to call mum", "in 20 minutes check the build", "on Friday at 10am standup", "every weekday at 8:30 exercise", "every Monday at 10 plan the week", "add a task buy solder", "my reminders", "cancel the reminder about the standup". Times are read on this computer; what the rules miss ("after lunch") goes to Claude when a key is set, otherwise Jarvis asks "when?". Claude sees your open tasks and sets reminders you ask for in free form; each one is confirmed with a ⏰ line under the answer.
 
 Reminders arrive as KDE notifications from the background daemon — even with the window closed — with "Snooze 10 min" and "Done" buttons; reminders missed while the computer was off come at the next start. Plasma's "Do not disturb" applies.
 
@@ -89,6 +93,8 @@ Off by default. Turn it on in Control center → Memory or in the Activity tab.
 - If the service starts before Plasma (typical at login), the daemon waits for KWin and connects by itself, and reloads the script when KWin restarts. Window reports are accepted only from the owner of `org.kde.KWin`.
 
 ## Programming and VS Code
+
+The extension has its own side bar (all actions, connection and Claude status, recent answers), a menu on the status bar or Ctrl+Alt+J, a "Jarvis" submenu in the editor's context menu, a light-bulb action on errors, Review this file and Add comments, a Compare view before replacing code, and a Get Started walkthrough.
 
 The Code tab → "Install the VS Code extension" installs the Jarvis extension (`/usr/share/jarvis/vscode/jarvis-vscode.vsix`). After "Developer: Reload Window" Jarvis appears in the VS Code status bar.
 

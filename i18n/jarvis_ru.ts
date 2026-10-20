@@ -46,6 +46,10 @@
         <source>I know the basics about you already. Tell me something new!</source>
         <translation>Основное о вас я уже знаю. Расскажите что-нибудь новое!</translation>
     </message>
+    <message>
+        <source>Saved.</source>
+        <translation>Сохранено.</translation>
+    </message>
 </context>
 <context>
     <name>CodeBlock</name>
@@ -101,16 +105,6 @@
         <translation>Получить</translation>
     </message>
     <message>
-        <source>Talk to Jarvis</source>
-        <translation>Разговаривайте с Jarvis</translation>
-    </message>
-    <message>
-        <source>Press the microphone, say a phrase and press stop.
-The recognized text appears in the input field — send it with Enter.</source>
-        <translation>Нажмите микрофон, произнесите фразу и нажмите стоп.
-Распознанный текст появится в строке ввода — отправьте его клавишей Enter.</translation>
-    </message>
-    <message>
         <source>Speak answers aloud</source>
         <translation>Озвучивать ответы</translation>
     </message>
@@ -137,10 +131,6 @@ The recognized text appears in the input field — send it with Enter.</source>
     <message>
         <source>Russian recognition model</source>
         <translation>Русская модель распознавания</translation>
-    </message>
-    <message>
-        <source>Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognized on this computer. Answers are spoken in their own language.</source>
-        <translation>Настройка скачивает Vosk из PyPI и модель (~45 МБ) для языка интерфейса с alphacephei.com. После этого речь распознаётся на компьютере. Ответы озвучиваются на их собственном языке.</translation>
     </message>
     <message>
         <source>Check voice installation</source>
@@ -267,6 +257,114 @@ The recognized text appears in the input field — send it with Enter.</source>
         <translation>1 час</translation>
     </message>
     <message>
+        <source>Jarvis&apos;s voice</source>
+        <translation>Голос Jarvis</translation>
+    </message>
+    <message>
+        <source>Code, links and tables are not read out — only what a person would say.</source>
+        <translation>Код, ссылки и таблицы не зачитываются — только то, что сказал бы человек.</translation>
+    </message>
+    <message>
+        <source>Natural voice</source>
+        <translation>Естественный голос</translation>
+    </message>
+    <message>
+        <source>A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.</source>
+        <translation>Говорит нейросетевой голос (Piper) на этом компьютере: без интернета, никуда ничего не отправляется. Выберите голос для каждого языка и послушайте его.</translation>
+    </message>
+    <message>
+        <source>Instead of the robotic system voice, a neural voice (Piper) that sounds like a person. It runs on this computer without the internet. The download is about 200 MB for the program and ~63 MB per voice.</source>
+        <translation>Вместо роботизированного системного голоса — нейросетевой голос (Piper), который звучит как человек. Работает на этом компьютере без интернета. Загрузка: около 200 МБ программа и ~63 МБ каждый голос.</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>Русский</translation>
+    </message>
+    <message>
+        <source>English</source>
+        <translation>Английский</translation>
+    </message>
+    <message>
+        <source>French (studies)</source>
+        <translation>Французский (занятия)</translation>
+    </message>
+    <message>
+        <source>Listen</source>
+        <translation>Послушать</translation>
+    </message>
+    <message>
+        <source>Pace</source>
+        <translation>Темп</translation>
+    </message>
+    <message>
+        <source>Download the chosen voices</source>
+        <translation>Загрузить выбранные голоса</translation>
+    </message>
+    <message>
+        <source>Install the natural voice</source>
+        <translation>Установить естественный голос</translation>
+    </message>
+    <message>
+        <source>Dictation</source>
+        <translation>Диктовка</translation>
+    </message>
+    <message>
+        <source>Press the microphone, say a phrase and press stop. The recognized text appears in the input field — send it with Enter.</source>
+        <translation>Нажмите микрофон, скажите фразу и нажмите стоп. Распознанный текст появится в поле ввода — отправьте его клавишей Enter.</translation>
+    </message>
+    <message>
+        <source>Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognized on this computer.</source>
+        <translation>Установка загрузит Vosk из PyPI и модель (~45 МБ) с alphacephei.com для языка интерфейса. После этого речь распознаётся на этом компьютере.</translation>
+    </message>
+    <message>
+        <source>Reminders</source>
+        <translation>Напоминания</translation>
+    </message>
+    <message>
+        <source>&quot;Snooze&quot; button</source>
+        <translation>Кнопка «Отложить»</translation>
+    </message>
+    <message>
+        <source>%1 minutes</source>
+        <translation>%1 минут</translation>
+    </message>
+    <message>
+        <source>Until I press &quot;Done&quot;</source>
+        <translation>Пока не нажму «Готово»</translation>
+    </message>
+    <message>
+        <source>remind once</source>
+        <translation>напомнить один раз</translation>
+    </message>
+    <message>
+        <source>again every %1 min (3 times)</source>
+        <translation>повторять каждые %1 мин (3 раза)</translation>
+    </message>
+    <message>
+        <source>&quot;In the morning&quot; means</source>
+        <translation>«Утром» — это</translation>
+    </message>
+    <message>
+        <source>&quot;In the afternoon&quot; means</source>
+        <translation>«Днём» — это</translation>
+    </message>
+    <message>
+        <source>&quot;In the evening&quot; means</source>
+        <translation>«Вечером» — это</translation>
+    </message>
+    <message>
+        <source>Sound with reminders</source>
+        <translation>Звук напоминаний</translation>
+    </message>
+    <message>
+        <source>The alarm sound of your Plasma sound theme.</source>
+        <translation>Звук будильника из звуковой темы Plasma.</translation>
+    </message>
+    <message>
+        <source>Repetitions you can say: every day, on weekdays, on weekends, every Monday, on Mondays and Wednesdays, every 2 hours, every 3 days, every 5th of the month, every year on 20 October; and &quot;15 minutes before&quot;. A reminder can be edited with ✎ in the Tasks tab or moved in chat: &quot;move the reminder about the call to 5 pm&quot;.</source>
+        <translation>Повторы можно сказать словами: каждый день, по будням, по выходным, каждый понедельник, по понедельникам и средам, каждые 2 часа, каждые 3 дня, каждое 5 число, каждый год 20 октября; и «за 15 минут до». Напоминание можно изменить кнопкой ✎ на вкладке «Задачи» или перенести в чате: «перенеси напоминание про созвон на 17:00».</translation>
+    </message>
+    <message>
         <source>1.5 hours</source>
         <translation>1,5 часа</translation>
     </message>
@@ -353,6 +451,14 @@ The recognized text appears in the input field — send it with Enter.</source>
     <message>
         <source>Restart service</source>
         <translation>Перезапустить службу</translation>
+    </message>
+    <message>
+        <source>Stop service</source>
+        <translation>Остановить службу</translation>
+    </message>
+    <message>
+        <source>Reminders and hints pause until Jarvis or the service starts again.</source>
+        <translation>Напоминания и подсказки приостановятся, пока Jarvis или служба не запустятся снова.</translation>
     </message>
     <message>
         <source>Restart Jarvis</source>
@@ -535,28 +641,20 @@ A KDE menu entry and a system tray icon</source>
         <translation>Jarvis остаётся в трее. Нажмите на значок, чтобы открыть окно; «Выход» в его меню завершает работу.</translation>
     </message>
     <message>
-        <source>French studies: lessons, translation, flashcards</source>
-        <translation>Французский: занятия, перевод, карточки</translation>
+        <source>Control center…</source>
+        <translation>Центр управления…</translation>
     </message>
     <message>
-        <source>Skills, voice, memory and updates</source>
-        <translation>Навыки, голос, память и обновления</translation>
+        <source>French studies: lessons, translation, flashcards</source>
+        <translation>Французский: занятия, перевод, карточки</translation>
     </message>
     <message>
         <source>Quick commands · Meta+J</source>
         <translation>Быстрые команды · Meta+J</translation>
     </message>
     <message>
-        <source>Claude API settings…</source>
-        <translation>Настройки Claude API…</translation>
-    </message>
-    <message>
         <source>Clear chat</source>
         <translation>Очистить чат</translation>
-    </message>
-    <message>
-        <source>Quit and stop jarvisd</source>
-        <translation>Выход и остановить jarvisd</translation>
     </message>
     <message>
         <source>thinking…</source>
@@ -700,6 +798,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Done</source>
         <translation>Готово</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Изменить</translation>
+    </message>
+    <message>
+        <source>Change the text, time or repetition</source>
+        <translation>Изменить текст, время или повтор</translation>
     </message>
     <message>
         <source>Delete</source>
@@ -872,6 +978,158 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay.</source>
         <translation>Факты, краткое содержание разговоров и темы будут удалены. Обученные примеры, карточки и история активности останутся.</translation>
+    </message>
+    <message>
+        <source>Reminder</source>
+        <translation>Напоминание</translation>
+    </message>
+    <message>
+        <source>Task</source>
+        <translation>Задача</translation>
+    </message>
+    <message>
+        <source>Now: %1</source>
+        <translation>Сейчас: %1</translation>
+    </message>
+    <message>
+        <source>New time: tomorrow at 10, in an hour, 25.12 at 9…</source>
+        <translation>Новое время: завтра в 10, через час, 25.12 в 9…</translation>
+    </message>
+    <message>
+        <source>+10 min</source>
+        <translation>+10 мин</translation>
+    </message>
+    <message>
+        <source>in 10 minutes</source>
+        <translation>через 10 минут</translation>
+    </message>
+    <message>
+        <source>+1 hour</source>
+        <translation>+1 час</translation>
+    </message>
+    <message>
+        <source>in an hour</source>
+        <translation>через час</translation>
+    </message>
+    <message>
+        <source>This evening</source>
+        <translation>Сегодня вечером</translation>
+    </message>
+    <message>
+        <source>today in the evening</source>
+        <translation>сегодня вечером</translation>
+    </message>
+    <message>
+        <source>Tomorrow morning</source>
+        <translation>Завтра утром</translation>
+    </message>
+    <message>
+        <source>tomorrow morning</source>
+        <translation>завтра утром</translation>
+    </message>
+    <message>
+        <source>No time</source>
+        <translation>Без времени</translation>
+    </message>
+    <message>
+        <source>Repeat</source>
+        <translation>Повтор</translation>
+    </message>
+    <message>
+        <source>Keep as it is</source>
+        <translation>Оставить как есть</translation>
+    </message>
+    <message>
+        <source>Don&apos;t repeat</source>
+        <translation>Не повторять</translation>
+    </message>
+    <message>
+        <source>Every day</source>
+        <translation>Каждый день</translation>
+    </message>
+    <message>
+        <source>On weekdays</source>
+        <translation>По будням</translation>
+    </message>
+    <message>
+        <source>On weekends</source>
+        <translation>По выходным</translation>
+    </message>
+    <message>
+        <source>Every week</source>
+        <translation>Каждую неделю</translation>
+    </message>
+    <message>
+        <source>Every month</source>
+        <translation>Каждый месяц</translation>
+    </message>
+    <message>
+        <source>Every year</source>
+        <translation>Каждый год</translation>
+    </message>
+    <message>
+        <source>On chosen days…</source>
+        <translation>По дням недели…</translation>
+    </message>
+    <message>
+        <source>Every N minutes, hours or days…</source>
+        <translation>Каждые N минут, часов или дней…</translation>
+    </message>
+    <message>
+        <source>Mon</source>
+        <translation>Пн</translation>
+    </message>
+    <message>
+        <source>Tue</source>
+        <translation>Вт</translation>
+    </message>
+    <message>
+        <source>Wed</source>
+        <translation>Ср</translation>
+    </message>
+    <message>
+        <source>Thu</source>
+        <translation>Чт</translation>
+    </message>
+    <message>
+        <source>Fri</source>
+        <translation>Пт</translation>
+    </message>
+    <message>
+        <source>Sat</source>
+        <translation>Сб</translation>
+    </message>
+    <message>
+        <source>Sun</source>
+        <translation>Вс</translation>
+    </message>
+    <message>
+        <source>Every</source>
+        <translation>Каждые</translation>
+    </message>
+    <message>
+        <source>minutes</source>
+        <translation>минут</translation>
+    </message>
+    <message>
+        <source>hours</source>
+        <translation>часов</translation>
+    </message>
+    <message>
+        <source>days</source>
+        <translation>дней</translation>
+    </message>
+    <message>
+        <source>At least every 5 minutes.</source>
+        <translation>Не чаще раза в 5 минут.</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
     </message>
 </context>
 <context>
@@ -1973,6 +2231,18 @@ Chat with me or add a first example</source>
     <message>
         <source>Recognizing…</source>
         <translation>Распознаю…</translation>
+    </message>
+    <message>
+        <source>Voice changed.</source>
+        <translation>Голос изменён.</translation>
+    </message>
+    <message>
+        <source>Press &quot;Download the chosen voices&quot; to get this voice.</source>
+        <translation>Нажмите «Загрузить выбранные голоса», чтобы получить этот голос.</translation>
+    </message>
+    <message>
+        <source>Installing the natural voice…</source>
+        <translation>Установка естественного голоса…</translation>
     </message>
     <message>
         <source>No speech recognized. Try again.</source>

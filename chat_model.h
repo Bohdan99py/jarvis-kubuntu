@@ -82,6 +82,8 @@ public:
     Q_INVOKABLE void addTask(const QString &text);
     // done, remove, snooze, reopen
     Q_INVOKABLE void taskAction(const QString &id, const QString &action);
+    // when: "tomorrow at 10" ("" keeps the time, "-" none); repeat: "keep" or a code. Result in memoryStatus.
+    Q_INVOKABLE void editTask(const QString &id, const QString &text, const QString &when, const QString &repeat);
     // Plain text to the clipboard (code from an answer).
     Q_INVOKABLE void copyText(const QString &text) const;
     QString memory() const { return m_memory; }

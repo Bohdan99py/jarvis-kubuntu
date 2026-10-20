@@ -125,6 +125,8 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.deepReflection = value;
     else if (name == QLatin1String("notifyReplies"))
         d.notifyReplies = value;
+    else if (name == QLatin1String("reminderSound"))
+        d.reminderSound = value;
     else
         return tr("Unknown option.");
     return store(d);
@@ -134,5 +136,23 @@ QString AppSettings::setBreakMinutes(int minutes)
 {
     jarvis::ConfigData d = jarvis::Config::loadFileOnly();
     d.breakMinutes = std::clamp(minutes, 0, 600);
+    return store(d);
+}
+
+QString AppSettings::setNumber(const QString &name, int value)
+{
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    if (name == QLatin1String("snoozeMinutes"))
+        d.snoozeMinutes = std::clamp(value, 1, 720);
+    else if (name == QLatin1String("morningHour"))
+        d.morningHour = std::clamp(value, 4, 12);
+    else if (name == QLatin1String("afternoonHour"))
+        d.afternoonHour = std::clamp(value, 11, 18);
+    else if (name == QLatin1String("eveningHour"))
+        d.eveningHour = std::clamp(value, 16, 23);
+    else if (name == QLatin1String("nagMinutes"))
+        d.nagMinutes = std::clamp(value, 0, 120);
+    else
+        return tr("Unknown option.");
     return store(d);
 }

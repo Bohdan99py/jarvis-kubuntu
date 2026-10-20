@@ -31,6 +31,12 @@ class AppSettings : public QObject
     Q_PROPERTY(bool morningSummary READ morningSummary NOTIFY changed FINAL)
     Q_PROPERTY(bool deepReflection READ deepReflection NOTIFY changed FINAL)
     Q_PROPERTY(bool notifyReplies READ notifyReplies NOTIFY changed FINAL)
+    Q_PROPERTY(int snoozeMinutes READ snoozeMinutes NOTIFY changed FINAL)
+    Q_PROPERTY(int morningHour READ morningHour NOTIFY changed FINAL)
+    Q_PROPERTY(int afternoonHour READ afternoonHour NOTIFY changed FINAL)
+    Q_PROPERTY(int eveningHour READ eveningHour NOTIFY changed FINAL)
+    Q_PROPERTY(bool reminderSound READ reminderSound NOTIFY changed FINAL)
+    Q_PROPERTY(int nagMinutes READ nagMinutes NOTIFY changed FINAL)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -52,6 +58,12 @@ public:
     bool morningSummary() const { return m_data.morningSummary; }
     bool deepReflection() const { return m_data.deepReflection; }
     bool notifyReplies() const { return m_data.notifyReplies; }
+    int snoozeMinutes() const { return m_data.snoozeMinutes; }
+    int morningHour() const { return m_data.morningHour; }
+    int afternoonHour() const { return m_data.afternoonHour; }
+    int eveningHour() const { return m_data.eveningHour; }
+    bool reminderSound() const { return m_data.reminderSound; }
+    int nagMinutes() const { return m_data.nagMinutes; }
 
     // An empty `apiKey` keeps the stored key. Both return "" on success,
     // otherwise a message for the user.
@@ -65,6 +77,8 @@ public:
     Q_INVOKABLE QString setOption(const QString &name, bool value);
     // 0 turns break reminders off.
     Q_INVOKABLE QString setBreakMinutes(int minutes);
+    // name: snoozeMinutes, morningHour, afternoonHour, eveningHour, nagMinutes.
+    Q_INVOKABLE QString setNumber(const QString &name, int value);
 
 signals:
     void changed();

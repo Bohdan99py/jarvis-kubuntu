@@ -1,6 +1,8 @@
 #include "calc_engine.h"
 
+#include <QDateTime>
 #include <QHash>
+#include <QLocale>
 #include <QList>
 #include <QRegularExpression>
 #include <QStringList>
@@ -369,6 +371,21 @@ const QList<Calc> &calcs()
          u"A number in hex (0x…), bin (0b…), oct (0o…) or decimal — in every base.",
          u"0x2A = 0b101010 = 42",
          {{"value", u"Число", u"Number", "text", "0x3F"}}},
+        {"crc", u"Контрольные суммы CRC", u"CRC checksums",
+         u"Текст или байты в hex («01 02 A0») — CRC-8, CRC-16 (CCITT, MODBUS, XMODEM) и CRC-32.",
+         u"Text or hex bytes (\"01 02 A0\") — CRC-8, CRC-16 (CCITT, MODBUS, XMODEM) and CRC-32.",
+         u"CRC-32(\"123456789\") = 0xCBF43926",
+         {{"data", u"Данные", u"Data", "text", "123456789"}}},
+        {"epoch", u"Unix-время ↔ дата", u"Unix time ↔ date",
+         u"Секунды или миллисекунды с 1970 года — в дату, или дата «2026-10-20 18:00» — в Unix-время.",
+         u"Seconds or milliseconds since 1970 to a date, or a date \"2026-10-20 18:00\" to Unix time.",
+         u"t = секунды с 1970-01-01 00:00 UTC",
+         {{"value", u"Время или дата", u"Time or date", "text", "1760000000"}}},
+        {"bits", u"Битовое поле регистра", u"Register bit field",
+         u"Достать поле из значения регистра или записать в него новое.", u"Read a field from a register value or write a new one into it.",
+         u"поле = (x >> pos) & (2^w − 1)",
+         {{"value", u"Значение регистра", u"Register value", "text", "0x4800"}, {"pos", u"Младший бит поля", u"Lowest bit", "n", "11"},
+          {"width", u"Ширина, бит", u"Width, bits", "n", "2"}, {"set", u"Записать значение (необязательно)", u"Write a value (optional)", "text", ""}}},
         {"kinematics", u"Равноускоренное движение", u"Uniform acceleration",
          u"Скорость и путь через время t.", u"Speed and distance after time t.",
          u"v = v0 + a·t   s = v0·t + a·t²/2",
@@ -999,6 +1016,108 @@ QJsonObject Calculators::compute(const QString &id, const QJsonObject &values, L
         line(u"Нужно бит", u"Bits needed", QString::number(n ? 64 - qCountLeadingZeroBits(quint64(n)) : 1));
         if (n >= 32 && n < 127)
             line(u"Символ ASCII", u"ASCII character", u"'"_s + QChar(char16_t(n)) + u"'"_s);
+    } else if (id == u"crc") {
+        const QString text = raw.value(u"data"_s);
+        static const QRegularExpression hex(u"^\\s*(?:(?:0x)?[0-9A-Fa-f]{2}[\\s,:;]+)+(?:0x)?[0-9A-Fa-f]{2}\\s*$"_s);
+        QByteArray data;
+        const bool bytes = hex.match(text).hasMatch();
+        if (bytes) {
+            for (QString part : text.split(rx(u"[\\s,:;]+"_s), Qt::SkipEmptyParts))
+                data.append(char(part.remove(u"0x"_s, Qt::CaseInsensitive).toUInt(nullptr, 16)));
+        } else {
+            data = text.toUtf8();
+        }
+        auto crc8 = [&](quint8 poly, bool reflected) {
+            quint8 crc = 0;
+            for (char ch : std::as_const(data)) {
+                crc ^= quint8(ch);
+                for (int b = 0; b < 8; ++b)
+                    crc = reflected ? ((crc & 1) ? (crc >> 1) ^ poly : crc >> 1) : ((crc & 0x80) ? quint8(crc << 1) ^ poly : quint8(crc << 1));
+            }
+            return crc;
+        };
+        auto crc16 = [&](quint16 init, bool reflected) {
+            quint16 crc = init;
+            for (char ch : std::as_const(data)) {
+                if (reflected) {
+                    crc ^= quint8(ch);
+                    for (int b = 0; b < 8; ++b)
+                        crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : crc >> 1;
+                } else {
+                    crc ^= quint16(quint8(ch)) << 8;
+                    for (int b = 0; b < 8; ++b)
+                        crc = (crc & 0x8000) ? quint16(crc << 1) ^ 0x1021 : quint16(crc << 1);
+                }
+            }
+            return crc;
+        };
+        quint32 crc32 = 0xFFFFFFFF;
+        for (char ch : std::as_const(data)) {
+            crc32 ^= quint8(ch);
+            for (int b = 0; b < 8; ++b)
+                crc32 = (crc32 & 1) ? (crc32 >> 1) ^ 0xEDB88320u : crc32 >> 1;
+        }
+        crc32 ^= 0xFFFFFFFFu;
+        auto hexOf = [](quint32 v, int digits) { return u"0x"_s + QString::number(v, 16).toUpper().rightJustified(digits, u'0'); };
+        line(u"Данные", u"Data", (bytes ? (ru ? u"байты: %1"_s : u"bytes: %1"_s) : (ru ? u"текст UTF-8, байт: %1"_s : u"UTF-8 text, bytes: %1"_s)).arg(data.size()));
+        line(u"CRC-8 (poly 0x07)", u"CRC-8 (poly 0x07)", hexOf(crc8(0x07, false), 2));
+        line(u"CRC-8/MAXIM (1-Wire)", u"CRC-8/MAXIM (1-Wire)", hexOf(crc8(0x8C, true), 2));
+        line(u"CRC-16/CCITT-FALSE", u"CRC-16/CCITT-FALSE", hexOf(crc16(0xFFFF, false), 4));
+        line(u"CRC-16/XMODEM", u"CRC-16/XMODEM", hexOf(crc16(0x0000, false), 4));
+        line(u"CRC-16/MODBUS", u"CRC-16/MODBUS", hexOf(crc16(0xFFFF, true), 4) + (ru ? u" (в кадре: младший байт первым)"_s : u" (low byte first in the frame)"_s));
+        line(u"CRC-32 (Ethernet, zip)", u"CRC-32 (Ethernet, zip)", hexOf(crc32, 8));
+    } else if (id == u"epoch") {
+        const QString text = raw.value(u"value"_s).trimmed();
+        QDateTime when;
+        bool number = false;
+        const qint64 n = text.toLongLong(&number);
+        if (number)
+            when = QDateTime::fromMSecsSinceEpoch(std::llabs(n) > 100000000000LL ? n : n * 1000);
+        else {
+            for (const QString &format : {u"yyyy-MM-dd HH:mm:ss"_s, u"yyyy-MM-dd HH:mm"_s, u"yyyy-MM-dd"_s, u"dd.MM.yyyy HH:mm"_s, u"dd.MM.yyyy"_s})
+                if (!when.isValid())
+                    when = QDateTime::fromString(text, format);
+            if (!when.isValid())
+                when = QDateTime::fromString(text, Qt::ISODate);
+        }
+        if (!when.isValid())
+            return failure(ru ? u"Введите число секунд (или мс) или дату «2026-10-20 18:00»."_s : u"Enter seconds (or ms) or a date like \"2026-10-20 18:00\"."_s);
+        const QLocale locale(ru ? QLocale::Russian : QLocale::English);
+        line(u"Unix-время, с", u"Unix time, s", QString::number(when.toSecsSinceEpoch()));
+        line(u"Unix-время, мс", u"Unix time, ms", QString::number(when.toMSecsSinceEpoch()));
+        line(u"Местное время", u"Local time", locale.toString(when.toLocalTime(), u"d MMMM yyyy, HH:mm:ss"_s));
+        line(u"UTC", u"UTC", when.toUTC().toString(Qt::ISODate));
+    } else if (id == u"bits") {
+        auto integer = [](QString t, bool *ok) {
+            t = t.trimmed().toLower().remove(u'_').remove(u' ');
+            int base = 10;
+            if (t.startsWith(u"0x")) { base = 16; t = t.mid(2); }
+            else if (t.startsWith(u"0b")) { base = 2; t = t.mid(2); }
+            return t.toULongLong(ok, base);
+        };
+        bool ok = false;
+        const quint64 x = integer(raw.value(u"value"_s), &ok);
+        if (!ok || !has("pos") || !has("width"))
+            return failure(missing);
+        const int pos = int(val("pos")), width = int(val("width"));
+        if (pos < 0 || width < 1 || pos + width > 64)
+            return failure(impossible);
+        const quint64 mask = width == 64 ? ~0ULL : ((1ULL << width) - 1);
+        const quint64 field = (x >> pos) & mask;
+        auto hexOf = [](quint64 v) { return u"0x"_s + QString::number(v, 16).toUpper(); };
+        line(u"Поле", u"Field", QString::number(field) + u" = "_s + hexOf(field) + u" = 0b"_s + QString::number(field, 2).rightJustified(width, u'0'));
+        line(u"Маска на месте", u"Mask in place", hexOf(mask << pos));
+        if (!raw.value(u"set"_s).trimmed().isEmpty()) {
+            bool okSet = false;
+            const quint64 v = integer(raw.value(u"set"_s), &okSet);
+            if (!okSet)
+                return failure(impossible);
+            if (v > mask)
+                line(u"Внимание", u"Note", ru ? u"значение не помещается в поле — лишние биты отброшены"_s : u"the value does not fit — extra bits dropped"_s);
+            const quint64 next = (x & ~(mask << pos)) | ((v & mask) << pos);
+            line(u"Новое значение регистра", u"New register value", hexOf(next) + u" ("_s + QString::number(next) + u')');
+            line(u"В коде", u"In code", u"x = (x & ~(0x%1u << %2)) | ((v & 0x%1u) << %2);"_s.arg(QString::number(mask, 16).toUpper()).arg(pos));
+        }
     } else if (id == u"kinematics") {
         if (!need({"a", "t"}))
             return failure(missing);
