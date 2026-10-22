@@ -17,6 +17,7 @@ def module(name):
 update = module('update')
 voice = module('voice')
 study = module('study')
+speak = module('speak')
 
 class Helpers(unittest.TestCase):
     def setUp(self):
@@ -120,5 +121,71 @@ class Study(unittest.TestCase):
             data=json.loads((Path(d)/'cours.3.fr.json').read_text())
             self.assertEqual(data['segments'][1]['text'],'Au revoir.')
             self.assertEqual((Path(d)/'cours.3.fr.txt').read_text(),'[00:00] Bonjour.\n[01:05] Au revoir.\n')
+
+class Speech(unittest.TestCase):
+    def test_speakable_and_sentences(self):
+        self.assertEqual(' '.join(speak.speakable('**Готово**: см. `main.c`\n```c\nint x;\n```', 'ru').split()), 'Готово: см. main.c Код показан в чате.')
+        parts = speak.sentences('Первое предложение. Второе! ' + 'слово, ' * 80 + 'конец.', limit=120)
+        self.assertTrue(all(len(p) <= 121 for p in parts) and len(parts) > 3)
+        self.assertEqual(speak.sentences('One. Two.'), ['One. Two.'])
+    def test_engine_plan(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            settings = speak.load_settings(root)
+            self.assertEqual(settings['engine'], 'auto')
+            self.assertEqual(speak.plan(settings, root), ['system'])
+            (root / 'speech.json').write_text(json.dumps({'engine': 'elevenlabs', 'elevenlabs': {'api_key': 'k'}}))
+            (root / 'piper').mkdir(); (root / 'piper' / 'ready').write_text('x')
+            (root / 'venv/bin').mkdir(parents=True); (root / 'venv/bin/python').write_text('')
+            (root / 'piper' / 'settings.json').write_text(json.dumps({'ru': 'ru_RU-irina-medium', 'rate': 9}))
+            settings = speak.load_settings(root)
+            self.assertEqual(speak.plan(settings, root), ['elevenlabs', 'piper', 'system'])
+            self.assertEqual(settings['voices']['ru'], 'ru_RU-irina-medium')
+            self.assertEqual(settings['rate'], 2.0)
+            (root / 'speech.json').write_text(json.dumps({'engine': 'chatterbox'}))
+            self.assertEqual(speak.plan(speak.load_settings(root), root), ['piper', 'system'], 'not installed: fallbacks')
+    def test_elevenlabs_request(self):
+        sent, played = {}, []
+        class Response(io.BytesIO):
+            def read1(self, n=-1): return self.read(min(n, 5))
+        def urlopen(request, timeout):
+            sent.update(url=request.full_url, body=json.loads(request.data), key=request.get_header('Xi-api-key'))
+            return Response(b'\x01\x02\x03\x04\x05\x06\x07\x08\x09')
+        def play(chunks, job, rate, channels=1):
+            played.extend(chunks); return True
+        settings = {'rate': 1.5, 'elevenlabs': {'api_key': 'secret', 'voice_id': 'onwK4e9ZLuTAKqWW03F9', 'model': 'eleven_flash_v2_5'}}
+        with patch('urllib.request.urlopen', urlopen), patch.object(speak, 'play', play):
+            self.assertTrue(speak.speak_elevenlabs('Привет', 'ru', settings, Path('/nonexistent'), speak.Job()))
+        self.assertIn('/v1/text-to-speech/onwK4e9ZLuTAKqWW03F9/stream?output_format=pcm_24000', sent['url'])
+        self.assertEqual(sent['key'], 'secret')
+        self.assertEqual(sent['body']['language_code'], 'ru')
+        self.assertEqual(sent['body']['voice_settings']['speed'], 1.2, 'ElevenLabs speed is limited to 0.7-1.2')
+        self.assertTrue(all(len(c) % 2 == 0 for c in played), 'whole 16-bit samples only')
+        settings['elevenlabs'] = {'api_key': 'secret', 'voice_id': '../../x'}
+        with patch('urllib.request.urlopen', urlopen), patch.object(speak, 'play', play):
+            speak.speak_elevenlabs('Hi', 'en', settings, Path('/nonexistent'), speak.Job())
+        self.assertIn(speak.ELEVEN_DEFAULT_VOICE, sent['url'], 'an odd voice id never reaches the URL')
+        self.assertNotIn('language_code', sent['body'])
+    def test_server_round_trip(self):
+        import os, subprocess, sys, time
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d); bin_dir = d / 'bin'; bin_dir.mkdir(); out = d / 'spoken.txt'
+            tool = bin_dir / 'spd-say'
+            tool.write_text(f'#!/bin/sh\ncat >> {out}\n'); tool.chmod(0o755)
+            env = dict(os.environ, XDG_RUNTIME_DIR=str(d), XDG_DATA_HOME=str(d / 'data'), PATH=f'{bin_dir}:{os.environ["PATH"]}')
+            script = str(ROOT / 'scripts' / 'speak.py')
+            # -S: no site packages, so Speech Dispatcher's Python module is absent and spd-say speaks.
+            server = subprocess.Popen([sys.executable, '-S', script, '--serve'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+            try:
+                self.assertIn(b'ready', server.stdout.readline())
+                self.assertTrue((d / 'jarvis-speech.sock').exists())
+                self.assertEqual((d / 'jarvis-speech.sock').stat().st_mode & 0o777, 0o600)
+                client = subprocess.run([sys.executable, '-S', script, 'en'], input='**Hello** there.'.encode(), capture_output=True, env=env, timeout=30)
+                self.assertEqual(client.returncode, 0, client.stderr)
+                self.assertIn('"name": "system"', client.stdout.decode())
+                self.assertEqual(out.read_text(), 'Hello there.')
+            finally:
+                server.stdin.close(); server.wait(timeout=10)
+            self.assertFalse((d / 'jarvis-speech.sock').exists(), 'the socket goes with the server')
 
 if __name__=='__main__':unittest.main()

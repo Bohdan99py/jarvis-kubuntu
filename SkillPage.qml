@@ -289,7 +289,7 @@ Popup {
                         TextEdit {
                             visible: answerCard.expanded
                             Layout.fillWidth: true
-                            text: page.text(answerCard.modelData, "answer").replace(/</g, "&lt;")
+                            text: page.desktop.safeMarkdown(page.text(answerCard.modelData, "answer"))
                             textFormat: TextEdit.MarkdownText
                             readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap
                             color: Theme.text; font.pixelSize: 13; selectionColor: page.tint

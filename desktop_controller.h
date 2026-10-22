@@ -1,4 +1,5 @@
 #pragma once
+#include <QDBusContext>
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
@@ -6,7 +7,7 @@
 #include <QVariantMap>
 #include <QNetworkAccessManager>
 #include "skill_store.h"
-class DesktopController : public QObject {
+class DesktopController : public QObject, protected QDBusContext {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.jarvis.Desktop1")
     Q_PROPERTY(QVariantList skills READ skills NOTIFY skillsChanged)
@@ -42,6 +43,8 @@ public:
     // Calculators of a skill ("tools") in the interface language, and one calculation.
     Q_INVOKABLE QVariantList calculators(const QStringList &ids) const;
     Q_INVOKABLE QVariantMap calculate(const QString &id, const QVariantMap &values) const;
+    // Markdown from a skill file (or anything untrusted), safe to render: no images, no HTML.
+    Q_INVOKABLE QString safeMarkdown(const QString &text) const;
     Q_INVOKABLE void update();
     Q_INVOKABLE void restart();
     Q_INVOKABLE void searchWeb(const QString &query);
@@ -53,7 +56,8 @@ public slots:
     Q_SCRIPTABLE void ShowQuick() { emit quickRequested(); }
     Q_SCRIPTABLE void ShowMain() { emit mainRequested(); }
     // From jarvisd's notifications: "main", "tasks", "study", "curious" or "memory".
-    Q_SCRIPTABLE void Open(const QString &target, const QString &payload) { emit openRequested(target.left(20), payload.left(1000)); }
+    // The payload becomes a chat message from Jarvis, so it is taken only from jarvisd.
+    Q_SCRIPTABLE void Open(const QString &target, const QString &payload);
 signals:
     void skillsChanged();
     void updateChanged();

@@ -218,12 +218,75 @@ def setup_tts(root, voices):
         (target / "ready").write_text(PIPER + "\n", encoding="utf-8")
         event("ready", text=voice_message("tts_ready"))
 
+# Chatterbox (Resemble AI): local neural speech in 23 languages that can take on a
+# voice from a short sample. PyTorch is large: without an NVIDIA GPU the CPU build
+# (~200 MB instead of ~2.5 GB) is installed. Its own environment keeps its pinned
+# libraries away from Vosk and Piper.
+CHATTERBOX = "chatterbox-tts==0.1.7"
+CHATTERBOX_MESSAGES = {
+    "ru": {"start": "Установка Chatterbox: PyTorch и программа (1–3 ГБ)…", "model": "Загрузка модели Chatterbox (~3 ГБ)…",
+           "check": "Проверка голоса Chatterbox…", "ready": "Голос Chatterbox готов."},
+    "en": {"start": "Installing Chatterbox: PyTorch and the program (1–3 GB)…", "model": "Downloading the Chatterbox model (~3 GB)…",
+           "check": "Checking the Chatterbox voice…", "ready": "The Chatterbox voice is ready."},
+}
+
+
+def chatterbox_message(key):
+    return CHATTERBOX_MESSAGES.get(LANG, CHATTERBOX_MESSAGES["en"])[key]
+
+
+def has_nvidia():
+    import shutil
+    return bool(shutil.which("nvidia-smi")) or Path("/proc/driver/nvidia/version").exists()
+
+
+def torch_packages(version=sys.version_info):
+    """The PyTorch that chatterbox-tts 0.1.7 asks for on this Python."""
+    if version >= (3, 14):
+        return ["torch>=2.9.0", "torchaudio>=2.9.0"]
+    return ["torch==2.6.0", "torchaudio==2.6.0"]
+
+
+def setup_chatterbox(root, device="auto"):
+    import fcntl
+    import venv
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (root / ".setup.lock").open("w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        event("status", text=chatterbox_message("start"))
+        home = root / "chatterbox"
+        home.mkdir(exist_ok=True, mode=0o700)
+        (home / "ready").unlink(missing_ok=True)
+        environment = home / "venv"
+        if not (environment / "bin/python").exists():
+            venv.EnvBuilder(with_pip=True).create(environment)
+        python = str(environment / "bin/python")
+        pip = [python, "-m", "pip", "install", "--disable-pip-version-check", "--timeout", "60"]
+        gpu = device == "cuda" or (device == "auto" and has_nvidia())
+        if not gpu:
+            subprocess.run(pip + ["--index-url", "https://download.pytorch.org/whl/cpu"] + torch_packages(),
+                           check=True, stdout=sys.stderr, timeout=3600)
+        subprocess.run(pip + [CHATTERBOX], check=True, stdout=sys.stderr, timeout=3600)
+        # The weights come from Hugging Face into Jarvis's own folder.
+        env = dict(os.environ, HF_HOME=str(home / "hf"), HF_HUB_DISABLE_TELEMETRY="1")
+        event("status", text=chatterbox_message("model"))
+        subprocess.run([python, "-c", "from chatterbox.mtl_tts import ChatterboxMultilingualTTS as M; M.from_pretrained(device='cpu')"],
+                       check=True, timeout=3600, stdout=sys.stderr, env=env)
+        event("status", text=chatterbox_message("check"))
+        subprocess.run([python, "-c", "from chatterbox.mtl_tts import ChatterboxMultilingualTTS as M; "
+                                      "M.from_pretrained(device='cpu').generate('Ok.', language_id='en')"],
+                       check=True, timeout=1800, stdout=sys.stderr, env=env)
+        (home / "ready").write_text(CHATTERBOX + ("\ncuda\n" if gpu else "\ncpu\n"), encoding="utf-8")
+        event("ready", text=chatterbox_message("ready"))
+
+
 def main():
     def terminate(signum, frame):
         raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["setup", "listen", "transcribe", "tts"])
+    parser.add_argument("mode", choices=["setup", "listen", "transcribe", "tts", "chatterbox"])
+    parser.add_argument("--chatterbox-device", choices=["auto", "cpu", "cuda"], default="auto")
     parser.add_argument("--voices", default="", help="tts: Piper voices to install, comma separated")
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--wav", type=Path)
@@ -238,6 +301,8 @@ def main():
             setup(args.root, model)
         elif args.mode == "tts":
             setup_tts(args.root, [v for v in args.voices.split(",") if v])
+        elif args.mode == "chatterbox":
+            setup_chatterbox(args.root, args.chatterbox_device)
         else:
             recognize(args.root / model, args.wav if args.mode == "transcribe" else None, args.device)
     except Exception as error:

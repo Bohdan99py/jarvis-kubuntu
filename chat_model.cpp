@@ -21,37 +21,13 @@
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include "dbus_names.h"
+#include "markdown_safe.h"
 
 using namespace Qt::StringLiterals;
 
 #include <utility>
 
 namespace {
-
-// Answers come from Claude and may quote anything: as Markdown they must not
-// load images or run HTML. Outside code, "<" becomes an entity (it still reads
-// as "<"); code blocks and `inline code` show it literally anyway.
-QString safeMarkdown(const QString &text)
-{
-    static const QRegularExpression image(QStringLiteral("!\\[([^\\]]*)\\]\\([^)]*\\)"));
-    QStringList lines = text.split(u'\n');
-    bool fence = false;
-    for (QString &line : lines) {
-        const QString trimmed = line.trimmed();
-        if (trimmed.startsWith(QLatin1String("```")) || trimmed.startsWith(QLatin1String("~~~"))) {
-            fence = !fence;
-            continue;
-        }
-        if (fence)
-            continue;
-        line.replace(image, QStringLiteral("[\\1]"));
-        QStringList parts = line.split(u'`');
-        for (int i = 0; i < parts.size(); i += 2) // even parts are outside `code`
-            parts[i].replace(u'<', QLatin1String("&lt;"));
-        line = parts.join(u'`');
-    }
-    return lines.join(u'\n');
-}
 
 // Text and fenced code apart: code gets its own block with Copy and Save.
 // "```cpp main.cpp" names the file; an unclosed fence (still streaming) runs to the end.
@@ -65,7 +41,7 @@ QVariantList segments(const QString &text)
     auto flushProse = [&] {
         const QString t = prose.join(u'\n').trimmed();
         if (!t.isEmpty())
-            out.append(QVariantMap{{QStringLiteral("kind"), QStringLiteral("text")}, {QStringLiteral("markdown"), safeMarkdown(t)}});
+            out.append(QVariantMap{{QStringLiteral("kind"), QStringLiteral("text")}, {QStringLiteral("markdown"), jarvis::text::safeMarkdown(t)}});
         prose.clear();
     };
     auto flushCode = [&] {
@@ -163,7 +139,7 @@ QVariant ChatModel::data(const QModelIndex &index, int role) const
     case TimeRole:
         return m.time;
     case MarkdownRole:
-        return m.fromUser ? QString() : safeMarkdown(m.text);
+        return m.fromUser ? QString() : jarvis::text::safeMarkdown(m.text);
     case SegmentsRole:
         return m.fromUser ? QVariantList() : segments(m.text);
     case FilesRole:

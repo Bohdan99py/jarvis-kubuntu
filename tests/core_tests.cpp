@@ -17,6 +17,7 @@
 #include "task_store.h"
 #include "calc_engine.h"
 #include "attachments.h"
+#include "markdown_safe.h"
 #include <QFile>
 #include <QImage>
 static void require(bool ok,const char *message) { if(!ok)qFatal("%s",message); }
@@ -30,6 +31,7 @@ static void skills() {
     require(skills.prompt().contains("embedded systems engineer"),"embedded skill on by default");
     require(!skills.recall(QStringLiteral("Чем отличается SPI от I2C?")).isEmpty(),"embedded local example");
     require(!skills.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"built-in local example");
+    require(skills.recall(QStringLiteral("Что такое SQL-инъекция?")).contains("prepare") && skills.recall("What is endianness?").contains("little-endian"),"programming answers");
     require(skills.setEnabled("electronics",false).isEmpty(),"disable skill");
     require(skills.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"disabled skill cannot answer");
     require(!skills.prompt().contains("Thévenin/Norton"),"disabled skill not sent to Claude");
@@ -333,6 +335,53 @@ static void reminders() {
     require(tasks.task(nag)["done"].toDouble()==0 && tasks.task(nag)["repeat"].toString()=="days:1,5","edit reopens with a new repetition");
     require(!tasks.update(nag,QStringLiteral("x"),0,{}).isEmpty() && tasks.update("missing",QStringLiteral("ok text"),0,{})=="missing","edit validation");
 }
+static void programmingCalculators() {
+    using jarvis::Calculators;using jarvis::Lang;
+    auto line=[](const QJsonObject &r,int i){return r["lines"].toArray().at(i).toObject()["value"].toString();};
+    auto find=[](const QJsonObject &r,const QString &label){for(const auto &l:r["lines"].toArray()) if(l.toObject()["label"].toString()==label) return l.toObject()["value"].toString(); return QString();};
+    QJsonObject r=Calculators::compute("ieee754",{{"value","3.14"}},Lang::En);
+    require(r["ok"].toBool() && line(r,0)=="0x4048F5C3","float bits of 3.14");
+    require(find(r,"double bits")=="0x40091EB851EB851F","double bits of 3.14");
+    r=Calculators::compute("ieee754",{{"value","0x40490FDB"}},Lang::En);
+    require(line(r,0)=="3.14159274","float from bits");
+    r=Calculators::compute("ieee754",{{"value","-0.1"}},Lang::En);
+    require(line(r,0)=="0xBDCCCCCD","negative float");
+    r=Calculators::compute("ieee754",{{"value","0x7F800000"}},Lang::En);
+    require(line(r,1).contains("infinity"),"infinity classified");
+    r=Calculators::compute("qformat",{{"format","Q15"},{"value","0.5"}},Lang::En);
+    require(line(r,0)=="16384 = 0x4000","Q15 of 0.5");
+    r=Calculators::compute("qformat",{{"format","Q1.15"},{"value","0x8000"}},Lang::En);
+    require(line(r,0)=="-1","Q15 negative code");
+    r=Calculators::compute("qformat",{{"format","Q16.16"},{"value","1.5"}},Lang::En);
+    require(line(r,0)=="98304 = 0x00018000" && find(r,"Range").startsWith("-32768"),"Q16.16");
+    r=Calculators::compute("qformat",{{"format","Q15"},{"value","2"}},Lang::En);
+    require(line(r,0)=="out of range — saturated" && line(r,1)=="32767 = 0x7FFF","Q15 saturates");
+    r=Calculators::compute("subnet",{{"value","192.168.1.10/24"}},Lang::En);
+    require(line(r,0)=="192.168.1.0/24" && find(r,"Broadcast")=="192.168.1.255" && find(r,"Usable addresses")=="254","subnet /24");
+    require(find(r,"Address type").contains("private"),"private range");
+    r=Calculators::compute("subnet",{{"value","10.20.30.40 255.255.240.0"}},Lang::En);
+    require(line(r,0)=="10.20.16.0/20" && find(r,"Hosts")=="10.20.16.1 … 10.20.31.254","subnet from a mask");
+    require(!Calculators::compute("subnet",{{"value","10.0.0.1 255.0.255.0"}},Lang::En)["ok"].toBool(),"non-contiguous mask");
+    r=Calculators::compute("rgb",{{"value","#FF8800"}},Lang::En);
+    require(line(r,1)=="rgb(255, 136, 0)" && find(r,"RGB565 (MCU displays)").startsWith("0xFC40"),"RGB565");
+    r=Calculators::compute("rgb",{{"value","0xF800"}},Lang::En);
+    require(line(r,0)=="#FF0000","RGB565 back to red");
+    r=Calculators::compute("bytes",{{"value",QStringLiteral("Жук")}},Lang::En);
+    require(find(r,"UTF-8 (hex)")=="D0 96 D1 83 D0 BA" && find(r,"Characters / bytes")=="3 / 6","UTF-8 bytes");
+    require(find(r,"C string")=="\"\\xD0\\x96\\xD1\\x83\\xD0\\xBA\"","C string escapes");
+    r=Calculators::compute("bytes",{{"value","D0 96 D1 83"}},Lang::En);
+    require(find(r,"As UTF-8 text")==QStringLiteral("«Жу»"),"bytes back to text");
+    r=Calculators::compute("complexity",{{"n","1M"},{"speed","100M"}},Lang::En);
+    require(r["ok"].toBool() && find(r,"O(n)").endsWith("10 ms") && find(r,"O(n!)").contains("million years"),"complexity table");
+    QString reply;
+    require(Calculators::answer("192.168.0.77/26",Lang::Ru,&reply) && reply.contains("192.168.0.64/26"),"subnet in chat");
+    require(Calculators::answer("float 0.1",Lang::En,&reply) && reply.contains("0x3DCCCCCD"),"ieee754 in chat");
+    require(Calculators::answer("0.25 в Q15",Lang::Ru,&reply) && reply.contains("8192"),"Q format in chat");
+    require(Calculators::answer("#ff8800 в rgb565",Lang::Ru,&reply) && reply.contains("0xFC40"),"colour in chat");
+    require(Calculators::answer(QStringLiteral("utf-8 «Привет»"),Lang::Ru,&reply) && reply.contains("D0 9F"),"bytes in chat");
+    require(Calculators::answer("O(n log n) n=1e6",Lang::En,&reply) && reply.contains("O(n²)"),"complexity in chat");
+    require(!Calculators::answer("how many bytes in a kilobyte?",Lang::En,&reply),"plain question stays a question");
+}
 static void calculators() {
     using jarvis::Calculators;using jarvis::Lang;
     auto value=[](const char *text){double v=-1;if(!Calculators::parseValue(QString::fromUtf8(text),&v))qFatal("parse %s",text);return v;};
@@ -431,6 +480,11 @@ static void attachments(const QString &dir) {
     QFile code(dir+"/blink.ino");require(code.open(QIODevice::WriteOnly),"write code");code.write("void setup() {}\nvoid loop() {}\n");code.close();
     auto a=Attachments::load(dir+"/blink.ino");
     require(a.kind=="text" && a.blocks.first().toObject()["text"].toString().contains("```cpp\nvoid setup"),"code attachment");
+    // A long Russian log: the 400 KB cut falls inside a two-byte letter.
+    QFile log(dir+"/long.log");require(log.open(QIODevice::WriteOnly),"write log");
+    log.write("x"+QString(300000,QChar(0x044F)).toUtf8());log.close();
+    a=Attachments::load(dir+"/long.log");
+    require(a.error.isEmpty() && a.kind=="text" && a.blocks.first().toObject()["text"].toString().contains("first 400 KB"),"UTF-8 text cut on a character boundary");
     QImage big(3000,1000,QImage::Format_RGB32);big.fill(Qt::red);big.save(dir+"/big.png");
     a=Attachments::load(dir+"/big.png");
     require(a.kind=="image" && a.blocks.at(1).toObject()["source"].toObject()["media_type"].toString()=="image/jpeg","large image scaled to JPEG");
@@ -438,6 +492,20 @@ static void attachments(const QString &dir) {
     require(scaled.width()==1568,"scaled to 1568 px");
     QFile bin(dir+"/x.bin");require(bin.open(QIODevice::WriteOnly),"write binary");bin.write(QByteArray("\x7f" "ELF\0\0\0",7));bin.close();
     require(!Attachments::load(dir+"/x.bin").error.isEmpty() && !Attachments::load("/proc/self/status").error.isEmpty() && !Attachments::load(dir+"/missing.txt").error.isEmpty(),"refusals");
+}
+static void markdown() {
+    using jarvis::text::safeMarkdown;
+    auto noImage=[](const QString &md){ return !md.contains("![") && !md.contains("<img"); };
+    require(noImage(safeMarkdown("look ![x](https://evil.example/?q=secret) here")),"inline image removed");
+    require(safeMarkdown("look ![chart](https://e.x/a.png)").contains("[chart]"),"image keeps its alt text");
+    require(noImage(safeMarkdown("![x](https://e.x/a_(1).png)")),"image URL with parentheses removed");
+    require(noImage(safeMarkdown("![logo][1]\n\n[1]: https://evil.example/p.png")),"reference image removed");
+    require(noImage(safeMarkdown("![logo]\n\n[logo]: https://evil.example/p.png")),"shortcut reference image removed");
+    require(!safeMarkdown("a ` <img src=https://e.x/p>").contains("<img"),"unbalanced backtick does not shield HTML");
+    require(safeMarkdown("use `a<b` here <b>bold</b>")=="use `a<b` here &lt;b>bold&lt;/b>","code span kept, HTML escaped");
+    require(safeMarkdown("``a`b<c`` <i>")=="``a`b<c`` &lt;i>","double-backtick span");
+    require(safeMarkdown("```cpp\nif (a<b) x = ![y](z);\n```\n<b>")=="```cpp\nif (a<b) x = ![y](z);\n```\n&lt;b>","fenced code untouched");
+    require(safeMarkdown("~~~~\n```\n<x>\n~~~~\n<y>")=="~~~~\n```\n<x>\n~~~~\n&lt;y>","only the same fence closes a block");
 }
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
@@ -455,6 +523,8 @@ int main(int argc,char **argv) {
     curiosity();
     reminders();
     calculators();
+    programmingCalculators();
     attachments(scratch.path());
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments";
+    markdown();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown";
 }

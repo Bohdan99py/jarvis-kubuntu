@@ -21,6 +21,7 @@
 #include <QTimer>
 
 #include "config.h"
+#include "markdown_safe.h"
 #include "memory_text.h"
 #include "runtime_paths.h"
 
@@ -1183,6 +1184,11 @@ void StudyController::speakNext()
     m_speech.start(systemPython(), args);
     m_speech.write(text.toUtf8());
     m_speech.closeWriteChannel();
+}
+
+QString StudyController::notes() const
+{
+    return jarvis::text::safeMarkdown(m_notes);
 }
 
 // ---- PDF ------------------------------------------------------------------------

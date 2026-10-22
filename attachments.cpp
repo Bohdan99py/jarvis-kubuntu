@@ -204,7 +204,7 @@ bool runKicadCli(const QStringList &args, int timeoutMs = 30000)
 } // namespace
 
 // KiCad escapes characters in names: "SDA{slash}A4" is "SDA/A4".
-QString unescape(QString name)
+static QString unescape(QString name)
 {
     static const QList<std::pair<QString, QString>> table = {
         {u"{slash}"_s, u"/"_s}, {u"{backslash}"_s, u"\\"_s}, {u"{lt}"_s, u"<"_s}, {u"{gt}"_s, u">"_s},
@@ -632,8 +632,13 @@ Attachment Attachments::load(const QString &path)
         return a;
     }
 
+    // Cut on a character boundary: a multi-byte letter split at 400 KB is not an encoding error.
+    qsizetype keep = std::min<qsizetype>(bytes.size(), kMaxTextBytes);
+    if (keep < bytes.size())
+        while (keep > 0 && (uchar(bytes.at(keep)) & 0xC0) == 0x80)
+            --keep;
     auto decoder = QStringDecoder(QStringDecoder::Utf8);
-    QString text = decoder(bytes.left(kMaxTextBytes));
+    QString text = decoder(bytes.left(keep));
     if (decoder.hasError()) {
         a.error = QCoreApplication::translate("jarvis", "%1 is not UTF-8 text").arg(a.name);
         return a;

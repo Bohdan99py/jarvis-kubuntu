@@ -48,6 +48,8 @@ qt_add_library(jarvis_core STATIC
     language.cpp
     memory_text.h
     memory_text.cpp
+    markdown_safe.h
+    markdown_safe.cpp
     knowledge_store.h
     knowledge_store.cpp
     activity_store.h
