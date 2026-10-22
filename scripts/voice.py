@@ -90,6 +90,18 @@ def setup(root, model=MODEL):
         (root / "ready").write_text("vosk==0.3.45\n", encoding="utf-8")
         event("ready", text=message("ready"))
 
+def input_level(pcm):
+    """Loudness of 16-bit mono PCM, 0…1 (speech at a normal distance ≈ 0.3–0.8)."""
+    import array
+    import math
+    samples = array.array("h")
+    samples.frombytes(pcm[:len(pcm) - len(pcm) % 2])
+    if not samples:
+        return 0.0
+    rms = math.sqrt(sum(x * x for x in samples) / len(samples)) / 32768.0
+    return round(min(1.0, rms * 6.0), 3)
+
+
 def recognize(model, wav=None, device="default"):
     from vosk import Model, KaldiRecognizer, SetLogLevel
     SetLogLevel(-1)
@@ -116,6 +128,7 @@ def recognize(model, wav=None, device="default"):
             selector.register(sys.stdin, selectors.EVENT_READ)
             event("listening", text=message("listening"))
             deadline = time.monotonic() + 20
+            last_level = 0.0
             stop = False
             while not stop and time.monotonic() < deadline:
                 for key, _ in selector.select(.15):
@@ -131,6 +144,10 @@ def recognize(model, wav=None, device="default"):
                         error = recorder.stderr.read(2048).decode(errors="replace")
                         raise RuntimeError(message("mic") + error)
                     accept(data)
+                    now = time.monotonic()
+                    if now - last_level >= 0.05:  # the microphone level for the interface, 20 times a second
+                        last_level = now
+                        event("level", v=input_level(data))
         finally:
             recorder.terminate()
             try:

@@ -15,12 +15,14 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QScreen>
 #include <QTimer>
 #include "desktop_controller.h"
 #include "notifier.h"
 #include "build_config.h"
 #include "config.h"
 #include "language.h"
+#include "visual_state.h"
 
 // SIGTERM (logout, systemctl stop) ends the event loop normally, so a lesson
 // recording is finished and saved instead of being cut off.
@@ -77,14 +79,23 @@ int main(int argc,char *argv[]) {
     DesktopController desktop;
     Notifier notifier;
     if(bus.isConnected())bus.registerObject("/org/jarvis/Desktop1",&desktop,QDBusConnection::ExportScriptableSlots);
+    // The HUD's state machine lives in the core library (it is unit-tested there).
+    qmlRegisterType<jarvis::VisualState>("Jarvis.Core",1,0,"VisualStateController");
     QQuickStyle::setStyle("Basic");
     OfflineNetworkFactory offline; // outlives the engine
+    // The compact HUD overlay is a translucent window.
+    QQuickWindow::setDefaultAlphaBuffer(true);
     QQmlApplicationEngine engine;
     engine.setNetworkAccessManagerFactory(&offline);
     engine.rootContext()->setContextProperty("desktopBridge",&desktop);
     engine.rootContext()->setContextProperty("startQuick",quick);
     engine.rootContext()->setContextProperty("startTray",tray);
     engine.rootContext()->setContextProperty("startOpen",open);
+    // Development aid: JARVIS_HUD_STATE=speaking (idle, listening, processing, notification,
+    // warning, error) shows that HUD state regardless of what Jarvis does.
+    // JARVIS_HUD_STATE=<state> pins the HUD to one state (idle, listening, processing, speaking,
+    // notification, warning, error) for visual checks; JARVIS_HUD_STATE=demo starts the demo.
+    engine.rootContext()->setContextProperty("hudForcedState",qEnvironmentVariable("JARVIS_HUD_STATE"));
     engine.rootContext()->setContextProperty("notifier",&notifier);
     QObject::connect(&engine,&QQmlApplicationEngine::objectCreated,&app,[](QObject *object,const QUrl &){if(!object)QCoreApplication::exit(EXIT_FAILURE);},Qt::QueuedConnection);
     engine.load(QUrl("qrc:/qt/qml/Jarvis/Main.qml"));
@@ -97,6 +108,9 @@ int main(int argc,char *argv[]) {
             window->show();
             if(QObject *chat=window->findChild<QObject*>("chatModel"))
                 QMetaObject::invokeMethod(chat,"say",Q_ARG(QString,qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SAY")));
+            // JARVIS_UI_SNAPSHOT_SEND=text sends a real request, to see the HUD follow it.
+            if(QObject *chat=window->findChild<QObject*>("chatModel");chat&&qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SEND"))
+                QMetaObject::invokeMethod(chat,"send",Q_ARG(QString,qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SEND")));
             // JARVIS_UI_SNAPSHOT_CENTER=<tab number> shows a tab of the control center instead.
             if(const QString tab=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_CENTER");!tab.isEmpty())
                 if(QObject *center=window->findChild<QObject*>("controlCenter")) {
@@ -107,7 +121,12 @@ int main(int argc,char *argv[]) {
             if(const QString skill=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SKILL");!skill.isEmpty())
                 if(QObject *center=window->findChild<QObject*>("controlCenter"))
                     QMetaObject::invokeMethod(center,"showSkill",Q_ARG(QVariant,skill.section(':',0,0)),Q_ARG(QVariant,skill.section(':',1)));
-            QTimer::singleShot(1500,window,[window,shot]{window->grabWindow().save(shot);QCoreApplication::quit();});
+            // JARVIS_UI_SNAPSHOT_DELAY=<ms> waits longer, e.g. for the HUD demo to play some events.
+            const int delay=qBound(200,qEnvironmentVariableIntValue("JARVIS_UI_SNAPSHOT_DELAY"),60000);
+            QTimer::singleShot(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_DELAY")?delay:1500,window,[window,shot]{
+                // JARVIS_UI_SNAPSHOT_SCREEN=1 grabs the whole screen, with the compact overlay.
+                const QImage image=qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SCREEN")?window->screen()->grabWindow(0).toImage():window->grabWindow();
+                image.save(shot);QCoreApplication::quit();});
         });
     }
     return app.exec();

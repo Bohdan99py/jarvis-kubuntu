@@ -53,6 +53,8 @@ Assistant::Assistant(QObject *parent)
     : QObject(parent)
 {
     connect(&m_claude, &ClaudeClient::finished, this, [this](bool ok, const QString &text) {
+        if (!ok)
+            emit failed(m_current, text);
         finish(m_current, ok ? absorbClaudeReply(text) : text, ok);
     });
     m_activityTick.setInterval(60 * 1000);
@@ -170,6 +172,7 @@ void Assistant::startNext()
     m_current = r.id;
     m_currentText = r.text;
     if (!r.mode.isEmpty()) {
+        emit routed(r.id, u"code"_s);
         startCode(r);
         return;
     }
@@ -177,25 +180,31 @@ void Assistant::startNext()
     const Lang lang = replyLanguage(r.text);
     m_lastChat = now();
     if (!r.files.isEmpty()) {
+        emit routed(r.id, u"files"_s);
         answerWithFiles(r, lang);
         return;
     }
     QString commandReply;
     if (handleMemoryCommand(r.text, lang, &commandReply)) {
+        emit routed(r.id, u"memory"_s);
         finishLater(r.id, commandReply, false, 150);
         return;
     }
-    if (handleTaskCommand(r, lang))
+    if (handleTaskCommand(r, lang)) {
+        emit routed(r.id, u"tasks"_s);
         return;
+    }
     // "пример схемы на 555": the bundled example circuits, offline.
     QString schematic;
     if (SchematicLibrary::answer(r.text, lang, &schematic)) {
+        emit routed(r.id, u"schematic"_s);
         finishLater(r.id, schematic, false, 120);
         return;
     }
     // Calculations are answered here, exactly and without the network.
     QString calculation;
     if (Calculators::answer(r.text, lang, &calculation)) {
+        emit routed(r.id, u"calculator"_s);
         finishLater(r.id, calculation, false, 120);
         return;
     }
@@ -211,6 +220,7 @@ void Assistant::answer(const Request &r, Lang lang)
         const bool fresh = now() - m_correctionAt < 10 * 60 * 1000;
         m_correctionAt = 0;
         if (fresh && !m_lastQuestion.isEmpty() && !r.text.trimmed().endsWith(u'?')) {
+            emit routed(r.id, u"learn"_s);
             const QString error = teach(m_lastQuestion, r.text.trimmed());
             if (error.isEmpty())
                 m_lastAnswer = r.text.trimmed();
@@ -254,6 +264,7 @@ void Assistant::answer(const Request &r, Lang lang)
             curiosity.remove(u"pending"_s);
             curiosityChanged = true;
             if (answered && m_knowledge.learn(slot, value, u"curiosity"_s, 0.85).isEmpty()) {
+                emit routed(r.id, u"learn"_s);
                 m_knowledge.setCuriosityState(curiosity);
                 emit memoryChanged();
                 const QString ack = slot == u"name"
@@ -275,6 +286,7 @@ void Assistant::answer(const Request &r, Lang lang)
 
     if (!learned.isEmpty()) {
         saveCuriosity();
+        emit routed(r.id, u"recall"_s);
         finishLater(r.id, learned, true, 0);
         return;
     }
@@ -305,6 +317,11 @@ void Assistant::answer(const Request &r, Lang lang)
                          u"with this one question in your own words, then append <asked/>. Otherwise do not ask it.\n"_s;
         }
         saveCuriosity();
+        // What Claude gets from memory: taught answers, facts, earlier conversations.
+        if (context.contains(u"## Known about the user"_s) || context.contains(u"## Earlier conversations"_s)
+            || context.contains(u"## Answers the user taught you"_s))
+            emit routed(r.id, u"recall"_s);
+        emit routed(r.id, u"llm"_s);
         m_claude.ask(r.text, lang, m_config.replyLanguage != u"auto", context);
         return;
     }
@@ -338,6 +355,7 @@ void Assistant::answer(const Request &r, Lang lang)
         }
     }
     saveCuriosity();
+    emit routed(r.id, match == ChatEngine::Match::Data ? u"system"_s : u"local"_s);
 
     // Short "thinking" pause so local answers feel like a conversation, not a flash.
     finishLater(r.id, localReply, match != ChatEngine::Match::Data,
@@ -662,6 +680,7 @@ void Assistant::reflect()
         u"Reply with JSON only: {\"facts\":[{\"slot\":\"name|location|occupation|project|birthday|likes|"
         u"dislikes|skill|uses|goal|studies|note\",\"value\":\"short value in the user's language\"}],"
         u"\"summary\":\"…\"} with at most 5 facts ([] when there is nothing new)."_s;
+    emit routed(0, u"reflect"_s);
     m_claude.extract(system, u"Known facts:\n"_s + (known.isEmpty() ? u"(none)\n"_s : known)
                                  + u"\nConversation:\n"_s + conversation, 600);
 }
@@ -1003,12 +1022,15 @@ void Assistant::startCode(const Request &r)
         request += u"Code:\n```"_s + language + u'\n' + selection + u"\n```\n"_s;
     if (!diagnostics.isEmpty())
         request += u"Diagnostics:\n"_s + diagnostics.join(u'\n') + u'\n';
+    emit routed(r.id, u"llm"_s);
     m_coder.ask(request, lang, m_config.replyLanguage != u"auto", context);
 }
 
 void Assistant::finishCode(bool ok, const QString &reply)
 {
     const quint64 id = m_current;
+    if (!ok)
+        emit failed(id, reply);
     if (ok) {
         CodeAnswer answer = m_pendingCode;
         answer.answer = reply.left(6000);
@@ -1165,6 +1187,7 @@ void Assistant::answerWithFiles(const Request &r, Lang lang)
     if (!trouble.isEmpty())
         question += u"\n\n("_s + trouble + u")"_s;
     m_currentText = question + u" [files: "_s + names.join(u", "_s) + u']';
+    emit routed(r.id, u"llm"_s);
     m_claude.ask(question, lang, m_config.replyLanguage != u"auto", buildContext(question), blocks, names.join(u", "_s));
 }
 
@@ -1399,6 +1422,7 @@ bool Assistant::handleTaskCommand(const Request &r, Lang lang)
             u"request gives no time; resolve vague times against the current time (\"after lunch\" 13:30, \"in the "
             u"evening\" 19:00, \"end of the day\" 18:00, \"in the morning\" 09:00)."_s
                 .arg(QLocale::c().toString(current, u"dddd yyyy-MM-dd HH:mm"_s));
+        emit routed(r.id, u"llm"_s);
         m_planner.extract(system, textValue.left(1000), 200);
         return true;
     }
@@ -1773,6 +1797,7 @@ void Assistant::reviewMemory()
           u"{\"merge\":[{\"ids\":[\"…\"],\"slot\":\"…\",\"value\":\"…\"}],\"forget\":[\"id\"],"
           u"\"add\":[{\"slot\":\"…\",\"value\":\"…\"}],\"insight\":\"…\"}"_s;
     m_planJob = PlanJob::Review;
+    emit routed(0, u"reflect"_s);
     m_planner.extract(system, data.left(14000), 900);
 }
 

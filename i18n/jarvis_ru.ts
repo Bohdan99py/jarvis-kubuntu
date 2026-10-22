@@ -658,6 +658,34 @@ A KDE menu entry and a system tray icon</source>
         <source>Audio (*.wav *.flac *.mp3 *.ogg)</source>
         <translation>Аудио (*.wav *.flac *.mp3 *.ogg)</translation>
     </message>
+    <message>
+        <source>Interface</source>
+        <translation>Интерфейс</translation>
+    </message>
+    <message>
+        <source>Cinematic HUD: every effect</source>
+        <translation>Кинематографический HUD: все эффекты</translation>
+    </message>
+    <message>
+        <source>Balanced HUD</source>
+        <translation>Сбалансированный HUD</translation>
+    </message>
+    <message>
+        <source>Light HUD: no particles, fewer layers</source>
+        <translation>Лёгкий HUD: без частиц, меньше слоёв</translation>
+    </message>
+    <message>
+        <source>Classic chat without the HUD</source>
+        <translation>Классический чат без HUD</translation>
+    </message>
+    <message>
+        <source>Compact core above other windows</source>
+        <translation>Компактное ядро поверх других окон</translation>
+    </message>
+    <message>
+        <source>A small always-on-top core that shows what Jarvis is doing. Drag it anywhere; a click opens Jarvis. Ctrl+Shift+O switches it.</source>
+        <translation>Маленькое ядро поверх всех окон показывает, чем занят Джарвис. Его можно перетащить куда угодно; щелчок открывает Джарвиса. Ctrl+Shift+O включает и выключает его.</translation>
+    </message>
 </context>
 <context>
     <name>DesktopController</name>
@@ -740,6 +768,455 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Choose a skill JSON file up to 160 KB.</source>
         <translation>Выберите JSON-файл навыка до 160 КБ.</translation>
+    </message>
+</context>
+<context>
+    <name>HudStage</name>
+    <message>
+        <source>Request with %1 file(s)</source>
+        <translation>Запрос с файлами: %1</translation>
+    </message>
+    <message>
+        <source>Request sent</source>
+        <translation>Запрос отправлен</translation>
+    </message>
+    <message>
+        <source>Route: %1</source>
+        <translation>Маршрут: %1</translation>
+    </message>
+    <message>
+        <source>Another client: %1</source>
+        <translation>Другой клиент: %1</translation>
+    </message>
+    <message>
+        <source>Answer streaming</source>
+        <translation>Ответ поступает</translation>
+    </message>
+    <message>
+        <source>Answer, %1 characters</source>
+        <translation>Ответ, символов: %1</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Ошибка: %1</translation>
+    </message>
+    <message>
+        <source>Background service failed, answering locally</source>
+        <translation>Фоновая служба не ответила, отвечаю локально</translation>
+    </message>
+    <message>
+        <source>Notification: %1</source>
+        <translation>Уведомление: %1</translation>
+    </message>
+    <message>
+        <source>Memory updated</source>
+        <translation>Память обновлена</translation>
+    </message>
+    <message>
+        <source>Background service connected</source>
+        <translation>Фоновая служба подключена</translation>
+    </message>
+    <message>
+        <source>Background service stopped</source>
+        <translation>Фоновая служба остановлена</translation>
+    </message>
+    <message>
+        <source>Running: %1</source>
+        <translation>Выполняется: %1</translation>
+    </message>
+    <message>
+        <source>Speaking</source>
+        <translation>Говорю</translation>
+    </message>
+    <message>
+        <source>Finished speaking</source>
+        <translation>Закончил говорить</translation>
+    </message>
+    <message>
+        <source>Listening</source>
+        <translation>Слушаю</translation>
+    </message>
+    <message>
+        <source>Stopped listening</source>
+        <translation>Перестал слушать</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Предупреждение: %1</translation>
+    </message>
+    <message>
+        <source>LOW</source>
+        <translation>ЛЁГКИЙ</translation>
+    </message>
+    <message>
+        <source>Low: fewer rings, no particles, 20 frames per second</source>
+        <translation>Лёгкий: меньше колец, без частиц, 20 кадров в секунду</translation>
+    </message>
+    <message>
+        <source>BALANCED</source>
+        <translation>БАЛАНС</translation>
+    </message>
+    <message>
+        <source>Balanced: all effects, 30 frames per second while idle</source>
+        <translation>Баланс: все эффекты, 30 кадров в секунду в покое</translation>
+    </message>
+    <message>
+        <source>CINEMATIC</source>
+        <translation>КИНО</translation>
+    </message>
+    <message>
+        <source>Cinematic: every effect on every frame</source>
+        <translation>Кино: все эффекты в каждом кадре</translation>
+    </message>
+    <message>
+        <source>DEMO</source>
+        <translation>ДЕМО</translation>
+    </message>
+    <message>
+        <source>Demonstration: made-up events show every effect. They are marked DEMO and never counted as real activity.</source>
+        <translation>Демонстрация: выдуманные события показывают все эффекты. Они помечены ДЕМО и никогда не считаются настоящей активностью.</translation>
+    </message>
+    <message>
+        <source>Compact overlay: a small core above other windows · Ctrl+Shift+O</source>
+        <translation>Компактный оверлей: маленькое ядро поверх окон · Ctrl+Shift+O</translation>
+    </message>
+    <message>
+        <source>MEMORY ▸</source>
+        <translation>ПАМЯТЬ ▸</translation>
+    </message>
+    <message>
+        <source>◂ MEMORY</source>
+        <translation>◂ ПАМЯТЬ</translation>
+    </message>
+    <message>
+        <source>Show or hide the memory panel · Ctrl+M</source>
+        <translation>Показать или скрыть панель памяти · Ctrl+M</translation>
+    </message>
+    <message>
+        <source>SYSTEM</source>
+        <translation>СИСТЕМА</translation>
+    </message>
+    <message>
+        <source>CPU</source>
+        <translation>ЦП</translation>
+    </message>
+    <message>
+        <source>RAM</source>
+        <translation>ОЗУ</translation>
+    </message>
+    <message>
+        <source>%1 / %2 GB</source>
+        <translation>%1 / %2 ГБ</translation>
+    </message>
+    <message>
+        <source>GPU</source>
+        <translation>ГП</translation>
+    </message>
+    <message>
+        <source>VRAM</source>
+        <translation>Видеопамять</translation>
+    </message>
+    <message>
+        <source>Temperature</source>
+        <translation>Температура</translation>
+    </message>
+    <message>
+        <source>HUD frames/s</source>
+        <translation>Кадров/с HUD</translation>
+    </message>
+    <message>
+        <source>Quality</source>
+        <translation>Качество</translation>
+    </message>
+    <message>
+        <source>ASSISTANT</source>
+        <translation>АССИСТЕНТ</translation>
+    </message>
+    <message>
+        <source>local</source>
+        <translation>локально</translation>
+    </message>
+    <message>
+        <source>State</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Модель</translation>
+    </message>
+    <message>
+        <source>no Claude key</source>
+        <translation>нет ключа Claude</translation>
+    </message>
+    <message>
+        <source>Route</source>
+        <translation>Маршрут</translation>
+    </message>
+    <message>
+        <source>Stream</source>
+        <translation>Поток</translation>
+    </message>
+    <message>
+        <source>Last answer</source>
+        <translation>Последний ответ</translation>
+    </message>
+    <message>
+        <source>%1 ch/s · %2</source>
+        <translation>%1 симв/с · %2</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 с</translation>
+    </message>
+    <message>
+        <source>Requests</source>
+        <translation>Запросы</translation>
+    </message>
+    <message>
+        <source>Claude calls</source>
+        <translation>Вызовы Claude</translation>
+    </message>
+    <message>
+        <source>Memory recalls</source>
+        <translation>Обращения к памяти</translation>
+    </message>
+    <message>
+        <source>Errors</source>
+        <translation>Ошибки</translation>
+    </message>
+    <message>
+        <source>TASKS</source>
+        <translation>ЗАДАЧИ</translation>
+    </message>
+    <message>
+        <source>%1 open, none with a time</source>
+        <translation>Открытых: %1, без срока</translation>
+    </message>
+    <message>
+        <source>ACTIVE REQUEST</source>
+        <translation>ТЕКУЩИЙ ЗАПРОС</translation>
+    </message>
+    <message>
+        <source>ACTIVITY</source>
+        <translation>АКТИВНОСТЬ</translation>
+    </message>
+    <message>
+        <source>%1 characters</source>
+        <translation>символов: %1</translation>
+    </message>
+    <message>
+        <source>ERROR</source>
+        <translation>ОШИБКА</translation>
+    </message>
+    <message>
+        <source>NOTIFICATION</source>
+        <translation>УВЕДОМЛЕНИЕ</translation>
+    </message>
+    <message>
+        <source>WARNING</source>
+        <translation>ПРЕДУПРЕЖДЕНИЕ</translation>
+    </message>
+    <message>
+        <source>The background service did not answer; this window answers by itself.</source>
+        <translation>Фоновая служба не ответила; это окно отвечает само.</translation>
+    </message>
+    <message>
+        <source>The background service stopped. Reminders pause until it is back.</source>
+        <translation>Фоновая служба остановлена. Напоминания приостановлены до её возвращения.</translation>
+    </message>
+    <message>
+        <source>VOICE</source>
+        <translation>ГОЛОС</translation>
+    </message>
+    <message>
+        <source>off</source>
+        <translation>выкл.</translation>
+    </message>
+    <message>
+        <source>Now</source>
+        <translation>Сейчас</translation>
+    </message>
+    <message>
+        <source>speaking</source>
+        <translation>говорит</translation>
+    </message>
+    <message>
+        <source>listening</source>
+        <translation>слушает</translation>
+    </message>
+    <message>
+        <source>quiet</source>
+        <translation>тишина</translation>
+    </message>
+    <message>
+        <source>Output</source>
+        <translation>Вывод</translation>
+    </message>
+    <message>
+        <source>not measured</source>
+        <translation>не измерен</translation>
+    </message>
+    <message>
+        <source>MID</source>
+        <translation>СРЕД</translation>
+    </message>
+    <message>
+        <source>HIGH</source>
+        <translation>ВЫС</translation>
+    </message>
+    <message>
+        <source>Microphone</source>
+        <translation>Микрофон</translation>
+    </message>
+    <message>
+        <source>MEMORY</source>
+        <translation>ПАМЯТЬ</translation>
+    </message>
+    <message>
+        <source>%1 writes</source>
+        <translation>записей: %1</translation>
+    </message>
+    <message>
+        <source>Facts</source>
+        <translation>Факты</translation>
+    </message>
+    <message>
+        <source>Taught answers</source>
+        <translation>Выученные ответы</translation>
+    </message>
+    <message>
+        <source>Conversations</source>
+        <translation>Разговоры</translation>
+    </message>
+    <message>
+        <source>Topics</source>
+        <translation>Темы</translation>
+    </message>
+    <message>
+        <source>EVENT STREAM</source>
+        <translation>ПОТОК СОБЫТИЙ</translation>
+    </message>
+    <message>
+        <source>live</source>
+        <translation>вживую</translation>
+    </message>
+    <message>
+        <source>Waiting for activity…</source>
+        <translation>Ожидание активности…</translation>
+    </message>
+</context>
+<context>
+    <name>JarvisCore</name>
+    <message>
+        <source>STATE</source>
+        <translation>СОСТОЯНИЕ</translation>
+    </message>
+    <message>
+        <source> · DEMO</source>
+        <translation> · ДЕМО</translation>
+    </message>
+    <message>
+        <source>ROUTE</source>
+        <translation>МАРШРУТ</translation>
+    </message>
+    <message>
+        <source>REQUESTS · ERRORS</source>
+        <translation>ЗАПРОСЫ · ОШИБКИ</translation>
+    </message>
+    <message>
+        <source>STREAM</source>
+        <translation>ПОТОК</translation>
+    </message>
+    <message>
+        <source>LAST ANSWER</source>
+        <translation>ПОСЛЕДНИЙ ОТВЕТ</translation>
+    </message>
+    <message>
+        <source>%1 ch/s</source>
+        <translation>%1 симв/с</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 с</translation>
+    </message>
+</context>
+<context>
+    <name>JarvisTheme</name>
+    <message>
+        <source>idle</source>
+        <translation>покой</translation>
+    </message>
+    <message>
+        <source>listening</source>
+        <translation>слушает</translation>
+    </message>
+    <message>
+        <source>processing</source>
+        <translation>обработка</translation>
+    </message>
+    <message>
+        <source>speaking</source>
+        <translation>говорит</translation>
+    </message>
+    <message>
+        <source>notification</source>
+        <translation>уведомление</translation>
+    </message>
+    <message>
+        <source>warning</source>
+        <translation>внимание</translation>
+    </message>
+    <message>
+        <source>error</source>
+        <translation>ошибка</translation>
+    </message>
+    <message>
+        <source>Claude</source>
+        <translation>Claude</translation>
+    </message>
+    <message>
+        <source>memory recall</source>
+        <translation>вспоминание из памяти</translation>
+    </message>
+    <message>
+        <source>learning</source>
+        <translation>обучение</translation>
+    </message>
+    <message>
+        <source>memory command</source>
+        <translation>команда памяти</translation>
+    </message>
+    <message>
+        <source>calculator</source>
+        <translation>калькулятор</translation>
+    </message>
+    <message>
+        <source>schematics library</source>
+        <translation>библиотека схем</translation>
+    </message>
+    <message>
+        <source>live system data</source>
+        <translation>данные системы</translation>
+    </message>
+    <message>
+        <source>reminders</source>
+        <translation>напоминания</translation>
+    </message>
+    <message>
+        <source>attachments</source>
+        <translation>вложения</translation>
+    </message>
+    <message>
+        <source>code</source>
+        <translation>код</translation>
+    </message>
+    <message>
+        <source>local answer</source>
+        <translation>локальный ответ</translation>
+    </message>
+    <message>
+        <source>memory review</source>
+        <translation>обзор памяти</translation>
     </message>
 </context>
 <context>
@@ -1022,6 +1499,18 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Send</source>
         <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>update check</source>
+        <translation>проверка обновлений</translation>
+    </message>
+    <message>
+        <source>Compact overlay</source>
+        <translation>Компактный оверлей</translation>
+    </message>
+    <message>
+        <source>Menu</source>
+        <translation>Меню</translation>
     </message>
 </context>
 <context>

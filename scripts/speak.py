@@ -19,6 +19,7 @@ The one-shot form hands the text to a running speech server when there is one
 JSON events: {"event": "engine", "name": …} and {"event": "error", "text": …}.
 Markdown, code and links are not read out."""
 import json
+import math
 import os
 import queue
 import re
@@ -29,6 +30,7 @@ import struct
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 
 DEFAULT_VOICES = {"ru": "ru_RU-dmitri-medium", "en": "en_GB-alan-medium", "fr": "fr_FR-tom-medium"}
@@ -58,8 +60,19 @@ def socket_path():
     return Path(runtime) / "jarvis-speech.sock" if runtime else voice_root() / "speech.sock"
 
 
+_out_lock = threading.Lock()
+
+
+def send(event):
+    """One JSON line on stdout; the level clock writes from its own thread."""
+    line = json.dumps(event, ensure_ascii=False) + "\n"
+    with _out_lock:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+
+
 def emit(kind, **data):
-    print(json.dumps(dict(event=kind, **data), ensure_ascii=False), flush=True)
+    send(dict(event=kind, **data))
 
 
 def language(text):
@@ -180,10 +193,12 @@ def can_run_here(engine, root):
 # ---- Playback ---------------------------------------------------------------------------
 
 class Job:
-    """One answer being spoken; cancel() silences it from any thread."""
+    """One answer being spoken; cancel() silences it from any thread.
+    `report` receives events for the client: engine, error and the sound level."""
 
-    def __init__(self):
+    def __init__(self, report=None):
         self.cancelled = threading.Event()
+        self.report = report
         self._lock = threading.Lock()
         self._closers = []
 
@@ -202,6 +217,79 @@ class Job:
                 closer()
             except Exception:
                 pass
+
+
+def levels(pcm, rate, channels=1, frame_ms=33):
+    """Loudness of what is played, per ~1/30 s: [overall, low, mid, high], 0…1.
+    Bands from two one-pole filters (no NumPy in the system Python): low below
+    ~300 Hz, high above ~2.5 kHz, mid in between — enough to animate a voice."""
+    import array
+    samples = array.array("h")
+    samples.frombytes(pcm[:len(pcm) - len(pcm) % 2])
+    if channels > 1:
+        samples = samples[::channels]
+    step = max(1, int(rate * frame_ms / 1000))
+    a_low = 1 - math.exp(-2 * math.pi * 300 / rate)
+    a_high = 1 - math.exp(-2 * math.pi * 2500 / rate)
+    low = high_lp = 0.0
+    out = []
+    for start in range(0, len(samples), step):
+        s_all = s_low = s_mid = s_high = 0.0
+        frame = samples[start:start + step]
+        for x in frame:
+            x /= 32768.0
+            low += a_low * (x - low)
+            high_lp += a_high * (x - high_lp)
+            h = x - high_lp
+            m = high_lp - low
+            s_all += x * x
+            s_low += low * low
+            s_mid += m * m
+            s_high += h * h
+        n = len(frame) or 1
+        # Speech RMS sits around 0.05–0.3: scaled so a normal voice reaches ~0.6–0.9.
+        out.append([round(min(1.0, math.sqrt(v / n) * 3.2), 3) for v in (s_all, s_low, s_mid, s_high)])
+    return out, step / rate
+
+
+class LevelClock:
+    """Sends the levels of the audio when it is heard, not when it is written:
+    aplay plays at real time from the first write, so frame k sounds at start + k·dt."""
+
+    def __init__(self, job):
+        self.job = job
+        self.frames = queue.Queue()
+        self.start = None
+        self.queued = 0.0
+        self.alive = True
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def feed(self, pcm, rate, channels):
+        if self.start is None:
+            self.start = time.monotonic() + 0.06  # the device's own buffering
+        values, dt = levels(pcm, rate, channels)
+        for v in values:
+            self.frames.put((self.start + self.queued, v))
+            self.queued += dt
+
+    def _run(self):
+        while self.alive:
+            try:
+                due, v = self.frames.get(timeout=0.2)
+            except queue.Empty:
+                continue
+            wait = due - time.monotonic()
+            if wait > 0 and self.job.cancelled.wait(wait):
+                break
+            if wait < -0.25:
+                continue  # late (the machine was busy): skip rather than lag behind
+            if self.job.report:
+                self.job.report({"event": "level", "v": v})
+
+    def stop(self):
+        self.alive = False
+        if self.job.report:
+            self.job.report({"event": "level", "v": [0, 0, 0, 0]})
 
 
 def play(chunks, job, rate, channels=1):
@@ -231,6 +319,7 @@ def play(chunks, job, rate, channels=1):
 
     threading.Thread(target=produce, daemon=True).start()
     player = None
+    clock = LevelClock(job) if job.report else None
     try:
         while True:
             try:
@@ -247,6 +336,8 @@ def play(chunks, job, rate, channels=1):
                 job.on_cancel(player.kill)
             player.stdin.write(chunk)
             player.stdin.flush()
+            if clock:
+                clock.feed(chunk, rate, channels)
     except (BrokenPipeError, ValueError):
         pass  # aplay was stopped
     finally:
@@ -259,6 +350,8 @@ def play(chunks, job, rate, channels=1):
                 player.wait(timeout=600)
             except subprocess.TimeoutExpired:
                 player.kill()
+        if clock:
+            clock.stop()
     if failure and not job.cancelled.is_set():
         raise failure[0]
     return not job.cancelled.is_set()
@@ -467,14 +560,16 @@ def speak_local(text, lang, root, job, report, delegate=True):
             child = subprocess.Popen([str(python), os.path.abspath(__file__), lang, "--engine", engine],
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             job.on_cancel(child.terminate)  # "stop" must silence the voice, not only this process
-            out, _ = child.communicate(text.encode())
-            for line in out.decode(errors="replace").splitlines():
+            child.stdin.write(text.encode())
+            child.stdin.close()
+            for line in child.stdout:  # live: the sound level arrives while it plays
                 try:
                     event = json.loads(line)
                 except ValueError:
                     continue
-                if event.get("event") in ("engine", "error"):
+                if event.get("event") in ("engine", "error", "level"):
                     report(event)
+            child.wait()
             if child.returncode == 0 or job.cancelled.is_set():
                 return True
             continue
@@ -557,11 +652,16 @@ def serve(root):
 
             threading.Thread(target=watch, daemon=True).start()
 
+            send_lock = threading.Lock()
+
             def report(event):
                 try:
-                    conn.sendall((json.dumps(event, ensure_ascii=False) + "\n").encode())
+                    with send_lock:
+                        conn.sendall((json.dumps(event, ensure_ascii=False) + "\n").encode())
                 except OSError:
                     pass
+
+            job.report = report
 
             with speech_lock:
                 ok = job.cancelled.is_set() or speak_local(text, lang, root, job, report, delegate=False)
@@ -624,8 +724,8 @@ def speak_via_server(text, lang, job):
                 return False if unavailable else True
             if kind == "unavailable":
                 unavailable = True
-            elif kind in ("engine", "error"):
-                print(json.dumps(event, ensure_ascii=False), flush=True)
+            elif kind in ("engine", "error", "level"):
+                send(event)
     return True if job.cancelled.is_set() else None
 
 
@@ -652,7 +752,7 @@ def main():
     spoken = speakable(text, lang)
     if not spoken:
         return 0
-    job = Job()
+    job = Job(report=send)
 
     def stop(*_):
         job.cancel()
@@ -676,7 +776,7 @@ def main():
         result = speak_via_server(spoken, lang, job)
         if result:
             return 0
-    return 0 if speak_local(spoken, lang, root, job, lambda e: print(json.dumps(e, ensure_ascii=False), flush=True)) else 1
+    return 0 if speak_local(spoken, lang, root, job, send) else 1
 
 
 if __name__ == '__main__':

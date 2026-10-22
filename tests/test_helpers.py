@@ -128,6 +128,37 @@ class Speech(unittest.TestCase):
         parts = speak.sentences('Первое предложение. Второе! ' + 'слово, ' * 80 + 'конец.', limit=120)
         self.assertTrue(all(len(p) <= 121 for p in parts) and len(parts) > 3)
         self.assertEqual(speak.sentences('One. Two.'), ['One. Two.'])
+    def test_levels_follow_the_sound(self):
+        import array, math
+        def tone(freq, amp=0.3, rate=24000, seconds=0.2):
+            return array.array('h', (int(amp * 32767 * math.sin(2 * math.pi * freq * i / rate)) for i in range(int(rate * seconds)))).tobytes()
+        low, dt = speak.levels(tone(150), 24000)
+        high, _ = speak.levels(tone(5000), 24000)
+        silent, _ = speak.levels(bytes(4800), 24000)
+        self.assertAlmostEqual(dt, 0.033, delta=0.001)
+        self.assertEqual(len(low), 7)
+        self.assertGreater(low[-1][1], low[-1][3] * 3, 'a low tone fills the low band')
+        self.assertGreater(high[-1][3], high[-1][1] * 3, 'a high tone fills the high band')
+        self.assertTrue(0.5 < low[-1][0] <= 1.0)
+        self.assertEqual(silent[0], [0.0, 0.0, 0.0, 0.0])
+    def test_level_clock_reports_in_time(self):
+        import array, math, time
+        events = []
+        job = speak.Job(report=events.append)
+        clock = speak.LevelClock(job)
+        clock.feed(array.array('h', [8000] * 4800).tobytes(), 24000, 1)  # 0.2 s
+        time.sleep(0.12)
+        early = len(events)
+        time.sleep(0.25)
+        clock.stop()
+        self.assertTrue(0 < early < len(events) - 1, 'levels arrive while the sound plays, not all at once')
+        self.assertEqual(events[-1]['v'], [0, 0, 0, 0])
+    def test_microphone_level(self):
+        import array
+        self.assertEqual(voice.input_level(b''), 0.0)
+        self.assertEqual(voice.input_level(bytes(3200)), 0.0)
+        self.assertEqual(voice.input_level(array.array('h', [16000] * 1600).tobytes()), 1.0)
+        self.assertAlmostEqual(voice.input_level(array.array('h', [1000] * 1600).tobytes()), 0.183, delta=0.002)
     def test_engine_plan(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)

@@ -74,6 +74,9 @@ private:
 //   signal Progress(t, s)     the answer so far, while Claude writes it
 //   signal MemoryChanged()    facts/examples/topics changed
 //   signal ActivityChanged()  activity data changed (throttled)
+//   signal Routed(t, s)       how request id is being answered (llm, recall, calculator…; 0 = background)
+//   signal Failed(t, s)       Claude could not answer request id, and why
+//   signal Notice(s)          a notification Jarvis shows (JSON: key, kind, title, body)
 class DaemonAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
@@ -106,6 +109,9 @@ signals:
     void Progress(quint64 id, const QString &text);
     void MemoryChanged();
     void ActivityChanged();
+    void Routed(quint64 id, const QString &route);
+    void Failed(quint64 id, const QString &reason);
+    void Notice(const QString &json);
 
 private:
     DaemonService *m_service;

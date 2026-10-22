@@ -2,6 +2,7 @@
 
 #include <QQmlEngine>
 #include <QRegularExpression>
+#include <QSettings>
 
 #include <algorithm>
 
@@ -155,4 +156,46 @@ QString AppSettings::setNumber(const QString &name, int value)
     else
         return tr("Unknown option.");
     return store(d);
+}
+
+QString AppSettings::hudQuality() const
+{
+    const QString q = QSettings().value(QStringLiteral("hud/quality"), QStringLiteral("balanced")).toString();
+    static const QStringList known{QStringLiteral("off"), QStringLiteral("low"), QStringLiteral("balanced"), QStringLiteral("cinematic")};
+    return known.contains(q) ? q : QStringLiteral("balanced");
+}
+
+void AppSettings::setHudQuality(const QString &quality)
+{
+    static const QStringList known{QStringLiteral("off"), QStringLiteral("low"), QStringLiteral("balanced"), QStringLiteral("cinematic")};
+    if (!known.contains(quality) || quality == hudQuality())
+        return;
+    QSettings().setValue(QStringLiteral("hud/quality"), quality);
+    emit hudChanged();
+}
+
+bool AppSettings::memoryOpen() const
+{
+    return QSettings().value(QStringLiteral("hud/memoryOpen"), false).toBool();
+}
+
+void AppSettings::setMemoryOpen(bool open)
+{
+    if (open == memoryOpen())
+        return;
+    QSettings().setValue(QStringLiteral("hud/memoryOpen"), open);
+    emit hudChanged();
+}
+
+bool AppSettings::overlay() const
+{
+    return QSettings().value(QStringLiteral("hud/overlay"), false).toBool();
+}
+
+void AppSettings::setOverlay(bool on)
+{
+    if (on == overlay())
+        return;
+    QSettings().setValue(QStringLiteral("hud/overlay"), on);
+    emit hudChanged();
 }

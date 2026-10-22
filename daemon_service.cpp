@@ -6,6 +6,7 @@
 #include <QDBusMessage>
 #include <QDebug>
 #include <QDBusPendingCallWatcher>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QTimer>
 
@@ -127,6 +128,14 @@ DaemonAdaptor::DaemonAdaptor(DaemonService *service)
     connect(&service->assistant(), &Assistant::replyProgress, this, &DaemonAdaptor::Progress);
     connect(&service->assistant(), &Assistant::memoryChanged, this, &DaemonAdaptor::MemoryChanged);
     connect(&service->assistant(), &Assistant::activityChanged, this, &DaemonAdaptor::ActivityChanged);
+    connect(&service->assistant(), &Assistant::routed, this, &DaemonAdaptor::Routed);
+    connect(&service->assistant(), &Assistant::failed, this, [this](quint64 id, const QString &reason) { emit Failed(id, reason.left(500)); });
+    // Only what a notification already shows on the desktop: kind and title.
+    connect(&service->assistant(), &Assistant::notice, this, [this](const QJsonObject &notice) {
+        emit Notice(QString::fromUtf8(QJsonDocument(QJsonObject{{QStringLiteral("kind"), notice.value(QStringLiteral("kind"))},
+                                                                {QStringLiteral("title"), notice.value(QStringLiteral("title"))}})
+                                          .toJson(QJsonDocument::Compact)));
+    });
 }
 
 quint64 DaemonAdaptor::Ask(const QString &text)

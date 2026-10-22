@@ -34,10 +34,18 @@ signals:
     // The answer so far, while it is written.
     void replyProgress(const QString &textSoFar);
     void failed(const QString &reason);
+    // What the daemon is doing, for the interface: the route of a request
+    // (`own`: this window asked) and Claude failures and notifications.
+    void routed(const QString &route, bool own);
+    void claudeFailed(const QString &reason, bool own);
+    void notice(const QString &kind, const QString &title);
 
 private slots:
     void onReplySignal(quint64 id, const QString &reply);
     void onProgressSignal(quint64 id, const QString &text);
+    void onRoutedSignal(quint64 id, const QString &route);
+    void onFailedSignal(quint64 id, const QString &reason);
+    void onNoticeSignal(const QString &json);
 
 private:
     void setAvailable(bool available);

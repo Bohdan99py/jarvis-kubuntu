@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.16.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.17.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,7 +14,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 DBus Network Widgets)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 DBus Network Widgets ShaderTools)
 qt_standard_project_setup(REQUIRES 6.4)
 
 include(GNUInstallDirs)
@@ -74,6 +74,8 @@ qt_add_library(jarvis_core STATIC
     attachments.cpp
     schematic_library.h
     schematic_library.cpp
+    visual_state.h
+    visual_state.cpp
     chat_engine.h
     chat_engine.cpp
     system_info.h
@@ -96,7 +98,7 @@ jarvis_warnings(jarvis_core)
 # Russian translation of the English source strings (C++ and QML). Only
 # lrelease is needed (package qt6-l10n-tools); the .qm is embedded in the core
 # library so the GUI and the daemon share it. Refresh the .ts after changing
-# strings: lupdate -locations none -no-obsolete . -ts i18n/jarvis_ru.ts
+# strings: lupdate -locations none -no-obsolete *.cpp *.h *.qml hud/*.qml -ts i18n/jarvis_ru.ts
 find_program(JARVIS_LRELEASE NAMES lrelease lrelease-qt6
     HINTS "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}" "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBEXECS}" /usr/lib/qt6/bin
     REQUIRED)
@@ -134,7 +136,7 @@ jarvis_warnings(jarvisd)
 qt_add_executable(jarvis main.cpp)
 
 # Theme.qml is a QML singleton (Theme.accent, Theme.bg, ...).
-set_source_files_properties(Theme.qml Texts.qml QuickCommands.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(Theme.qml Texts.qml QuickCommands.qml hud/JarvisTheme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(jarvis
     URI Jarvis
@@ -155,6 +157,18 @@ qt_add_qml_module(jarvis
         StudyWindow.qml
         SkillPage.qml
         CodeBlock.qml
+        hud/JarvisTheme.qml
+        hud/HudController.qml
+        hud/CoreRings.qml
+        hud/AudioReactiveLayer.qml
+        hud/DataStreams.qml
+        hud/ParticleField.qml
+        hud/NeuralNetworkView.qml
+        hud/JarvisCore.qml
+        hud/HolographicPanel.qml
+        hud/HUDPanelManager.qml
+        hud/HudStage.qml
+        hud/HudOverlay.qml
     SOURCES
         voice_controller.h
         voice_controller.cpp
@@ -162,6 +176,8 @@ qt_add_qml_module(jarvis
         study_controller.cpp
         kicad_controller.h
         kicad_controller.cpp
+        hud_telemetry.h
+        hud_telemetry.cpp
         desktop_controller.h
         desktop_controller.cpp
         runtime_paths.h
@@ -188,6 +204,17 @@ target_link_libraries(jarvis PRIVATE
     Qt6::DBus
 )
 jarvis_warnings(jarvis)
+# The HUD's GPU effects: GLSL compiled by qsb for OpenGL, Vulkan, Metal and D3D.
+qt_add_shaders(jarvis "hud_shaders"
+    PREFIX "/qt/qml/Jarvis"
+    FILES
+        hud/shaders/core.frag
+        hud/shaders/ring.frag
+        hud/shaders/spectrum.frag
+        hud/shaders/streams.frag
+        hud/shaders/field.frag
+)
+qt_add_resources(jarvis hud_images PREFIX "/qt/qml/Jarvis" FILES hud/glow.png)
 qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg
     icons/skills/electronics.svg icons/skills/physics.svg icons/skills/embedded.svg icons/skills/programming.svg
     icons/skills/philosophy.svg icons/skills/games.svg icons/skills/conversation.svg icons/skills/writing.svg

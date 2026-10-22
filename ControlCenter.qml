@@ -620,6 +620,21 @@ Dialog {
                             currentIndex: ["auto", "ru", "en"].indexOf(center.settings.replyLanguage)
                             onActivated: index => center.settings.setReplyLanguage(["auto", "ru", "en"][index])
                         }
+                        Label { text: qsTr("Interface"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "hudCombo"
+                            readonly property var values: ["cinematic", "balanced", "low", "off"]
+                            model: [qsTr("Cinematic HUD: every effect"), qsTr("Balanced HUD"), qsTr("Light HUD: no particles, fewer layers"), qsTr("Classic chat without the HUD")]
+                            currentIndex: values.indexOf(center.settings.hudQuality)
+                            onActivated: index => center.settings.hudQuality = values[index]
+                        }
+                    }
+                    OptionSwitch {
+                        objectName: "overlaySwitch"
+                        text: qsTr("Compact core above other windows")
+                        hint: qsTr("A small always-on-top core that shows what Jarvis is doing. Drag it anywhere; a click opens Jarvis. Ctrl+Shift+O switches it.")
+                        checked: center.settings.overlay
+                        onToggled: center.settings.overlay = checked
                     }
                     OptionSwitch {
                         objectName: "autostartSwitch"
