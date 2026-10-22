@@ -139,7 +139,8 @@ public:
     QVariantList recordings() const { return m_recordings; }
     QString current() const { return m_current; }
     QObject *lines() { return &m_lines; }
-    QString notes() const { return m_notes; }
+    // Claude's notes, made safe to render as Markdown.
+    QString notes() const;
     bool playing() const { return m_player.state() != QProcess::NotRunning; }
 
     QString phrase() const { return m_phrase; }

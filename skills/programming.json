@@ -5,14 +5,20 @@
  "color": "#5aa2f0",
  "name": "Программирование",
  "name_en": "Programming",
- "description": "C, C++, Python, Qt, Linux, git и отладка: код, объяснения, поиск ошибок.",
- "description_en": "C, C++, Python, Qt, Linux, git and debugging: code, explanations, finding bugs.",
- "prompt": "Act as a senior software engineer and mentor. Languages and tools: C, modern C++ (RAII, smart pointers, move semantics, templates, STL, undefined behaviour), Python, Qt/QML, CMake, Linux (shell, processes, permissions, systemd), git, debugging (gdb, valgrind, sanitizers, logging), testing, algorithms and complexity. When writing code: give complete, compilable code in fenced blocks with the language tag; when the user wants a file, put the file name after the language tag (```cpp main.cpp) so Jarvis can save it; keep the user's style and existing APIs; explain the key decisions briefly after the code. When fixing: find the root cause, show the corrected code and say why the bug happened. When the user attaches source files, refer to them by name and line. Never invent APIs; say when the answer depends on a version. Prefer simple, readable solutions over clever ones. When the user attaches source files, refer to them by file name and line; for a bug report, reproduce it in your head first, name the root cause, then give the fix. Prefer the user's toolchain: Linux, CMake, Qt, PlatformIO, arm-none-eabi-gcc, Python venvs. Jarvis's VS Code extension sends you the selection and diagnostics of the open file.",
+ "description": "C, C++, Python, Rust, Go, JS, SQL, Qt, Linux, git, Docker и отладка: код, разбор ошибок, алгоритмы, безопасность.",
+ "description_en": "C, C++, Python, Rust, Go, JS, SQL, Qt, Linux, git, Docker and debugging: code, bug hunting, algorithms, security.",
+ "prompt": "Act as a senior software engineer and mentor. Languages and tools: C, modern C++ (C++17/20/23: RAII, smart pointers, move semantics, templates and concepts, constexpr, ranges, STL, undefined behaviour), Python (typing, asyncio, packaging), Rust, Go, JavaScript/TypeScript, SQL, Qt/QML, CMake, Linux (shell, processes, permissions, systemd), Docker, git and CI, debugging (gdb, valgrind, sanitizers, logging), profiling (perf, callgrind, py-spy), testing, algorithms, data structures and complexity, concurrency, networking (TCP/UDP, HTTP, REST), design patterns, and secure coding (input validation, injection, secrets, memory safety). When writing code: give complete, compilable code in fenced blocks with the language tag; when the user wants a file, put the file name after the language tag (```cpp main.cpp) so Jarvis can save it; for several files give each its own block; keep the user's style and existing APIs; state the language standard and library versions the code needs; handle errors and edge cases instead of ignoring them; explain the key decisions briefly after the code. When fixing: find the root cause, show the corrected code and say why the bug happened. When reviewing: bugs first, then security, then performance, then readability, each with the line and a concrete fix. For performance questions, measure before optimising and give the complexity in O-notation. Point out security problems (injection, unchecked input, overflow, secrets in code, race conditions) even when not asked. Never invent APIs; say when the answer depends on a version. Prefer simple, readable solutions over clever ones. Jarvis has offline calculators the user can open in this skill: number bases, bit fields, CRC, Unix time, IEEE 754 floats, Q-format fixed point, IPv4 subnets, colours with RGB565, text to UTF-8 bytes and algorithm running time. When the user attaches source files, refer to them by file name and line; for a bug report, reproduce it in your head first, name the root cause, then give the fix. Prefer the user's toolchain: Linux, CMake, Qt, PlatformIO, arm-none-eabi-gcc, Python venvs. Jarvis's VS Code extension sends you the selection and diagnostics of the open file.",
  "tools": [
   "bases",
   "bits",
   "crc",
-  "epoch"
+  "epoch",
+  "ieee754",
+  "qformat",
+  "subnet",
+  "rgb",
+  "bytes",
+  "complexity"
  ],
  "formulas": [
   {
@@ -131,6 +137,111 @@
    "formula": "picocom -b 115200 /dev/ttyUSB0",
    "note": "Выход: Ctrl+A, затем Ctrl+X. Нужна группа dialout.",
    "note_en": "Exit: Ctrl+A, then Ctrl+X. Needs the dialout group."
+  },
+  {
+   "title": "Выравнивание вверх до степени двойки",
+   "formula": "(x + a − 1) & ~(a − 1)",
+   "title_en": "Align up to a power of two",
+   "note": "a — степень двойки: 4, 8, 16…",
+   "note_en": "a is a power of two: 4, 8, 16…"
+  },
+  {
+   "title": "Степень двойки?",
+   "formula": "x && !(x & (x − 1))",
+   "title_en": "Is a power of two?"
+  },
+  {
+   "title": "Младший установленный бит",
+   "formula": "x & −x",
+   "title_en": "Lowest set bit",
+   "note": "Номер бита — __builtin_ctz(x) (C/C++20: std::countr_zero).",
+   "note_en": "Its index: __builtin_ctz(x) (C++20: std::countr_zero)."
+  },
+  {
+   "title": "Число установленных битов",
+   "formula": "__builtin_popcount(x)  ·  std::popcount(x)",
+   "title_en": "Count set bits"
+  },
+  {
+   "title": "Округление деления вверх",
+   "formula": "(a + b − 1) / b",
+   "title_en": "Ceiling division",
+   "note": "Для положительных целых.",
+   "note_en": "For positive integers."
+  },
+  {
+   "title": "Середина без переполнения",
+   "formula": "lo + (hi − lo) / 2",
+   "title_en": "Midpoint without overflow",
+   "note": "Или std::midpoint (C++20).",
+   "note_en": "Or std::midpoint (C++20)."
+  },
+  {
+   "title": "Перестановка байтов (endianness)",
+   "formula": "__builtin_bswap32(x)  ·  std::byteswap(x)",
+   "title_en": "Byte swap (endianness)",
+   "note": "Сеть — big-endian: htonl/ntohl. x86 и ARM Cortex-M — little-endian.",
+   "note_en": "Networks are big-endian: htonl/ntohl. x86 and ARM Cortex-M are little-endian."
+  },
+  {
+   "title": "Сравнение float",
+   "formula": "|a − b| ≤ ε·max(|a|, |b|)",
+   "title_en": "Comparing floats",
+   "note": "Не сравнивайте числа с плавающей точкой через ==.",
+   "note_en": "Never compare floating-point numbers with ==."
+  },
+  {
+   "title": "Хеш-таблица: коэффициент заполнения",
+   "formula": "α = n / m",
+   "title_en": "Hash table load factor",
+   "note": "При α > 0,75 таблицу расширяют вдвое.",
+   "note_en": "Grow the table twice as large when α > 0.75."
+  },
+  {
+   "title": "Закон Амдала",
+   "formula": "S = 1 / ((1 − p) + p / N)",
+   "title_en": "Amdahl's law",
+   "note": "p — доля, которую можно распараллелить, N — число ядер.",
+   "note_en": "p is the parallel share of the work, N the number of cores."
+  },
+  {
+   "title": "Вероятность коллизии (день рождения)",
+   "formula": "p ≈ 1 − e^(−n² / 2m)",
+   "title_en": "Collision chance (birthday)",
+   "note": "n элементов, m возможных значений хеша.",
+   "note_en": "n items, m possible hash values."
+  },
+  {
+   "title": "Python: профилирование",
+   "formula": "python -m cProfile -s cumtime app.py  ·  py-spy top --pid N",
+   "title_en": "Python: profiling"
+  },
+  {
+   "title": "perf: горячие функции",
+   "formula": "perf record -g ./app && perf report",
+   "title_en": "perf: hot functions"
+  },
+  {
+   "title": "git: найти коммит с ошибкой",
+   "formula": "git bisect start; git bisect bad; git bisect good v1.2",
+   "title_en": "git: find the bad commit"
+  },
+  {
+   "title": "Docker: собрать и запустить",
+   "formula": "docker build -t app . && docker run --rm -p 8080:8080 app",
+   "title_en": "Docker: build and run"
+  },
+  {
+   "title": "Санитайзеры GCC/Clang",
+   "formula": "-fsanitize=address,undefined -g  ·  -fsanitize=thread",
+   "title_en": "GCC/Clang sanitizers",
+   "note": "ASan и TSan нельзя включать одновременно.",
+   "note_en": "ASan and TSan cannot be used together."
+  },
+  {
+   "title": "CMake: сборка",
+   "formula": "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && cmake --build build -j",
+   "title_en": "CMake: build"
   }
  ],
  "examples": [
@@ -401,6 +512,526 @@
     "avrdude",
     "openocd"
    ]
+  },
+  {
+   "question": "Что такое ООП?",
+   "answer": "Объектно-ориентированное программирование строит программу из объектов — данных вместе с операциями над ними. Четыре идеи:\n\n- **инкапсуляция** — состояние скрыто, менять его можно только через методы, которые сохраняют инварианты;\n- **наследование** — новый класс расширяет существующий;\n- **полиморфизм** — один интерфейс, разные реализации (виртуальные функции);\n- **абстракция** — пользователь видит что делает объект, а не как.\n\nПрактика: предпочитайте композицию наследованию, держите классы маленькими, а иерархии — неглубокими.",
+   "aliases": [
+    "ооп",
+    "объектно-ориентированное программирование",
+    "oop"
+   ],
+   "question_en": "What is OOP?",
+   "answer_en": "Object-oriented programming builds a program from objects — data together with the operations on it. Four ideas:\n\n- **encapsulation** — state is hidden and changed only through methods that keep the invariants;\n- **inheritance** — a new class extends an existing one;\n- **polymorphism** — one interface, different implementations (virtual functions);\n- **abstraction** — users see what an object does, not how.\n\nIn practice: prefer composition over inheritance, keep classes small and hierarchies shallow."
+  },
+  {
+   "question": "Как работают виртуальные функции?",
+   "answer": "У класса с виртуальными функциями есть таблица (vtable) с адресами реализаций, а у каждого объекта — скрытый указатель на неё. Вызов `base->draw()` идёт через таблицу, поэтому выполняется версия настоящего типа объекта.\n\n```cpp\nstruct Shape { virtual ~Shape() = default; virtual double area() const = 0; };\nstruct Circle : Shape { double r; double area() const override { return 3.14159 * r * r; } };\n```\n\nПравила: базовому классу с виртуальными функциями нужен **виртуальный деструктор** (иначе `delete base` не вызовет деструктор наследника); пишите `override` — компилятор поймает опечатку в сигнатуре; не вызывайте виртуальные функции из конструктора.",
+   "aliases": [
+    "виртуальные функции",
+    "полиморфизм",
+    "vtable",
+    "виртуальный деструктор"
+   ],
+   "question_en": "How do virtual functions work?",
+   "answer_en": "A class with virtual functions has a table (vtable) with the addresses of the implementations, and every object holds a hidden pointer to it. A call `base->draw()` goes through the table, so the version of the object's real type runs.\n\n```cpp\nstruct Shape { virtual ~Shape() = default; virtual double area() const = 0; };\nstruct Circle : Shape { double r; double area() const override { return 3.14159 * r * r; } };\n```\n\nRules: a base class with virtual functions needs a **virtual destructor** (or `delete base` skips the derived destructor); write `override` so the compiler catches a signature typo; do not call virtual functions from a constructor."
+  },
+  {
+   "question": "Что такое правило пяти?",
+   "answer": "Если классу нужен свой деструктор, копирующий конструктор или копирующее присваивание (он владеет ресурсом), скорее всего, нужны все пять: деструктор, копирование (конструктор и `operator=`) и перемещение (конструктор и `operator=`).\n\n**Правило нуля** лучше: храните ресурсы в RAII-членах (`std::unique_ptr`, `std::vector`, `std::string`, `std::fstream`) — тогда компилятор сам сгенерирует правильные операции, и писать ничего не надо. Чтобы запретить копирование: `T(const T&) = delete;`.",
+   "aliases": [
+    "правило пяти",
+    "правило трёх",
+    "правило нуля",
+    "rule of five",
+    "rule of zero"
+   ],
+   "question_en": "What is the rule of five?",
+   "answer_en": "If a class needs its own destructor, copy constructor or copy assignment (it owns a resource), it most likely needs all five: the destructor, copying (constructor and `operator=`) and moving (constructor and `operator=`).\n\nThe **rule of zero** is better: keep resources in RAII members (`std::unique_ptr`, `std::vector`, `std::string`, `std::fstream`) — then the compiler generates correct operations and you write none. To forbid copying: `T(const T&) = delete;`."
+  },
+  {
+   "question": "Какой контейнер STL выбрать?",
+   "answer": "- **std::vector** — по умолчанию: подряд в памяти, быстрый обход и доступ по индексу, вставка в конец O(1) амортизированно. Держите его, пока не доказано обратное.\n- **std::array** — фиксированный размер, без кучи (хорошо для МК).\n- **std::deque** — быстрые вставки в оба конца.\n- **std::list** — только если нужны стабильные итераторы и частые вставки в середину; обычно медленнее vector из-за промахов кеша.\n- **std::unordered_map / unordered_set** — поиск по ключу O(1) в среднем.\n- **std::map / set** — упорядочены, O(log n), есть lower_bound.\n- **std::flat_map** (C++23) — отсортированный vector: быстрее map для небольших наборов.",
+   "aliases": [
+    "vector или list",
+    "контейнеры stl",
+    "stl containers",
+    "vector vs list"
+   ],
+   "question_en": "Which STL container should I use?",
+   "answer_en": "- **std::vector** — the default: contiguous, fast traversal and indexing, push_back amortised O(1). Keep it until proven otherwise.\n- **std::array** — fixed size, no heap (good for MCUs).\n- **std::deque** — fast insertion at both ends.\n- **std::list** — only when you need stable iterators and many insertions in the middle; usually slower than vector because of cache misses.\n- **std::unordered_map / unordered_set** — O(1) average lookup by key.\n- **std::map / set** — ordered, O(log n), with lower_bound.\n- **std::flat_map** (C++23) — a sorted vector: faster than map for small sets."
+  },
+  {
+   "question": "Что такое инвалидация итераторов?",
+   "answer": "Итератор, указатель или ссылка на элемент контейнера становятся недействительными после некоторых операций — использовать их дальше нельзя (UB).\n\n- `vector`: `push_back`/`insert` при перераспределении памяти ломают **все** итераторы; `erase` — от удалённого до конца.\n- `unordered_map`: rehash ломает итераторы (но не ссылки на элементы).\n- `map`, `list`: ломается только итератор удалённого элемента.\n\nУдаление в цикле: `it = v.erase(it);` или `std::erase_if(v, pred);` (C++20). Если нужен стабильный адрес — `reserve()` заранее или храните индексы.",
+   "aliases": [
+    "инвалидация итераторов",
+    "iterator invalidation",
+    "итератор стал недействительным"
+   ],
+   "question_en": "What is iterator invalidation?",
+   "answer_en": "An iterator, pointer or reference to a container element becomes invalid after some operations — using it afterwards is UB.\n\n- `vector`: `push_back`/`insert` that reallocate invalidate **all** iterators; `erase` — from the erased one to the end.\n- `unordered_map`: a rehash invalidates iterators (but not references to elements).\n- `map`, `list`: only the erased element's iterator.\n\nErasing in a loop: `it = v.erase(it);` or `std::erase_if(v, pred);` (C++20). For stable addresses `reserve()` up front or keep indices."
+  },
+  {
+   "question": "Что такое лямбда-функция?",
+   "answer": "Лямбда — безымянная функция прямо в выражении, которая может захватить переменные вокруг:\n\n```cpp\nint limit = 10;\nauto big = std::count_if(v.begin(), v.end(), [limit](int x) { return x > limit; });\n```\n\nЗахват: `[x]` — копия, `[&x]` — ссылка, `[=]`/`[&]` — всё, `[this]`, `[p = std::move(ptr)]` — с инициализацией. Опасность: лямбда со ссылкой на локальную переменную, сохранённая (в std::function, в Qt connect, в поток) дольше жизни переменной, даёт висячую ссылку. В Qt передавайте объект-контекст: `connect(src, &S::sig, this, [this]{ … });`.",
+   "aliases": [
+    "лямбда",
+    "лямбды c++",
+    "lambda",
+    "замыкание"
+   ],
+   "question_en": "What is a lambda?",
+   "answer_en": "A lambda is an unnamed function written inside an expression that can capture the variables around it:\n\n```cpp\nint limit = 10;\nauto big = std::count_if(v.begin(), v.end(), [limit](int x) { return x > limit; });\n```\n\nCaptures: `[x]` copy, `[&x]` reference, `[=]`/`[&]` everything, `[this]`, `[p = std::move(ptr)]` with an initializer. Danger: a lambda holding a reference to a local, stored (in std::function, a Qt connect, a thread) longer than the variable lives, dangles. In Qt pass a context object: `connect(src, &S::sig, this, [this]{ … });`."
+  },
+  {
+   "question": "Что такое constexpr?",
+   "answer": "`constexpr` разрешает вычислить значение или функцию во время компиляции, если аргументы известны:\n\n```cpp\nconstexpr uint32_t brr(uint32_t clk, uint32_t baud) { return (clk + baud / 2) / baud; }\nstatic_assert(brr(72'000'000, 115200) == 625);\n```\n\nРезультат попадает в код как константа — ни времени, ни памяти во время работы (полезно для таблиц и регистров МК). `consteval` (C++20) — только во время компиляции, `constinit` — гарантирует статическую инициализацию без «static initialization order fiasco».",
+   "aliases": [
+    "constexpr",
+    "consteval",
+    "вычисления во время компиляции"
+   ],
+   "question_en": "What is constexpr?",
+   "answer_en": "`constexpr` lets a value or function be evaluated at compile time when the arguments are known:\n\n```cpp\nconstexpr uint32_t brr(uint32_t clk, uint32_t baud) { return (clk + baud / 2) / baud; }\nstatic_assert(brr(72'000'000, 115200) == 625);\n```\n\nThe result is a constant in the code — no run time and no memory (handy for tables and MCU registers). `consteval` (C++20) means compile time only; `constinit` guarantees static initialisation and avoids the static initialisation order fiasco."
+  },
+  {
+   "question": "Что такое концепты в C++20?",
+   "answer": "Шаблон пишется один раз для многих типов; концепт (C++20) говорит, какие типы подходят, — и ошибка становится понятной:\n\n```cpp\n#include <concepts>\ntemplate <std::integral T>\nT gcd(T a, T b) { while (b) { a %= b; std::swap(a, b); } return a; }\n\ntemplate <typename T>\nconcept Sensor = requires(T s) { { s.read() } -> std::convertible_to<float>; };\n```\n\nБез концептов `gcd(1.5, 2.0)` выдаст страницу ошибок изнутри шаблона; с ними — «double does not satisfy integral».",
+   "aliases": [
+    "концепты",
+    "concepts",
+    "шаблоны c++",
+    "templates"
+   ],
+   "question_en": "What are C++20 concepts?",
+   "answer_en": "A template is written once for many types; a concept (C++20) states which types fit — and the error becomes readable:\n\n```cpp\n#include <concepts>\ntemplate <std::integral T>\nT gcd(T a, T b) { while (b) { a %= b; std::swap(a, b); } return a; }\n\ntemplate <typename T>\nconcept Sensor = requires(T s) { { s.read() } -> std::convertible_to<float>; };\n```\n\nWithout concepts `gcd(1.5, 2.0)` prints a page of errors from inside the template; with them — \"double does not satisfy integral\"."
+  },
+  {
+   "question": "Что такое std::optional и std::variant?",
+   "answer": "- `std::optional<T>` — значение или «ничего»: `std::optional<int> find(...)`; проверка `if (auto x = find()) use(*x);`.\n- `std::variant<A, B>` — безопасный union: хранит ровно один из типов, обход через `std::visit`.\n- `std::expected<T, E>` (C++23) — результат или ошибка без исключений: `return std::unexpected(Error::Timeout);`.\n\nЭто лучше «магических» значений (-1, nullptr) и выходных параметров: тип сам говорит, что результата может не быть.",
+   "aliases": [
+    "std::optional",
+    "std::variant",
+    "std::expected",
+    "optional"
+   ],
+   "question_en": "What are std::optional and std::variant?",
+   "answer_en": "- `std::optional<T>` — a value or nothing: `std::optional<int> find(...)`; check with `if (auto x = find()) use(*x);`.\n- `std::variant<A, B>` — a type-safe union: holds exactly one of the types, visited with `std::visit`.\n- `std::expected<T, E>` (C++23) — a result or an error without exceptions: `return std::unexpected(Error::Timeout);`.\n\nBetter than magic values (-1, nullptr) and out-parameters: the type itself says a result may be missing."
+  },
+  {
+   "question": "Исключения или коды ошибок?",
+   "answer": "**Исключения** — для редких, «настоящих» ошибок, которые нельзя обработать на месте: нет файла конфигурации, кончилась память. Код остаётся чистым, RAII освобождает ресурсы при раскрутке стека.\n\n**Коды ошибок / std::expected** — для ожидаемых исходов (пользователь ввёл не число, таймаут сети), в горячих циклах и там, где исключения отключены (`-fno-exceptions` во встраиваемых системах, многие игровые движки).\n\nГлавное — не глотать ошибки молча: каждая либо обрабатывается, либо уходит выше с контекстом.",
+   "aliases": [
+    "исключения",
+    "exceptions",
+    "обработка ошибок",
+    "error handling"
+   ],
+   "question_en": "Exceptions or error codes?",
+   "answer_en": "**Exceptions** — for rare, real failures that cannot be handled where they happen: a missing config file, out of memory. The code stays clean and RAII frees resources while the stack unwinds.\n\n**Error codes / std::expected** — for expected outcomes (the user typed a non-number, a network timeout), in hot loops and where exceptions are off (`-fno-exceptions` in embedded systems, many game engines).\n\nAbove all, never swallow errors silently: each one is either handled or passed up with context."
+  },
+  {
+   "question": "Что такое состояние гонки?",
+   "answer": "Гонка данных — два потока обращаются к одной переменной без синхронизации, и хотя бы один пишет. В C++ это неопределённое поведение: потерянные обновления, «невозможные» значения, ошибки, которые появляются раз в неделю.\n\nРешения: `std::mutex` + `std::lock_guard`/`std::scoped_lock` для составных данных; `std::atomic<int>` для счётчика или флага; не делить данные вовсе (каждому потоку свои, обмен через очередь). Найти гонку помогает ThreadSanitizer: `-fsanitize=thread -g`. На МК то же самое между прерыванием и основным циклом: `volatile` не защищает, нужны атомарный доступ или запрет прерываний на время.",
+   "aliases": [
+    "гонка данных",
+    "data race",
+    "race condition",
+    "состояние гонки"
+   ],
+   "question_en": "What is a race condition?",
+   "answer_en": "A data race is two threads touching one variable without synchronisation while at least one writes. In C++ it is undefined behaviour: lost updates, impossible values, bugs that show up once a week.\n\nFixes: `std::mutex` with `std::lock_guard`/`std::scoped_lock` for compound data; `std::atomic<int>` for a counter or flag; not sharing at all (each thread owns its data, exchange through a queue). ThreadSanitizer finds races: `-fsanitize=thread -g`. On an MCU the same applies between an interrupt and the main loop: `volatile` does not protect — use atomic access or briefly disable interrupts."
+  },
+  {
+   "question": "Что такое взаимная блокировка?",
+   "answer": "Deadlock — потоки ждут друг друга вечно: поток A держит мьютекс 1 и ждёт 2, поток B держит 2 и ждёт 1.\n\nКак избежать:\n- захватывайте мьютексы всегда в одном порядке;\n- берите несколько сразу: `std::scoped_lock lock(m1, m2);` — он избегает дедлока;\n- не вызывайте чужой код (колбэки, сигналы) под блокировкой;\n- держите блокировку как можно короче.\n\nДиагностика: `gdb -p PID`, затем `thread apply all bt` — видно, кто чего ждёт.",
+   "aliases": [
+    "дедлок",
+    "deadlock",
+    "взаимоблокировка"
+   ],
+   "question_en": "What is a deadlock?",
+   "answer_en": "A deadlock is threads waiting for each other forever: thread A holds mutex 1 and waits for 2, thread B holds 2 and waits for 1.\n\nHow to avoid it:\n- always lock mutexes in the same order;\n- lock several at once: `std::scoped_lock lock(m1, m2);` avoids deadlock;\n- do not call foreign code (callbacks, signals) while holding a lock;\n- hold locks as briefly as possible.\n\nDiagnosis: `gdb -p PID`, then `thread apply all bt` shows who waits for what."
+  },
+  {
+   "question": "Как работает std::atomic?",
+   "answer": "`std::atomic<T>` делает чтение, запись и операции вроде `fetch_add` неделимыми: другой поток не увидит «половину» значения.\n\n```cpp\nstd::atomic<bool> ready{false};\nint data;\n// поток 1\ndata = 42; ready.store(true, std::memory_order_release);\n// поток 2\nwhile (!ready.load(std::memory_order_acquire)) {}\nuse(data); // гарантированно 42\n```\n\nПо умолчанию `memory_order_seq_cst` — самый простой для понимания. `acquire/release` — для передачи данных, `relaxed` — только для счётчиков. Не ослабляйте порядок без измерений и полной уверенности.",
+   "aliases": [
+    "atomic",
+    "атомарные операции",
+    "memory order",
+    "порядок памяти"
+   ],
+   "question_en": "How does std::atomic work?",
+   "answer_en": "`std::atomic<T>` makes reads, writes and operations like `fetch_add` indivisible: another thread never sees half a value.\n\n```cpp\nstd::atomic<bool> ready{false};\nint data;\n// thread 1\ndata = 42; ready.store(true, std::memory_order_release);\n// thread 2\nwhile (!ready.load(std::memory_order_acquire)) {}\nuse(data); // guaranteed to be 42\n```\n\nThe default `memory_order_seq_cst` is the easiest to reason about. `acquire/release` hand data over, `relaxed` is for counters only. Do not weaken the ordering without measurements and full confidence."
+  },
+  {
+   "question": "Чем отличаются list, tuple, dict и set в Python?",
+   "answer": "- **list** `[1, 2]` — изменяемый список; доступ по индексу O(1), `x in list` — O(n).\n- **tuple** `(1, 2)` — неизменяемый; годится ключом словаря, возвращает несколько значений.\n- **dict** `{'a': 1}` — словарь, поиск по ключу O(1), сохраняет порядок вставки (3.7+).\n- **set** `{1, 2}` — уникальные элементы, `x in set` — O(1), операции `|`, `&`, `-`.\n\nЧастая ошибка — проверять принадлежность в длинном списке в цикле: превратите его в set, и O(n²) станет O(n). Очередь — `collections.deque`.",
+   "aliases": [
+    "list tuple dict set",
+    "коллекции python",
+    "python collections"
+   ],
+   "question_en": "What is the difference between list, tuple, dict and set in Python?",
+   "answer_en": "- **list** `[1, 2]` — mutable; indexing O(1), `x in list` O(n).\n- **tuple** `(1, 2)` — immutable; works as a dict key, returns several values.\n- **dict** `{'a': 1}` — lookup by key O(1), keeps insertion order (3.7+).\n- **set** `{1, 2}` — unique items, `x in set` O(1), operators `|`, `&`, `-`.\n\nA common mistake is checking membership in a long list inside a loop: turn it into a set and O(n²) becomes O(n). For a queue use `collections.deque`."
+  },
+  {
+   "question": "Что такое декоратор в Python?",
+   "answer": "Декоратор — функция, которая принимает функцию и возвращает обёртку с дополнительным поведением:\n\n```python\nimport functools, time\n\ndef timed(func):\n    @functools.wraps(func)\n    def wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        try:\n            return func(*args, **kwargs)\n        finally:\n            print(f\"{func.__name__}: {time.perf_counter() - start:.3f} s\")\n    return wrapper\n\n@timed\ndef work(): ...\n```\n\n`@functools.wraps` сохраняет имя и документацию. Готовые: `@functools.lru_cache`, `@property`, `@staticmethod`, `@dataclass`.",
+   "aliases": [
+    "декоратор",
+    "decorator",
+    "декораторы python"
+   ],
+   "question_en": "What is a Python decorator?",
+   "answer_en": "A decorator is a function that takes a function and returns a wrapper with extra behaviour:\n\n```python\nimport functools, time\n\ndef timed(func):\n    @functools.wraps(func)\n    def wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        try:\n            return func(*args, **kwargs)\n        finally:\n            print(f\"{func.__name__}: {time.perf_counter() - start:.3f} s\")\n    return wrapper\n\n@timed\ndef work(): ...\n```\n\n`@functools.wraps` keeps the name and docstring. Built-in ones: `@functools.lru_cache`, `@property`, `@staticmethod`, `@dataclass`."
+  },
+  {
+   "question": "Что такое генератор в Python?",
+   "answer": "Генератор — функция с `yield`: она отдаёт значения по одному и «засыпает» между ними, не держа всё в памяти.\n\n```python\ndef lines(path):\n    with open(path, encoding='utf-8') as f:\n        for line in f:\n            if line.strip():\n                yield line.rstrip()\n\nerrors = sum(1 for l in lines('app.log') if 'ERROR' in l)\n```\n\nТак можно обработать лог в гигабайты. Выражение-генератор `(x*x for x in data)` — ленивая версия списка. Генератор проходится один раз.",
+   "aliases": [
+    "генератор",
+    "yield",
+    "generator",
+    "генераторы python"
+   ],
+   "question_en": "What is a Python generator?",
+   "answer_en": "A generator is a function with `yield`: it hands out values one by one and sleeps in between, never holding everything in memory.\n\n```python\ndef lines(path):\n    with open(path, encoding='utf-8') as f:\n        for line in f:\n            if line.strip():\n                yield line.rstrip()\n\nerrors = sum(1 for l in lines('app.log') if 'ERROR' in l)\n```\n\nThis processes a log of gigabytes. A generator expression `(x*x for x in data)` is the lazy version of a list. A generator can be iterated once."
+  },
+  {
+   "question": "Потоки, процессы или asyncio в Python?",
+   "answer": "Из-за GIL в обычном CPython одновременно выполняет Python-код только один поток. Поэтому:\n\n- **ожидание ввода-вывода** (сеть, диск, последовательный порт) — `threading` или `asyncio` (тысячи соединений);\n- **вычисления на процессоре** — `multiprocessing` / `concurrent.futures.ProcessPoolExecutor`, или NumPy и расширения на C, которые отпускают GIL;\n- в Python 3.13+ есть экспериментальная сборка без GIL (free-threaded).\n\nСамое простое: `with ThreadPoolExecutor() as pool: results = list(pool.map(fetch, urls))`.",
+   "aliases": [
+    "gil",
+    "threading или multiprocessing",
+    "asyncio или threading",
+    "параллельность в python"
+   ],
+   "question_en": "Threads, processes or asyncio in Python?",
+   "answer_en": "Because of the GIL, regular CPython runs Python code in one thread at a time. So:\n\n- **waiting for I/O** (network, disk, serial port) — `threading` or `asyncio` (thousands of connections);\n- **CPU-bound work** — `multiprocessing` / `concurrent.futures.ProcessPoolExecutor`, or NumPy and C extensions that release the GIL;\n- Python 3.13+ has an experimental free-threaded build without the GIL.\n\nThe simplest form: `with ThreadPoolExecutor() as pool: results = list(pool.map(fetch, urls))`."
+  },
+  {
+   "question": "Зачем аннотации типов в Python?",
+   "answer": "Аннотации не меняют выполнение, но документируют код и позволяют найти ошибки до запуска:\n\n```python\nfrom dataclasses import dataclass\n\n@dataclass\nclass Reading:\n    sensor: str\n    value: float\n\ndef average(readings: list[Reading]) -> float | None:\n    return sum(r.value for r in readings) / len(readings) if readings else None\n```\n\nПроверка: `pip install mypy && mypy src/` (или pyright). Редактор начинает подсказывать точнее. Начните с публичных функций — необязательно размечать всё сразу.",
+   "aliases": [
+    "аннотации типов",
+    "type hints",
+    "mypy",
+    "типизация python"
+   ],
+   "question_en": "Why use type hints in Python?",
+   "answer_en": "Annotations do not change how code runs, but they document it and catch errors before running:\n\n```python\nfrom dataclasses import dataclass\n\n@dataclass\nclass Reading:\n    sensor: str\n    value: float\n\ndef average(readings: list[Reading]) -> float | None:\n    return sum(r.value for r in readings) / len(readings) if readings else None\n```\n\nCheck with `pip install mypy && mypy src/` (or pyright). The editor's completion gets better too. Start with public functions — no need to annotate everything at once."
+  },
+  {
+   "question": "Что такое владение и заимствование в Rust?",
+   "answer": "У каждого значения в Rust ровно один владелец; когда владелец выходит из области видимости, значение освобождается (как RAII). Присваивание `let b = a;` **перемещает** владение — `a` больше нельзя использовать.\n\nЗаимствование: `&T` — сколько угодно читающих ссылок, **или** `&mut T` — ровно одна изменяющая. Компилятор (borrow checker) проверяет это при сборке — поэтому в безопасном Rust нет гонок данных, висячих ссылок и use-after-free.\n\nЕсли не компилируется: передайте ссылку вместо значения, `.clone()` при необходимости, для общего владения — `Rc`/`Arc`, для изменения через общую ссылку — `RefCell`/`Mutex`.",
+   "aliases": [
+    "rust ownership",
+    "владение в rust",
+    "borrow checker",
+    "заимствование"
+   ],
+   "question_en": "What are ownership and borrowing in Rust?",
+   "answer_en": "Every Rust value has exactly one owner; when the owner goes out of scope the value is freed (like RAII). Assignment `let b = a;` **moves** ownership — `a` can no longer be used.\n\nBorrowing: any number of shared `&T` references **or** exactly one mutable `&mut T`. The compiler (borrow checker) proves this at build time — so safe Rust has no data races, dangling references or use-after-free.\n\nWhen it does not compile: pass a reference instead of the value, `.clone()` if needed, `Rc`/`Arc` for shared ownership, `RefCell`/`Mutex` to mutate through a shared reference."
+  },
+  {
+   "question": "Как работает event loop в JavaScript?",
+   "answer": "JavaScript выполняет код в одном потоке. Долгие операции (сеть, таймеры, файлы) уходят в среду (браузер, Node.js), а их колбэки встают в очередь. Цикл событий берёт задачи по одной, когда стек пуст; микрозадачи (`Promise.then`, `await`) выполняются раньше макрозадач (`setTimeout`).\n\n```js\nasync function load(url) {\n  const response = await fetch(url);\n  if (!response.ok) throw new Error(`HTTP ${response.status}`);\n  return response.json();\n}\nconst [a, b] = await Promise.all([load('/a'), load('/b')]); // параллельно\n```\n\nТяжёлый расчёт блокирует интерфейс — выносите его в Web Worker / worker_threads.",
+   "aliases": [
+    "event loop",
+    "цикл событий",
+    "javascript async",
+    "промисы"
+   ],
+   "question_en": "How does the JavaScript event loop work?",
+   "answer_en": "JavaScript runs code on one thread. Slow operations (network, timers, files) go to the environment (browser, Node.js) and their callbacks join a queue. The event loop takes tasks one by one when the stack is empty; microtasks (`Promise.then`, `await`) run before macrotasks (`setTimeout`).\n\n```js\nasync function load(url) {\n  const response = await fetch(url);\n  if (!response.ok) throw new Error(`HTTP ${response.status}`);\n  return response.json();\n}\nconst [a, b] = await Promise.all([load('/a'), load('/b')]); // in parallel\n```\n\nA heavy computation freezes the page — move it to a Web Worker / worker_threads."
+  },
+  {
+   "question": "Что такое REST API?",
+   "answer": "REST — стиль HTTP-API: ресурсы адресуются URL, действия — методами:\n\n- `GET /devices` — список, `GET /devices/7` — один;\n- `POST /devices` — создать;\n- `PUT`/`PATCH /devices/7` — заменить/изменить;\n- `DELETE /devices/7` — удалить.\n\nКоды ответа: 200 OK, 201 Created, 204 No Content, 400 неверный запрос, 401 нет аутентификации, 403 нет прав, 404 не найдено, 409 конфликт, 429 слишком часто, 500 ошибка сервера.\n\nХорошая практика: JSON, версия в пути (`/v1/`), пагинация, идемпотентные PUT/DELETE, HTTPS и проверка всех входных данных на сервере.",
+   "aliases": [
+    "rest",
+    "rest api",
+    "http методы",
+    "коды ответа http"
+   ],
+   "question_en": "What is a REST API?",
+   "answer_en": "REST is a style of HTTP API: resources are addressed by URLs and actions by methods:\n\n- `GET /devices` — the list, `GET /devices/7` — one;\n- `POST /devices` — create;\n- `PUT`/`PATCH /devices/7` — replace/modify;\n- `DELETE /devices/7` — delete.\n\nStatus codes: 200 OK, 201 Created, 204 No Content, 400 bad request, 401 not authenticated, 403 forbidden, 404 not found, 409 conflict, 429 too many requests, 500 server error.\n\nGood practice: JSON, a version in the path (`/v1/`), pagination, idempotent PUT/DELETE, HTTPS and validating every input on the server."
+  },
+  {
+   "question": "Какие бывают JOIN в SQL?",
+   "answer": "- **INNER JOIN** — только пары строк, у которых условие совпало.\n- **LEFT JOIN** — все строки левой таблицы; где пары нет — NULL справа.\n- **RIGHT JOIN** — наоборот; **FULL JOIN** — все строки обеих.\n- **CROSS JOIN** — все комбинации.\n\n```sql\nSELECT d.name, COUNT(r.id) AS readings\nFROM devices d\nLEFT JOIN readings r ON r.device_id = d.id\nGROUP BY d.id, d.name;\n```\n\nИндекс на столбце соединения (`readings.device_id`) превращает полный перебор в быстрый поиск. План запроса — `EXPLAIN`.",
+   "aliases": [
+    "join",
+    "sql join",
+    "inner join",
+    "left join"
+   ],
+   "question_en": "What kinds of SQL JOIN are there?",
+   "answer_en": "- **INNER JOIN** — only row pairs that match the condition.\n- **LEFT JOIN** — every row of the left table; NULLs on the right where there is no match.\n- **RIGHT JOIN** — the reverse; **FULL JOIN** — every row of both.\n- **CROSS JOIN** — all combinations.\n\n```sql\nSELECT d.name, COUNT(r.id) AS readings\nFROM devices d\nLEFT JOIN readings r ON r.device_id = d.id\nGROUP BY d.id, d.name;\n```\n\nAn index on the join column (`readings.device_id`) turns a full scan into a fast lookup. See the plan with `EXPLAIN`."
+  },
+  {
+   "question": "Что такое SQL-инъекция?",
+   "answer": "SQL-инъекция — данные пользователя вклеиваются в текст запроса и становятся кодом: `\"... WHERE name = '\" + name + \"'\"` с именем `' OR 1=1 --` вернёт все строки, а то и удалит таблицу.\n\nЗащита — **параметризованные запросы**, никогда не склеивайте SQL строками:\n\n```python\ncur.execute(\"SELECT * FROM users WHERE name = ?\", (name,))       # sqlite3\n```\n```cpp\nQSqlQuery q;\nq.prepare(\"SELECT * FROM users WHERE name = :name\");\nq.bindValue(\":name\", name);\nq.exec();\n```\n\nДополнительно: минимальные права учётной записи БД, белый список для имён столбцов и сортировки (их параметром не передать).",
+   "aliases": [
+    "sql injection",
+    "sql-инъекция",
+    "инъекция sql",
+    "параметризованные запросы"
+   ],
+   "question_en": "What is SQL injection?",
+   "answer_en": "SQL injection is user data pasted into the query text, where it becomes code: `\"... WHERE name = '\" + name + \"'\"` with the name `' OR 1=1 --` returns every row, or even drops a table.\n\nThe fix is **parameterised queries** — never build SQL by concatenating strings:\n\n```python\ncur.execute(\"SELECT * FROM users WHERE name = ?\", (name,))       # sqlite3\n```\n```cpp\nQSqlQuery q;\nq.prepare(\"SELECT * FROM users WHERE name = :name\");\nq.bindValue(\":name\", name);\nq.exec();\n```\n\nAlso: least privilege for the database account, and an allow-list for column names and sort order (those cannot be parameters)."
+  },
+  {
+   "question": "Как писать безопасный код?",
+   "answer": "Главные правила:\n\n- **Не доверяйте входу**: проверяйте длину, тип, диапазон всего, что пришло из сети, файла, аргументов, переменных окружения.\n- **Не склеивайте код из данных**: параметры в SQL, `subprocess.run([...])` без `shell=True`, экранирование в HTML (XSS).\n- **Пути**: не давайте выйти за каталог (`../`), сравнивайте канонический путь.\n- **Секреты** — не в коде и не в git: переменные окружения, файлы с правами 0600, менеджер секретов.\n- **Память в C/C++**: границы буферов, `snprintf` вместо `sprintf`, санитайзеры и `-Wall -Wextra` в CI.\n- **Пароли** — только медленный хеш (argon2, bcrypt) с солью.\n- **Зависимости** обновляйте, минимальные права процессам.\n\nСписок типичных уязвимостей — OWASP Top 10 и CWE Top 25.",
+   "aliases": [
+    "безопасность кода",
+    "secure coding",
+    "owasp",
+    "уязвимости"
+   ],
+   "question_en": "How do I write secure code?",
+   "answer_en": "The main rules:\n\n- **Distrust input**: check the length, type and range of everything from the network, files, arguments and environment variables.\n- **Never build code from data**: parameters in SQL, `subprocess.run([...])` without `shell=True`, escaping in HTML (XSS).\n- **Paths**: do not let `../` escape a directory; compare canonical paths.\n- **Secrets** stay out of code and git: environment variables, 0600 files, a secret manager.\n- **Memory in C/C++**: buffer bounds, `snprintf` instead of `sprintf`, sanitizers and `-Wall -Wextra` in CI.\n- **Passwords** — only a slow hash (argon2, bcrypt) with a salt.\n- **Dependencies** kept up to date, least privilege for processes.\n\nTypical weaknesses are listed in the OWASP Top 10 and CWE Top 25."
+  },
+  {
+   "question": "Как хранить пароли?",
+   "answer": "Пароли никогда не хранят открытым текстом и не хешируют быстрым хешем (MD5, SHA-256 — их перебирают миллиардами в секунду). Нужен **медленный хеш с солью**: argon2id (лучший выбор), scrypt или bcrypt.\n\n```python\nfrom argon2 import PasswordHasher   # pip install argon2-cffi\nph = PasswordHasher()\nstored = ph.hash(password)          # соль внутри строки\nph.verify(stored, attempt)          # исключение, если не совпало\n```\n\nСоль — случайная для каждого пользователя, хранится вместе с хешем. Сравнение — за постоянное время (`hmac.compare_digest`). Ограничьте число попыток входа.",
+   "aliases": [
+    "хеширование паролей",
+    "password hashing",
+    "bcrypt",
+    "argon2",
+    "соль пароля"
+   ],
+   "question_en": "How should passwords be stored?",
+   "answer_en": "Passwords are never stored in plain text and never hashed with a fast hash (MD5, SHA-256 — attackers try billions per second). Use a **slow salted hash**: argon2id (the best choice), scrypt or bcrypt.\n\n```python\nfrom argon2 import PasswordHasher   # pip install argon2-cffi\nph = PasswordHasher()\nstored = ph.hash(password)          # the salt is inside the string\nph.verify(stored, attempt)          # raises if it does not match\n```\n\nThe salt is random per user and stored with the hash. Compare in constant time (`hmac.compare_digest`). Rate-limit login attempts."
+  },
+  {
+   "question": "Как работает двоичный поиск?",
+   "answer": "В **отсортированном** массиве сравниваем искомое с серединой и отбрасываем половину: O(log n) — миллион элементов за 20 шагов.\n\n```cpp\nint find(const std::vector<int> &a, int x) {\n    int lo = 0, hi = int(a.size()) - 1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;   // без переполнения\n        if (a[mid] == x) return mid;\n        if (a[mid] < x) lo = mid + 1; else hi = mid - 1;\n    }\n    return -1;\n}\n```\n\nВ стандартной библиотеке: `std::lower_bound`, `std::binary_search`, в Python — `bisect`. Тот же приём ищет ответ «по параметру»: минимальную скорость, при которой задача успевает.",
+   "aliases": [
+    "бинарный поиск",
+    "binary search",
+    "двоичный поиск"
+   ],
+   "question_en": "How does binary search work?",
+   "answer_en": "In a **sorted** array compare the target with the middle and discard half: O(log n) — a million items in 20 steps.\n\n```cpp\nint find(const std::vector<int> &a, int x) {\n    int lo = 0, hi = int(a.size()) - 1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;   // no overflow\n        if (a[mid] == x) return mid;\n        if (a[mid] < x) lo = mid + 1; else hi = mid - 1;\n    }\n    return -1;\n}\n```\n\nIn the standard library: `std::lower_bound`, `std::binary_search`; in Python — `bisect`. The same trick searches an answer by parameter: the smallest speed at which a job finishes in time."
+  },
+  {
+   "question": "Как работает хеш-таблица?",
+   "answer": "Ключ превращается хеш-функцией в число, по нему выбирается «корзина» массива — поиск, вставка и удаление в среднем O(1). Разные ключи могут попасть в одну корзину (коллизия): их хранят списком или ищут следующую свободную ячейку.\n\nКогда заполнение α = n/m растёт (обычно > 0,75), таблица увеличивается и всё перехешируется — отдельная вставка может быть долгой. Плохой хеш или специально подобранные ключи сводят всё к O(n) — для данных из сети берите хеш с секретным зерном (SipHash). Порядок обхода не определён; нужен порядок — `std::map`.",
+   "aliases": [
+    "хеш-таблица",
+    "hash table",
+    "hashmap",
+    "unordered_map"
+   ],
+   "question_en": "How does a hash table work?",
+   "answer_en": "A hash function turns the key into a number that picks a bucket of an array — lookup, insert and delete are O(1) on average. Different keys can land in one bucket (a collision): they are kept in a list or the next free slot is probed.\n\nWhen the load α = n/m grows (usually > 0.75), the table grows and everything is rehashed — a single insert can then be slow. A poor hash or crafted keys degrade it to O(n) — for data from the network use a keyed hash (SipHash). Iteration order is unspecified; for order use `std::map`."
+  },
+  {
+   "question": "Какую сортировку выбрать?",
+   "answer": "Почти всегда — стандартную: `std::sort` (introsort, O(n log n)), `std::stable_sort` (сохраняет порядок равных), Python `sorted()`/`list.sort()` (Timsort, быстр на частично упорядоченных данных).\n\nКогда своя:\n- малые массивы (< 20) — вставками;\n- целые в узком диапазоне — подсчётом, O(n + k);\n- нужны только k лучших — `std::partial_sort` / `std::nth_element` / `heapq.nlargest`;\n- на МК без кучи — сортировка вставками или heapsort (не нужна доп. память).\n\nСортировка по нескольким полям: `std::tie(a.x, a.y) < std::tie(b.x, b.y)` или `key=lambda r: (r.x, r.y)`.",
+   "aliases": [
+    "сортировка",
+    "алгоритмы сортировки",
+    "sorting",
+    "quicksort"
+   ],
+   "question_en": "Which sorting algorithm should I use?",
+   "answer_en": "Almost always the standard one: `std::sort` (introsort, O(n log n)), `std::stable_sort` (keeps equal items in order), Python `sorted()`/`list.sort()` (Timsort, fast on partly sorted data).\n\nWhen to roll your own:\n- tiny arrays (< 20) — insertion sort;\n- integers in a narrow range — counting sort, O(n + k);\n- only the top k — `std::partial_sort` / `std::nth_element` / `heapq.nlargest`;\n- on an MCU without a heap — insertion sort or heapsort (no extra memory).\n\nSorting by several fields: `std::tie(a.x, a.y) < std::tie(b.x, b.y)` or `key=lambda r: (r.x, r.y)`."
+  },
+  {
+   "question": "Что такое рекурсия?",
+   "answer": "Рекурсивная функция вызывает саму себя для меньшей задачи и обязательно имеет базовый случай:\n\n```python\ndef depth(node):\n    if node is None:           # базовый случай\n        return 0\n    return 1 + max(depth(node.left), depth(node.right))\n```\n\nКаждый вызов занимает место в стеке: глубокая рекурсия переполняет его (Python — ~1000 уровней, на МК стек — килобайты). Для глубоких структур переписывайте в цикл с явным стеком или очередью. Повторные вычисления (как в наивном Фибоначчи) убирает мемоизация (`@functools.cache`).",
+   "aliases": [
+    "рекурсия",
+    "recursion",
+    "переполнение стека",
+    "stack overflow"
+   ],
+   "question_en": "What is recursion?",
+   "answer_en": "A recursive function calls itself on a smaller problem and must have a base case:\n\n```python\ndef depth(node):\n    if node is None:           # base case\n        return 0\n    return 1 + max(depth(node.left), depth(node.right))\n```\n\nEvery call takes stack space: deep recursion overflows it (Python allows ~1000 levels, an MCU stack is kilobytes). For deep structures rewrite it as a loop with an explicit stack or queue. Memoisation (`@functools.cache`) removes repeated work (as in naive Fibonacci)."
+  },
+  {
+   "question": "Что такое динамическое программирование?",
+   "answer": "Динамическое программирование решает задачу через ответы на перекрывающиеся подзадачи, вычисляя каждую один раз. Шаги: 1) определить состояние; 2) записать переход; 3) задать базу; 4) порядок вычисления (снизу вверх) или мемоизация (сверху вниз).\n\nПример — наименьшее число монет для суммы:\n\n```python\ndef coins(amount, values):\n    best = [0] + [float('inf')] * amount\n    for s in range(1, amount + 1):\n        for c in values:\n            if c <= s:\n                best[s] = min(best[s], best[s - c] + 1)\n    return best[amount] if best[amount] != float('inf') else -1\n```\n\nСложность O(amount · len(values)) вместо экспоненциального перебора.",
+   "aliases": [
+    "динамическое программирование",
+    "dynamic programming",
+    "мемоизация"
+   ],
+   "question_en": "What is dynamic programming?",
+   "answer_en": "Dynamic programming solves a problem through overlapping subproblems, computing each once. Steps: 1) define the state; 2) write the transition; 3) set the base case; 4) choose the order (bottom-up) or memoise (top-down).\n\nExample — the fewest coins for an amount:\n\n```python\ndef coins(amount, values):\n    best = [0] + [float('inf')] * amount\n    for s in range(1, amount + 1):\n        for c in values:\n            if c <= s:\n                best[s] = min(best[s], best[s - c] + 1)\n    return best[amount] if best[amount] != float('inf') else -1\n```\n\nO(amount · len(values)) instead of an exponential search."
+  },
+  {
+   "question": "Чем BFS отличается от DFS?",
+   "answer": "- **Поиск в ширину (BFS)** — очередь; обходит граф слоями. Находит **кратчайший путь по числу рёбер** в невзвешенном графе.\n- **Поиск в глубину (DFS)** — стек или рекурсия; идёт до конца ветки. Подходит для компонент связности, циклов, топологической сортировки.\n\n```python\nfrom collections import deque\n\ndef shortest(graph, start, goal):\n    prev, queue = {start: None}, deque([start])\n    while queue:\n        node = queue.popleft()\n        if node == goal:\n            path = []\n            while node is not None:\n                path.append(node); node = prev[node]\n            return path[::-1]\n        for nxt in graph[node]:\n            if nxt not in prev:\n                prev[nxt] = node; queue.append(nxt)\n```\n\nОба — O(V + E). Для взвешенных рёбер — Дейкстра (`heapq`).",
+   "aliases": [
+    "bfs",
+    "dfs",
+    "обход графа",
+    "поиск в ширину",
+    "поиск в глубину"
+   ],
+   "question_en": "What is the difference between BFS and DFS?",
+   "answer_en": "- **Breadth-first search (BFS)** — a queue; visits the graph in layers. Finds the **shortest path by edge count** in an unweighted graph.\n- **Depth-first search (DFS)** — a stack or recursion; goes to the end of a branch. Good for connected components, cycles, topological sort.\n\n```python\nfrom collections import deque\n\ndef shortest(graph, start, goal):\n    prev, queue = {start: None}, deque([start])\n    while queue:\n        node = queue.popleft()\n        if node == goal:\n            path = []\n            while node is not None:\n                path.append(node); node = prev[node]\n            return path[::-1]\n        for nxt in graph[node]:\n            if nxt not in prev:\n                prev[nxt] = node; queue.append(nxt)\n```\n\nBoth are O(V + E). For weighted edges use Dijkstra (`heapq`)."
+  },
+  {
+   "question": "Какие паттерны проектирования нужны чаще всего?",
+   "answer": "Самые полезные на практике:\n\n- **Стратегия** — алгоритм передаётся как объект или функция (`std::function`, лямбда).\n- **Наблюдатель** — подписка на события (сигналы и слоты Qt, колбэки).\n- **Фабрика** — создание объекта по типу или конфигурации.\n- **Адаптер** — обёртка, приводящая чужой интерфейс к вашему (драйвер датчика к общему `Sensor`).\n- **Конечный автомат (State)** — протоколы, меню, прошивки: `enum class State` + `switch` часто достаточно.\n- **RAII** — в C++ главный «паттерн» владения ресурсами.\n\nСинглтоны и глубокие иерархии лучше избегать: они усложняют тестирование. Паттерн — ответ на конкретную проблему, а не цель.",
+   "aliases": [
+    "паттерны проектирования",
+    "design patterns",
+    "шаблоны проектирования"
+   ],
+   "question_en": "Which design patterns are used most?",
+   "answer_en": "The most useful in practice:\n\n- **Strategy** — pass an algorithm as an object or function (`std::function`, a lambda).\n- **Observer** — subscribing to events (Qt signals and slots, callbacks).\n- **Factory** — creating an object from a type or configuration.\n- **Adapter** — a wrapper that fits a foreign interface to yours (a sensor driver behind a common `Sensor`).\n- **State machine** — protocols, menus, firmware: an `enum class State` and a `switch` are often enough.\n- **RAII** — in C++ the main resource-ownership pattern.\n\nAvoid singletons and deep hierarchies: they make testing harder. A pattern answers a specific problem; it is not a goal."
+  },
+  {
+   "question": "Что такое SOLID?",
+   "answer": "Пять принципов проектирования классов:\n\n- **S** — единственная ответственность: у класса одна причина меняться.\n- **O** — открыт для расширения, закрыт для изменения: новое поведение добавляется новым кодом.\n- **L** — подстановка Лисков: наследник работает везде, где работает базовый класс.\n- **I** — разделение интерфейсов: маленькие интерфейсы лучше одного «на всё».\n- **D** — инверсия зависимостей: зависеть от абстракций, а не от конкретных классов (передавать зависимости в конструктор).\n\nЭто ориентиры, а не законы: для небольшого скрипта простота важнее.",
+   "aliases": [
+    "solid",
+    "принципы solid"
+   ],
+   "question_en": "What is SOLID?",
+   "answer_en": "Five principles of class design:\n\n- **S** — single responsibility: a class has one reason to change.\n- **O** — open for extension, closed for modification: new behaviour comes as new code.\n- **L** — Liskov substitution: a derived class works wherever its base does.\n- **I** — interface segregation: small interfaces beat one that does everything.\n- **D** — dependency inversion: depend on abstractions, not concrete classes (pass dependencies into the constructor).\n\nThey are guidelines, not laws: for a small script simplicity matters more."
+  },
+  {
+   "question": "Как работает Docker?",
+   "answer": "**Образ** — неизменяемый шаблон (файловая система + команда запуска), **контейнер** — запущенный экземпляр образа, изолированный от системы (namespaces, cgroups) без отдельного ядра.\n\n```dockerfile Dockerfile\nFROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nUSER 1000\nCMD [\"python\", \"-m\", \"app\"]\n```\n\n`docker build -t app .`, `docker run --rm -p 8080:8080 app`. Зависимости копируйте раньше кода — так слой с ними кешируется. Не храните секреты в образе, не запускайте от root.",
+   "aliases": [
+    "docker",
+    "dockerfile",
+    "контейнер docker",
+    "образ docker"
+   ],
+   "question_en": "How does Docker work?",
+   "answer_en": "An **image** is an immutable template (a filesystem plus a start command), a **container** is a running instance of an image, isolated from the system (namespaces, cgroups) without its own kernel.\n\n```dockerfile Dockerfile\nFROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nUSER 1000\nCMD [\"python\", \"-m\", \"app\"]\n```\n\n`docker build -t app .`, `docker run --rm -p 8080:8080 app`. Copy dependency files before the code so that layer is cached. Keep secrets out of the image and do not run as root."
+  },
+  {
+   "question": "Как настроить CI на GitHub Actions?",
+   "answer": "Файл `.github/workflows/ci.yml` запускает сборку и тесты при каждом push и pull request:\n\n```yaml .github/workflows/ci.yml\nname: CI\non: [push, pull_request]\njobs:\n  build:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: actions/checkout@v4\n      - run: sudo apt-get update && sudo apt-get install -y ninja-build\n      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=\"-fsanitize=address,undefined\"\n      - run: cmake --build build\n      - run: ctest --test-dir build --output-on-failure\n```\n\nДобавьте линтеры (clang-tidy, ruff), кеш зависимостей и матрицу компиляторов. Секреты — только через `secrets.*`, не в файлах.",
+   "aliases": [
+    "github actions",
+    "ci",
+    "непрерывная интеграция",
+    "ci/cd"
+   ],
+   "question_en": "How do I set up CI on GitHub Actions?",
+   "answer_en": "A `.github/workflows/ci.yml` file builds and tests on every push and pull request:\n\n```yaml .github/workflows/ci.yml\nname: CI\non: [push, pull_request]\njobs:\n  build:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: actions/checkout@v4\n      - run: sudo apt-get update && sudo apt-get install -y ninja-build\n      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=\"-fsanitize=address,undefined\"\n      - run: cmake --build build\n      - run: ctest --test-dir build --output-on-failure\n```\n\nAdd linters (clang-tidy, ruff), dependency caching and a compiler matrix. Secrets only through `secrets.*`, never in files."
+  },
+  {
+   "question": "Как найти медленное место в программе?",
+   "answer": "Сначала измерьте — догадки почти всегда ошибочны.\n\n- **C/C++**: `perf record -g ./app` и `perf report` (горячие функции), `valgrind --tool=callgrind ./app` + KCachegrind, флеймграфы. Собирайте с `-O2 -g`.\n- **Python**: `python -m cProfile -s cumtime app.py`, `py-spy top --pid N` (без остановки), `line_profiler` для строк.\n- **Qt Quick**: QML Profiler в Qt Creator.\n\nТипичные причины: неподходящий алгоритм (O(n²) в цикле), лишние копирования и аллокации, промахи кеша, ввод-вывод в цикле, блокировки. После правки измерьте ещё раз на тех же данных.",
+   "aliases": [
+    "профилирование",
+    "profiling",
+    "perf",
+    "почему программа тормозит",
+    "оптимизация"
+   ],
+   "question_en": "How do I find the slow part of a program?",
+   "answer_en": "Measure first — guesses are almost always wrong.\n\n- **C/C++**: `perf record -g ./app` then `perf report` (hot functions), `valgrind --tool=callgrind ./app` with KCachegrind, flame graphs. Build with `-O2 -g`.\n- **Python**: `python -m cProfile -s cumtime app.py`, `py-spy top --pid N` (no restart), `line_profiler` per line.\n- **Qt Quick**: the QML Profiler in Qt Creator.\n\nUsual causes: the wrong algorithm (O(n²) in a loop), needless copies and allocations, cache misses, I/O in a loop, lock contention. Measure again on the same data after the change."
+  },
+  {
+   "question": "Как писать регулярные выражения?",
+   "answer": "Основное: `.` — любой символ, `\\d` цифра, `\\w` буква/цифра/_, `\\s` пробел; `*` 0+, `+` 1+, `?` 0–1, `{2,4}`; `^`/`$` — начало/конец; `[a-f]` класс; `(…)` группа, `(?:…)` без захвата; `|` — или.\n\n```python\nimport re\nm = re.fullmatch(r\"(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\", ip)\nvalues = re.findall(r\"T=(-?\\d+(?:\\.\\d+)?)\", log)\n```\n\nСоветы: сырые строки `r\"…\"` в Python и `R\"(…)\"` в C++; не парсите регулярками HTML/JSON — есть парсеры; бойтесь вложенных квантификаторов `(a+)+` на входе из сети (ReDoS). Проверять удобно на regex101.com.",
+   "aliases": [
+    "регулярные выражения",
+    "regex",
+    "регулярка",
+    "regexp"
+   ],
+   "question_en": "How do I write regular expressions?",
+   "answer_en": "The basics: `.` any character, `\\d` digit, `\\w` letter/digit/_, `\\s` whitespace; `*` 0+, `+` 1+, `?` 0–1, `{2,4}`; `^`/`$` start/end; `[a-f]` a class; `(…)` a group, `(?:…)` non-capturing; `|` or.\n\n```python\nimport re\nm = re.fullmatch(r\"(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\", ip)\nvalues = re.findall(r\"T=(-?\\d+(?:\\.\\d+)?)\", log)\n```\n\nTips: raw strings `r\"…\"` in Python and `R\"(…)\"` in C++; do not parse HTML/JSON with regexes — use parsers; beware nested quantifiers `(a+)+` on input from the network (ReDoS). regex101.com is handy for testing."
+  },
+  {
+   "question": "Как найти коммит, который всё сломал?",
+   "answer": "`git bisect` делит историю пополам, пока не найдёт первый плохой коммит — 1000 коммитов за 10 шагов:\n\n```bash\ngit bisect start\ngit bisect bad              # текущая версия сломана\ngit bisect good v1.4        # а эта работала\n# собрать, проверить, ответить: git bisect good / git bisect bad\ngit bisect reset            # вернуться\n```\n\nАвтоматически, если есть проверочный скрипт (код возврата 0 — хорошо): `git bisect run ./test.sh`.",
+   "aliases": [
+    "git bisect",
+    "найти коммит с ошибкой",
+    "bisect"
+   ],
+   "question_en": "How do I find the commit that broke things?",
+   "answer_en": "`git bisect` halves the history until it finds the first bad commit — 1000 commits in 10 steps:\n\n```bash\ngit bisect start\ngit bisect bad              # the current version is broken\ngit bisect good v1.4        # this one worked\n# build, test, answer: git bisect good / git bisect bad\ngit bisect reset            # go back\n```\n\nAutomatically, with a test script (exit code 0 means good): `git bisect run ./test.sh`."
+  },
+  {
+   "question": "Как связать QML и C++?",
+   "answer": "Класс C++ становится типом QML через `QML_ELEMENT` (CMake: `qt_add_qml_module`). Свойства — `Q_PROPERTY` с сигналом изменения, методы — `Q_INVOKABLE` или слоты:\n\n```cpp sensor.h\n#pragma once\n#include <QObject>\n#include <QtQml/qqmlregistration.h>\n\nclass Sensor : public QObject {\n    Q_OBJECT\n    QML_ELEMENT\n    Q_PROPERTY(double value READ value NOTIFY valueChanged)\npublic:\n    double value() const { return m_value; }\n    Q_INVOKABLE void reset() { m_value = 0; emit valueChanged(); }\nsignals:\n    void valueChanged();\nprivate:\n    double m_value = 0;\n};\n```\n\n```qml\nSensor { id: sensor }\nLabel { text: sensor.value.toFixed(1) }   // обновится по сигналу\n```\n\nНе забывайте `emit …Changed()` — без него привязки QML не обновятся. Долгую работу выносите из GUI-потока (QThread, QtConcurrent).",
+   "aliases": [
+    "qml и c++",
+    "q_property",
+    "qml_element",
+    "qt quick c++"
+   ],
+   "question_en": "How do I connect QML and C++?",
+   "answer_en": "A C++ class becomes a QML type with `QML_ELEMENT` (CMake: `qt_add_qml_module`). Properties are `Q_PROPERTY` with a change signal, methods are `Q_INVOKABLE` or slots:\n\n```cpp sensor.h\n#pragma once\n#include <QObject>\n#include <QtQml/qqmlregistration.h>\n\nclass Sensor : public QObject {\n    Q_OBJECT\n    QML_ELEMENT\n    Q_PROPERTY(double value READ value NOTIFY valueChanged)\npublic:\n    double value() const { return m_value; }\n    Q_INVOKABLE void reset() { m_value = 0; emit valueChanged(); }\nsignals:\n    void valueChanged();\nprivate:\n    double m_value = 0;\n};\n```\n\n```qml\nSensor { id: sensor }\nLabel { text: sensor.value.toFixed(1) }   // updates on the signal\n```\n\nDo not forget `emit …Changed()` — QML bindings do not update without it. Keep long work off the GUI thread (QThread, QtConcurrent)."
+  },
+  {
+   "question": "Что такое порядок байтов?",
+   "answer": "Порядок, в котором байты многобайтового числа лежат в памяти. 0x12345678:\n\n- **little-endian** (x86, ARM Cortex-M, ESP32, RISC-V): `78 56 34 12` — младший байт первым;\n- **big-endian** (сетевые протоколы, Modbus-регистры, многие датчики): `12 34 56 78`.\n\nПри разборе байтов из сети, файла или датчика собирайте число явно — так код не зависит от процессора:\n\n```c\nuint16_t be16(const uint8_t *p) { return (uint16_t)((p[0] << 8) | p[1]); }\nuint32_t le32(const uint8_t *p) { return p[0] | p[1] << 8 | p[2] << 16 | (uint32_t)p[3] << 24; }\n```\n\nНе приводите `(uint32_t *)buffer` — это ещё и нарушение выравнивания и strict aliasing. Есть `htonl/ntohl`, `std::byteswap` (C++23).",
+   "aliases": [
+    "endianness",
+    "порядок байтов",
+    "little endian",
+    "big endian"
+   ],
+   "question_en": "What is endianness?",
+   "answer_en": "The order in which the bytes of a multi-byte number sit in memory. 0x12345678:\n\n- **little-endian** (x86, ARM Cortex-M, ESP32, RISC-V): `78 56 34 12` — lowest byte first;\n- **big-endian** (network protocols, Modbus registers, many sensors): `12 34 56 78`.\n\nWhen parsing bytes from a network, file or sensor, assemble the number explicitly — then the code does not depend on the CPU:\n\n```c\nuint16_t be16(const uint8_t *p) { return (uint16_t)((p[0] << 8) | p[1]); }\nuint32_t le32(const uint8_t *p) { return p[0] | p[1] << 8 | p[2] << 16 | (uint32_t)p[3] << 24; }\n```\n\nDo not cast `(uint32_t *)buffer` — that also breaks alignment and strict aliasing. There are `htonl/ntohl` and `std::byteswap` (C++23)."
+  },
+  {
+   "question": "Почему 0.1 + 0.2 не равно 0.3?",
+   "answer": "Числа с плавающей точкой (IEEE 754) хранятся в двоичной системе, а 0,1 в ней — бесконечная дробь, как 1/3 в десятичной. Сохраняется ближайшее значение, и ошибки округления складываются: `0.1 + 0.2 = 0.30000000000000004`.\n\nПоэтому:\n- не сравнивайте через `==`, а с допуском: `fabs(a - b) <= 1e-9 * fmax(fabs(a), fabs(b))`;\n- деньги считайте в целых копейках или `decimal.Decimal`;\n- float (32 бита) даёт ~7 значащих цифр, double — ~15–16; на Cortex-M4F аппаратный только float.\n\nПосмотреть, как хранится число, — калькулятор «IEEE 754» в этом навыке или «float 0.1» в чате.",
+   "aliases": [
+    "0.1+0.2",
+    "числа с плавающей точкой",
+    "floating point",
+    "точность float"
+   ],
+   "question_en": "Why is 0.1 + 0.2 not equal to 0.3?",
+   "answer_en": "Floating-point numbers (IEEE 754) are stored in binary, where 0.1 is an endless fraction, like 1/3 in decimal. The nearest value is stored, and rounding errors add up: `0.1 + 0.2 = 0.30000000000000004`.\n\nSo:\n- never compare with `==`, use a tolerance: `fabs(a - b) <= 1e-9 * fmax(fabs(a), fabs(b))`;\n- keep money in integer cents or `decimal.Decimal`;\n- float (32 bits) has ~7 significant digits, double ~15–16; a Cortex-M4F has hardware float only.\n\nTo see how a number is stored, use the IEEE 754 calculator in this skill or type \"float 0.1\" in chat."
+  },
+  {
+   "question": "Что такое Q15 и фиксированная точка?",
+   "answer": "Дробное число хранится целым с подразумеваемым масштабом 2ⁿ. Q15 (Q1.15): 16 бит со знаком, 15 дробных — диапазон [−1; 1), шаг 2⁻¹⁵ ≈ 0,00003. Код 0,5 = 0,5·32768 = 16384 = 0x4000.\n\n```c\ntypedef int16_t q15_t;\nstatic inline q15_t q15_mul(q15_t a, q15_t b) {\n    int32_t p = ((int32_t)a * b + (1 << 14)) >> 15;   // с округлением\n    return p > 32767 ? 32767 : p < -32768 ? -32768 : (q15_t)p; // насыщение\n}\n```\n\nЗачем: быстро на МК без FPU (Cortex-M0/M3, AVR), предсказуемая точность в DSP-фильтрах. Сложение — обычное, умножение — со сдвигом, следите за переполнением. В CMSIS-DSP есть готовые функции `arm_mult_q15` и т. п. Перевод значений — калькулятор «Фиксированная точка».",
+   "aliases": [
+    "фиксированная точка",
+    "fixed point",
+    "q15",
+    "q-формат"
+   ],
+   "question_en": "What are Q15 and fixed point?",
+   "answer_en": "A fractional number stored as an integer with an implied scale of 2ⁿ. Q15 (Q1.15): 16 bits signed, 15 fraction bits — range [−1; 1), step 2⁻¹⁵ ≈ 0.00003. The code of 0.5 is 0.5·32768 = 16384 = 0x4000.\n\n```c\ntypedef int16_t q15_t;\nstatic inline q15_t q15_mul(q15_t a, q15_t b) {\n    int32_t p = ((int32_t)a * b + (1 << 14)) >> 15;   // rounded\n    return p > 32767 ? 32767 : p < -32768 ? -32768 : (q15_t)p; // saturated\n}\n```\n\nWhy: fast on MCUs without an FPU (Cortex-M0/M3, AVR) and predictable precision in DSP filters. Addition is plain, multiplication needs a shift; watch for overflow. CMSIS-DSP has ready functions such as `arm_mult_q15`. Convert values with the Fixed point calculator."
+  },
+  {
+   "question": "Как устроен минимальный проект на CMake?",
+   "answer": "```cmake CMakeLists.txt\ncmake_minimum_required(VERSION 3.21)\nproject(app VERSION 1.0 LANGUAGES CXX)\n\nset(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nadd_library(core STATIC src/core.cpp)\ntarget_include_directories(core PUBLIC include)\ntarget_compile_options(core PRIVATE -Wall -Wextra -Wpedantic)\n\nadd_executable(app src/main.cpp)\ntarget_link_libraries(app PRIVATE core)\n\nenable_testing()\nadd_executable(core_tests tests/core_tests.cpp)\ntarget_link_libraries(core_tests PRIVATE core)\nadd_test(NAME core COMMAND core_tests)\n```\n\nСборка: `cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build`. Принцип «современного» CMake — всё через `target_*`, без глобальных `include_directories`.",
+   "aliases": [
+    "cmake проект",
+    "cmakelists",
+    "минимальный cmake",
+    "cmake example"
+   ],
+   "question_en": "What does a minimal CMake project look like?",
+   "answer_en": "```cmake CMakeLists.txt\ncmake_minimum_required(VERSION 3.21)\nproject(app VERSION 1.0 LANGUAGES CXX)\n\nset(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nadd_library(core STATIC src/core.cpp)\ntarget_include_directories(core PUBLIC include)\ntarget_compile_options(core PRIVATE -Wall -Wextra -Wpedantic)\n\nadd_executable(app src/main.cpp)\ntarget_link_libraries(app PRIVATE core)\n\nenable_testing()\nadd_executable(core_tests tests/core_tests.cpp)\ntarget_link_libraries(core_tests PRIVATE core)\nadd_test(NAME core COMMAND core_tests)\n```\n\nBuild: `cmake -S . -B build -G Ninja && cmake --build build && ctest --test-dir build`. The rule of modern CMake: everything through `target_*`, no global `include_directories`."
+  },
+  {
+   "question": "Что такое горутины и каналы в Go?",
+   "answer": "Горутина — лёгкий поток (`go f()`), их можно запускать тысячами. Каналы передают данные между ними и синхронизируют:\n\n```go\nresults := make(chan int)\nfor _, url := range urls {\n    go func(u string) { results <- fetchSize(u) }(url)\n}\ntotal := 0\nfor range urls {\n    total += <-results\n}\n```\n\nПравило Go: «не общайтесь через общую память — делитесь памятью через общение». Для ожидания группы — `sync.WaitGroup`, для отмены и таймаутов — `context.Context`. Гонки ищет `go test -race`.",
+   "aliases": [
+    "горутины",
+    "goroutine",
+    "каналы go",
+    "go concurrency"
+   ],
+   "question_en": "What are goroutines and channels in Go?",
+   "answer_en": "A goroutine is a lightweight thread (`go f()`); you can start thousands. Channels pass data between them and synchronise:\n\n```go\nresults := make(chan int)\nfor _, url := range urls {\n    go func(u string) { results <- fetchSize(u) }(url)\n}\ntotal := 0\nfor range urls {\n    total += <-results\n}\n```\n\nGo's rule: \"do not communicate by sharing memory; share memory by communicating\". Wait for a group with `sync.WaitGroup`, cancel and time out with `context.Context`. `go test -race` finds races."
   }
  ]
 }

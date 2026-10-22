@@ -7,7 +7,11 @@
 #include <QCommandLineParser>
 #include <QDBusConnection>
 #include <QDBusInterface>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QQmlApplicationEngine>
+#include <QQmlNetworkAccessManagerFactory>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
@@ -22,6 +26,24 @@
 // recording is finished and saved instead of being cut off.
 static int signalPipe[2]={-1,-1};
 static void onTerminate(int) { const char c=1; [[maybe_unused]] auto n=::write(signalPipe[1],&c,1); }
+
+// QML never fetches anything from the network: a remote image in rendered
+// Markdown (an answer, a skill, lesson notes) would leak data in its URL.
+// Defence in depth behind the Markdown sanitizer; local and qrc files still load.
+class OfflineNetwork : public QNetworkAccessManager {
+public:
+    using QNetworkAccessManager::QNetworkAccessManager;
+protected:
+    QNetworkReply *createRequest(Operation op,const QNetworkRequest &request,QIODevice *data) override {
+        const QString scheme=request.url().scheme();
+        if(scheme=="qrc" || scheme=="file" || scheme=="data") return QNetworkAccessManager::createRequest(op,request,data);
+        return QNetworkAccessManager::createRequest(GetOperation,QNetworkRequest(QUrl(QStringLiteral("data:,"))),nullptr);
+    }
+};
+class OfflineNetworkFactory : public QQmlNetworkAccessManagerFactory {
+public:
+    QNetworkAccessManager *create(QObject *parent) override { return new OfflineNetwork(parent); }
+};
 
 int main(int argc,char *argv[]) {
     QApplication app(argc,argv);
@@ -56,7 +78,9 @@ int main(int argc,char *argv[]) {
     Notifier notifier;
     if(bus.isConnected())bus.registerObject("/org/jarvis/Desktop1",&desktop,QDBusConnection::ExportScriptableSlots);
     QQuickStyle::setStyle("Basic");
+    OfflineNetworkFactory offline; // outlives the engine
     QQmlApplicationEngine engine;
+    engine.setNetworkAccessManagerFactory(&offline);
     engine.rootContext()->setContextProperty("desktopBridge",&desktop);
     engine.rootContext()->setContextProperty("startQuick",quick);
     engine.rootContext()->setContextProperty("startTray",tray);
@@ -73,6 +97,12 @@ int main(int argc,char *argv[]) {
             window->show();
             if(QObject *chat=window->findChild<QObject*>("chatModel"))
                 QMetaObject::invokeMethod(chat,"say",Q_ARG(QString,qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SAY")));
+            // JARVIS_UI_SNAPSHOT_CENTER=<tab number> shows a tab of the control center instead.
+            if(const QString tab=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_CENTER");!tab.isEmpty())
+                if(QObject *center=window->findChild<QObject*>("controlCenter")) {
+                    if(QObject *tabs=center->findChild<QObject*>("controlTabs")) tabs->setProperty("currentIndex",tab.toInt());
+                    QMetaObject::invokeMethod(center,"open");
+                }
             QTimer::singleShot(1500,window,[window,shot]{window->grabWindow().save(shot);QCoreApplication::quit();});
         });
     }

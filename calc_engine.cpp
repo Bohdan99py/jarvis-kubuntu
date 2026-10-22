@@ -5,11 +5,13 @@
 #include <QLocale>
 #include <QList>
 #include <QRegularExpression>
+#include <QStringDecoder>
 #include <QStringList>
 #include <QtAlgorithms>
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <functional>
 #include <limits>
 
@@ -386,6 +388,36 @@ const QList<Calc> &calcs()
          u"поле = (x >> pos) & (2^w − 1)",
          {{"value", u"Значение регистра", u"Register value", "text", "0x4800"}, {"pos", u"Младший бит поля", u"Lowest bit", "n", "11"},
           {"width", u"Ширина, бит", u"Width, bits", "n", "2"}, {"set", u"Записать значение (необязательно)", u"Write a value (optional)", "text", ""}}},
+        {"ieee754", u"IEEE 754: float и double", u"IEEE 754: float and double",
+         u"Десятичное число — в биты float/double, или биты (0x40490FDB, 16 цифр — double) — в число.",
+         u"A decimal number to float/double bits, or bits (0x40490FDB, 16 digits for a double) to the number.",
+         u"x = (−1)^s · 1,m · 2^(e − 127)",
+         {{"value", u"Число или биты", u"Number or bits", "text", "3.14"}}},
+        {"qformat", u"Фиксированная точка (Q-формат)", u"Fixed point (Q format)",
+         u"Qm.n: m бит целой части со знаком, n дробных (Q15 = Q1.15, 16 бит). Число — в код, или код 0x… — в число.",
+         u"Qm.n: m integer bits including the sign, n fraction bits (Q15 = Q1.15, 16 bits). A number to its code, or a 0x… code to the number.",
+         u"код = round(x · 2ⁿ)   шаг = 2⁻ⁿ",
+         {{"format", u"Формат", u"Format", "text", "Q1.15"}, {"value", u"Число или код", u"Number or code", "text", "0.5"}}},
+        {"subnet", u"Подсеть IPv4", u"IPv4 subnet",
+         u"Адрес с префиксом (192.168.1.10/24) или с маской — сеть, широковещательный адрес, диапазон узлов.",
+         u"An address with a prefix (192.168.1.10/24) or a mask — network, broadcast and host range.",
+         u"сеть = адрес & маска   узлов = 2^(32 − префикс) − 2",
+         {{"value", u"Адрес/префикс", u"Address/prefix", "text", "192.168.1.10/24"}}},
+        {"rgb", u"Цвет: HEX, RGB, HSL, RGB565", u"Colour: HEX, RGB, HSL, RGB565",
+         u"#RRGGBB, «255,136,0» или код RGB565 (0xFC40) — во все форматы, для CSS, Qt и дисплеев МК.",
+         u"#RRGGBB, \"255,136,0\" or an RGB565 code (0xFC40) — in every format, for CSS, Qt and MCU displays.",
+         u"RGB565 = (R>>3)<<11 | (G>>2)<<5 | B>>3",
+         {{"value", u"Цвет", u"Colour", "text", "#FF8800"}}},
+        {"bytes", u"Текст ↔ байты UTF-8", u"Text ↔ UTF-8 bytes",
+         u"Текст — в байты UTF-8, строку и массив для C, Base64; байты в hex («D0 9F») — обратно в текст.",
+         u"Text to UTF-8 bytes, a C string and array, Base64; hex bytes (\"D0 9F\") back to text.",
+         u"«Ж» = U+0416 = D0 96",
+         {{"value", u"Текст или байты", u"Text or bytes", "text", "Привет"}}},
+        {"complexity", u"Сложность алгоритма: сколько это займёт", u"Algorithm complexity: how long it takes",
+         u"Число операций и время для O(1) … O(n!) при заданном n. Скорость: ~10⁸ простых операций/с для C/C++, ~10⁷ для Python.",
+         u"Operations and time for O(1) … O(n!) at a given n. Speed: ~10⁸ simple operations/s for C/C++, ~10⁷ for Python.",
+         u"t ≈ f(n) / скорость",
+         {{"n", u"Размер входа n", u"Input size n", "n", "1000000"}, {"speed", u"Операций в секунду", u"Operations per second", "n", "100M"}}},
         {"kinematics", u"Равноускоренное движение", u"Uniform acceleration",
          u"Скорость и путь через время t.", u"Speed and distance after time t.",
          u"v = v0 + a·t   s = v0·t + a·t²/2",
@@ -1118,6 +1150,262 @@ QJsonObject Calculators::compute(const QString &id, const QJsonObject &values, L
             line(u"Новое значение регистра", u"New register value", hexOf(next) + u" ("_s + QString::number(next) + u')');
             line(u"В коде", u"In code", u"x = (x & ~(0x%1u << %2)) | ((v & 0x%1u) << %2);"_s.arg(QString::number(mask, 16).toUpper()).arg(pos));
         }
+    } else if (id == u"ieee754") {
+        QString t = raw.value(u"value"_s).trimmed().toLower().remove(u' ').remove(u'_');
+        auto parts = [&](quint64 bits, int expBits, int manBits) {
+            const quint64 man = bits & ((1ULL << manBits) - 1);
+            const quint64 exp = (bits >> manBits) & ((1ULL << expBits) - 1);
+            const int bias = (1 << (expBits - 1)) - 1;
+            const quint64 maxExp = (1ULL << expBits) - 1;
+            const QString kind = exp == maxExp ? (man ? u"NaN"_s : (ru ? u"бесконечность"_s : u"infinity"_s))
+                                 : exp == 0 ? (man ? (ru ? u"денормализованное"_s : u"subnormal"_s) : (ru ? u"ноль"_s : u"zero"_s))
+                                            : (ru ? u"нормализованное"_s : u"normal"_s);
+            return u"%1 | %2 | %3  (%4: %5, %6)"_s.arg(QString::number(bits >> (expBits + manBits)),
+                                                       QString::number(exp, 2).rightJustified(expBits, u'0'),
+                                                       u"0x"_s + QString::number(man, 16).toUpper(), ru ? u"порядок"_s : u"exponent"_s,
+                                                       exp == 0 || exp == maxExp ? u"—"_s : QString::number(qint64(exp) - bias), kind);
+        };
+        auto hex = [](quint64 v, int digits) { return u"0x"_s + QString::number(v, 16).toUpper().rightJustified(digits, u'0'); };
+        if (t.startsWith(u"0x") && (t.size() == 10 || t.size() == 18)) {
+            bool ok = false;
+            const quint64 bits = t.mid(2).toULongLong(&ok, 16);
+            if (!ok)
+                return failure(impossible);
+            if (t.size() == 10) {
+                const quint32 b32 = quint32(bits);
+                float f;
+                std::memcpy(&f, &b32, sizeof f);
+                line(u"float (32 бита)", u"float (32 bits)", QString::number(double(f), 'g', 9));
+                line(u"Знак | порядок | мантисса", u"Sign | exponent | mantissa", parts(b32, 8, 23));
+            } else {
+                double d;
+                std::memcpy(&d, &bits, sizeof d);
+                line(u"double (64 бита)", u"double (64 bits)", QString::number(d, 'g', 17));
+                line(u"Знак | порядок | мантисса", u"Sign | exponent | mantissa", parts(bits, 11, 52));
+            }
+        } else {
+            double d = 0;
+            if (!evaluate(t, &d))
+                return failure(ru ? u"Введите число (3.14, -1e-3) или биты 0x40490FDB."_s : u"Enter a number (3.14, -1e-3) or bits like 0x40490FDB."_s);
+            const float f = float(d);
+            quint32 b32;
+            std::memcpy(&b32, &f, sizeof b32);
+            quint64 b64;
+            std::memcpy(&b64, &d, sizeof b64);
+            line(u"float, биты", u"float bits", hex(b32, 8));
+            line(u"Знак | порядок | мантисса", u"Sign | exponent | mantissa", parts(b32, 8, 23));
+            line(u"Хранится во float", u"Stored as float", QString::number(double(f), 'g', 9));
+            if (std::isfinite(d) && d != 0 && double(f) != d)
+                line(u"Ошибка округления float", u"float rounding error", QString::number(double(f) - d, 'g', 3));
+            line(u"double, биты", u"double bits", hex(b64, 16));
+            line(u"Байты float в памяти (little-endian)", u"float bytes in memory (little-endian)",
+                 u"%1 %2 %3 %4"_s.arg(hex(b32 & 0xFF, 2), hex((b32 >> 8) & 0xFF, 2), hex((b32 >> 16) & 0xFF, 2), hex(b32 >> 24, 2)));
+        }
+    } else if (id == u"qformat") {
+        static const QRegularExpression fmt(u"^\\s*[qQ]?\\s*(\\d{1,2})(?:\\.(\\d{1,2}))?\\s*$"_s);
+        const auto m = fmt.match(raw.value(u"format"_s));
+        if (!m.hasMatch())
+            return failure(ru ? u"Формат: Q15, Q1.15, Q16.16, Q8.8."_s : u"Format: Q15, Q1.15, Q16.16, Q8.8."_s);
+        // "Q15" is Q1.15: one integer bit, the sign.
+        const int intBits = m.captured(2).isEmpty() ? 1 : m.captured(1).toInt();
+        const int fracBits = m.captured(2).isEmpty() ? m.captured(1).toInt() : m.captured(2).toInt();
+        const int total = intBits + fracBits;
+        if (intBits < 1 || total > 64 || total < 2)
+            return failure(impossible);
+        const double scale = std::ldexp(1.0, fracBits);
+        const double maxCode = std::ldexp(1.0, total - 1) - 1, minCode = -std::ldexp(1.0, total - 1);
+        const QString text = raw.value(u"value"_s).trimmed().toLower();
+        auto code = [&](qint64 c) {
+            const quint64 masked = total == 64 ? quint64(c) : quint64(c) & ((1ULL << total) - 1);
+            return QString::number(c) + u" = 0x"_s + QString::number(masked, 16).toUpper().rightJustified((total + 3) / 4, u'0');
+        };
+        if (text.startsWith(u"0x")) {
+            bool ok = false;
+            quint64 u = text.mid(2).toULongLong(&ok, 16);
+            if (!ok || (total < 64 && u >> total))
+                return failure(impossible);
+            qint64 c = qint64(u);
+            if (total < 64 && (u >> (total - 1)) & 1)
+                c = qint64(u) - qint64(1ULL << total); // two's complement
+            line(u"Число", u"Number", QString::number(double(c) / scale, 'g', 12));
+            line(u"Код", u"Code", code(c));
+        } else {
+            double x = 0;
+            if (!evaluate(text, &x))
+                return failure(missing);
+            double c = std::round(x * scale);
+            if (c > maxCode || c < minCode) {
+                c = std::clamp(c, minCode, maxCode);
+                line(u"Внимание", u"Note", ru ? u"число вне диапазона — насыщение"_s : u"out of range — saturated"_s);
+            }
+            line(u"Код", u"Code", code(qint64(c)));
+            line(u"Хранится", u"Stored value", QString::number(c / scale, 'g', 12));
+            line(u"Ошибка", u"Error", QString::number(c / scale - x, 'g', 3));
+        }
+        line(u"Шаг (разрешение)", u"Step (resolution)", QString::number(1.0 / scale, 'g', 6));
+        line(u"Диапазон", u"Range", u"%1 … %2"_s.arg(QString::number(minCode / scale, 'g', 10), QString::number(maxCode / scale, 'g', 10)));
+        line(u"Разрядность", u"Width", QString::number(total) + (ru ? u" бит со знаком"_s : u" bits, signed"_s));
+    } else if (id == u"subnet") {
+        static const QRegularExpression address(
+            u"^\\s*(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\s*(?:/\\s*(\\d{1,2})|\\s+(\\d{1,3}(?:\\.\\d{1,3}){3}))?\\s*$"_s);
+        const auto m = address.match(raw.value(u"value"_s));
+        if (!m.hasMatch())
+            return failure(ru ? u"Введите адрес с префиксом: 192.168.1.10/24 или 10.0.0.5 255.255.0.0."_s
+                              : u"Enter an address with a prefix: 192.168.1.10/24 or 10.0.0.5 255.255.0.0."_s);
+        auto toIp = [](quint32 a) { return u"%1.%2.%3.%4"_s.arg(a >> 24).arg((a >> 16) & 255).arg((a >> 8) & 255).arg(a & 255); };
+        quint32 ip = 0;
+        for (int i = 1; i <= 4; ++i) {
+            const int octet = m.captured(i).toInt();
+            if (octet > 255)
+                return failure(impossible);
+            ip = (ip << 8) | quint32(octet);
+        }
+        int prefix = 32;
+        if (!m.captured(5).isEmpty()) {
+            prefix = m.captured(5).toInt();
+        } else if (!m.captured(6).isEmpty()) {
+            quint32 mask = 0;
+            for (const QString &o : m.captured(6).split(u'.')) {
+                if (o.toInt() > 255)
+                    return failure(impossible);
+                mask = (mask << 8) | quint32(o.toInt());
+            }
+            prefix = qPopulationCount(mask);
+            if (mask != (prefix ? ~0u << (32 - prefix) : 0u))
+                return failure(ru ? u"Маска должна быть непрерывной: 255.255.255.0, 255.255.0.0…"_s : u"The mask must be contiguous: 255.255.255.0, 255.255.0.0…"_s);
+        }
+        if (prefix > 32)
+            return failure(impossible);
+        const quint32 mask = prefix ? ~0u << (32 - prefix) : 0u;
+        const quint32 network = ip & mask, broadcast = network | ~mask;
+        line(u"Сеть", u"Network", toIp(network) + u'/' + QString::number(prefix));
+        line(u"Маска", u"Mask", toIp(mask) + u"  (wildcard "_s + toIp(~mask) + u')');
+        if (prefix <= 30) {
+            line(u"Широковещательный", u"Broadcast", toIp(broadcast));
+            line(u"Узлы", u"Hosts", toIp(network + 1) + u" … "_s + toIp(broadcast - 1));
+            line(u"Адресов для узлов", u"Usable addresses", QString::number((1ULL << (32 - prefix)) - 2));
+        } else {
+            line(u"Адресов", u"Addresses", QString::number(1ULL << (32 - prefix)) + (prefix == 31 ? u" (point-to-point, RFC 3021)"_s : QString()));
+        }
+        const bool privateNet = (ip >> 24) == 10 || (ip >> 20) == (172u << 4 | 1) || (ip >> 16) == (192u << 8 | 168);
+        const QString kind = (ip >> 24) == 127 ? (ru ? u"loopback"_s : u"loopback"_s)
+                             : privateNet ? (ru ? u"частная (RFC 1918)"_s : u"private (RFC 1918)"_s)
+                             : (ip >> 16) == (169u << 8 | 254) ? u"link-local"_s
+                             : (ip >> 28) == 14 ? u"multicast"_s : (ru ? u"публичная"_s : u"public"_s);
+        line(u"Тип адреса", u"Address type", kind);
+    } else if (id == u"rgb") {
+        const QString t = raw.value(u"value"_s).trimmed().toLower();
+        int r = -1, g = -1, b = -1;
+        static const QRegularExpression hex6(u"^#?([0-9a-f]{6})$"_s), hex3(u"^#([0-9a-f]{3})$"_s), code565(u"^0x([0-9a-f]{1,4})$"_s),
+            triple(u"^(?:rgb\\s*\\()?\\s*(\\d{1,3})\\s*[,; ]\\s*(\\d{1,3})\\s*[,; ]\\s*(\\d{1,3})\\s*\\)?$"_s);
+        if (const auto m = hex6.match(t); m.hasMatch()) {
+            const uint v = m.captured(1).toUInt(nullptr, 16);
+            r = int(v >> 16); g = int((v >> 8) & 255); b = int(v & 255);
+        } else if (const auto m3 = hex3.match(t); m3.hasMatch()) {
+            const QString h = m3.captured(1);
+            r = QString(2, h.at(0)).toInt(nullptr, 16); g = QString(2, h.at(1)).toInt(nullptr, 16); b = QString(2, h.at(2)).toInt(nullptr, 16);
+        } else if (const auto m5 = code565.match(t); m5.hasMatch()) {
+            const uint v = m5.captured(1).toUInt(nullptr, 16);
+            // Five or six bits widened to eight by repeating the top bits.
+            const uint r5 = v >> 11, g6 = (v >> 5) & 63, b5 = v & 31;
+            r = int((r5 << 3) | (r5 >> 2)); g = int((g6 << 2) | (g6 >> 4)); b = int((b5 << 3) | (b5 >> 2));
+        } else if (const auto mt = triple.match(t); mt.hasMatch()) {
+            r = mt.captured(1).toInt(); g = mt.captured(2).toInt(); b = mt.captured(3).toInt();
+        }
+        if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255)
+            return failure(ru ? u"Введите цвет: #FF8800, #F80, 255,136,0 или код RGB565 0xFC40."_s
+                              : u"Enter a colour: #FF8800, #F80, 255,136,0 or an RGB565 code 0xFC40."_s);
+        const double rf = r / 255.0, gf = g / 255.0, bf = b / 255.0;
+        const double hi = std::max({rf, gf, bf}), lo = std::min({rf, gf, bf}), l = (hi + lo) / 2;
+        double h = 0, sat = 0;
+        if (hi != lo) {
+            const double d = hi - lo;
+            sat = l > 0.5 ? d / (2 - hi - lo) : d / (hi + lo);
+            h = hi == rf ? std::fmod((gf - bf) / d + 6, 6) : hi == gf ? (bf - rf) / d + 2 : (rf - gf) / d + 4;
+            h *= 60;
+        }
+        const uint c565 = (uint(r >> 3) << 11) | (uint(g >> 2) << 5) | uint(b >> 3);
+        auto hx = [](uint v, int digits) { return QString::number(v, 16).toUpper().rightJustified(digits, u'0'); };
+        line(u"HEX", u"HEX", u"#"_s + hx(uint(r), 2) + hx(uint(g), 2) + hx(uint(b), 2));
+        line(u"RGB", u"RGB", u"rgb(%1, %2, %3)"_s.arg(r).arg(g).arg(b));
+        line(u"HSL", u"HSL", u"hsl(%1, %2%, %3%)"_s.arg(qRound(h)).arg(qRound(sat * 100)).arg(qRound(l * 100)));
+        line(u"RGB565 (дисплеи МК)", u"RGB565 (MCU displays)", u"0x"_s + hx(c565, 4) + (ru ? u", байты по SPI: "_s : u", SPI bytes: "_s)
+                                                                  + u"0x"_s + hx(c565 >> 8, 2) + u" 0x"_s + hx(c565 & 255, 2));
+        line(u"Qt / QML", u"Qt / QML", u"QColor(%1, %2, %3)  ·  \"#%4\""_s.arg(r).arg(g).arg(b).arg(hx(uint(r), 2) + hx(uint(g), 2) + hx(uint(b), 2)));
+        line(u"Как float (OpenGL)", u"As floats (OpenGL)", u"%1, %2, %3"_s.arg(QString::number(rf, 'f', 3), QString::number(gf, 'f', 3), QString::number(bf, 'f', 3)));
+    } else if (id == u"bytes") {
+        const QString text = raw.value(u"value"_s);
+        static const QRegularExpression hexBytes(u"^\\s*(?:(?:0x)?[0-9A-Fa-f]{2}[\\s,:]*)+$"_s);
+        QByteArray data;
+        bool decoded = false;
+        if (hexBytes.match(text).hasMatch() && text.contains(rx(u"[\\s,:]|0x"_s))) {
+            for (QString part : text.split(rx(u"[\\s,:]+"_s), Qt::SkipEmptyParts)) {
+                part.remove(u"0x"_s, Qt::CaseInsensitive);
+                for (int i = 0; i + 1 < part.size(); i += 2)
+                    data.append(char(part.mid(i, 2).toUInt(nullptr, 16)));
+            }
+            auto decoder = QStringDecoder(QStringDecoder::Utf8);
+            const QString back = decoder(data);
+            line(u"Байт", u"Bytes", QString::number(data.size()));
+            line(u"Как текст UTF-8", u"As UTF-8 text", decoder.hasError() ? (ru ? u"не UTF-8"_s : u"not UTF-8"_s) : u"«"_s + back + u"»"_s);
+            decoded = true;
+        } else {
+            data = text.toUtf8();
+        }
+        if (data.isEmpty())
+            return failure(missing);
+        if (!decoded) {
+            line(u"Символов / байт", u"Characters / bytes", u"%1 / %2"_s.arg(text.size()).arg(data.size()));
+            QStringList hexList, array;
+            QString cString;
+            for (char ch : std::as_const(data)) {
+                const uint u = uchar(ch);
+                hexList.append(QString::number(u, 16).toUpper().rightJustified(2, u'0'));
+                array.append(u"0x"_s + hexList.last());
+                if (u >= 32 && u < 127 && ch != '"' && ch != '\\')
+                    cString += QChar(ch);
+                else
+                    cString += u"\\x"_s + hexList.last();
+            }
+            line(u"UTF-8 (hex)", u"UTF-8 (hex)", hexList.join(u' ').left(600));
+            line(u"Строка C", u"C string", (u"\""_s + cString + u"\""_s).left(600));
+            line(u"Массив C", u"C array", (u"const uint8_t data[%1] = {"_s.arg(data.size()) + array.join(u", "_s) + u"};"_s).left(600));
+            QStringList points;
+            for (const uint cp : text.toUcs4())
+                if (points.size() < 12)
+                    points.append(u"U+"_s + QString::number(cp, 16).toUpper().rightJustified(4, u'0'));
+            line(u"Кодовые точки", u"Code points", points.join(u' ') + (text.toUcs4().size() > 12 ? u" …"_s : QString()));
+        }
+        line(u"Base64", u"Base64", QString::fromLatin1(data.toBase64()).left(600));
+    } else if (id == u"complexity") {
+        if (!need({"n"}) || val("n") < 1)
+            return failure(missing);
+        const double n = val("n"), speed = has("speed") && val("speed") > 0 ? val("speed") : 1e8;
+        auto time = [&](double ops) {
+            const double s = ops / speed;
+            if (!std::isfinite(s) || s > 3.15e7 * 1e6)
+                return ru ? u"дольше миллиона лет"_s : u"over a million years"_s;
+            if (s >= 3.15e7) return QString::number(s / 3.15e7, 'g', 3) + (ru ? u" лет"_s : u" years"_s);
+            if (s >= 86400) return QString::number(s / 86400, 'g', 3) + (ru ? u" дней"_s : u" days"_s);
+            if (s >= 3600) return QString::number(s / 3600, 'g', 3) + (ru ? u" ч"_s : u" h"_s);
+            if (s >= 60) return QString::number(s / 60, 'g', 3) + (ru ? u" мин"_s : u" min"_s);
+            return format(s, u"s"_s, lang);
+        };
+        auto row = [&](const char16_t *name, double ops) {
+            line(name, name, u"%1 %2 ≈ %3"_s.arg(std::isfinite(ops) && ops < 1e300 ? QString::number(ops, 'g', 3) : u"∞"_s,
+                                                   ru ? u"оп."_s : u"ops,"_s, time(ops)));
+        };
+        row(u"O(1)", 1);
+        row(u"O(log n)", std::log2(n));
+        row(u"O(√n)", std::sqrt(n));
+        row(u"O(n)", n);
+        row(u"O(n log n)", n * std::log2(std::max(2.0, n)));
+        row(u"O(n²)", n * n);
+        row(u"O(n³)", n * n * n);
+        row(u"O(2ⁿ)", n > 1000 ? std::numeric_limits<double>::infinity() : std::exp2(n));
+        row(u"O(n!)", n > 170 ? std::numeric_limits<double>::infinity() : std::tgamma(n + 1));
+        line(u"Подсказка", u"Hint", ru ? u"~1 с — это ~10⁸ простых операций на C/C++; для n = 10⁶ укладывается O(n log n), для 10⁴ — O(n²)."_s
+                                       : u"~1 s is ~10⁸ simple operations in C/C++; n = 10⁶ fits O(n log n), n = 10⁴ fits O(n²)."_s);
     } else if (id == u"kinematics") {
         if (!need({"a", "t"}))
             return failure(missing);
@@ -1268,6 +1556,37 @@ bool Calculators::answer(const QString &input, Lang lang, QString *reply)
                         compute(QLatin1String(id), values, lang), lang);
         return true;
     };
+
+    // Programming: "192.168.1.10/24", "float 3.14", "q15 0.5", "#ff8800 в rgb565", "utf-8 Привет", "O(n log n) n=1e6".
+    static const QRegularExpression cidr = rx(u"^(?:(?:подсеть|сеть|маска|subnet|network|cidr|ip)\\s*:?\\s*)?(\\d{1,3}(?:\\.\\d{1,3}){3}\\s*(?:/\\s*\\d{1,2}|\\s+\\d{1,3}(?:\\.\\d{1,3}){3}))\\s*\\??$"_s);
+    if (const auto m = cidr.match(text); m.hasMatch())
+        return run("subnet", {{u"value"_s, m.captured(1)}});
+    static const QRegularExpression ieee = rx(
+        u"^(?:ieee\\s*-?\\s*754|float|double|флоат|число с плавающей точкой)\\s*:?\\s*(-?[\\d.]+(?:e[-+]?\\d+)?|0x[0-9a-f]{8}|0x[0-9a-f]{16})(?:\\s+(?:в|to|in)\\s+\\S+)?\\s*\\??$|"
+        u"^(0x[0-9a-f]{8}|0x[0-9a-f]{16}|-?[\\d.]+(?:e[-+]?\\d+)?)\\s+(?:в|to|как|as)\\s+(?:float|double|ieee\\s*-?\\s*754)\\s*\\??$"_s);
+    if (const auto m = ieee.match(text); m.hasMatch())
+        return run("ieee754", {{u"value"_s, m.captured(1).isEmpty() ? m.captured(2) : m.captured(1)}});
+    static const QRegularExpression qfmt = rx(u"^(q\\d{1,2}(?:\\.\\d{1,2})?)\\s*:?\\s*(-?[\\d.]+|0x[0-9a-f]+)\\s*\\??$|^(-?[\\d.]+|0x[0-9a-f]+)\\s+(?:в|to|in)\\s+(q\\d{1,2}(?:\\.\\d{1,2})?)\\s*\\??$"_s);
+    if (const auto m = qfmt.match(text); m.hasMatch())
+        return run("qformat", m.captured(1).isEmpty() ? QJsonObject{{u"format"_s, m.captured(4)}, {u"value"_s, m.captured(3)}}
+                                                      : QJsonObject{{u"format"_s, m.captured(1)}, {u"value"_s, m.captured(2)}});
+    static const QRegularExpression colour = rx(
+        u"^(?:(?:цвет|colou?r|rgb565|rgb)\\s*:?\\s*)?(#[0-9a-f]{6}|#[0-9a-f]{3}|\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}|0x[0-9a-f]{4})\\s*(?:(?:в|to|in)\\s+(?:rgb565|rgb|hsl|hex|565)\\w*)?\\s*\\??$"_s);
+    if (const auto m = colour.match(text); m.hasMatch() && (text.startsWith(u'#') || lower.contains(rx(u"rgb|hsl|цвет|colou?r|565"_s))))
+        return run("rgb", {{u"value"_s, m.captured(1)}});
+    static const QRegularExpression bytes = rx(u"^(?:utf-?8|(?:байты|bytes)\\s+(?:строки|текста|of))\\s*:?\\s*[«\"“']?(.+?)[»\"”']?$"_s);
+    if (const auto m = bytes.match(text); m.hasMatch())
+        return run("bytes", {{u"value"_s, m.captured(1)}});
+    static const QRegularExpression bigO = rx(u"\\bo\\s*\\(([^)]{1,20})\\).*?\\bn\\s*=\\s*([\\d.]+(?:e\\d+|\\^\\d+|[kmг]|млн|тыс)?)"_s);
+    if (const auto m = bigO.match(text); m.hasMatch()) {
+        QString n = m.captured(2).toLower();
+        n.replace(u"млн"_s, u"M"_s).replace(u"тыс"_s, u"k"_s);
+        if (n.contains(u'^'))
+            n = v(std::pow(n.section(u'^', 0, 0).toDouble(), n.section(u'^', 1).toDouble()));
+        else if (n.contains(u'e'))
+            n = v(n.toDouble());
+        return run("complexity", {{u"n"_s, n}});
+    }
 
     // "посчитай 2*pi*50*100n", or a bare "12/(4.7+10)".
     static const QRegularExpression calc = rx(

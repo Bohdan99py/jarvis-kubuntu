@@ -166,71 +166,205 @@ Dialog {
                     Label { text: qsTr("Jarvis's voice"); color: Theme.text; font.pixelSize: 22; font.bold: true }
                     OptionSwitch {
                         text: qsTr("Speak answers aloud")
-                        hint: qsTr("Code, links and tables are not read out — only what a person would say.")
+                        hint: qsTr("Code, links and tables are not read out — only what a person would say. A new answer interrupts the one still being read.")
                         checked: center.voice.enabled
                         onToggled: center.voice.enabled = checked
                     }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        Label { text: qsTr("Voice engine"); color: Theme.text; Layout.preferredWidth: 140 }
+                        DarkCombo {
+                            id: engineCombo
+                            readonly property var values: ["auto", "elevenlabs", "chatterbox", "piper", "system"]
+                            Layout.preferredWidth: 330
+                            model: [qsTr("Best available"), qsTr("ElevenLabs — studio voices (cloud)"), qsTr("Chatterbox — neural, on this computer"),
+                                    qsTr("Piper — light neural, on this computer"), qsTr("System voice (espeak-ng)")]
+                            currentIndex: Math.max(0, values.indexOf(center.voice.engine))
+                            onActivated: index => center.voice.engine = values[index]
+                        }
+                    }
+                    Label {
+                        readonly property var names: ({ elevenlabs: "ElevenLabs", chatterbox: "Chatterbox", piper: "Piper", system: qsTr("the system voice") })
+                        text: qsTr("Speaking now: %1. If it fails, the next ready voice takes over, so Jarvis is never silent.").arg(names[center.voice.activeEngine] || center.voice.activeEngine)
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                    }
+
+                    // ElevenLabs: cloud voices with the most natural intonation.
                     Rectangle {
+                        visible: center.voice.engine === "auto" || center.voice.engine === "elevenlabs"
+                        Layout.fillWidth: true
+                        implicitHeight: elevenColumn.implicitHeight + 28
+                        radius: 16
+                        color: Theme.bg
+                        border.color: center.voice.activeEngine === "elevenlabs" ? Qt.darker(Theme.accent, 1.6) : Theme.border
+                        ColumnLayout {
+                            id: elevenColumn
+                            anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 14
+                            spacing: 10
+                            Label { text: qsTr("ElevenLabs"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                            Label {
+                                text: qsTr("Studio-quality voices that sound like a real person, in Russian, English, French and dozens of other languages. The text of each answer is sent to ElevenLabs to be spoken: it needs the internet and an API key (elevenlabs.io → Developers → API keys; the free plan includes a monthly character allowance). The key is stored only on this computer, readable by you alone.")
+                                color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                TextField {
+                                    id: elevenKey
+                                    Layout.fillWidth: true
+                                    echoMode: TextInput.Password
+                                    selectByMouse: true
+                                    color: Theme.text
+                                    placeholderTextColor: Theme.textDim
+                                    placeholderText: center.voice.elevenReady ? qsTr("Key saved (%1)").arg(center.voice.elevenKeyHint) : qsTr("ElevenLabs API key")
+                                    background: Rectangle { implicitHeight: 38; color: Theme.panel; radius: 10; border.color: elevenKey.activeFocus ? Theme.accent : Theme.border }
+                                    Accessible.name: qsTr("ElevenLabs API key")
+                                    onAccepted: { center.voice.setElevenKey(text); text = "" }
+                                }
+                                DarkButton { text: qsTr("Save"); primary: true; enabled: elevenKey.text.trim().length > 0; onClicked: { center.voice.setElevenKey(elevenKey.text); elevenKey.text = "" } }
+                                DarkButton { text: qsTr("Remove"); danger: true; visible: center.voice.elevenReady; onClicked: center.voice.setElevenKey("") }
+                            }
+                            GridLayout {
+                                visible: center.voice.elevenReady
+                                columns: 3
+                                columnSpacing: 10
+                                rowSpacing: 8
+                                Layout.fillWidth: true
+                                Label { text: qsTr("Voice"); color: Theme.text; Layout.preferredWidth: 130 }
+                                DarkCombo {
+                                    Layout.fillWidth: true
+                                    readonly property var options: center.voice.elevenVoices.length > 0 ? center.voice.elevenVoices
+                                                                   : [{ id: center.voice.elevenVoice, name: center.voice.elevenVoice === "JBFqnCBsd6RMkjVDRZzb" ? "George" : center.voice.elevenVoice, description: "" }]
+                                    model: options.map(v => v.description ? v.name + " — " + v.description : v.name)
+                                    currentIndex: Math.max(0, options.findIndex(v => v.id === center.voice.elevenVoice))
+                                    onActivated: index => center.voice.chooseElevenVoice(options[index].id, options[index].name)
+                                }
+                                DarkButton { text: center.voice.elevenLoading ? qsTr("Loading…") : qsTr("Load my voices"); enabled: !center.voice.elevenLoading; onClicked: center.voice.loadElevenVoices() }
+                                Label { text: qsTr("Model"); color: Theme.text }
+                                DarkCombo {
+                                    Layout.fillWidth: true
+                                    Layout.columnSpan: 2
+                                    readonly property var values: ["eleven_multilingual_v2", "eleven_flash_v2_5", "eleven_turbo_v2_5", "eleven_v3"]
+                                    model: [qsTr("Multilingual v2 — the most natural reading"), qsTr("Flash v2.5 — starts fastest, half the price"),
+                                            qsTr("Turbo v2.5 — fast, good quality"), qsTr("v3 — the most expressive")]
+                                    currentIndex: Math.max(0, values.indexOf(center.voice.elevenModel))
+                                    onActivated: index => center.voice.elevenModel = values[index]
+                                }
+                                Label { text: qsTr("Stability"); color: Theme.text }
+                                Slider {
+                                    id: stabilitySlider
+                                    Layout.fillWidth: true
+                                    from: 0; to: 1; stepSize: 0.05
+                                    value: center.voice.elevenStability
+                                    onMoved: center.voice.elevenStability = value
+                                }
+                                Label { text: stabilitySlider.value < 0.35 ? qsTr("lively") : stabilitySlider.value > 0.7 ? qsTr("even") : qsTr("balanced"); color: Theme.textDim }
+                            }
+                        }
+                    }
+
+                    // Chatterbox: open-source neural speech that can take on a voice from a recording.
+                    Rectangle {
+                        visible: center.voice.engine === "auto" || center.voice.engine === "chatterbox"
+                        Layout.fillWidth: true
+                        implicitHeight: chatterboxColumn.implicitHeight + 28
+                        radius: 16
+                        color: Theme.bg
+                        border.color: center.voice.activeEngine === "chatterbox" ? Qt.darker(Theme.accent, 1.6) : Theme.border
+                        ColumnLayout {
+                            id: chatterboxColumn
+                            anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 14
+                            spacing: 10
+                            Label { text: qsTr("Chatterbox"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                            Label {
+                                text: qsTr("A neural voice by Resemble AI that runs on this computer — nothing is sent anywhere. Give it a 5–20 second recording of a voice and it speaks like that voice. Best with an NVIDIA graphics card; on the processor each sentence takes a few seconds. The download is 1–3 GB for the program and about 3 GB for the model.")
+                                color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                            Label {
+                                visible: !center.voice.chatterboxReady
+                                text: center.voice.hasNvidia ? qsTr("An NVIDIA graphics card was found: the GPU build of PyTorch will be installed.")
+                                                             : qsTr("No NVIDIA graphics card was found: the smaller processor build of PyTorch will be installed.")
+                                color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                            DarkButton {
+                                visible: !center.voice.chatterboxReady
+                                text: qsTr("Install Chatterbox")
+                                primary: true
+                                enabled: !center.voice.busy
+                                onClicked: center.voice.installChatterbox()
+                            }
+                            GridLayout {
+                                visible: center.voice.chatterboxReady
+                                columns: 3
+                                columnSpacing: 10
+                                rowSpacing: 8
+                                Layout.fillWidth: true
+                                Label { text: qsTr("Voice sample"); color: Theme.text; Layout.preferredWidth: 130 }
+                                Label {
+                                    text: center.voice.chatterboxSample.length > 0 ? center.voice.chatterboxSample : qsTr("Chatterbox's own voice")
+                                    color: Theme.textDim; elide: Text.ElideMiddle; Layout.fillWidth: true; textFormat: Text.PlainText
+                                }
+                                RowLayout {
+                                    DarkButton { text: qsTr("Choose a recording…"); onClicked: sampleDialog.open() }
+                                    DarkButton { text: qsTr("Remove"); visible: center.voice.chatterboxSample.length > 0; onClicked: center.voice.setChatterboxSample("") }
+                                }
+                                Label { text: qsTr("Expressiveness"); color: Theme.text }
+                                Slider {
+                                    id: expressionSlider
+                                    Layout.fillWidth: true
+                                    from: 0.25; to: 1.5; stepSize: 0.05
+                                    value: center.voice.chatterboxExaggeration
+                                    onMoved: center.voice.chatterboxExaggeration = value
+                                }
+                                Label { text: expressionSlider.value < 0.45 ? qsTr("calm") : expressionSlider.value > 0.8 ? qsTr("dramatic") : qsTr("natural"); color: Theme.textDim }
+                                Label { text: qsTr("Runs on"); color: Theme.text }
+                                DarkCombo {
+                                    Layout.columnSpan: 2
+                                    readonly property var values: ["auto", "cuda", "cpu"]
+                                    model: [qsTr("Graphics card if there is one"), qsTr("NVIDIA graphics card (CUDA)"), qsTr("Processor")]
+                                    currentIndex: Math.max(0, values.indexOf(center.voice.chatterboxDevice))
+                                    onActivated: index => center.voice.chatterboxDevice = values[index]
+                                }
+                            }
+                        }
+                    }
+
+                    // Piper: light local neural voices, one per language.
+                    Rectangle {
+                        visible: center.voice.engine === "auto" || center.voice.engine === "piper"
                         Layout.fillWidth: true
                         implicitHeight: naturalColumn.implicitHeight + 28
                         radius: 16
                         color: Theme.bg
-                        border.color: center.voice.naturalReady ? Qt.darker(Theme.accent, 1.6) : Theme.border
+                        border.color: center.voice.activeEngine === "piper" ? Qt.darker(Theme.accent, 1.6) : Theme.border
                         ColumnLayout {
                             id: naturalColumn
                             anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 14
                             spacing: 10
-                            Label { text: qsTr("Natural voice"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                            Label { text: qsTr("Piper"); color: Theme.text; font.pixelSize: 17; font.bold: true }
                             Label {
                                 text: center.voice.naturalReady
                                       ? qsTr("A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.")
                                       : qsTr("Instead of the robotic system voice, a neural voice (Piper) that sounds like a person. It runs on this computer without the internet. The download is about 200 MB for the program and ~63 MB per voice.")
                                 color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true
                             }
-                            GridLayout {
-                                columns: 3
-                                columnSpacing: 10
-                                rowSpacing: 8
-                                Layout.fillWidth: true
-                                Repeater {
-                                    model: [{ lang: "ru", label: qsTr("Russian") }, { lang: "en", label: qsTr("English") }, { lang: "fr", label: qsTr("French (studies)") }]
-                                    delegate: Item {
-                                        id: voiceRow
-                                        required property var modelData
-                                        readonly property var options: center.voice.voices.filter(v => v.lang === modelData.lang)
-                                        Layout.columnSpan: 3
+                            Repeater {
+                                model: [{ lang: "ru", label: qsTr("Russian") }, { lang: "en", label: qsTr("English") }, { lang: "fr", label: qsTr("French (studies)") }]
+                                delegate: RowLayout {
+                                    id: voiceRow
+                                    required property var modelData
+                                    readonly property var options: center.voice.voices.filter(v => v.lang === modelData.lang)
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Label { text: voiceRow.modelData.label; color: Theme.text; Layout.preferredWidth: 130; elide: Text.ElideRight }
+                                    DarkCombo {
                                         Layout.fillWidth: true
-                                        implicitHeight: 40
-                                        Label { id: langLabel; text: voiceRow.modelData.label; color: Theme.text; width: 140; anchors.verticalCenter: parent.verticalCenter; elide: Text.ElideRight }
-                                        DarkCombo {
-                                            anchors.left: langLabel.right; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
-                                            width: Math.min(300, voiceRow.width - langLabel.width - listenButton.width - 30)
-                                            model: voiceRow.options.map(v => v.name + (v.installed ? "" : "  ⤓"))
-                                            currentIndex: Math.max(0, voiceRow.options.findIndex(v => v.id === center.voice.chosenVoices[voiceRow.modelData.lang]))
-                                            onActivated: index => center.voice.chooseVoice(voiceRow.modelData.lang, voiceRow.options[index].id)
-                                        }
-                                        DarkButton {
-                                            id: listenButton
-                                            anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                                            text: qsTr("Listen")
-                                            enabled: !center.voice.busy
-                                            onClicked: center.voice.preview(voiceRow.modelData.lang)
-                                        }
+                                        Layout.maximumWidth: 320
+                                        model: voiceRow.options.map(v => v.name + (v.installed ? "" : "  ⤓"))
+                                        currentIndex: Math.max(0, voiceRow.options.findIndex(v => v.id === center.voice.chosenVoices[voiceRow.modelData.lang]))
+                                        onActivated: index => center.voice.chooseVoice(voiceRow.modelData.lang, voiceRow.options[index].id)
                                     }
                                 }
-                            }
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 10
-                                Label { text: qsTr("Pace"); color: Theme.text; Layout.preferredWidth: 140 }
-                                Slider {
-                                    id: rateSlider
-                                    Layout.fillWidth: true
-                                    from: 0.7; to: 1.4; stepSize: 0.05
-                                    value: center.voice.rate
-                                    onMoved: center.voice.rate = value
-                                }
-                                Label { text: Math.round(rateSlider.value * 100) + " %"; color: Theme.textDim; Layout.preferredWidth: 50 }
                             }
                             DarkButton {
                                 readonly property bool missing: center.voice.voices.some(v => !v.installed && Object.values(center.voice.chosenVoices).indexOf(v.id) >= 0)
@@ -243,7 +377,24 @@ Dialog {
                         }
                     }
                     RowLayout {
-                        DarkButton { text: qsTr("Test voice"); enabled: !center.voice.speaking; onClicked: { center.voice.enabled = true; center.voice.speak(qsTr("Hi! I'm Jarvis. Voice output is on.")) } }
+                        Layout.fillWidth: true
+                        spacing: 10
+                        Label { text: qsTr("Pace"); color: Theme.text; Layout.preferredWidth: 140 }
+                        Slider {
+                            id: rateSlider
+                            Layout.fillWidth: true
+                            from: 0.7; to: 1.4; stepSize: 0.05
+                            value: center.voice.rate
+                            onMoved: center.voice.rate = value
+                        }
+                        Label { text: Math.round(rateSlider.value * 100) + " %"; color: Theme.textDim; Layout.preferredWidth: 50 }
+                    }
+                    RowLayout {
+                        spacing: 8
+                        Label { text: qsTr("Listen"); color: Theme.text; Layout.preferredWidth: 140 }
+                        DarkButton { text: qsTr("Russian"); onClicked: center.voice.preview("ru") }
+                        DarkButton { text: qsTr("English"); onClicked: center.voice.preview("en") }
+                        DarkButton { text: qsTr("French"); onClicked: center.voice.preview("fr") }
                         DarkButton { text: qsTr("Stop"); enabled: center.voice.speaking || center.voice.recording; onClicked: center.voice.stop() }
                     }
                     Label { text: center.voice.status; color: Theme.accent; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText; visible: text.length > 0 }
@@ -494,6 +645,7 @@ Dialog {
         }
         DarkButton { Layout.alignment: Qt.AlignRight; text: qsTr("Done"); onClicked: center.close() }
     }
+    FileDialog { id: sampleDialog; title: qsTr("A recording of the voice"); nameFilters: [qsTr("Audio (*.wav *.flac *.mp3 *.ogg)")]; onAccepted: center.voice.setChatterboxSample(selectedFile) }
     FileDialog { id: skillFile; title: qsTr("Import skill"); nameFilters: [qsTr("Jarvis skills (*.json)")]; onAccepted: center.desktop.importSkill(selectedFile) }
     SkillPage {
         id: skillPage

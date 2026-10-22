@@ -3,8 +3,11 @@
 #include "config.h"
 #include "language.h"
 #include "calc_engine.h"
+#include "markdown_safe.h"
 #include <QDesktopServices>
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include "dbus_names.h"
 #include <memory>
 #include <QDir>
 #include <QFileInfo>
@@ -72,7 +75,7 @@ void DesktopController::installSkill(const QByteArray &bytes) {
 }
 void DesktopController::importSkill(const QUrl &url) {
     QFile file(url.toLocalFile());
-    if(!url.isLocalFile() || !file.open(QIODevice::ReadOnly) || file.size()>65536) {m_skillStatus=tr("Choose a skill JSON file up to 64 KB.");emit skillsChanged();return;}
+    if(!url.isLocalFile() || !file.open(QIODevice::ReadOnly) || file.size()>jarvis::SkillStore::kMaxBytes) {m_skillStatus=tr("Choose a skill JSON file up to 160 KB.");emit skillsChanged();return;}
     installSkill(file.readAll());
 }
 void DesktopController::fetchSkill(const QUrl &url) {
@@ -82,7 +85,7 @@ void DesktopController::fetchSkill(const QUrl &url) {
     QNetworkRequest request(url);request.setTransferTimeout(15000);
     auto *reply=m_network.get(request);
     auto bytes=std::make_shared<QByteArray>();
-    connect(reply,&QNetworkReply::readyRead,this,[reply,bytes]{*bytes+=reply->readAll();if(bytes->size()>65536)reply->abort();});
+    connect(reply,&QNetworkReply::readyRead,this,[reply,bytes]{*bytes+=reply->readAll();if(bytes->size()>jarvis::SkillStore::kMaxBytes)reply->abort();});
     connect(reply,&QNetworkReply::finished,this,[this,reply,bytes]{
         m_fetching=false;*bytes+=reply->readAll();
         if(reply->error()!=QNetworkReply::NoError){m_skillStatus=reply->errorString();emit skillsChanged();}
@@ -103,6 +106,16 @@ QVariantMap DesktopController::calculate(const QString &id,const QVariantMap &va
     const auto lang=jarvis::resolveLanguage(jarvis::Config::loadFileOnly().language);
     return jarvis::Calculators::compute(id,QJsonObject::fromVariantMap(values),lang).toVariantMap();
 }
+void DesktopController::Open(const QString &target,const QString &payload) {
+    QString text=payload.left(1000);
+    if(calledFromDBus() && !text.isEmpty()) {
+        // Any program on the session bus may call Open; only the daemon may speak for Jarvis.
+        const auto owner=connection().interface()->serviceOwner(QString(jarvis::dbus::kService));
+        if(!owner.isValid() || owner.value()!=message().service()) text.clear();
+    }
+    emit openRequested(target.left(20),text);
+}
+QString DesktopController::safeMarkdown(const QString &text) const { return jarvis::text::safeMarkdown(text); }
 void DesktopController::openSkillsFolder() {
     const QString path=QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation)+"/jarvis/skills";
     QDir().mkpath(path);QDesktopServices::openUrl(QUrl::fromLocalFile(path));
