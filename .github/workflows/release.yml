@@ -26,18 +26,24 @@ jobs:
       matrix:
         os: [ubuntu-24.04, ubuntu-26.04]
     runs-on: ${{ matrix.os }}
+    # A healthy run takes about 5 minutes; a stalled mirror must not hold the
+    # release queue for the default 6 hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Install build and runtime dependencies
-        run: |
-          sudo apt-get update
-          # The SVG image plugin: its own package on 26.04, part of libqt6svg6 on 24.04.
-          svg=libqt6svg6; apt-cache show qt6-svg-plugins >/dev/null 2>&1 && svg=qt6-svg-plugins
-          sudo apt-get install -y build-essential cmake ninja-build dpkg-dev qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
-            qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates \
-            qml6-module-qtquick-window qml6-module-qtquick-dialogs qml6-module-qtqml-workerscript qml6-module-qt-labs-platform qt6-l10n-tools \
-            qml6-module-qtquick-particles qt6-shadertools-dev \
-            dbus libglib2.0-bin "$svg" python3 python3-gi gir1.2-glib-2.0 python3-venv python3-speechd alsa-utils speech-dispatcher speech-dispatcher-espeak-ng espeak-ng desktop-file-utils
+      # Downloaded .debs: a run fetches only what changed, so a slow mirror matters
+      # less (apt still checks every .deb against the signed index). The key changes
+      # with the package list and every month, starting from the latest cache.
+      - id: month
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/jarvis-apt
+          key: apt-${{ matrix.os }}-${{ hashFiles('.github/scripts/install-ci-deps.sh') }}-${{ steps.month.outputs.month }}
+          restore-keys: apt-${{ matrix.os }}-
+      - name: Install build and test dependencies
+        timeout-minutes: 25
+        run: .github/scripts/install-ci-deps.sh ~/.cache/jarvis-apt
       - name: Build
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DJARVIS_DISTRO=${{ matrix.os }}
@@ -77,6 +83,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish)
     needs: build
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
