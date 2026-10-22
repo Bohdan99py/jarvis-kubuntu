@@ -42,6 +42,9 @@ public:
     static QString kicadSchematic(const QByteArray &schFile, QString *summary);
     static QString kicadPcb(const QByteArray &pcbFile, QString *summary);
     static QString simulide(const QByteArray &circuit, QString *summary);
+    // Parts of a KiCad netlist (.net) or of one schematic sheet (.kicad_sch):
+    // [{ref, value, footprint, symbol}], power symbols left out; [] when unreadable.
+    static QJsonArray kicadParts(const QByteArray &file);
 };
 
 } // namespace jarvis

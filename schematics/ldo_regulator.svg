@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 280" width="520" height="280">
+<title>3.3 V linear regulator (LDO)</title>
+<rect width="520" height="280" rx="14" fill="#0f1724"/>
+<rect x="220" y="90" width="90" height="60" rx="4" fill="#16233a" stroke="#e6eef8" stroke-width="2"/>
+<text x="265.0" y="68" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">U1</text>
+<text x="265.0" y="82" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">AMS1117-3.3</text>
+<text x="226" y="124" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">VI</text>
+<text x="216" y="116" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">3</text>
+<line x1="220" y1="120" x2="200" y2="120" stroke="#e6eef8" stroke-width="2"/>
+<text x="304" y="124" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">VO</text>
+<text x="314" y="116" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">2</text>
+<line x1="310" y1="120" x2="330" y2="120" stroke="#e6eef8" stroke-width="2"/>
+<text x="265" y="144" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">GND</text>
+<text x="269" y="162" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">1</text>
+<line x1="265" y1="150" x2="265" y2="170" stroke="#e6eef8" stroke-width="2"/>
+<line x1="80" y1="70" x2="100" y2="70" stroke="#e6eef8" stroke-width="2"/>
+<text x="90" y="63" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">+5V</text>
+<polyline points="90,70 90,120 200,120" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="150" cy="120" r="3.5" fill="#8fb3d9"/>
+<polyline points="150,120 150.0,160.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="150.0,170.0 150,210" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(150.0,165.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><line x1="-5" y1="-14" x2="-5" y2="14"/><line x1="5" y1="-14" x2="5" y2="14"/></g>
+<text x="168.0" y="162.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="bold">C1</text>
+<text x="168.0" y="177.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">10 µF</text>
+<polyline points="150,210 150,218" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="138" y1="218" x2="162" y2="218"/><line x1="143" y1="223" x2="157" y2="223"/><line x1="147" y1="228" x2="153" y2="228"/></g>
+<polyline points="265,170 265,210" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="265,210 265,218" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="253" y1="218" x2="277" y2="218"/><line x1="258" y1="223" x2="272" y2="223"/><line x1="262" y1="228" x2="268" y2="228"/></g>
+<polyline points="330,120 440,120" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="380" cy="120" r="3.5" fill="#8fb3d9"/>
+<polyline points="380,120 380.0,160.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="380.0,170.0 380,210" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(380.0,165.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><line x1="-5" y1="-14" x2="-5" y2="14"/><line x1="5" y1="-14" x2="5" y2="14"/></g>
+<text x="398.0" y="162.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="bold">C2</text>
+<text x="398.0" y="177.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">22 µF</text>
+<polyline points="380,210 380,218" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="368" y1="218" x2="392" y2="218"/><line x1="373" y1="223" x2="387" y2="223"/><line x1="377" y1="228" x2="383" y2="228"/></g>
+<line x1="430" y1="100" x2="450" y2="100" stroke="#e6eef8" stroke-width="2"/>
+<text x="440" y="93" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">+3V3</text>
+<polyline points="440,100 440,120" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+</svg>

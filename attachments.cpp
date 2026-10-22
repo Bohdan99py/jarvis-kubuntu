@@ -266,6 +266,32 @@ QString Attachments::kicadNetlist(const QByteArray &netFile, QString *summary)
     return clip(out);
 }
 
+QJsonArray Attachments::kicadParts(const QByteArray &file)
+{
+    Sx root;
+    QJsonArray out;
+    if (!parseSx(file, &root))
+        return out;
+    if (root.at(0) == u"export") {
+        if (const Sx *components = root.child(u"components"))
+            for (const Sx *c : components->children(u"comp")) {
+                const Sx *lib = c->child(u"libsource");
+                out.append(QJsonObject{{u"ref"_s, c->field(u"ref")}, {u"value"_s, c->field(u"value")},
+                                       {u"footprint"_s, c->field(u"footprint")},
+                                       {u"symbol"_s, lib ? lib->field(u"lib") + u':' + lib->field(u"part") : QString()}});
+            }
+    } else if (root.at(0) == u"kicad_sch") {
+        for (const Sx *s : root.children(u"symbol")) {
+            const QString ref = s->property(u"Reference");
+            if (ref.isEmpty() || ref.startsWith(u'#'))
+                continue;
+            out.append(QJsonObject{{u"ref"_s, ref}, {u"value"_s, s->property(u"Value")},
+                                   {u"footprint"_s, s->property(u"Footprint")}, {u"symbol"_s, s->field(u"lib_id")}});
+        }
+    }
+    return out;
+}
+
 // ---- KiCad schematic without kicad-cli ---------------------------------------------------
 
 QString Attachments::kicadSchematic(const QByteArray &schFile, QString *summary)

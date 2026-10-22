@@ -58,6 +58,12 @@ QString SkillStore::validate(const QByteArray &bytes) {
                 return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg("formulas");
         }
     }
+    if (o.contains("schematics")) {
+        static const QRegularExpression example("^[a-z][a-z0-9_]{0,47}$");
+        if (!o["schematics"].isArray() || o["schematics"].toArray().size()>50) return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg("schematics");
+        for (const auto &v:o["schematics"].toArray())
+            if (!example.match(v.toString()).hasMatch()) return QCoreApplication::translate("jarvis", "Invalid skill field: %1").arg("schematics");
+    }
     if (o.contains("examples") && !o["examples"].isArray()) return QCoreApplication::translate("jarvis", "examples must be an array.");
     if (o["examples"].toArray().size()>kMaxExamples) return QCoreApplication::translate("jarvis", "Up to 150 examples per skill.");
     for (const auto &v:o["examples"].toArray()) {

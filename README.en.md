@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.15
+# Jarvis for Kubuntu · 0.16
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.15.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.16.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -29,7 +29,13 @@ Voice recognition uses the Vosk model for the interface language (`vosk-model-sm
 
 ## Voice
 
-Control center → Voice: "Install the natural voice" sets up [Piper](https://github.com/rhasspy/piper), a neural voice that sounds like a person and runs on this computer without the internet (about 200 MB plus ~63 MB per voice, checked against the Piper catalog). Pick a Russian, English and French voice (the French one also reads the French studies), listen and set the pace. Code, links and tables are not read out. Without Piper, Speech Dispatcher (espeak-ng) speaks. Dictation uses Vosk, also locally.
+Control center → Voice → **Voice engine**: "Best available" (ElevenLabs → Chatterbox → Piper → system, in that order) or a specific one. If the chosen voice fails (no network, quota used up), the next ready one reads the answer, so Jarvis is never silent; the reason shows in the settings. A new answer interrupts the one still being read. While a local neural voice is in use, a speech server keeps the model loaded instead of loading it for every answer (socket `$XDG_RUNTIME_DIR/jarvis-speech.sock`, owner only).
+
+**ElevenLabs** — studio-quality voices that sound like a real person, in Russian, English, French and dozens of other languages. Paste an API key (elevenlabs.io → Developers → API keys), press "Load my voices", pick a voice (George, a British voice, by default), a model (Multilingual v2 — the most natural, Flash v2.5 — faster and half the price, v3 — the most expressive) and the stability. Audio streams and starts at once. The text of every answer goes to ElevenLabs; the key lives in `~/.local/share/jarvis/voice/speech.json` (0600) or comes from `ELEVENLABS_API_KEY`, and the interface shows only its last characters.
+
+**Chatterbox** (Resemble AI, open model) — a neural voice on this computer, nothing goes to the network. It can speak with the voice of a short recording (5–20 s, WAV/FLAC/MP3/OGG — "Voice sample") and has an expressiveness slider. "Install Chatterbox" puts `chatterbox-tts==0.1.7` with PyTorch into its own environment under `~/.local/share/jarvis/voice/chatterbox` — the compact CPU build without an NVIDIA card, the CUDA one with it — and downloads the model (~3 GB) from Hugging Face there. Fast on a GPU; on a CPU each sentence takes a few seconds.
+
+**Piper**: "Install the natural voice" sets up [Piper](https://github.com/rhasspy/piper), a neural voice that sounds like a person and runs on this computer without the internet (about 200 MB plus ~63 MB per voice, checked against the Piper catalog). Pick a Russian, English and French voice (the French one also reads the French studies), listen and set the pace. Code, links and tables are not read out. Without Piper, Speech Dispatcher (espeak-ng) speaks. Dictation uses Vosk, also locally.
 
 ## Memory that learns
 
@@ -56,11 +62,20 @@ Reminders arrive as KDE notifications from the background daemon — even with t
 
 ## Skills, calculators and formulas
 
-Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, plus conversation, philosophy, games and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas` and per-example `aliases`.
+Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, plus conversation, philosophy, games and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". The Programming skill also converts IEEE 754 floats and doubles to bits and back, Q15/Q16.16 fixed point, IPv4 subnets, colours (HEX/RGB/HSL and RGB565 for MCU displays), text to UTF-8 bytes (a C string and array, Base64), and estimates running time from complexity — in chat too: "192.168.1.10/24", "float 0.1", "0.25 to Q15", "#ff8800 to rgb565", "utf-8 \"Hello\"", "O(n log n) n=1e6"; its answer base grew to 70 (OOP, virtual functions, STL, concurrency, Python, Rust, Go, JavaScript, REST, SQL injection, secure coding, password hashing, algorithms, patterns, Docker, CI, profiling, endianness, floating point…). Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas`, per-example `aliases` and `schematics` (ids of bundled example circuits: the skill page then shows them and a KiCad tab).
 
 ## Files, code and schematics
 
 The paperclip (or drag and drop) attaches up to 8 files to a question: images, PDF datasheets, source code and text, KiCad schematics (`.kicad_sch` — with `kicad-cli` Jarvis sends the full netlist of all sheets and a PDF of the drawing), boards (`.kicad_pcb`), netlists (`.net`) and SimulIDE circuits (`.sim1`). Schematics reach Claude as parts and nets, so it checks connections net by net; without a key Jarvis still lists them. Code in answers gets its own blocks with syntax colours, Copy and Save as file (into `~/Documents/Jarvis/Files`).
+
+## Example circuits and KiCad
+
+The Electronics (and Embedded systems) skill page has two more tabs:
+
+- **Schematics** — 11 classic circuits with working values: LED and resistor, voltage divider, RC filter, NE555 blinker, NPN and MOSFET switches, a non-inverting op-amp, a 3.3 V regulator, a button with pull-up and debounce, an I2C bus, a bridge rectifier with a 7805. Zoom in (Ctrl+wheel), read how it works and its parts and nets, ask Jarvis about it, or save it as SPICE (`.cir` for ngspice), a KiCad netlist (`.net` — PCB editor → File → Import → Netlist), a parts list (`.csv`) or the drawing (`.svg`), into `~/Documents/Jarvis/Schematics`. In chat: "show me an example circuit with a 555".
+- **KiCad** — your projects: recent ones from Documents, Projects, KiCad and KiCad's demos, or "Open a project…". Jarvis only reads them: previews of every sheet and the board, ERC and DRC (KiCad 8+) with the findings listed, a parts list (CSV), netlist, schematic PDF, fabrication files (Gerbers of the needed layers, drill, placement), "Open in KiCad". "Ask Jarvis about it" sends the schematic (all nets and a PDF of the drawing) with the check report to the chat. Results go to `~/Documents/Jarvis/KiCad/<project>`. Needs `kicad-cli` (package `kicad`); without it Jarvis still makes a parts list from the schematic file.
+
+The examples are described once in `schematics/generate.py`, which produces the drawing, parts, nets and SPICE deck, so they never disagree.
 
 ## Embedded systems specialist
 
@@ -113,6 +128,9 @@ The Code tab → "Install the VS Code extension" installs the Jarvis extension (
 
 - `jarvis.service` runs in a systemd sandbox: system and home are read-only except `~/.local/share/jarvis` and the runtime directory; no capabilities, `NoNewPrivileges`, `MemoryDenyWriteExecute`, restricted namespaces and socket families.
 - Memory refuses passwords, keys, card numbers, markup and instruction-like phrases, because facts go back into Claude's system prompt; window titles are stripped of markup.
+- Claude's answers, imported skills and lesson notes are rendered as safe Markdown: no images of any kind (a remote image could carry data away in its URL) and no HTML; on top of that the interface never loads anything from the network.
+- Only the Jarvis daemon may put a message "from Jarvis" into the chat over D-Bus (`org.jarvis.Desktop1.Open`).
+- The speech server's socket is 0600 and accepts only the same user's processes; the ElevenLabs key is never passed on a command line.
 - Updates: the package URL is pinned to this repository; size, the GitHub SHA-256 and `.deb` metadata are checked; installation goes through Discover with confirmation.
 
 ## Development

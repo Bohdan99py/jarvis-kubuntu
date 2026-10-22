@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300" width="500" height="300">
+<title>Button with pull-up and debounce</title>
+<rect width="500" height="300" rx="14" fill="#0f1724"/>
+<line x1="190" y1="40" x2="210" y2="40" stroke="#e6eef8" stroke-width="2"/>
+<text x="200" y="33" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">+3V3</text>
+<polyline points="200,40 200,60" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="200,60 200.0,73.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="200.0,117.0 200,130" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(200.0,95.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><rect x="-22" y="-8" width="44" height="16" fill="#16233a"/></g>
+<text x="182.0" y="92.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="bold">R1</text>
+<text x="182.0" y="107.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">10 kΩ</text>
+<circle cx="200" cy="130" r="3.5" fill="#8fb3d9"/>
+<polyline points="200,130 260,130" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="260,130 278.0,130.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="322.0,130.0 340,130" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(300.0,130.0) rotate(0)" stroke="#e6eef8" stroke-width="2" fill="none"><rect x="-22" y="-8" width="44" height="16" fill="#16233a"/></g>
+<text x="300.0" y="108.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">R2</text>
+<text x="300.0" y="156.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">1 kΩ</text>
+<polyline points="340,130 430,130" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<text x="436" y="134" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="bold">GPIO</text>
+<circle cx="380" cy="130" r="3.5" fill="#8fb3d9"/>
+<polyline points="380,130 380.0,175.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="380.0,185.0 380,230" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(380.0,180.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><line x1="-5" y1="-14" x2="-5" y2="14"/><line x1="5" y1="-14" x2="5" y2="14"/></g>
+<text x="398.0" y="177.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="bold">C1</text>
+<text x="398.0" y="192.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">100 nF</text>
+<polyline points="380,230 380,238" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="368" y1="238" x2="392" y2="238"/><line x1="373" y1="243" x2="387" y2="243"/><line x1="377" y1="248" x2="383" y2="248"/></g>
+<polyline points="200,130 200.0,162.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="200.0,198.0 200,230" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(200.0,180.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><circle cx="-14" cy="0" r="3"/><circle cx="14" cy="0" r="3"/><line x1="-18" y1="-9" x2="18" y2="-9"/><line x1="0" y1="-9" x2="0" y2="-19"/><line x1="-6" y1="-19" x2="6" y2="-19"/></g>
+<text x="182.0" y="177.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="bold">SW1</text>
+<text x="182.0" y="192.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">button</text>
+<polyline points="200,230 200,238" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="188" y1="238" x2="212" y2="238"/><line x1="193" y1="243" x2="207" y2="243"/><line x1="197" y1="248" x2="203" y2="248"/></g>
+</svg>

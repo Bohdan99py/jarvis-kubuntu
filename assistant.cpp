@@ -16,6 +16,7 @@
 #include "calc_engine.h"
 #include "memory_text.h"
 #include "reminder_parser.h"
+#include "schematic_library.h"
 
 using namespace Qt::StringLiterals;
 
@@ -186,6 +187,12 @@ void Assistant::startNext()
     }
     if (handleTaskCommand(r, lang))
         return;
+    // "пример схемы на 555": the bundled example circuits, offline.
+    QString schematic;
+    if (SchematicLibrary::answer(r.text, lang, &schematic)) {
+        finishLater(r.id, schematic, false, 120);
+        return;
+    }
     // Calculations are answered here, exactly and without the network.
     QString calculation;
     if (Calculators::answer(r.text, lang, &calculation)) {

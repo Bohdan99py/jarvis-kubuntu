@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 260" width="460" height="260">
+<title>LED with a current-limiting resistor</title>
+<rect width="460" height="260" rx="14" fill="#0f1724"/>
+<rect x="40" y="90" width="60" height="70" rx="4" fill="#16233a" stroke="#e6eef8" stroke-width="2"/>
+<text x="70.0" y="68" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">J1</text>
+<text x="70.0" y="82" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">5 V</text>
+<text x="94" y="114" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">+</text>
+<text x="104" y="106" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">1</text>
+<line x1="100" y1="110" x2="120" y2="110" stroke="#e6eef8" stroke-width="2"/>
+<text x="94" y="144" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">−</text>
+<text x="104" y="136" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">2</text>
+<line x1="100" y1="140" x2="120" y2="140" stroke="#e6eef8" stroke-width="2"/>
+<polyline points="120,110 170,110" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="170,110 198.0,110.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="242.0,110.0 270,110" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(220.0,110.0) rotate(0)" stroke="#e6eef8" stroke-width="2" fill="none"><rect x="-22" y="-8" width="44" height="16" fill="#16233a"/></g>
+<text x="220.0" y="88.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">R1</text>
+<text x="220.0" y="136.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">150 Ω</text>
+<polyline points="270,110 340,110" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="340,110 340.0,145.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="340.0,165.0 340,200" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(340.0,155.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><polygon points="-10,-11 -10,11 9,0" fill="#16233a"/><line x1="10" y1="-11" x2="10" y2="11"/><g stroke-width="1.6"><line x1="2" y1="-14" x2="10" y2="-24"/><line x1="8" y1="-12" x2="16" y2="-22"/></g><polygon points="10,-24 5,-22 9,-19" fill="#e6eef8" stroke="none"/><polygon points="16,-22 11,-20 15,-17" fill="#e6eef8" stroke="none"/></g>
+<text x="322.0" y="152.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="bold">D1</text>
+<text x="322.0" y="167.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">LED red, 20 mA</text>
+<polyline points="340,200 340,220 120,220 120,140 120,140" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="230,220 230,228" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g stroke="#e6eef8" stroke-width="2"><line x1="218" y1="228" x2="242" y2="228"/><line x1="223" y1="233" x2="237" y2="233"/><line x1="227" y1="238" x2="233" y2="238"/></g>
+<circle cx="230" cy="220" r="3.5" fill="#8fb3d9"/>
+<line x1="140" y1="80" x2="160" y2="80" stroke="#e6eef8" stroke-width="2"/>
+<text x="150" y="73" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">+5V</text>
+<polyline points="150,80 150,110" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="150" cy="110" r="3.5" fill="#8fb3d9"/>
+</svg>
