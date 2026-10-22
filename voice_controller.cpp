@@ -36,6 +36,7 @@ VoiceController::VoiceController(QObject *parent):QObject(parent) {
     connect(&m_worker,&QProcess::errorOccurred,this,[this](QProcess::ProcessError){m_timeout.stop();m_recording=false;m_status=m_worker.errorString();emit changed();});
     connect(&m_worker,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this](int code,QProcess::ExitStatus){
         readEvents();m_timeout.stop();m_recording=false;
+        if(m_inputLevel!=0){m_inputLevel=0;emit levelChanged();}
         if(code!=0 && !m_receivedError) m_status=tr("The voice module failed. Check Python, the model and the microphone.");
         syncServer(); // a voice was installed: the server may now keep it loaded
         emit changed();
@@ -44,6 +45,7 @@ VoiceController::VoiceController(QObject *parent):QObject(parent) {
     connect(&m_speech,&QProcess::readyReadStandardOutput,this,&VoiceController::readSpeechEvents);
     connect(&m_speech,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this](int code,QProcess::ExitStatus status){
         readSpeechEvents();
+        resetOutputLevel();
         if(code!=0 && status==QProcess::NormalExit)m_status=tr("Could not speak the answer. Check the voice settings and Speech Dispatcher.");
         emit changed();
     });
@@ -107,6 +109,10 @@ void VoiceController::say(const QString &text,const QString &lang) {
     m_speech.start(systemPython(),args);
     m_speech.write(text.left(6000).toUtf8());m_speech.closeWriteChannel();
 }
+void VoiceController::resetOutputLevel() {
+    m_outputLevel=0;m_outputBands={0.0,0.0,0.0};m_outputMeasured=false;
+    emit levelChanged();
+}
 void VoiceController::readSpeechEvents() {
     m_speechBuffer+=m_speech.readAllStandardOutput();
     static const QHash<QString,QString> names{{"elevenlabs","ElevenLabs"},{"chatterbox","Chatterbox"},{"piper","Piper"},{"system","Speech Dispatcher"}};
@@ -114,6 +120,14 @@ void VoiceController::readSpeechEvents() {
         const int end=m_speechBuffer.indexOf('\n');const auto line=m_speechBuffer.left(end);m_speechBuffer.remove(0,end+1);
         const auto o=QJsonDocument::fromJson(line).object();
         const QString kind=o["event"].toString();
+        if(kind=="level") { // ~30 per second: only the HUD listens
+            const QJsonArray v=o["v"].toArray();
+            m_outputLevel=std::clamp(v.at(0).toDouble(),0.0,1.0);
+            m_outputBands={std::clamp(v.at(1).toDouble(),0.0,1.0),std::clamp(v.at(2).toDouble(),0.0,1.0),std::clamp(v.at(3).toDouble(),0.0,1.0)};
+            m_outputMeasured=true;
+            emit levelChanged();
+            continue;
+        }
         if(kind=="error") {m_status=o["text"].toString().left(300);m_speechError=true;emit changed();}
         else if(kind=="engine" && m_speechError && names.contains(o["name"].toString())) {
             // The chosen voice failed: say who took over.
@@ -411,6 +425,7 @@ void VoiceController::readEvents() {
     while(m_buffer.contains('\n')) {
         const int end=m_buffer.indexOf('\n');const auto line=m_buffer.left(end);m_buffer.remove(0,end+1);
         const auto o=QJsonDocument::fromJson(line).object();const auto kind=o["event"].toString();const auto text=o["text"].toString();
+        if(kind=="level") {m_inputLevel=std::clamp(o["v"].toDouble(),0.0,1.0);emit levelChanged();continue;}
         if(kind=="listening")m_recording=true;
         if(kind=="error")m_receivedError=true;
         if(kind=="text") {m_status=text.isEmpty()?tr("No speech recognized. Try again."):tr("Text added to the input field.");if(!text.isEmpty())emit textReady(text);}

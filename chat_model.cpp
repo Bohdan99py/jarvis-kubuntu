@@ -86,6 +86,15 @@ ChatModel::ChatModel(QObject *parent)
     connect(&m_daemon, &DaemonClient::failed, this, &ChatModel::onDaemonFailed);
     connect(&m_daemon, &DaemonClient::availabilityChanged, this,
             &ChatModel::daemonConnectedChanged);
+    connect(&m_daemon, &DaemonClient::availabilityChanged, this,
+            [this](bool on) { emit activity(QStringLiteral("daemon"), on ? QStringLiteral("on") : QStringLiteral("off")); });
+    connect(&m_daemon, &DaemonClient::routed, this,
+            [this](const QString &route, bool own) { emit activity(own || route == QLatin1String("reflect") ? QStringLiteral("route") : QStringLiteral("route-ext"), route); });
+    connect(&m_daemon, &DaemonClient::claudeFailed, this, [this](const QString &reason, bool) { emit activity(QStringLiteral("error"), reason); });
+    connect(&m_daemon, &DaemonClient::notice, this, [this](const QString &, const QString &title) { emit activity(QStringLiteral("notice"), title); });
+    // The local engine answers when there is no daemon (or as a fallback).
+    connect(&m_assistant, &jarvis::Assistant::routed, this, [this](quint64, const QString &route) { emit activity(QStringLiteral("route"), route); });
+    connect(&m_assistant, &jarvis::Assistant::failed, this, [this](quint64, const QString &reason) { emit activity(QStringLiteral("error"), reason.left(300)); });
 
     m_messages.reserve(kMaxMessages + 1);
     addGreeting();
@@ -97,6 +106,7 @@ ChatModel::ChatModel(QObject *parent)
     connect(&m_assistant, &jarvis::Assistant::notice, this, [this](const QJsonObject &notice) {
         m_noticeBodies.insert(notice.value(QStringLiteral("key")).toString(), notice.value(QStringLiteral("body")).toString());
         m_notifier.showNotice(notice);
+        emit activity(QStringLiteral("notice"), notice.value(QStringLiteral("title")).toString().left(200));
     });
     connect(&m_notifier, &Notifier::actionInvoked, this, [this](const QString &key, const QString &action) {
         const QString target = m_assistant.noticeAction(key, action);
@@ -106,7 +116,10 @@ ChatModel::ChatModel(QObject *parent)
     // Give D-Bus activation time to bring the daemon up before deciding to stand in for it.
     QTimer::singleShot(10000, this, &ChatModel::updateLocalAutonomy);
     connect(&m_assistant, &jarvis::Assistant::memoryChanged, this, [this] {
-        if (!daemonConnected()) backgroundChange(true);
+        if (!daemonConnected()) {
+            emit activity(QStringLiteral("memory"), {});
+            backgroundChange(true);
+        }
     });
     connect(&m_assistant, &jarvis::Assistant::activityChanged, this, [this] {
         if (!daemonConnected()) backgroundChange(false);
@@ -202,6 +215,7 @@ void ChatModel::sendWithFiles(const QString &text, const QVariantList &files)
     setBusy(true);
     m_pendingText = trimmed;
     m_pendingFiles = paths;
+    emit activity(QStringLiteral("request"), QString::number(paths.size()));
 
     if (m_daemon.isAvailable())
         m_daemon.ask(trimmed, paths);
@@ -301,6 +315,7 @@ void ChatModel::onProgress(const QString &textSoFar)
 {
     if (!m_busy)
         return;
+    emit activity(QStringLiteral("stream"), QString::number(textSoFar.size()));
     if (m_streamRow < 0 || m_streamRow >= m_messages.size()) {
         append(textSoFar, /*fromUser=*/false);
         m_streamRow = int(m_messages.size()) - 1;
@@ -330,6 +345,7 @@ void ChatModel::onReply(const QString &reply)
         append(reply, /*fromUser=*/false);
     }
     m_lastReply=reply;emit lastReplyChanged();emit assistantReply(reply);
+    emit activity(QStringLiteral("reply"), QString::number(reply.size()));
     m_pendingText.clear();
     m_pendingFiles.clear();
     setBusy(false);
@@ -340,6 +356,7 @@ void ChatModel::onDaemonFailed(const QString &reason)
     if (!m_busy)
         return;
     qWarning().noquote() << "jarvisd failed (" << reason << "), answering locally";
+    emit activity(QStringLiteral("fallback"), reason.left(200));
     m_assistant.ask(m_pendingText, m_pendingFiles); // graceful fallback: the user still gets an answer
 }
 
@@ -450,6 +467,8 @@ void ChatModel::forget(const QString &what)
 
 void ChatModel::recordAction(const QString &id, const QString &label)
 {
+    // A quick command the user ran (open an app, search, a tool): the HUD shows it.
+    emit activity(QStringLiteral("tool"), label.isEmpty() ? id.left(60) : label.left(60));
     if (!daemonConnected()) {
         m_assistant.recordAction(id, label);
         return;
@@ -510,6 +529,7 @@ void ChatModel::askMeSomething()
 
 void ChatModel::onDaemonMemoryChanged()
 {
+    emit activity(QStringLiteral("memory"), {});
     backgroundChange(true);
 }
 

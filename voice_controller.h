@@ -48,6 +48,13 @@ class VoiceController : public QObject {
     Q_PROPERTY(QString chatterboxDevice READ chatterboxDevice WRITE setChatterboxDevice NOTIFY changed)
     Q_PROPERTY(QString chatterboxSample READ chatterboxSample NOTIFY changed)
     Q_PROPERTY(double chatterboxExaggeration READ chatterboxExaggeration WRITE setChatterboxExaggeration NOTIFY changed)
+    // Real sound levels for the HUD, 0…1: the microphone while dictating, and what
+    // the voice is playing — overall and three bands (low, mid, high). Speech
+    // Dispatcher gives no audio: outputMeasured stays false and the levels at 0.
+    Q_PROPERTY(double inputLevel READ inputLevel NOTIFY levelChanged)
+    Q_PROPERTY(double outputLevel READ outputLevel NOTIFY levelChanged)
+    Q_PROPERTY(QVariantList outputBands READ outputBands NOTIFY levelChanged)
+    Q_PROPERTY(bool outputMeasured READ outputMeasured NOTIFY levelChanged)
 public:
     explicit VoiceController(QObject *parent=nullptr);
     ~VoiceController() override;
@@ -101,6 +108,10 @@ public:
     QString chatterboxSample() const;
     double chatterboxExaggeration() const;
     void setChatterboxExaggeration(double value);
+    double inputLevel() const { return m_inputLevel; }
+    double outputLevel() const { return m_outputLevel; }
+    QVariantList outputBands() const { return m_outputBands; }
+    bool outputMeasured() const { return m_outputMeasured; }
     // Installs Chatterbox with PyTorch into its own environment (1–3 GB plus ~3 GB of weights).
     Q_INVOKABLE void installChatterbox();
     // A clear 5–20 s recording of one voice: Chatterbox speaks like it. Empty url removes it.
@@ -109,6 +120,7 @@ signals:
     void changed();
     void languageChanged();
     void textReady(const QString &text);
+    void levelChanged();
 private:
     void start(const QString &python,const QStringList &args,int timeout);
     void readEvents();
@@ -133,6 +145,10 @@ private:
     QNetworkAccessManager m_network;
     QVariantList m_elevenVoices;
     bool m_elevenLoading=false,m_speechError=false;
+    double m_inputLevel=0,m_outputLevel=0;
+    QVariantList m_outputBands{0.0,0.0,0.0};
+    bool m_outputMeasured=false;
+    void resetOutputLevel();
     mutable std::optional<QJsonObject> m_speechCache,m_piperCache;
     bool m_recording=false,m_enabled=false,m_receivedError=false;
 };

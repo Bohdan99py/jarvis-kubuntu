@@ -2,19 +2,101 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Jarvis
+import Jarvis.Core
 import Qt.labs.platform as Platform
 import QtQuick.Dialogs as Dialogs
 
 ApplicationWindow {
     id: root
 
-    width: 1180
-    height: 820
+    width: 1440
+    height: 880
     minimumWidth: 1000
     minimumHeight: 700
     visible: !startQuick && !startTray && startOpen !== "study"
     title: qsTr("J.A.R.V.I.S.")
-    color: Theme.bg
+    color: hudOn ? JarvisTheme.void_ : Theme.bg
+
+    // ---------- Cinematic HUD ----------
+    // "off" keeps the classic window; low, balanced and cinematic trade detail for GPU time.
+    readonly property bool hudOn: appSettings.hudQuality !== "off"
+    readonly property bool shownNow: root.visible && root.visibility !== Window.Minimized
+    property bool hudDemo: hudForcedState === "demo"
+    property string lastAsked: ""
+
+    VisualStateController {
+        id: visualState
+        busy: chatModel.busy
+        speaking: voiceEngine.speaking
+        listening: voiceEngine.recording || study.listening
+        jobs: (voiceEngine.busy && !voiceEngine.recording ? 1 : 0) + (study.busy ? 1 : 0) + (desktopBridge.updating ? 1 : 0)
+        demo: root.hudDemo
+        forcedState: hudForcedState
+    }
+    HudTelemetry {
+        id: telemetry
+        window: root
+        active: root.hudOn && root.shownNow
+    }
+    HudController {
+        id: hudCtl
+        running: root.hudOn && root.shownNow
+        quality: root.hudOn ? appSettings.hudQuality : "low"
+        hudState: visualState.state
+        level: voiceEngine.outputLevel
+        bands: voiceEngine.outputBands
+        levelMeasured: voiceEngine.outputMeasured
+        micLevel: Math.max(voiceEngine.inputLevel, study.listening ? study.level : 0)
+        streamRate: visualState.streamRate
+        streaming: visualState.streaming
+    }
+    HudOverlay {
+        id: overlay
+        visible: appSettings.overlay
+        vs: visualState
+        voice: voiceEngine
+        quality: appSettings.hudQuality
+        onOpenRequested: root.showMain()
+        onCloseRequested: appSettings.overlay = false
+    }
+    // Real events feed the state machine; it hands every event (and the demo's,
+    // marked as such) to the HUD's effects.
+    Connections {
+        target: chatModel
+        function onActivity(kind, detail) { visualState.record(kind, detail) }
+    }
+    Connections {
+        target: visualState
+        function onPulse(kind, detail, demo) { if (root.hudOn) hudStage.event(kind, detail) }
+    }
+    // Background jobs are tools at work.
+    readonly property bool voiceJob: voiceEngine.busy && !voiceEngine.recording
+    onVoiceJobChanged: if (voiceJob) visualState.record("tool", voiceEngine.status)
+    readonly property bool studyJob: study.busy
+    onStudyJobChanged: if (studyJob) visualState.record("tool", study.status)
+    readonly property bool updateJob: desktopBridge.updating
+    onUpdateJobChanged: if (updateJob) visualState.record("tool", qsTr("update check"))
+
+    // The space behind everything: grid, haze, scan line and the waves the core sends out.
+    ShaderEffect {
+        anchors.fill: parent
+        visible: root.hudOn
+        property real time: hudCtl.time
+        property size size: Qt.size(width, height)
+        property point centre: {
+            const p = hudStage.mapToItem(root.contentItem, hudStage.coreCentre.x, hudStage.coreCentre.y)
+            return Qt.point(p.x / Math.max(1, width), p.y / Math.max(1, height))
+        }
+        property real coreRadius: hudStage.coreRadius
+        property color accent: hudCtl.colorA
+        property color alertColor: hudCtl.alertColor
+        property real alertMix: hudCtl.alertMix
+        property real energy: hudCtl.energy
+        property vector4d waves: Qt.vector4d(hudCtl.waves[0], hudCtl.waves[1], hudCtl.waves[2], hudCtl.waves[3])
+        property real detail: hudCtl.detail
+        property real scan: hudCtl.scan
+        fragmentShader: "hud/shaders/field.frag.qsb"
+    }
 
     ChatModel {
         id: chatModel
@@ -38,6 +120,7 @@ ApplicationWindow {
             Platform.MenuItem { text: qsTr("Quick commands"); onTriggered: quickBar.reveal() }
             Platform.MenuItem { text: qsTr("Open Jarvis"); onTriggered: { root.show(); root.raise(); root.requestActivate() } }
             Platform.MenuItem { text: qsTr("French studies"); onTriggered: studyWindow.showTab(0) }
+            Platform.MenuItem { text: qsTr("Compact overlay"); checkable: true; checked: appSettings.overlay; onTriggered: appSettings.overlay = !appSettings.overlay }
             Platform.MenuItem { text: qsTr("Quit"); onTriggered: Qt.quit() }
         }
     }
@@ -94,8 +177,10 @@ ApplicationWindow {
     }
     // Something finished while Jarvis was out of sight.
     function notifyReady(key, title, body, actions) {
-        if (appSettings.notifyReplies && body.length > 0)
+        if (appSettings.notifyReplies && body.length > 0) {
             notifier.show(key, title, body, actions || [["default", ""]])
+            visualState.record("notice", title + ": " + body.replace(/[`*_#]/g, "").replace(/\s+/g, " ").slice(0, 160))
+        }
     }
     Connections {
         target: notifier
@@ -170,6 +255,15 @@ ApplicationWindow {
         sequences: [StandardKey.Quit]
         onActivated: Qt.quit()
     }
+    Shortcut {
+        sequence: "Ctrl+M"
+        enabled: root.hudOn
+        onActivated: appSettings.memoryOpen = !appSettings.memoryOpen
+    }
+    Shortcut {
+        sequence: "Ctrl+Shift+O"
+        onActivated: appSettings.overlay = !appSettings.overlay
+    }
 
     // Files waiting to go with the next message (URLs).
     property var pendingFiles: []
@@ -185,6 +279,7 @@ ApplicationWindow {
         const t = input.text.trim()
         if ((t.length === 0 && root.pendingFiles.length === 0) || chatModel.busy)
             return
+        root.lastAsked = t.length > 0 ? t : root.pendingFiles.map(root.fileName).join(", ")
         chatModel.sendWithFiles(t, root.pendingFiles)
         input.text = ""
         root.pendingFiles = []
@@ -247,11 +342,24 @@ ApplicationWindow {
 
     RowLayout {
       anchors.fill: parent
-      anchors.margins: 20
-      spacing: 20
-      ColumnLayout {
-        Layout.fillWidth: true
+      anchors.margins: root.hudOn ? 14 : 20
+      spacing: root.hudOn ? 12 : 20
+      Item {
+        id: chatColumn
+        Layout.fillWidth: !root.hudOn
+        Layout.preferredWidth: root.hudOn ? Math.max(360, Math.min(480, root.width * 0.31)) : -1
         Layout.fillHeight: true
+        // With the HUD the chat is a glass panel over the field.
+        Rectangle {
+            anchors.fill: parent
+            visible: root.hudOn
+            radius: 6
+            color: JarvisTheme.glass
+            border.color: JarvisTheme.line
+        }
+      ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: root.hudOn ? 1 : 0
         spacing: 0
 
         // ---------- Header ----------
@@ -313,13 +421,17 @@ ApplicationWindow {
                 Item { Layout.fillWidth: true }
 
                 DarkButton {
-                    text: study.vocabStats.due > 0 ? qsTr("Français · %1").arg(study.vocabStats.due) : qsTr("Français")
+                    // Beside the HUD the chat is narrow: a shorter label.
+                    Layout.preferredWidth: root.hudOn ? implicitContentWidth + 28 : -1
+                    text: root.hudOn ? (study.vocabStats.due > 0 ? "FR · " + study.vocabStats.due : "FR")
+                                     : (study.vocabStats.due > 0 ? qsTr("Français · %1").arg(study.vocabStats.due) : qsTr("Français"))
                     onClicked: studyWindow.showTab(0)
                     ToolTip.visible: hovered
                     ToolTip.text: study.recording ? qsTr("Recording a lesson…") : qsTr("French studies: lessons, translation, flashcards")
                     Rectangle { visible: study.recording; width: 10; height: 10; radius: 5; color: Theme.danger; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 2 }
                 }
                 DarkButton {
+                    Layout.preferredWidth: root.hudOn ? 46 : -1
                     text: "⌕"
                     onClicked: quickBar.reveal()
                     Accessible.name: qsTr("Quick commands")
@@ -329,7 +441,9 @@ ApplicationWindow {
                 }
                 DarkButton {
                     id: menuBtn
-                    text: qsTr("☰  Menu")
+                    Layout.preferredWidth: root.hudOn ? 46 : -1
+                    text: root.hudOn ? "☰" : qsTr("☰  Menu")
+                    Accessible.name: qsTr("Menu")
                     onClicked: mainMenu.popup(menuBtn, menuBtn.width - mainMenu.width, menuBtn.height + 4)
                 }
             }
@@ -672,7 +786,13 @@ ApplicationWindow {
                 }
 
                 DarkButton {
-                    text: voiceEngine.recording ? "■" : qsTr("Microphone")
+                    // The HUD leaves the chat a narrow column: the microphone becomes an icon there.
+                    text: voiceEngine.recording ? "■" : root.hudOn ? "🎙" : qsTr("Microphone")
+                    Layout.preferredWidth: root.hudOn ? 52 : implicitWidth
+                    Accessible.name: qsTr("Microphone")
+                    ToolTip.visible: root.hudOn && hovered
+                    ToolTip.delay: 400
+                    ToolTip.text: qsTr("Microphone")
                     enabled: !voiceEngine.busy || voiceEngine.recording
                     onClicked: { if(!voiceEngine.ready) controlCenter.showVoice(); else if(voiceEngine.recording) voiceEngine.stop(); else voiceEngine.listen() }
                 }
@@ -686,10 +806,42 @@ ApplicationWindow {
             }
         }
       }
+      }
+      HudStage {
+        id: hudStage
+        objectName: "hudStage"
+        visible: root.hudOn
+        Layout.fillWidth: root.hudOn
+        Layout.fillHeight: true
+        ctl: hudCtl
+        vs: visualState
+        chat: chatModel
+        voice: voiceEngine
+        telemetry: telemetry
+        settings: appSettings
+        study: study
+        asked: root.lastAsked
+        memoryOpen: appSettings.memoryOpen
+        overlayOn: appSettings.overlay
+        demo: root.hudDemo
+        onToggleMemory: appSettings.memoryOpen = !appSettings.memoryOpen
+        onToggleOverlay: appSettings.overlay = !appSettings.overlay
+        onToggleDemo: root.hudDemo = !root.hudDemo
+        onQualityPicked: quality => appSettings.hudQuality = quality
+        onCoreActivated: {
+            if (voiceEngine.ready && !voiceEngine.busy) voiceEngine.listen()
+            else if (voiceEngine.recording) voiceEngine.stop()
+            else input.forceActiveFocus()
+        }
+      }
       MemoryPanel {
         id: memoryPanel
         objectName: "memoryPanel"
-        Layout.preferredWidth: Math.max(340, root.width * 0.38)
+        // Beside the HUD it folds away on demand (header button, Ctrl+M).
+        Layout.preferredWidth: root.hudOn ? (appSettings.memoryOpen ? Math.max(340, root.width * 0.27) : 0) : Math.max(340, root.width * 0.38)
+        Behavior on Layout.preferredWidth { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+        visible: Layout.preferredWidth > 2
+        clip: true
         Layout.fillHeight: true
         chat: chatModel
         settings: appSettings

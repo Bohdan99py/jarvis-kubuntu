@@ -6,6 +6,8 @@
 #include <QDBusMessage>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include "dbus_names.h"
 
@@ -38,6 +40,31 @@ DaemonClient::DaemonClient(QObject *parent)
     bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
                 QString(jarvis::dbus::kInterface), QStringLiteral("Progress"), this,
                 SLOT(onProgressSignal(quint64, QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("Routed"), this,
+                SLOT(onRoutedSignal(quint64, QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("Failed"), this,
+                SLOT(onFailedSignal(quint64, QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("Notice"), this,
+                SLOT(onNoticeSignal(QString)));
+}
+
+void DaemonClient::onRoutedSignal(quint64 id, const QString &route)
+{
+    emit routed(route.left(20), m_waiting && id != 0 && id == m_pendingId);
+}
+
+void DaemonClient::onFailedSignal(quint64 id, const QString &reason)
+{
+    emit claudeFailed(reason.left(300), m_waiting && id != 0 && id == m_pendingId);
+}
+
+void DaemonClient::onNoticeSignal(const QString &json)
+{
+    const QJsonObject o = QJsonDocument::fromJson(json.left(4096).toUtf8()).object();
+    emit notice(o.value(QStringLiteral("kind")).toString().left(20), o.value(QStringLiteral("title")).toString().left(200));
 }
 
 void DaemonClient::tryStartDaemon()

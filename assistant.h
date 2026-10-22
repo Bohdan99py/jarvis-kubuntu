@@ -109,6 +109,13 @@ signals:
     // kind: reminder, break, study, curious, morning, insight. The id "default"
     // is a click on the notification itself. Answers go to noticeAction().
     void notice(const QJsonObject &notice);
+    // Where request `id` is being answered, for the interface to show what Jarvis
+    // is doing: recall (taught answers, facts, earlier conversations), learn, llm,
+    // code, files, memory, tasks, calculator, schematic, system (live data), local.
+    // Background work has id 0: reflect (memory review), plan (reading a time).
+    void routed(quint64 id, const QString &route);
+    // Claude could not answer `id` (network, key, quota…); the reply says why.
+    void failed(quint64 id, const QString &reason);
 
 private:
     struct Request

@@ -19,6 +19,8 @@
 #include "attachments.h"
 #include "markdown_safe.h"
 #include "schematic_library.h"
+#include "visual_state.h"
+#include <QElapsedTimer>
 #include <QFile>
 #include <QImage>
 static void require(bool ok,const char *message) { if(!ok)qFatal("%s",message); }
@@ -540,6 +542,33 @@ static void schematics() {
     require(!SchematicLibrary::answer(QStringLiteral("нужен пример схемы подключения DHT22 к ESP32 по одному проводу"),Lang::Ru,&reply),"no similar example: Claude answers");
     require(SchematicLibrary::answer(QStringLiteral("пример схемы делителя напряжения"),Lang::Ru,&reply) && reply.contains("R1.2, R2.1"),"divider example");
 }
+static void visualState() {
+    jarvis::VisualState v;
+    v.setDurations(60,60,60);
+    auto wait=[](int ms){QElapsedTimer t;t.start();while(t.elapsed()<ms)QCoreApplication::processEvents(QEventLoop::AllEvents,10);};
+    require(v.state()=="idle","starts idle");
+    v.setBusy(true);require(v.state()=="processing","busy is processing");
+    v.record("request","0");v.record("route","recall");v.record("route","llm");
+    require(v.route()=="llm" && v.routes()==QStringList({"recall","llm"}),"routes of a request");
+    v.record("stream","100");wait(50);v.record("stream","600");
+    require(v.streaming() && v.streamChars()==600 && v.streamRate()>1000,"stream rate from real progress");
+    v.setSpeaking(true);require(v.state()=="speaking","speech outranks processing");
+    v.record("notice","Reminder");require(v.state()=="notification" && v.message()=="Reminder","a notice shows for a while");
+    v.record("error","Claude API error (500)");require(v.state()=="error","error outranks a notice");
+    v.record("warning","x");require(v.state()=="error" && v.message().startsWith("Claude"),"a warning does not hide an error");
+    wait(150);require(v.state()=="speaking","back to speaking after the error");
+    v.setSpeaking(false);v.record("reply","900");v.setBusy(false);
+    require(v.state()=="idle" && !v.streaming() && v.lastLatency()>0,"reply ends the request");
+    const auto c=v.counters();
+    require(c["requests"].toInt()==1 && c["replies"].toInt()==1 && c["llm"].toInt()==1 && c["recall"].toInt()==1 && c["errors"].toInt()==1 && c["notices"].toInt()==1,"counters");
+    v.record("memory");v.record("memory");require(v.counters()["memory"].toInt()==1,"memory bursts are throttled");
+    int demoPulses=0;QObject::connect(&v,&jarvis::VisualState::pulse,[&](const QString &,const QString &,bool demo){demoPulses+=demo;});
+    v.setDemo(true);wait(3600);v.setDemo(false);
+    require(demoPulses>0 && v.counters()["requests"].toInt()==1,"demo events never count as real");
+    bool demoInLog=false;for(const auto &e:v.log()) demoInLog=demoInLog||e.toMap()["demo"].toBool();
+    require(demoInLog && v.log().size()<=jarvis::VisualState::kMaxLog,"demo events are marked in the log");
+    v.setForcedState("warning");require(v.state()=="warning","forced state");v.setForcedState("");require(v.state()=="idle","forced state off");
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -560,5 +589,6 @@ int main(int argc,char **argv) {
     attachments(scratch.path());
     markdown();
     schematics();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics";
+    visualState();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state";
 }

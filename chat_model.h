@@ -110,6 +110,12 @@ signals:
     // Without a daemon this window delivers Jarvis's own notifications; a click
     // asks the window to show "main", "tasks", "study", "curious" or "memory".
     void openRequested(const QString &target, const QString &payload);
+    // What Jarvis is doing, for the HUD — real events only: request (detail: files
+    // attached), route (llm, recall, calculator…; route-ext when another client such
+    // as VS Code asked), stream (characters so far), reply (characters), error
+    // (Claude failed), fallback (the daemon failed, answering locally), notice
+    // (title), memory (memory changed), daemon (on/off).
+    void activity(const QString &kind, const QString &detail);
 
 private:
     struct Message

@@ -37,6 +37,13 @@ class AppSettings : public QObject
     Q_PROPERTY(int eveningHour READ eveningHour NOTIFY changed FINAL)
     Q_PROPERTY(bool reminderSound READ reminderSound NOTIFY changed FINAL)
     Q_PROPERTY(int nagMinutes READ nagMinutes NOTIFY changed FINAL)
+    // The cinematic HUD, kept per user in Jarvis.conf (not in config.json: the
+    // daemon has nothing to do with it). Quality: off (classic window), low,
+    // balanced, cinematic. memoryOpen: the memory panel beside the HUD.
+    // overlay: the compact always-on-top core.
+    Q_PROPERTY(QString hudQuality READ hudQuality WRITE setHudQuality NOTIFY hudChanged FINAL)
+    Q_PROPERTY(bool memoryOpen READ memoryOpen WRITE setMemoryOpen NOTIFY hudChanged FINAL)
+    Q_PROPERTY(bool overlay READ overlay WRITE setOverlay NOTIFY hudChanged FINAL)
 
 public:
     explicit AppSettings(QObject *parent = nullptr);
@@ -64,6 +71,12 @@ public:
     int eveningHour() const { return m_data.eveningHour; }
     bool reminderSound() const { return m_data.reminderSound; }
     int nagMinutes() const { return m_data.nagMinutes; }
+    QString hudQuality() const;
+    void setHudQuality(const QString &quality);
+    bool memoryOpen() const;
+    void setMemoryOpen(bool open);
+    bool overlay() const;
+    void setOverlay(bool on);
 
     // An empty `apiKey` keeps the stored key. Both return "" on success,
     // otherwise a message for the user.
@@ -85,6 +98,7 @@ signals:
     void saved();
     // The interface language was switched (after QML retranslation).
     void languageApplied();
+    void hudChanged();
 
 private:
     void refresh(bool notify);
