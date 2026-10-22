@@ -222,5 +222,14 @@
    "title_en": "UART transfer time",
    "note_en": "115200 baud ≈ 11.5 KB/s."
   }
+ ],
+ "schematics": [
+  "button_debounce",
+  "i2c_pullups",
+  "npn_motor",
+  "mosfet_lowside",
+  "ldo_regulator",
+  "led_resistor",
+  "rc_lowpass"
  ]
 }

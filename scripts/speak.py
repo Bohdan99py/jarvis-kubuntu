@@ -330,6 +330,8 @@ def speak_elevenlabs(text, lang, settings, root, job):
 
 
 _piper_voices = {}
+# One synthesis at a time per model: an interrupted answer's last sentence may still be in work.
+_model_lock = threading.Lock()
 
 
 def speak_piper(text, lang, settings, root, job):
@@ -345,7 +347,12 @@ def speak_piper(text, lang, settings, root, job):
     first = []
 
     def chunks():
-        for chunk in voice.synthesize(text, config):
+        sentences = voice.synthesize(text, config)
+        while not job.cancelled.is_set():
+            with _model_lock:
+                chunk = next(sentences, None)
+            if chunk is None:
+                return
             if not first:
                 first.append((chunk.sample_rate, chunk.sample_channels))
             yield chunk.audio_int16_bytes
@@ -395,15 +402,16 @@ def speak_chatterbox(text, lang, settings, root, job):
     reference = next((p for p in (root / "chatterbox" / f"reference.{s}" for s in ("wav", "flac", "mp3", "ogg")) if p.exists()), None)
     if reference:
         marker = (str(reference), reference.stat().st_mtime, exaggeration)
-        if getattr(model, "_jarvis_reference", None) != marker:  # a new sample: prepare it once
-            model.prepare_conditionals(str(reference), exaggeration=exaggeration)
-            model._jarvis_reference = marker
+        with _model_lock:
+            if getattr(model, "_jarvis_reference", None) != marker:  # a new sample: prepare it once
+                model.prepare_conditionals(str(reference), exaggeration=exaggeration)
+                model._jarvis_reference = marker
 
     def chunks():
         for piece in sentences(text):
             if job.cancelled.is_set():
                 return
-            with torch.inference_mode():
+            with _model_lock, torch.inference_mode():
                 wav = model.generate(piece, language_id=lang, exaggeration=exaggeration, cfg_weight=cfg_weight)
             yield (wav.squeeze(0).clamp(-1, 1) * 32767).to(torch.int16).cpu().numpy().tobytes()
 

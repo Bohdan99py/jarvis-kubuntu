@@ -109,14 +109,6 @@
         <translation>Озвучивать ответы</translation>
     </message>
     <message>
-        <source>Test voice</source>
-        <translation>Проверить голос</translation>
-    </message>
-    <message>
-        <source>Hi! I&apos;m Jarvis. Voice output is on.</source>
-        <translation>Привет! Я Джарвис. Голосовой вывод включён.</translation>
-    </message>
-    <message>
         <source>Stop</source>
         <translation>Стоп</translation>
     </message>
@@ -259,14 +251,6 @@
     <message>
         <source>Jarvis&apos;s voice</source>
         <translation>Голос Jarvis</translation>
-    </message>
-    <message>
-        <source>Code, links and tables are not read out — only what a person would say.</source>
-        <translation>Код, ссылки и таблицы не зачитываются — только то, что сказал бы человек.</translation>
-    </message>
-    <message>
-        <source>Natural voice</source>
-        <translation>Естественный голос</translation>
     </message>
     <message>
         <source>A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.</source>
@@ -490,6 +474,190 @@ A KDE menu entry and a system tray icon</source>
         <source>Forget everything about you?</source>
         <translation>Забыть всё о вас?</translation>
     </message>
+    <message>
+        <source>Code, links and tables are not read out — only what a person would say. A new answer interrupts the one still being read.</source>
+        <translation>Код, ссылки и таблицы не зачитываются — только то, что сказал бы человек. Новый ответ прерывает тот, что ещё читается.</translation>
+    </message>
+    <message>
+        <source>Voice engine</source>
+        <translation>Голосовой движок</translation>
+    </message>
+    <message>
+        <source>Best available</source>
+        <translation>Лучший из доступных</translation>
+    </message>
+    <message>
+        <source>ElevenLabs — studio voices (cloud)</source>
+        <translation>ElevenLabs — студийные голоса (облако)</translation>
+    </message>
+    <message>
+        <source>Chatterbox — neural, on this computer</source>
+        <translation>Chatterbox — нейросеть на этом компьютере</translation>
+    </message>
+    <message>
+        <source>Piper — light neural, on this computer</source>
+        <translation>Piper — лёгкая нейросеть на этом компьютере</translation>
+    </message>
+    <message>
+        <source>System voice (espeak-ng)</source>
+        <translation>Системный голос (espeak-ng)</translation>
+    </message>
+    <message>
+        <source>the system voice</source>
+        <translation>системный голос</translation>
+    </message>
+    <message>
+        <source>Speaking now: %1. If it fails, the next ready voice takes over, so Jarvis is never silent.</source>
+        <translation>Сейчас говорит: %1. Если он не сработает, подхватит следующий готовый голос — Jarvis не замолчит.</translation>
+    </message>
+    <message>
+        <source>ElevenLabs</source>
+        <translation>ElevenLabs</translation>
+    </message>
+    <message>
+        <source>Studio-quality voices that sound like a real person, in Russian, English, French and dozens of other languages. The text of each answer is sent to ElevenLabs to be spoken: it needs the internet and an API key (elevenlabs.io → Developers → API keys; the free plan includes a monthly character allowance). The key is stored only on this computer, readable by you alone.</source>
+        <translation>Голоса студийного качества, неотличимые от человека, — на русском, английском, французском и десятках других языков. Текст каждого ответа отправляется в ElevenLabs для озвучивания: нужен интернет и ключ API (elevenlabs.io → Developers → API keys; в бесплатном плане есть месячный лимит символов). Ключ хранится только на этом компьютере и доступен лишь вам.</translation>
+    </message>
+    <message>
+        <source>Key saved (%1)</source>
+        <translation>Ключ сохранён (%1)</translation>
+    </message>
+    <message>
+        <source>ElevenLabs API key</source>
+        <translation>Ключ API ElevenLabs</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>Загрузка…</translation>
+    </message>
+    <message>
+        <source>Load my voices</source>
+        <translation>Загрузить мои голоса</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Модель</translation>
+    </message>
+    <message>
+        <source>Multilingual v2 — the most natural reading</source>
+        <translation>Multilingual v2 — самое естественное чтение</translation>
+    </message>
+    <message>
+        <source>Flash v2.5 — starts fastest, half the price</source>
+        <translation>Flash v2.5 — начинает быстрее всех, вдвое дешевле</translation>
+    </message>
+    <message>
+        <source>Turbo v2.5 — fast, good quality</source>
+        <translation>Turbo v2.5 — быстро и качественно</translation>
+    </message>
+    <message>
+        <source>v3 — the most expressive</source>
+        <translation>v3 — самый выразительный</translation>
+    </message>
+    <message>
+        <source>Stability</source>
+        <translation>Стабильность</translation>
+    </message>
+    <message>
+        <source>lively</source>
+        <translation>живо</translation>
+    </message>
+    <message>
+        <source>even</source>
+        <translation>ровно</translation>
+    </message>
+    <message>
+        <source>balanced</source>
+        <translation>сбалансированно</translation>
+    </message>
+    <message>
+        <source>Chatterbox</source>
+        <translation>Chatterbox</translation>
+    </message>
+    <message>
+        <source>A neural voice by Resemble AI that runs on this computer — nothing is sent anywhere. Give it a 5–20 second recording of a voice and it speaks like that voice. Best with an NVIDIA graphics card; on the processor each sentence takes a few seconds. The download is 1–3 GB for the program and about 3 GB for the model.</source>
+        <translation>Нейросетевой голос от Resemble AI, работает на этом компьютере — ничего никуда не отправляется. Дайте ему запись голоса на 5–20 секунд, и он заговорит этим голосом. Лучше всего с видеокартой NVIDIA; на процессоре каждая фраза синтезируется несколько секунд. Загрузка — 1–3 ГБ программа и около 3 ГБ модель.</translation>
+    </message>
+    <message>
+        <source>An NVIDIA graphics card was found: the GPU build of PyTorch will be installed.</source>
+        <translation>Найдена видеокарта NVIDIA: будет установлена версия PyTorch для GPU.</translation>
+    </message>
+    <message>
+        <source>No NVIDIA graphics card was found: the smaller processor build of PyTorch will be installed.</source>
+        <translation>Видеокарта NVIDIA не найдена: будет установлена более лёгкая версия PyTorch для процессора.</translation>
+    </message>
+    <message>
+        <source>Install Chatterbox</source>
+        <translation>Установить Chatterbox</translation>
+    </message>
+    <message>
+        <source>Voice sample</source>
+        <translation>Образец голоса</translation>
+    </message>
+    <message>
+        <source>Chatterbox&apos;s own voice</source>
+        <translation>Собственный голос Chatterbox</translation>
+    </message>
+    <message>
+        <source>Choose a recording…</source>
+        <translation>Выбрать запись…</translation>
+    </message>
+    <message>
+        <source>Expressiveness</source>
+        <translation>Выразительность</translation>
+    </message>
+    <message>
+        <source>calm</source>
+        <translation>спокойно</translation>
+    </message>
+    <message>
+        <source>dramatic</source>
+        <translation>драматично</translation>
+    </message>
+    <message>
+        <source>natural</source>
+        <translation>естественно</translation>
+    </message>
+    <message>
+        <source>Runs on</source>
+        <translation>Где работает</translation>
+    </message>
+    <message>
+        <source>Graphics card if there is one</source>
+        <translation>На видеокарте, если есть</translation>
+    </message>
+    <message>
+        <source>NVIDIA graphics card (CUDA)</source>
+        <translation>Видеокарта NVIDIA (CUDA)</translation>
+    </message>
+    <message>
+        <source>Processor</source>
+        <translation>Процессор</translation>
+    </message>
+    <message>
+        <source>Piper</source>
+        <translation>Piper</translation>
+    </message>
+    <message>
+        <source>French</source>
+        <translation>Французский</translation>
+    </message>
+    <message>
+        <source>A recording of the voice</source>
+        <translation>Запись голоса</translation>
+    </message>
+    <message>
+        <source>Audio (*.wav *.flac *.mp3 *.ogg)</source>
+        <translation>Аудио (*.wav *.flac *.mp3 *.ogg)</translation>
+    </message>
 </context>
 <context>
     <name>DesktopController</name>
@@ -508,10 +676,6 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Skill installed and disabled. Enable it in the list.</source>
         <translation>Навык установлен и выключен. Включите его в списке.</translation>
-    </message>
-    <message>
-        <source>Choose a skill JSON file up to 64 KB.</source>
-        <translation>Выберите JSON-файл навыка до 64 КБ.</translation>
     </message>
     <message>
         <source>An HTTPS link to the skill JSON is required.</source>
@@ -572,6 +736,141 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>VS Code could not install the extension: %1</source>
         <translation>VS Code не смог установить расширение: %1</translation>
+    </message>
+    <message>
+        <source>Choose a skill JSON file up to 160 KB.</source>
+        <translation>Выберите JSON-файл навыка до 160 КБ.</translation>
+    </message>
+</context>
+<context>
+    <name>KicadController</name>
+    <message>
+        <source>This example has no %1 file.</source>
+        <translation>У этого примера нет файла %1.</translation>
+    </message>
+    <message>
+        <source>Could not save %1.</source>
+        <translation>Не удалось сохранить %1.</translation>
+    </message>
+    <message>
+        <source>Saved %1. In KiCad: PCB Editor → File → Import → Netlist.</source>
+        <translation>Сохранено: %1. В KiCad: редактор плат → Файл → Импорт → Список соединений.</translation>
+    </message>
+    <message>
+        <source>Saved %1.</source>
+        <translation>Сохранено: %1.</translation>
+    </message>
+    <message>
+        <source>Choose a KiCad project, schematic or board.</source>
+        <translation>Выберите проект, схему или плату KiCad.</translation>
+    </message>
+    <message>
+        <source>Project %1.</source>
+        <translation>Проект %1.</translation>
+    </message>
+    <message>
+        <source>kicad-cli was not found. Install KiCad 7 or newer (sudo apt install kicad).</source>
+        <translation>kicad-cli не найден. Установите KiCad 7 или новее (sudo apt install kicad).</translation>
+    </message>
+    <message>
+        <source>The project has no board file.</source>
+        <translation>В проекте нет файла платы.</translation>
+    </message>
+    <message>
+        <source>The project has no schematic.</source>
+        <translation>В проекте нет схемы.</translation>
+    </message>
+    <message>
+        <source>Drawing the preview…</source>
+        <translation>Рисую просмотр…</translation>
+    </message>
+    <message>
+        <source>Board</source>
+        <translation>Плата</translation>
+    </message>
+    <message>
+        <source>Root sheet</source>
+        <translation>Главный лист</translation>
+    </message>
+    <message>
+        <source>%1: %2 page(s).</source>
+        <translation>%1: страниц — %2.</translation>
+    </message>
+    <message>
+        <source>kicad-cli could not draw the project: %1</source>
+        <translation>kicad-cli не смог нарисовать проект: %1</translation>
+    </message>
+    <message>
+        <source>no pages</source>
+        <translation>нет страниц</translation>
+    </message>
+    <message>
+        <source>%1 produced no report.</source>
+        <translation>%1 не выдал отчёт.</translation>
+    </message>
+    <message>
+        <source>%1: no problems found</source>
+        <translation>%1: проблем не найдено</translation>
+    </message>
+    <message>
+        <source>%1: %2 errors, %3 warnings</source>
+        <translation>%1: ошибок — %2, предупреждений — %3</translation>
+    </message>
+    <message>
+        <source>ERC from Jarvis needs KiCad 8 or newer (found %1). Run it in KiCad: Inspect → Electrical Rules Checker.</source>
+        <translation>Проверка ERC из Jarvis требует KiCad 8 или новее (установлен %1). Запустите её в KiCad: Инспектор → Проверка электрических правил.</translation>
+    </message>
+    <message>
+        <source>Checking the schematic (ERC)…</source>
+        <translation>Проверяю схему (ERC)…</translation>
+    </message>
+    <message>
+        <source>DRC from Jarvis needs KiCad 8 or newer (found %1). Run it in KiCad: Inspect → Design Rules Checker.</source>
+        <translation>Проверка DRC из Jarvis требует KiCad 8 или новее (установлен %1). Запустите её в KiCad: Инспектор → Проверка конструкторских норм.</translation>
+    </message>
+    <message>
+        <source>Checking the board (DRC)…</source>
+        <translation>Проверяю плату (DRC)…</translation>
+    </message>
+    <message>
+        <source>No parts were found in the schematic.</source>
+        <translation>В схеме не найдено компонентов.</translation>
+    </message>
+    <message>
+        <source>Bill of materials: %1</source>
+        <translation>Перечень компонентов: %1</translation>
+    </message>
+    <message>
+        <source>Collecting the parts…</source>
+        <translation>Собираю компоненты…</translation>
+    </message>
+    <message>
+        <source>Netlist: %1</source>
+        <translation>Список соединений: %1</translation>
+    </message>
+    <message>
+        <source>kicad-cli failed: %1</source>
+        <translation>Ошибка kicad-cli: %1</translation>
+    </message>
+    <message>
+        <source>Schematic PDF: %1</source>
+        <translation>PDF схемы: %1</translation>
+    </message>
+    <message>
+        <source>Making Gerber and drill files…</source>
+        <translation>Делаю Gerber-файлы и файлы сверловки…</translation>
+    </message>
+    <message>
+        <source>Fabrication files (%1): %2 — zip the folder for the board house.</source>
+        <translation>Файлы для производства (%1): %2 — заархивируйте папку для завода.</translation>
+    </message>
+    <message>
+        <source>Opening %1 in KiCad…</source>
+        <translation>Открываю %1 в KiCad…</translation>
+    </message>
+    <message>
+        <source>KiCad is not installed: sudo apt install kicad</source>
+        <translation>KiCad не установлен: sudo apt install kicad</translation>
     </message>
 </context>
 <context>
@@ -1310,6 +1609,114 @@ Esc — скрыть окно.</translation>
     <message>
         <source>What Claude is told when this skill is on:</source>
         <translation>Что получает Claude, когда навык включён:</translation>
+    </message>
+    <message>
+        <source>Schematics</source>
+        <translation>Схемы</translation>
+    </message>
+    <message>
+        <source>Classic circuits with values that work. Open one to zoom in, ask Jarvis how it works, or save it: SPICE for ngspice, a netlist for the KiCad PCB editor, a bill of materials.</source>
+        <translation>Классические схемы с рабочими номиналами. Откройте любую, чтобы рассмотреть, спросить Jarvis, как она работает, или сохранить: SPICE для ngspice, список соединений для редактора плат KiCad, перечень компонентов.</translation>
+    </message>
+    <message>
+        <source>Fit</source>
+        <translation>Вписать</translation>
+    </message>
+    <message>
+        <source>Zoom in</source>
+        <translation>Увеличить</translation>
+    </message>
+    <message>
+        <source>Zoom out</source>
+        <translation>Уменьшить</translation>
+    </message>
+    <message>
+        <source>Parts and nets — what Jarvis reads from a schematic:</source>
+        <translation>Компоненты и цепи — так Jarvis читает схему:</translation>
+    </message>
+    <message>
+        <source>Ask Jarvis about it</source>
+        <translation>Спросить Jarvis</translation>
+    </message>
+    <message>
+        <source>SPICE (.cir)</source>
+        <translation>SPICE (.cir)</translation>
+    </message>
+    <message>
+        <source>Netlist for KiCad (.net)</source>
+        <translation>Нетлист для KiCad (.net)</translation>
+    </message>
+    <message>
+        <source>Parts list (.csv)</source>
+        <translation>Перечень (.csv)</translation>
+    </message>
+    <message>
+        <source>Drawing (.svg)</source>
+        <translation>Рисунок (.svg)</translation>
+    </message>
+    <message>
+        <source>Open a KiCad project</source>
+        <translation>Открыть проект KiCad</translation>
+    </message>
+    <message>
+        <source>KiCad (*.kicad_pro *.kicad_sch *.kicad_pcb)</source>
+        <translation>KiCad (*.kicad_pro *.kicad_sch *.kicad_pcb)</translation>
+    </message>
+    <message>
+        <source>Open a project…</source>
+        <translation>Открыть проект…</translation>
+    </message>
+    <message>
+        <source>Projects and KiCad demos</source>
+        <translation>Проекты и примеры KiCad</translation>
+    </message>
+    <message>
+        <source>KiCad demo</source>
+        <translation>пример KiCad</translation>
+    </message>
+    <message>
+        <source>No KiCad projects found in Documents, Projects or KiCad folders.</source>
+        <translation>В папках «Документы», Projects и KiCad проектов KiCad не найдено.</translation>
+    </message>
+    <message>
+        <source>Open a KiCad project, or pick one on the left. Jarvis only reads it: previews, checks and exports go to Documents/Jarvis/KiCad.</source>
+        <translation>Откройте проект KiCad или выберите слева. Jarvis только читает его: просмотр, проверки и экспорт сохраняются в «Документы/Jarvis/KiCad».</translation>
+    </message>
+    <message>
+        <source>KiCad is not installed. Install it (sudo apt install kicad, version 8 or newer recommended) to preview, check and export projects. Without it Jarvis still makes a parts list from a schematic.</source>
+        <translation>KiCad не установлен. Установите его (sudo apt install kicad, лучше версии 8 или новее), чтобы смотреть, проверять и экспортировать проекты. Без него Jarvis всё равно составит перечень компонентов схемы.</translation>
+    </message>
+    <message>
+        <source>Schematic</source>
+        <translation>Схема</translation>
+    </message>
+    <message>
+        <source>Board</source>
+        <translation>Плата</translation>
+    </message>
+    <message>
+        <source>Parts list</source>
+        <translation>Перечень</translation>
+    </message>
+    <message>
+        <source>Netlist</source>
+        <translation>Нетлист</translation>
+    </message>
+    <message>
+        <source>Gerber files</source>
+        <translation>Gerber-файлы</translation>
+    </message>
+    <message>
+        <source>Results folder</source>
+        <translation>Папка результатов</translation>
+    </message>
+    <message>
+        <source>Open in KiCad</source>
+        <translation>Открыть в KiCad</translation>
+    </message>
+    <message>
+        <source>Check this circuit: what it does, mistakes in the connections, missing pull-ups, decoupling or protection, and what to improve.</source>
+        <translation>Проверь эту схему: что она делает, ошибки в соединениях, не хватает ли подтяжек, развязки или защиты, и что улучшить.</translation>
     </message>
 </context>
 <context>
@@ -2213,10 +2620,6 @@ Chat with me or add a first example</source>
         <translation>Голосовой модуль завершился с ошибкой. Проверьте Python, модель и микрофон.</translation>
     </message>
     <message>
-        <source>Could not speak the answer. Check Speech Dispatcher.</source>
-        <translation>Не удалось озвучить ответ. Проверьте Speech Dispatcher.</translation>
-    </message>
-    <message>
         <source>Downloading voice components…</source>
         <translation>Загрузка компонентов голоса…</translation>
     </message>
@@ -2251,6 +2654,74 @@ Chat with me or add a first example</source>
     <message>
         <source>Text added to the input field.</source>
         <translation>Текст добавлен в строку ввода.</translation>
+    </message>
+    <message>
+        <source>Could not speak the answer. Check the voice settings and Speech Dispatcher.</source>
+        <translation>Не удалось озвучить ответ. Проверьте настройки голоса и Speech Dispatcher.</translation>
+    </message>
+    <message>
+        <source>%1 spoke instead.</source>
+        <translation>Вместо него ответил %1.</translation>
+    </message>
+    <message>
+        <source>Could not save the voice settings.</source>
+        <translation>Не удалось сохранить настройки голоса.</translation>
+    </message>
+    <message>
+        <source>Enter an ElevenLabs API key to use its voices.</source>
+        <translation>Введите ключ API ElevenLabs, чтобы использовать его голоса.</translation>
+    </message>
+    <message>
+        <source>Install Chatterbox to use it.</source>
+        <translation>Установите Chatterbox, чтобы им пользоваться.</translation>
+    </message>
+    <message>
+        <source>Install the natural voice to use Piper.</source>
+        <translation>Установите естественный голос, чтобы пользоваться Piper.</translation>
+    </message>
+    <message>
+        <source>This does not look like an ElevenLabs API key.</source>
+        <translation>Это не похоже на ключ API ElevenLabs.</translation>
+    </message>
+    <message>
+        <source>The ElevenLabs key was removed.</source>
+        <translation>Ключ ElevenLabs удалён.</translation>
+    </message>
+    <message>
+        <source>Key saved. Loading your ElevenLabs voices…</source>
+        <translation>Ключ сохранён. Загружаю ваши голоса ElevenLabs…</translation>
+    </message>
+    <message>
+        <source>ElevenLabs rejected the API key (401).</source>
+        <translation>ElevenLabs отклонил ключ API (401).</translation>
+    </message>
+    <message>
+        <source>Could not reach ElevenLabs: %1</source>
+        <translation>Нет связи с ElevenLabs: %1</translation>
+    </message>
+    <message>
+        <source>ElevenLabs is ready: %1 voices available.</source>
+        <translation>ElevenLabs готов: доступно голосов — %1.</translation>
+    </message>
+    <message>
+        <source>Installing Chatterbox: this downloads several gigabytes and takes a while…</source>
+        <translation>Устанавливаю Chatterbox: загрузка — несколько гигабайт, это займёт время…</translation>
+    </message>
+    <message>
+        <source>Chatterbox speaks with its own voice again.</source>
+        <translation>Chatterbox снова говорит своим голосом.</translation>
+    </message>
+    <message>
+        <source>Choose a WAV, FLAC, MP3 or OGG recording up to 20 MB.</source>
+        <translation>Выберите запись WAV, FLAC, MP3 или OGG до 20 МБ.</translation>
+    </message>
+    <message>
+        <source>Could not copy the recording.</source>
+        <translation>Не удалось скопировать запись.</translation>
+    </message>
+    <message>
+        <source>Chatterbox will now speak like this recording.</source>
+        <translation>Теперь Chatterbox говорит голосом с этой записи.</translation>
     </message>
 </context>
 <context>

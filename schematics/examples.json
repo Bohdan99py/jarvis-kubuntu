@@ -1,0 +1,1086 @@
+{
+ "schema": 1,
+ "examples": [
+  {
+   "id": "led_resistor",
+   "title": "Светодиод с токоограничивающим резистором",
+   "title_en": "LED with a current-limiting resistor",
+   "category": "basics",
+   "description": "Простейшая цепь: резистор ограничивает ток светодиода. R = (U − Uf)/I = (5 − 2)/0,02 = 150 Ом, мощность резистора 60 мВт. Для синего и белого светодиода Uf ≈ 3 В → 100 Ом. Без резистора светодиод сгорит: его ток почти не зависит от напряжения после открытия.",
+   "description_en": "The simplest circuit: the resistor limits the LED current. R = (U − Uf)/I = (5 − 2)/0.02 = 150 Ω, the resistor dissipates 60 mW. Blue and white LEDs have Uf ≈ 3 V → 100 Ω. Without the resistor the LED burns: once it conducts, its current barely depends on the voltage.",
+   "parts": [
+    {
+     "ref": "J1",
+     "value": "Power 5V",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "150",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "D1",
+     "value": "LED_Red",
+     "symbol": "Device:LED",
+     "footprint": "LED_THT:LED_D5.0mm",
+     "pins": {
+      "1": "K",
+      "2": "A"
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "+5V",
+     "nodes": [
+      "J1.1",
+      "R1.1"
+     ]
+    },
+    {
+     "name": "Net-(D1-A)",
+     "nodes": [
+      "R1.2",
+      "D1.2"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "D1.1",
+      "J1.2"
+     ]
+    }
+   ],
+   "spice": "* LED with a resistor\nV1 vcc 0 DC 5\nR1 vcc a 150\nD1 a 0 LEDRED\n.model LEDRED D(IS=1e-19 N=1.7 RS=2)\n.op\n.end\n",
+   "formulas": [
+    "R = (U − Uf) / I",
+    "P = I²·R"
+   ],
+   "tags": [
+    "светодиод",
+    "led",
+    "резистор",
+    "resistor"
+   ]
+  },
+  {
+   "id": "voltage_divider",
+   "title": "Делитель напряжения",
+   "title_en": "Voltage divider",
+   "category": "basics",
+   "description": "Два резистора делят напряжение: Vout = 12·4,7/(10 + 4,7) ≈ 3,84 В. Делитель годится для измерения (вход АЦП, обратная связь), но не для питания: его выходное сопротивление R1‖R2 ≈ 3,2 кОм, и нагрузка проседает напряжение. Нагрузка должна быть в 10+ раз больше R2.",
+   "description_en": "Two resistors divide the voltage: Vout = 12·4.7/(10 + 4.7) ≈ 3.84 V. A divider suits measuring (an ADC input, feedback) but not powering things: its output resistance R1‖R2 ≈ 3.2 kΩ, so a load pulls the voltage down. The load should be 10+ times larger than R2.",
+   "parts": [
+    {
+     "ref": "R1",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "4.7k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "+12V",
+     "nodes": [
+      "R1.1"
+     ]
+    },
+    {
+     "name": "VOUT",
+     "nodes": [
+      "R1.2",
+      "R2.1"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "R2.2"
+     ]
+    }
+   ],
+   "spice": "* Voltage divider\nV1 vin 0 DC 12\nR1 vin out 10k\nR2 out 0 4.7k\n.op\n.end\n",
+   "formulas": [
+    "Vout = Vin·R2/(R1 + R2)",
+    "Rout = R1·R2/(R1 + R2)"
+   ],
+   "tags": [
+    "делитель",
+    "divider"
+   ]
+  },
+  {
+   "id": "rc_lowpass",
+   "title": "RC-фильтр нижних частот",
+   "title_en": "RC low-pass filter",
+   "category": "filters",
+   "description": "Пропускает низкие частоты и ослабляет высокие на 20 дБ/декаду выше частоты среза fc = 1/(2πRC) = 159 Гц. На частоте среза выход −3 дБ (0,707), сдвиг фазы −45°. Применения: сглаживание ШИМ в аналоговое напряжение, антиалиасинг перед АЦП, подавление дребезга.",
+   "description_en": "Passes low frequencies and attenuates high ones by 20 dB/decade above the cutoff fc = 1/(2πRC) = 159 Hz. At the cutoff the output is −3 dB (0.707) with −45° phase. Uses: turning PWM into a voltage, anti-aliasing before an ADC, debouncing.",
+   "parts": [
+    {
+     "ref": "R1",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "100n",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "IN",
+     "nodes": [
+      "R1.1"
+     ]
+    },
+    {
+     "name": "OUT",
+     "nodes": [
+      "R1.2",
+      "C1.1"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "C1.2"
+     ]
+    }
+   ],
+   "spice": "* RC low-pass filter: AC sweep\nV1 in 0 AC 1\nR1 in out 10k\nC1 out 0 100n\n.ac dec 20 1 100k\n.end\n",
+   "formulas": [
+    "fc = 1 / (2π·R·C)",
+    "τ = R·C"
+   ],
+   "tags": [
+    "фильтр",
+    "rc",
+    "filter",
+    "lowpass"
+   ]
+  },
+  {
+   "id": "ne555_astable",
+   "title": "Мигалка на NE555",
+   "title_en": "NE555 LED blinker",
+   "category": "timers",
+   "description": "NE555 в автоколебательном режиме: C1 заряжается через R1 + R2 до 2/3 питания и разряжается через R2 до 1/3. f = 1,44/((R1 + 2·R2)·C1) ≈ 6,9 Гц, скважность (R1 + R2)/(R1 + 2·R2) ≈ 52 %. Вывод 4 (сброс) на питании, на 5 — 10 нФ от помех. Выход 3 отдаёт до 200 мА — хватает на светодиод с резистором 470 Ом.",
+   "description_en": "The NE555 as an oscillator: C1 charges through R1 + R2 to 2/3 of the supply and discharges through R2 to 1/3. f = 1.44/((R1 + 2·R2)·C1) ≈ 6.9 Hz, duty (R1 + R2)/(R1 + 2·R2) ≈ 52 %. Pin 4 (reset) goes to the supply, pin 5 gets 10 nF against noise. Output 3 drives up to 200 mA — enough for an LED with 470 Ω.",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "NE555",
+     "symbol": "Timer:NE555P",
+     "footprint": "Package_DIP:DIP-8_W7.62mm",
+     "pins": {
+      "1": "GND",
+      "2": "TR",
+      "3": "Q",
+      "4": "R",
+      "5": "CV",
+      "6": "THR",
+      "7": "DIS",
+      "8": "VCC"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "1k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "10u",
+     "symbol": "Device:C_Polarized",
+     "footprint": "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm",
+     "pins": {
+      "1": "+",
+      "2": "-"
+     }
+    },
+    {
+     "ref": "C2",
+     "value": "10n",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R3",
+     "value": "470",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "D1",
+     "value": "LED",
+     "symbol": "Device:LED",
+     "footprint": "LED_THT:LED_D5.0mm",
+     "pins": {
+      "1": "K",
+      "2": "A"
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "+9V",
+     "nodes": [
+      "U1.8",
+      "U1.4",
+      "R1.1"
+     ]
+    },
+    {
+     "name": "Net-(U1-DIS)",
+     "nodes": [
+      "R1.2",
+      "R2.1",
+      "U1.7"
+     ]
+    },
+    {
+     "name": "Net-(U1-THR)",
+     "nodes": [
+      "R2.2",
+      "U1.6",
+      "U1.2",
+      "C1.1"
+     ]
+    },
+    {
+     "name": "Net-(U1-CV)",
+     "nodes": [
+      "U1.5",
+      "C2.1"
+     ]
+    },
+    {
+     "name": "Net-(U1-Q)",
+     "nodes": [
+      "U1.3",
+      "R3.1"
+     ]
+    },
+    {
+     "name": "Net-(D1-A)",
+     "nodes": [
+      "R3.2",
+      "D1.2"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "U1.1",
+      "C1.2",
+      "C2.2",
+      "D1.1"
+     ]
+    }
+   ],
+   "spice": "",
+   "formulas": [
+    "f = 1,44 / ((R1 + 2·R2)·C)",
+    "tH = 0,693·(R1 + R2)·C",
+    "tL = 0,693·R2·C"
+   ],
+   "tags": [
+    "555",
+    "ne555",
+    "мигалка",
+    "blinker",
+    "таймер",
+    "timer"
+   ]
+  },
+  {
+   "id": "npn_motor",
+   "title": "Транзисторный ключ NPN для мотора или реле",
+   "title_en": "NPN switch for a motor or relay",
+   "category": "switching",
+   "description": "Микроконтроллер управляет нагрузкой 12 В через NPN-транзистор. Ток базы с запасом для насыщения: Ib ≈ (3,3 − 0,7)/330 ≈ 8 мА; R2 держит транзистор закрытым, пока вывод МК не настроен. Диод D1 обязателен: при выключении индуктивность мотора или катушки реле даёт выброс напряжения, который пробьёт транзистор. Для токов больше 0,5 А удобнее MOSFET (пример «MOSFET-ключ»).",
+   "description_en": "An MCU switches a 12 V load through an NPN transistor. Base current with margin for saturation: Ib ≈ (3.3 − 0.7)/330 ≈ 8 mA; R2 keeps the transistor off while the MCU pin is not configured. D1 is a must: when switched off, the motor or relay coil inductance makes a voltage spike that would break the transistor. Above 0.5 A a MOSFET is easier (see the MOSFET switch example).",
+   "parts": [
+    {
+     "ref": "J1",
+     "value": "GPIO",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "330",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "Q1",
+     "value": "BD139",
+     "symbol": "Device:Q_NPN_BCE",
+     "footprint": "Package_TO_SOT_THT:TO-92_Inline",
+     "pins": {
+      "1": "B",
+      "2": "C",
+      "3": "E"
+     }
+    },
+    {
+     "ref": "M1",
+     "value": "Motor_12V",
+     "symbol": "Motor:Motor_DC",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "+",
+      "2": "-"
+     }
+    },
+    {
+     "ref": "D1",
+     "value": "1N4007",
+     "symbol": "Device:D",
+     "footprint": "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal",
+     "pins": {
+      "1": "K",
+      "2": "A"
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "GPIO",
+     "nodes": [
+      "J1.1",
+      "R1.1"
+     ]
+    },
+    {
+     "name": "Net-(Q1-B)",
+     "nodes": [
+      "R1.2",
+      "R2.1",
+      "Q1.1"
+     ]
+    },
+    {
+     "name": "+12V",
+     "nodes": [
+      "M1.1",
+      "D1.1"
+     ]
+    },
+    {
+     "name": "Net-(Q1-C)",
+     "nodes": [
+      "M1.2",
+      "D1.2",
+      "Q1.2"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "Q1.3",
+      "R2.2",
+      "J1.2"
+     ]
+    }
+   ],
+   "spice": "* NPN low-side switch, the motor as R+L\nV1 vcc 0 DC 12\nVG gpio 0 PULSE(0 3.3 1m 1u 1u 5m 10m)\nR1 gpio b 330\nR2 b 0 10k\nQ1 c b 0 QNPN\nRM vcc m 24\nLM m c 10m\nD1 c vcc D1N4007\n.model QNPN NPN(BF=100 IS=1e-14 VAF=100)\n.model D1N4007 D(IS=7e-9 N=1.8 RS=0.04 BV=1000)\n.tran 10u 20m\n.end\n",
+   "formulas": [
+    "Ib = (Uупр − 0,7) / Rб",
+    "Ib ≥ 3…10·Iк / β"
+   ],
+   "tags": [
+    "транзистор",
+    "npn",
+    "ключ",
+    "мотор",
+    "реле",
+    "motor",
+    "relay",
+    "switch"
+   ]
+  },
+  {
+   "id": "mosfet_lowside",
+   "title": "MOSFET-ключ на стороне земли",
+   "title_en": "N-MOSFET low-side switch",
+   "category": "switching",
+   "description": "Логический (logic-level) N-MOSFET коммутирует нагрузку между ней и землёй. Нужен транзистор, у которого Rds(on) указано при Ugs = 2,5–4,5 В (IRLZ44N, AO3400), иначе от 3,3 В он откроется не полностью и перегреется. R1 = 100 Ом ограничивает ток заряда затвора и звон, R2 = 100 кОм держит ключ закрытым при сбросе МК. Потери P = I²·Rds(on): 2 А и 25 мОм → 0,1 Вт. Для мотора добавьте диод параллельно нагрузке.",
+   "description_en": "A logic-level N-MOSFET switches the load between it and ground. Pick one whose Rds(on) is specified at Ugs = 2.5–4.5 V (IRLZ44N, AO3400), otherwise 3.3 V turns it on only partly and it overheats. R1 = 100 Ω limits the gate charging current and ringing, R2 = 100 kΩ keeps it off while the MCU resets. Loss P = I²·Rds(on): 2 A and 25 mΩ → 0.1 W. For a motor add a diode across the load.",
+   "parts": [
+    {
+     "ref": "J1",
+     "value": "PWM",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "100",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "100k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "Q1",
+     "value": "IRLZ44N",
+     "symbol": "Device:Q_NMOS_GDS",
+     "footprint": "Package_TO_SOT_THT:TO-220-3_Vertical",
+     "pins": {
+      "1": "G",
+      "2": "D",
+      "3": "S"
+     }
+    },
+    {
+     "ref": "J2",
+     "value": "LED_strip",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "PWM",
+     "nodes": [
+      "J1.1",
+      "R1.1"
+     ]
+    },
+    {
+     "name": "Net-(Q1-G)",
+     "nodes": [
+      "R1.2",
+      "R2.1",
+      "Q1.1"
+     ]
+    },
+    {
+     "name": "+12V",
+     "nodes": [
+      "J2.1"
+     ]
+    },
+    {
+     "name": "Net-(Q1-D)",
+     "nodes": [
+      "J2.2",
+      "Q1.2"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "Q1.3",
+      "R2.2",
+      "J1.2"
+     ]
+    }
+   ],
+   "spice": "* Logic-level MOSFET switching a 6 ohm load\nV1 vcc 0 DC 12\nVG pwm 0 PULSE(0 3.3 0 100n 100n 50u 100u)\nR1 pwm g 100\nR2 g 0 100k\nRL vcc d 6\nM1 d g 0 0 NLOGIC\n.model NLOGIC NMOS(VTO=1.5 KP=20 LAMBDA=0.01)\n.tran 100n 300u\n.end\n",
+   "formulas": [
+    "P = I²·Rds(on)",
+    "t ≈ Qg / Ig"
+   ],
+   "tags": [
+    "mosfet",
+    "мосфет",
+    "ключ",
+    "шим",
+    "pwm",
+    "switch"
+   ]
+  },
+  {
+   "id": "opamp_noninverting",
+   "title": "Неинвертирующий усилитель на ОУ",
+   "title_en": "Non-inverting op-amp amplifier",
+   "category": "analog",
+   "description": "Коэффициент усиления K = 1 + R2/R1 = 11, высокое входное сопротивление, фаза не меняется. Отрицательная обратная связь держит напряжения на входах равными. Однополярное питание 5 В: LM358 не доходит до +5 В на выходе (≈ 3,5 В), rail-to-rail MCP6002 — почти до шин. Не забудьте 100 нФ у вывода питания ОУ.",
+   "description_en": "Gain K = 1 + R2/R1 = 11, a high input impedance, no phase inversion. Negative feedback keeps the two inputs at equal voltages. On a single 5 V supply the LM358 output tops out near 3.5 V, a rail-to-rail MCP6002 gets close to the rails. Do not forget 100 nF at the op-amp supply pin.",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "LM358",
+     "symbol": "Amplifier_Operational:LM358",
+     "footprint": "Package_DIP:DIP-8_W7.62mm",
+     "pins": {
+      "1": "",
+      "2": "-",
+      "3": "+",
+      "4": "V-",
+      "8": "V+"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "1k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "IN",
+     "nodes": [
+      "U1.3"
+     ]
+    },
+    {
+     "name": "Net-(U1--)",
+     "nodes": [
+      "U1.2",
+      "R1.1",
+      "R2.2"
+     ]
+    },
+    {
+     "name": "OUT",
+     "nodes": [
+      "U1.1",
+      "R2.1"
+     ]
+    },
+    {
+     "name": "+5V",
+     "nodes": [
+      "U1.8"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "U1.4",
+      "R1.2"
+     ]
+    }
+   ],
+   "spice": "* Non-inverting amplifier, gain 11 (ideal op-amp)\nV1 in 0 SIN(0.2 0.1 1k)\nE1 out 0 in inm 100k\nR1 inm 0 1k\nR2 out inm 10k\n.tran 10u 3m\n.end\n",
+   "formulas": [
+    "K = 1 + R2/R1"
+   ],
+   "tags": [
+    "оу",
+    "операционный",
+    "усилитель",
+    "opamp",
+    "op-amp",
+    "amplifier"
+   ]
+  },
+  {
+   "id": "ldo_regulator",
+   "title": "Стабилизатор 3,3 В (LDO)",
+   "title_en": "3.3 V linear regulator (LDO)",
+   "category": "power",
+   "description": "AMS1117-3.3 делает 3,3 В из 5 В (USB). Падение на нём ~1,1 В, поэтому вход ≥ 4,5 В. Мощность нагрева P = (Uвх − Uвых)·I: при 500 мА — 0,85 Вт, корпус SOT-223 без большой площадки меди нагреется сильно. Конденсаторы по даташиту: 10 мкФ на входе и 22 мкФ на выходе (тантал или керамика с последовательным сопротивлением). При перепаде больше 2–3 В выгоднее импульсный понижающий преобразователь.",
+   "description_en": "The AMS1117-3.3 makes 3.3 V from 5 V (USB). It drops ~1.1 V, so the input must be ≥ 4.5 V. Heat P = (Vin − Vout)·I: 0.85 W at 500 mA — a SOT-223 without a large copper pad gets hot. Capacitors per the datasheet: 10 µF in, 22 µF out (tantalum, or ceramic with some ESR). For a drop over 2–3 V a buck converter wastes less.",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "AMS1117-3.3",
+     "symbol": "Regulator_Linear:AMS1117-3.3",
+     "footprint": "Package_TO_SOT_SMD:SOT-223-3_TabPin2",
+     "pins": {
+      "1": "GND",
+      "2": "VO",
+      "3": "VI"
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "10u",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "C2",
+     "value": "22u",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "+5V",
+     "nodes": [
+      "U1.3",
+      "C1.1"
+     ]
+    },
+    {
+     "name": "+3V3",
+     "nodes": [
+      "U1.2",
+      "C2.1"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "U1.1",
+      "C1.2",
+      "C2.2"
+     ]
+    }
+   ],
+   "spice": "",
+   "formulas": [
+    "P = (Uвх − Uвых)·I",
+    "Uвх ≥ Uвых + Udrop"
+   ],
+   "tags": [
+    "стабилизатор",
+    "ldo",
+    "ams1117",
+    "питание",
+    "regulator",
+    "3.3"
+   ]
+  },
+  {
+   "id": "button_debounce",
+   "title": "Кнопка с подтяжкой и подавлением дребезга",
+   "title_en": "Button with pull-up and debounce",
+   "category": "mcu",
+   "description": "R1 подтягивает вход к 3,3 В — без нажатия на входе 1, нажатие замыкает на землю (0). Контакты кнопки «дребезжат» 1–10 мс; RC-цепь R2·C1 = 0,1 мс… с R1: заряд через R1 + R2 = 11 кОм → τ ≈ 1,1 мс, разряд через R2 → 0,1 мс. Для надёжности вход с триггером Шмитта или программная проверка: состояние держится 20 мс. Вместо R1 можно включить встроенную подтяжку МК (20–50 кОм).",
+   "description_en": "R1 pulls the input up to 3.3 V — released reads 1, pressed shorts it to ground (0). Button contacts bounce for 1–10 ms; the RC network smooths it: charging through R1 + R2 = 11 kΩ gives τ ≈ 1.1 ms, discharging through R2 0.1 ms. Use a Schmitt-trigger input or check in software that the state holds for 20 ms. The MCU's internal pull-up (20–50 kΩ) can replace R1.",
+   "parts": [
+    {
+     "ref": "R1",
+     "value": "10k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "1k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "100n",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "SW1",
+     "value": "SW_Push",
+     "symbol": "Switch:SW_Push",
+     "footprint": "Button_Switch_THT:SW_PUSH_6mm",
+     "pins": {
+      "1": "1",
+      "2": "2"
+     }
+    },
+    {
+     "ref": "J1",
+     "value": "GPIO",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "+3V3",
+     "nodes": [
+      "R1.1"
+     ]
+    },
+    {
+     "name": "Net-(SW1-1)",
+     "nodes": [
+      "R1.2",
+      "SW1.1",
+      "R2.1"
+     ]
+    },
+    {
+     "name": "GPIO",
+     "nodes": [
+      "R2.2",
+      "C1.1",
+      "J1.1"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "SW1.2",
+      "C1.2",
+      "J1.2"
+     ]
+    }
+   ],
+   "spice": "* Pull-up, debounce: the button closes at 1 ms with 3 bounces\nV1 vcc 0 DC 3.3\nR1 vcc n 10k\nS1 n 0 ctl 0 SBTN\nVC ctl 0 PWL(0 0 1m 0 1.0001m 1 1.2m 1 1.2001m 0 1.5m 0 1.5001m 1 1.8m 1 1.8001m 0 2m 0 2.0001m 1)\nR2 n gpio 1k\nC1 gpio 0 100n\n.model SBTN SW(VT=0.5 RON=0.1 ROFF=10Meg)\n.tran 5u 5m\n.end\n",
+   "formulas": [
+    "τ = R·C"
+   ],
+   "tags": [
+    "кнопка",
+    "дребезг",
+    "подтяжка",
+    "button",
+    "debounce",
+    "pull-up"
+   ]
+  },
+  {
+   "id": "i2c_pullups",
+   "title": "Шина I2C с подтягивающими резисторами",
+   "title_en": "I2C bus with pull-up resistors",
+   "category": "mcu",
+   "description": "Выходы I2C — открытый сток: устройства только прижимают линию к земле, а единицу создают подтягивающие резисторы. 4,7 кОм — для 100 кГц и коротких проводов; для 400 кГц или ёмкости шины ~200 пФ — 2,2 кОм (калькулятор «Подтяжка шины I2C»). Подтяжка — одна на всю шину, а не на каждое устройство. У модулей с датчиками свои резисторы часто уже стоят.",
+   "description_en": "I2C outputs are open drain: devices only pull the line low and the pull-up resistors make the high level. 4.7 kΩ suits 100 kHz and short wires; for 400 kHz or ~200 pF of bus capacitance use 2.2 kΩ (the I2C pull-up calculator). One set of pull-ups per bus, not per device. Sensor modules often have their own already.",
+   "parts": [
+    {
+     "ref": "U1",
+     "value": "MCU",
+     "symbol": "Connector:Conn_01x04_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2",
+      "3": "Pin_3",
+      "4": "Pin_4"
+     }
+    },
+    {
+     "ref": "U2",
+     "value": "Sensor",
+     "symbol": "Connector:Conn_01x04_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2",
+      "3": "Pin_3",
+      "4": "Pin_4"
+     }
+    },
+    {
+     "ref": "R1",
+     "value": "4.7k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    },
+    {
+     "ref": "R2",
+     "value": "4.7k",
+     "symbol": "Device:R",
+     "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "SDA",
+     "nodes": [
+      "U1.1",
+      "U2.1",
+      "R1.2"
+     ]
+    },
+    {
+     "name": "SCL",
+     "nodes": [
+      "U1.2",
+      "U2.2",
+      "R2.2"
+     ]
+    },
+    {
+     "name": "+3V3",
+     "nodes": [
+      "R1.1",
+      "R2.1",
+      "U1.3",
+      "U2.3"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "U1.4",
+      "U2.4"
+     ]
+    }
+   ],
+   "spice": "",
+   "formulas": [
+    "Rmax = tr / (0,8473·Cb)",
+    "Rmin = (Vdd − 0,4) / 3 мА"
+   ],
+   "tags": [
+    "i2c",
+    "подтяжка",
+    "pull-up",
+    "шина",
+    "bus"
+   ]
+  },
+  {
+   "id": "bridge_rectifier",
+   "title": "Выпрямитель и стабилизатор 5 В",
+   "title_en": "Bridge rectifier with a 5 V regulator",
+   "category": "power",
+   "description": "Переменное 12 В от трансформатора выпрямляет диодный мост, C1 сглаживает пульсации, 7805 стабилизирует 5 В. Амплитуда 12·√2 − 2·0,9 ≈ 15 В. Пульсации ΔU ≈ I/(2·f·C) = 0,5/(100·2200 мкФ) ≈ 2,3 В — минимум остаётся выше 7 В, нужных 7805. Мощность на 7805: (15 − 5)·0,5 = 5 Вт — нужен радиатор. Работа с сетью 230 В опасна: трансформатор только готовый, первичная цепь с предохранителем.",
+   "description_en": "A diode bridge rectifies 12 V AC from a transformer, C1 smooths the ripple, the 7805 regulates 5 V. The peak is 12·√2 − 2·0.9 ≈ 15 V. Ripple ΔU ≈ I/(2·f·C) = 0.5/(100·2200 µF) ≈ 2.3 V — the minimum stays above the 7 V the 7805 needs. The 7805 dissipates (15 − 5)·0.5 = 5 W — it needs a heatsink. Mains (230 V) is dangerous: use a ready transformer with a fused primary.",
+   "parts": [
+    {
+     "ref": "J1",
+     "value": "AC_12V",
+     "symbol": "Connector:Conn_01x02_Pin",
+     "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+     "pins": {
+      "1": "Pin_1",
+      "2": "Pin_2"
+     }
+    },
+    {
+     "ref": "D1",
+     "value": "DB107",
+     "symbol": "Diode_Bridge:DB107",
+     "footprint": "Diode_THT:Diode_Bridge_DIP-4_W7.62mm_P5.08mm",
+     "pins": {
+      "1": "+",
+      "2": "~",
+      "3": "~",
+      "4": "-"
+     }
+    },
+    {
+     "ref": "C1",
+     "value": "2200u",
+     "symbol": "Device:C_Polarized",
+     "footprint": "Capacitor_THT:CP_Radial_D5.0mm_P2.00mm",
+     "pins": {
+      "1": "+",
+      "2": "-"
+     }
+    },
+    {
+     "ref": "U1",
+     "value": "L7805",
+     "symbol": "Regulator_Linear:L7805",
+     "footprint": "Package_TO_SOT_THT:TO-220-3_Vertical",
+     "pins": {
+      "1": "IN",
+      "2": "GND",
+      "3": "OUT"
+     }
+    },
+    {
+     "ref": "C2",
+     "value": "100n",
+     "symbol": "Device:C",
+     "footprint": "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm",
+     "pins": {
+      "1": "",
+      "2": ""
+     }
+    }
+   ],
+   "nets": [
+    {
+     "name": "AC1",
+     "nodes": [
+      "J1.1",
+      "D1.2"
+     ]
+    },
+    {
+     "name": "AC2",
+     "nodes": [
+      "J1.2",
+      "D1.3"
+     ]
+    },
+    {
+     "name": "VRAW",
+     "nodes": [
+      "D1.1",
+      "C1.1",
+      "U1.1"
+     ]
+    },
+    {
+     "name": "GND",
+     "nodes": [
+      "D1.4",
+      "C1.2",
+      "U1.2",
+      "C2.2"
+     ]
+    },
+    {
+     "name": "+5V",
+     "nodes": [
+      "U1.3",
+      "C2.1"
+     ]
+    }
+   ],
+   "spice": "* Bridge rectifier, 2200 uF, 10 ohm load (no regulator)\nV1 a b SIN(0 16.97 50)\nD1 a p DBR\nD2 b p DBR\nD3 n a DBR\nD4 n b DBR\nC1 p n 2200u\nRL p n 30\n.model DBR D(IS=1e-9 N=1.9 RS=0.05 BV=1000)\n.tran 100u 100m\n.end\n",
+   "formulas": [
+    "Uпик = U~·√2 − 2·Uд",
+    "ΔU ≈ I / (2·f·C)"
+   ],
+   "tags": [
+    "выпрямитель",
+    "мост",
+    "7805",
+    "rectifier",
+    "bridge",
+    "блок питания",
+    "power supply"
+   ]
+  }
+ ]
+}

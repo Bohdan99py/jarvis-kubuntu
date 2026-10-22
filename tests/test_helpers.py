@@ -167,7 +167,7 @@ class Speech(unittest.TestCase):
         self.assertIn(speak.ELEVEN_DEFAULT_VOICE, sent['url'], 'an odd voice id never reaches the URL')
         self.assertNotIn('language_code', sent['body'])
     def test_server_round_trip(self):
-        import os, subprocess, sys, time
+        import os, subprocess, sys
         with tempfile.TemporaryDirectory() as d:
             d = Path(d); bin_dir = d / 'bin'; bin_dir.mkdir(); out = d / 'spoken.txt'
             tool = bin_dir / 'spd-say'

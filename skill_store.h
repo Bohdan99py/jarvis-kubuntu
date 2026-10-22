@@ -6,7 +6,8 @@ namespace jarvis {
 // Declarative skills contain prompts and optional exact-match examples, never executable code.
 // Optional fields: "image" (bundled picture id), "color" (#rrggbb), "tools" (ids of
 // built-in calculators the skill brings), "formulas" ([{title, formula, note}],
-// with *_en variants) and per-example "aliases" (other wordings of the question).
+// with *_en variants), per-example "aliases" (other wordings of the question) and
+// "schematics" (ids of bundled example circuits: the skill page shows them and a KiCad workbench).
 class SkillStore {
 public:
     static constexpr int kMaxBytes = 160 * 1024;

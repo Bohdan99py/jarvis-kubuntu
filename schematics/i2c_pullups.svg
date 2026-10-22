@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" width="560" height="320">
+<title>I2C bus with pull-up resistors</title>
+<rect width="560" height="320" rx="14" fill="#0f1724"/>
+<rect x="60" y="120" width="100" height="100" rx="4" fill="#16233a" stroke="#e6eef8" stroke-width="2"/>
+<text x="110.0" y="98" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">U1</text>
+<text x="110.0" y="112" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">MCU (STM32, ESP32…)</text>
+<text x="154" y="154" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">SDA</text>
+<text x="164" y="146" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">1</text>
+<line x1="160" y1="150" x2="180" y2="150" stroke="#e6eef8" stroke-width="2"/>
+<text x="154" y="184" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">SCL</text>
+<text x="164" y="176" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">2</text>
+<line x1="160" y1="180" x2="180" y2="180" stroke="#e6eef8" stroke-width="2"/>
+<rect x="400" y="120" width="100" height="100" rx="4" fill="#16233a" stroke="#e6eef8" stroke-width="2"/>
+<text x="450.0" y="98" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">U2</text>
+<text x="450.0" y="112" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">Sensor (BME280…)</text>
+<text x="406" y="154" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">SDA</text>
+<text x="396" y="146" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">1</text>
+<line x1="400" y1="150" x2="380" y2="150" stroke="#e6eef8" stroke-width="2"/>
+<text x="406" y="184" fill="#e6eef8" font-size="10" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">SCL</text>
+<text x="396" y="176" fill="#8fb3d9" font-size="9" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">2</text>
+<line x1="400" y1="180" x2="380" y2="180" stroke="#e6eef8" stroke-width="2"/>
+<polyline points="180,150 380,150" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="180,180 380,180" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<line x1="260" y1="40" x2="280" y2="40" stroke="#e6eef8" stroke-width="2"/>
+<text x="270" y="33" fill="#c792ea" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="bold">+3V3</text>
+<polyline points="270,40 270,50 240,50 240,60" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="270,50 300,50 300,60" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="270" cy="50" r="3.5" fill="#8fb3d9"/>
+<polyline points="240,60 240.0,83.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="240.0,127.0 240,150" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(240.0,105.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><rect x="-22" y="-8" width="44" height="16" fill="#16233a"/></g>
+<text x="222.0" y="102.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="bold">R1</text>
+<text x="222.0" y="117.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="end" font-weight="normal">4.7 kΩ</text>
+<polyline points="300,60 300.0,98.0" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="300.0,142.0 300,180" fill="none" stroke="#8fb3d9" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(300.0,120.0) rotate(90)" stroke="#e6eef8" stroke-width="2" fill="none"><rect x="-22" y="-8" width="44" height="16" fill="#16233a"/></g>
+<text x="318.0" y="117.0" fill="#7fd1c7" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="bold">R2</text>
+<text x="318.0" y="132.0" fill="#f2c46d" font-size="11" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="start" font-weight="normal">4.7 kΩ</text>
+<circle cx="240" cy="150" r="3.5" fill="#8fb3d9"/>
+<circle cx="300" cy="180" r="3.5" fill="#8fb3d9"/>
+<text x="270" y="290" fill="#e6eef8" font-size="12" font-family="DejaVu Sans, Noto Sans, sans-serif" text-anchor="middle" font-weight="normal">SDA, SCL: open drain — pull-ups are required</text>
+</svg>

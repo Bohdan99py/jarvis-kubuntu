@@ -103,6 +103,10 @@ int main(int argc,char *argv[]) {
                     if(QObject *tabs=center->findChild<QObject*>("controlTabs")) tabs->setProperty("currentIndex",tab.toInt());
                     QMetaObject::invokeMethod(center,"open");
                 }
+            // JARVIS_UI_SNAPSHOT_SKILL=<skill id>[:<tab>] shows a skill's page.
+            if(const QString skill=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SKILL");!skill.isEmpty())
+                if(QObject *center=window->findChild<QObject*>("controlCenter"))
+                    QMetaObject::invokeMethod(center,"showSkill",Q_ARG(QVariant,skill.section(':',0,0)),Q_ARG(QVariant,skill.section(':',1)));
             QTimer::singleShot(1500,window,[window,shot]{window->grabWindow().save(shot);QCoreApplication::quit();});
         });
     }

@@ -665,5 +665,18 @@
    "question_en": "How do I read a schematic?",
    "answer_en": "1. Find the supply and ground (VCC, +5V, GND) and follow where they go.\n2. Split the schematic into blocks: power, MCU, inputs, outputs, interfaces.\n3. Labels with the same name are connected even without a drawn wire.\n4. A dot at a crossing is a connection; without a dot the wires just cross.\n5. Designators: R resistor, C capacitor, L inductor, D diode, Q transistor, U integrated circuit.\n6. Check IC pins against the datasheet."
   }
+ ],
+ "schematics": [
+  "led_resistor",
+  "voltage_divider",
+  "rc_lowpass",
+  "ne555_astable",
+  "npn_motor",
+  "mosfet_lowside",
+  "opamp_noninverting",
+  "ldo_regulator",
+  "button_debounce",
+  "i2c_pullups",
+  "bridge_rectifier"
  ]
 }

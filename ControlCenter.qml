@@ -14,6 +14,14 @@ Dialog {
     function showVoice() { tabs.currentIndex=1; open() }
     function showMemory() { tabs.currentIndex=2; open() }
     function showApp() { tabs.currentIndex=4; open() }
+    // Opens a skill's page, optionally on a tab ("schematics", "kicad", …).
+    function showSkill(id, tab) {
+        const skill = desktop.skills.find(s => s.id === id)
+        if (!skill) return
+        open()
+        skillPage.show(skill)
+        if (tab) skillPage.showTab(tab)
+    }
     readonly property bool english: settings.uiLanguage === "en"
     function skillText(skill, field) { return english && skill[field + "_en"] ? skill[field + "_en"] : skill[field] }
     // The last error of a switch; shown on the Memory and Autonomy tabs.
@@ -653,6 +661,7 @@ Dialog {
         chat: center.chat
         english: center.english
         onAskRequested: question => { skillPage.close(); center.close(); center.chat.send(question) }
+        onAskWithFilesRequested: (question, files) => { skillPage.close(); center.close(); center.chat.sendWithFiles(question, files) }
     }
     Dialog {
         id: confirmForget

@@ -18,6 +18,7 @@
 #include "calc_engine.h"
 #include "attachments.h"
 #include "markdown_safe.h"
+#include "schematic_library.h"
 #include <QFile>
 #include <QImage>
 static void require(bool ok,const char *message) { if(!ok)qFatal("%s",message); }
@@ -507,6 +508,38 @@ static void markdown() {
     require(safeMarkdown("```cpp\nif (a<b) x = ![y](z);\n```\n<b>")=="```cpp\nif (a<b) x = ![y](z);\n```\n&lt;b>","fenced code untouched");
     require(safeMarkdown("~~~~\n```\n<x>\n~~~~\n<y>")=="~~~~\n```\n<x>\n~~~~\n&lt;y>","only the same fence closes a block");
 }
+static void schematics() {
+    using jarvis::SchematicLibrary;using jarvis::Lang;using jarvis::Attachments;
+    const QJsonArray all=SchematicLibrary::list(Lang::En);
+    require(all.size()>=10,"bundled example circuits");
+    for(const auto &v:all) {
+        const QJsonObject e=v.toObject();
+        require(QFile::exists(e["image"].toString().mid(3)),"every example has its drawing");
+        // The exported netlist reads back with the same parts and nets.
+        QString summary;
+        const QString net=SchematicLibrary::kicadNetlist(e);
+        const QString back=Attachments::kicadNetlist(net.toUtf8(),&summary);
+        require(!back.isEmpty() && summary.startsWith(QString::number(e["parts"].toArray().size())+" parts"),"netlist round trip");
+        require(Attachments::kicadParts(net.toUtf8()).size()==e["parts"].toArray().size(),"parts from the netlist");
+        for(const auto &n:e["nets"].toArray()) {
+            const auto nodes=n.toObject()["nodes"].toArray();
+            if(nodes.size()>1) require(back.contains(n.toObject()["name"].toString()+": "),"every net in the netlist");
+        }
+    }
+    const QJsonObject led=SchematicLibrary::example("led_resistor",Lang::Ru);
+    require(led["title"].toString().contains(QStringLiteral("Светодиод")) && led["spice"].toString().contains(".op"),"Russian example with SPICE");
+    require(SchematicLibrary::digest(led).contains("Net-(D1-A): R1.2, D1.2(A)"),"digest names pin functions");
+    const QString bom=SchematicLibrary::bomCsv(SchematicLibrary::example("ne555_astable",Lang::En)["parts"].toArray());
+    require(bom.startsWith("Qty;References;Value;Footprint;Symbol\n") && bom.contains("1;R1;1k;"),"BOM rows");
+    require(SchematicLibrary::bomCsv(QJsonArray{QJsonObject{{"ref","R1"},{"value","=HYPERLINK(1)"}}}).contains(";'=HYPERLINK(1);"),"BOM cells are never formulas");
+    QString reply;
+    require(SchematicLibrary::answer(QStringLiteral("покажи пример схемы на 555"),Lang::Ru,&reply) && reply.contains("NE555"),"schematic in chat");
+    require(SchematicLibrary::answer("show me an example circuit",Lang::En,&reply) && reply.contains("Voltage divider"),"list of examples");
+    require(!SchematicLibrary::answer(QStringLiteral("как работает делитель?"),Lang::Ru,&reply),"a plain question is not a request for a drawing");
+    require(!SchematicLibrary::answer(QStringLiteral("покажи схему подключения DHT22 к ESP32"),Lang::Ru,&reply),"a custom circuit is Claude's");
+    require(!SchematicLibrary::answer(QStringLiteral("нужен пример схемы подключения DHT22 к ESP32 по одному проводу"),Lang::Ru,&reply),"no similar example: Claude answers");
+    require(SchematicLibrary::answer(QStringLiteral("пример схемы делителя напряжения"),Lang::Ru,&reply) && reply.contains("R1.2, R2.1"),"divider example");
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -526,5 +559,6 @@ int main(int argc,char **argv) {
     programmingCalculators();
     attachments(scratch.path());
     markdown();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown";
+    schematics();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics";
 }
