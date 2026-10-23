@@ -23,6 +23,7 @@
 #include "config.h"
 #include "language.h"
 #include "visual_state.h"
+#include "graphics_info.h"
 
 // SIGTERM (logout, systemctl stop) ends the event loop normally, so a lesson
 // recording is finished and saved instead of being cut off.
@@ -48,6 +49,8 @@ public:
 };
 
 int main(int argc,char *argv[]) {
+    // The graphics card (PRIME offload) must be chosen before Qt loads a driver.
+    GraphicsInfo::prepareEnvironment(argc,argv);
     QApplication app(argc,argv);
     app.setApplicationName("jarvis");app.setOrganizationName("Jarvis");app.setApplicationDisplayName("J.A.R.V.I.S.");
     app.setApplicationVersion(JARVIS_VERSION);app.setDesktopFileName("org.jarvis.Jarvis");
@@ -55,7 +58,13 @@ int main(int argc,char *argv[]) {
     QCommandLineParser parser;parser.setApplicationDescription("Jarvis desktop assistant");parser.addHelpOption();parser.addVersionOption();
     parser.addOption({"quick","Open the quick command bar"});
     parser.addOption({"tray","Start in the system tray without opening a window (autostart)"});
-    parser.addOption({"open","Open a part of Jarvis: main, tasks, study, curious or memory","target"});parser.process(app);
+    parser.addOption({"open","Open a part of Jarvis: main, tasks, study, curious or memory","target"});
+    parser.addOption({"gpu-info","Print which graphics API, renderer and GPU Jarvis draws with, and the GPUs found, then exit"});
+    parser.addOption({"gpu","For this start: the graphics card for the interface (auto, integrated or dedicated)","card"});
+    parser.addOption({"graphics-api","For this start: Qt's graphics API (auto, opengl or vulkan)","api"});
+    parser.process(app);
+    GraphicsInfo::applyApi();
+    if(parser.isSet("gpu-info")) return GraphicsInfo::printReport();
     const QString open=parser.value("open").left(20);
     const bool quick=parser.isSet("quick");
     const bool tray=parser.isSet("tray");
@@ -66,6 +75,8 @@ int main(int argc,char *argv[]) {
         auto reply=!open.isEmpty()?existing.call("Open",open,QString()):existing.call(quick?"ShowQuick":"ShowMain");
         return reply.type()==QDBusMessage::ErrorMessage ? 1 : 0;
     }
+    // This is the Jarvis that draws: a non-default graphics choice is now on trial.
+    GraphicsInfo::armProbe();
     // Closing the window keeps Jarvis in the tray; "Quit" ends it.
     app.setQuitOnLastWindowClosed(false);
     // The session manager must not restore Jarvis: autostart starts it.
@@ -83,22 +94,27 @@ int main(int argc,char *argv[]) {
     qmlRegisterType<jarvis::VisualState>("Jarvis.Core",1,0,"VisualStateController");
     QQuickStyle::setStyle("Basic");
     OfflineNetworkFactory offline; // outlives the engine
-    // The compact HUD overlay is a translucent window.
-    QQuickWindow::setDefaultAlphaBuffer(true);
+    // Measures what really renders; only the compact overlay gets an alpha channel.
+    GraphicsInfo graphics;
+    QObject::connect(&graphics,&GraphicsInfo::restartRequested,&desktop,&DesktopController::restart);
     QQmlApplicationEngine engine;
     engine.setNetworkAccessManagerFactory(&offline);
     engine.rootContext()->setContextProperty("desktopBridge",&desktop);
     engine.rootContext()->setContextProperty("startQuick",quick);
     engine.rootContext()->setContextProperty("startTray",tray);
     engine.rootContext()->setContextProperty("startOpen",open);
-    // Development aid: JARVIS_HUD_STATE=speaking (idle, listening, processing, notification,
-    // warning, error) shows that HUD state regardless of what Jarvis does.
+    engine.rootContext()->setContextProperty("jarvisGraphics",&graphics);
     // JARVIS_HUD_STATE=<state> pins the HUD to one state (idle, listening, processing, speaking,
     // notification, warning, error) for visual checks; JARVIS_HUD_STATE=demo starts the demo.
     engine.rootContext()->setContextProperty("hudForcedState",qEnvironmentVariable("JARVIS_HUD_STATE"));
     engine.rootContext()->setContextProperty("notifier",&notifier);
     QObject::connect(&engine,&QQmlApplicationEngine::objectCreated,&app,[](QObject *object,const QUrl &){if(!object)QCoreApplication::exit(EXIT_FAILURE);},Qt::QueuedConnection);
     engine.load(QUrl("qrc:/qt/qml/Jarvis/Main.qml"));
+    // Whichever window draws first tells what renders (all share the process's device).
+    if(auto *root=qobject_cast<QQuickWindow*>(engine.rootObjects().value(0))) {
+        graphics.watch(root);
+        for(QQuickWindow *window:root->findChildren<QQuickWindow*>()) graphics.watch(window);
+    }
     // Development aid for checking the UI without a display:
     // JARVIS_UI_SNAPSHOT=out.png [JARVIS_UI_SNAPSHOT_SAY=text] saves the main window and exits.
     if(const QString shot=qEnvironmentVariable("JARVIS_UI_SNAPSHOT");!shot.isEmpty()) {

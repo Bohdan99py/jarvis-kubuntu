@@ -19,7 +19,8 @@ ApplicationWindow {
 
     // ---------- Cinematic HUD ----------
     // "off" keeps the classic window; low, balanced and cinematic trade detail for GPU time.
-    readonly property bool hudOn: appSettings.hudQuality !== "off"
+    // The HUD needs shaders: with Qt's software backend Jarvis keeps the classic window.
+    readonly property bool hudOn: appSettings.hudQuality !== "off" && jarvisGraphics.shadersSupported
     readonly property bool shownNow: root.visible && root.visibility !== Window.Minimized
     property bool hudDemo: hudForcedState === "demo"
     property string lastAsked: ""
@@ -36,11 +37,13 @@ ApplicationWindow {
     HudTelemetry {
         id: telemetry
         window: root
+        graphics: jarvisGraphics
         active: root.hudOn && root.shownNow
     }
     HudController {
         id: hudCtl
         running: root.hudOn && root.shownNow
+        refreshRate: jarvisGraphics.refreshRate
         quality: root.hudOn ? appSettings.hudQuality : "low"
         hudState: visualState.state
         level: voiceEngine.outputLevel
@@ -52,7 +55,8 @@ ApplicationWindow {
     }
     HudOverlay {
         id: overlay
-        visible: appSettings.overlay
+        wanted: appSettings.overlay
+        graphicsInfo: jarvisGraphics
         vs: visualState
         voice: voiceEngine
         quality: appSettings.hudQuality
@@ -78,24 +82,58 @@ ApplicationWindow {
     onUpdateJobChanged: if (updateJob) visualState.record("tool", qsTr("update check"))
 
     // The space behind everything: grid, haze, scan line and the waves the core sends out.
-    ShaderEffect {
+    // Split by how often each part changes, because it covers the whole window:
+    Item {
+        id: field
         anchors.fill: parent
         visible: root.hudOn
-        property real time: hudCtl.time
-        property size size: Qt.size(width, height)
-        property point centre: {
+        readonly property point centre: {
             const p = hudStage.mapToItem(root.contentItem, hudStage.coreCentre.x, hudStage.coreCentre.y)
             return Qt.point(p.x / Math.max(1, width), p.y / Math.max(1, height))
         }
-        property real coreRadius: hudStage.coreRadius
-        property color accent: hudCtl.colorA
-        property color alertColor: hudCtl.alertColor
-        property real alertMix: hudCtl.alertMix
-        property real energy: hudCtl.energy
-        property vector4d waves: Qt.vector4d(hudCtl.waves[0], hudCtl.waves[1], hudCtl.waves[2], hudCtl.waves[3])
-        property real detail: hudCtl.detail
-        property real scan: hudCtl.scan
-        fragmentShader: "hud/shaders/field.frag.qsb"
+        readonly property color accent: hudCtl.colorA
+        // the still grid, cached: drawn again only when its colour or the size changes;
+        ShaderEffect {
+            anchors.fill: parent
+            layer.enabled: true
+            property size size: Qt.size(width, height)
+            property point centre: field.centre
+            property real coreRadius: hudStage.coreRadius
+            property color accent: field.accent
+            property color alertColor: hudCtl.alertColor
+            property real alertMix: hudCtl.alertMix
+            property real detail: hudCtl.detail
+            fragmentShader: "hud/shaders/field.frag.qsb"
+        }
+        // haze and waves, drawn additively over it. (Rendering them into a smaller
+        // texture was tried: every texture update made Qt draw one more frame.)
+        ShaderEffect {
+            anchors.fill: parent
+            visible: hudCtl.detail > 1.5 || hudCtl.waves.some(w => w >= 0)
+            property real time: hudCtl.time
+            property size size: Qt.size(width, height)
+            property point centre: field.centre
+            property real coreRadius: hudStage.coreRadius
+            property color accent: field.accent
+            property color alertColor: hudCtl.alertColor
+            property real alertMix: hudCtl.alertMix
+            property real energy: hudCtl.energy
+            property vector4d waves: Qt.vector4d(hudCtl.waves[0], hudCtl.waves[1], hudCtl.waves[2], hudCtl.waves[3])
+            property real detail: hudCtl.detail
+            fragmentShader: "hud/shaders/fieldfx.frag.qsb"
+        }
+        // and the scan line, a thin gradient that moves down the window.
+        Rectangle {
+            width: parent.width
+            height: 120
+            y: (hudCtl.time * 0.045 % 1) * (parent.height + 200) - 100 - height
+            opacity: 0.6 * hudCtl.scan
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.97; color: Qt.rgba(field.accent.r, field.accent.g, field.accent.b, 0.03) }
+                GradientStop { position: 1.0; color: Qt.rgba(field.accent.r, field.accent.g, field.accent.b, 0.12) }
+            }
+        }
     }
 
     ChatModel {
@@ -179,7 +217,7 @@ ApplicationWindow {
     function notifyReady(key, title, body, actions) {
         if (appSettings.notifyReplies && body.length > 0) {
             notifier.show(key, title, body, actions || [["default", ""]])
-            visualState.record("notice", title + ": " + body.replace(/[`*_#]/g, "").replace(/\s+/g, " ").slice(0, 160))
+            visualState.record("notice", title + ": " + body.replace(/`/g, "").replace(/^#+\s*/gm, "").replace(/\s+/g, " ").slice(0, 160))
         }
     }
     Connections {
@@ -818,6 +856,7 @@ ApplicationWindow {
         chat: chatModel
         voice: voiceEngine
         telemetry: telemetry
+        graphics: jarvisGraphics
         settings: appSettings
         study: study
         asked: root.lastAsked

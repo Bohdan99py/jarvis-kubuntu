@@ -686,6 +686,62 @@ A KDE menu entry and a system tray icon</source>
         <source>A small always-on-top core that shows what Jarvis is doing. Drag it anywhere; a click opens Jarvis. Ctrl+Shift+O switches it.</source>
         <translation>Маленькое ядро поверх всех окон показывает, чем занят Джарвис. Его можно перетащить куда угодно; щелчок открывает Джарвиса. Ctrl+Shift+O включает и выключает его.</translation>
     </message>
+    <message>
+        <source>Graphics card</source>
+        <translation>Видеокарта</translation>
+    </message>
+    <message>
+        <source>System default</source>
+        <translation>Как в системе</translation>
+    </message>
+    <message>
+        <source>Integrated: %1</source>
+        <translation>Встроенная: %1</translation>
+    </message>
+    <message>
+        <source>Integrated</source>
+        <translation>Встроенная</translation>
+    </message>
+    <message>
+        <source>Dedicated: %1</source>
+        <translation>Дискретная: %1</translation>
+    </message>
+    <message>
+        <source>Dedicated (none found)</source>
+        <translation>Дискретная (не найдена)</translation>
+    </message>
+    <message>
+        <source>Graphics API</source>
+        <translation>Графический API</translation>
+    </message>
+    <message>
+        <source>Automatic (OpenGL)</source>
+        <translation>Автоматически (OpenGL)</translation>
+    </message>
+    <message>
+        <source>Renders: measured after the first frame.</source>
+        <translation>Рисует: станет известно после первого кадра.</translation>
+    </message>
+    <message>
+        <source>Renders: %1 %2 — SOFTWARE rendering on the CPU (%3). The HUD will be slow; choose Low or the classic chat, or check the graphics driver.</source>
+        <translation>Рисует: %1 %2 — ПРОГРАММНАЯ отрисовка на процессоре (%3). HUD будет медленным: выберите «Лёгкий» или классический чат либо проверьте графический драйвер.</translation>
+    </message>
+    <message>
+        <source>Renders: %1 %2 on %3 (%4).</source>
+        <translation>Рисует: %1 %2 на %3 (%4).</translation>
+    </message>
+    <message>
+        <source>Restart Jarvis to apply</source>
+        <translation>Перезапустить Jarvis, чтобы применить</translation>
+    </message>
+    <message>
+        <source>Copy graphics diagnostics</source>
+        <translation>Скопировать диагностику графики</translation>
+    </message>
+    <message>
+        <source>The API, the renderer, the GPU that draws and every GPU found — also printed by &quot;jarvis --gpu-info&quot;.</source>
+        <translation>API, рендерер, видеокарта, которая рисует, и все найденные видеокарты — то же печатает «jarvis --gpu-info».</translation>
+    </message>
 </context>
 <context>
     <name>DesktopController</name>
@@ -768,6 +824,49 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Choose a skill JSON file up to 160 KB.</source>
         <translation>Выберите JSON-файл навыка до 160 КБ.</translation>
+    </message>
+</context>
+<context>
+    <name>GraphicsInfo</name>
+    <message>
+        <source>Jarvis could not draw its window with the graphics settings chosen last time (card: %1, API: %2), so it uses the system defaults again.</source>
+        <translation>С выбранными в прошлый раз настройками графики (видеокарта: %1, API: %2) Jarvis не смог нарисовать окно, поэтому снова использует системные настройки.</translation>
+    </message>
+    <message>
+        <source>No second graphics card was found; Jarvis uses the default one.</source>
+        <translation>Вторая видеокарта не найдена; Jarvis использует основную.</translation>
+    </message>
+    <message>
+        <source>no Vulkan driver (error %1)</source>
+        <translation>нет драйвера Vulkan (ошибка %1)</translation>
+    </message>
+    <message>
+        <source>no Vulkan device</source>
+        <translation>нет устройства Vulkan</translation>
+    </message>
+    <message>
+        <source>this Qt has no Vulkan support</source>
+        <translation>эта сборка Qt без поддержки Vulkan</translation>
+    </message>
+    <message>
+        <source>Vulkan cannot be used (%1); Jarvis draws with OpenGL.</source>
+        <translation>Vulkan недоступен (%1); Jarvis рисует через OpenGL.</translation>
+    </message>
+    <message>
+        <source>The graphics settings (card: %1, API: %2) failed: %3. Jarvis restarted with the system defaults.</source>
+        <translation>Настройки графики (видеокарта: %1, API: %2) не сработали: %3. Jarvis перезапущен с системными настройками.</translation>
+    </message>
+    <message>
+        <source>The graphics driver could not start the interface: %1</source>
+        <translation>Графический драйвер не смог запустить интерфейс: %1</translation>
+    </message>
+    <message>
+        <source>CPU (software rendering)</source>
+        <translation>процессор (программная отрисовка)</translation>
+    </message>
+    <message>
+        <source>Set in the environment, changes how Qt renders: %1</source>
+        <translation>Задано в окружении и меняет отрисовку Qt: %1</translation>
     </message>
 </context>
 <context>
@@ -857,16 +956,8 @@ A KDE menu entry and a system tray icon</source>
         <translation>БАЛАНС</translation>
     </message>
     <message>
-        <source>Balanced: all effects, 30 frames per second while idle</source>
-        <translation>Баланс: все эффекты, 30 кадров в секунду в покое</translation>
-    </message>
-    <message>
         <source>CINEMATIC</source>
         <translation>КИНО</translation>
-    </message>
-    <message>
-        <source>Cinematic: every effect on every frame</source>
-        <translation>Кино: все эффекты в каждом кадре</translation>
     </message>
     <message>
         <source>DEMO</source>
@@ -907,10 +998,6 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>%1 / %2 GB</source>
         <translation>%1 / %2 ГБ</translation>
-    </message>
-    <message>
-        <source>GPU</source>
-        <translation>ГП</translation>
     </message>
     <message>
         <source>VRAM</source>
@@ -1103,6 +1190,26 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Waiting for activity…</source>
         <translation>Ожидание активности…</translation>
+    </message>
+    <message>
+        <source>asleep</source>
+        <translation>спит</translation>
+    </message>
+    <message>
+        <source>Software rendering: the CPU draws the HUD. See Control Center → Application.</source>
+        <translation>Программная отрисовка: HUD рисует процессор. См. Центр управления → Приложение.</translation>
+    </message>
+    <message>
+        <source>Renderer</source>
+        <translation>Рендерер</translation>
+    </message>
+    <message>
+        <source>Balanced: every layer without the background haze, 30 frames per second while idle, 60 when active</source>
+        <translation>Баланс: все слои, кроме дымки фона, 30 кадров в секунду в покое и 60 в работе</translation>
+    </message>
+    <message>
+        <source>Cinematic: every effect, 60 frames per second</source>
+        <translation>Кино: все эффекты, 60 кадров в секунду</translation>
     </message>
 </context>
 <context>

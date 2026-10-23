@@ -9,6 +9,8 @@ Window {
     required property var vs
     required property var voice
     property string quality: "balanced"
+    property bool wanted: false       // shown when true
+    property var graphicsInfo: null   // GraphicsInfo: gives this window, and only it, an alpha channel
     signal openRequested()
     signal closeRequested()
 
@@ -17,16 +19,21 @@ Window {
     flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus
     color: "transparent"
     title: "J.A.R.V.I.S."
-    // Starts in the top right corner (X11; on Wayland KWin decides where it opens).
+    // Hidden until completed: the alpha channel must be requested before the
+    // window exists. Starts in the top right corner (X11; on Wayland KWin decides).
+    visible: false
     Component.onCompleted: {
         x = Screen.desktopAvailableWidth - width - 24
         y = 56
+        if (graphicsInfo) graphicsInfo.makeTranslucent(overlay)
+        visible = Qt.binding(() => overlay.wanted)
     }
 
     HudController {
         id: ctl
         running: overlay.visible
         quality: overlay.quality === "cinematic" ? "balanced" : "low"
+        refreshRate: overlay.graphicsInfo ? overlay.graphicsInfo.refreshRate : 0
         hudState: overlay.vs.state
         level: overlay.voice.outputLevel
         bands: overlay.voice.outputBands

@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.17
+# Jarvis for Kubuntu · 0.17.1
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.17.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.17.1_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -24,10 +24,34 @@ The main window is a holographic HUD: the chat on the left, the AI core in the m
 - **Panels**: System (CPU per core, RAM, GPU and VRAM via `gpu_busy_percent` or `nvidia-smi`, temperature, HUD frames/s), Assistant, Tasks, Voice, Memory, Event stream, and transient Active request and Notification / Warning / Error panels that grow out of the core (point → line → frame → content) and fold away by themselves. Panels lay out without overlapping; hover highlights, a click on the title expands details, a right click pins, dragging moves, a double click puts it back.
 - **Demo** (the DEMO button) plays made-up events to show every effect. They are marked DEMO and never counted.
 - **Compact overlay** (the ◱ button, Ctrl+Shift+O or the tray menu): a small always-on-top core. Drag it anywhere; a click opens Jarvis. On Wayland KWin decides where it first appears.
-- **Quality** (the buttons on top or Control Center → Application → Interface): Low — three rings, no particles, 20 fps; Balanced — every effect, 30 fps and paused particles while idle; Cinematic — every effect on every frame. The same menu has "Classic chat without the HUD". The animation stops while the window is minimised or hidden.
+- **Quality** (the buttons on top or Control Center → Application → Interface): Low — three rings, no particles, 20 fps; Balanced — every layer except the background haze and the plasma's swirl, 30 fps while idle and 60 when active; Cinematic — every effect, 60 fps. The HUD's rate does not follow the display: on a 144 Hz monitor the window is still redrawn at most 60 times a second. The same menu has "Classic chat without the HUD". The animation stops while the window is minimised or hidden.
 - **Shortcuts**: Ctrl+M — memory panel, Ctrl+Shift+O — overlay. Clicking the core starts or stops listening (without voice it focuses the input).
 
 For visual checks: `JARVIS_HUD_STATE=processing jarvis` pins a state (`idle`, `listening`, `processing`, `speaking`, `notification`, `warning`, `error`); `JARVIS_HUD_STATE=demo` starts the demo.
+
+### Graphics card and checking the renderer
+
+Jarvis reports what draws it: the System panel lists every GPU, the one that renders marked ◆, and its details show the API and renderer; software rendering (llvmpipe, Qt's software renderer) is shown in red. The same is printed at start (`jarvis: graphics: …` in the terminal or `journalctl --user -u jarvis-tray`) and by:
+
+```sh
+jarvis --gpu-info                      # API, renderer, the GPU that draws, every GPU found
+jarvis --gpu-info --gpu dedicated      # the same with the dedicated card (not saved)
+jarvis --gpu-info --graphics-api vulkan
+```
+
+Finding an NVIDIA card does not mean NVIDIA draws: the renderer string decides (`NVIDIA GeForce RTX …`, `AMD Radeon 680M …`, or `llvmpipe` — software).
+
+Choose in Control Center → Application → Interface:
+- **Graphics card**: System default (usually the integrated GPU, better for the battery), Integrated or Dedicated. Dedicated uses PRIME render offload for the Jarvis process only — NVIDIA's `__NV_PRIME_RENDER_OFFLOAD`, `__GLX_VENDOR_LIBRARY_NAME`, `__VK_LAYER_NV_optimus`, or `DRI_PRIME=pci-…` of that card for Mesa drivers (AMD, Intel, nouveau). Nothing system-wide changes; with OpenGL the variables are dropped after the first frame, so programs Jarvis opens stay on the default GPU.
+- **Graphics API**: Automatic (OpenGL), OpenGL or Vulkan. Vulkan is used only when a driver and a device are found; otherwise Jarvis draws with OpenGL and says why.
+
+The GPU cannot change under a running window, so a "Restart Jarvis" button appears. If a new choice never draws a frame (a driver failure), the next start returns to the system defaults and says so. "Copy graphics diagnostics" copies the report for a bug report.
+
+Checking a hybrid laptop:
+1. `jarvis --gpu-info` and `jarvis --gpu-info --gpu dedicated` — `Renderer:` must name the intended GPU, without `SOFTWARE`.
+2. In Jarvis open the System panel's details (click its title): HUD frames/s at most 60 (about 30 in Balanced while idle), the Renderer line and the load of the ◆ GPU.
+3. Load from outside: `nvidia-smi dmon -s u` for NVIDIA, `amdgpu_top` or `radeontop` for AMD; CPU — `top -H -p $(pidof jarvis)`.
+4. Qt's frame times: `QSG_RENDER_TIMING=1 jarvis 2>&1 | grep "frame rendered"`; `blockedForSync` in the `[gui thread]` lines is how long the interface waited for rendering.
 
 ## Autostart and the tray
 
@@ -154,7 +178,7 @@ The Code tab → "Install the VS Code extension" installs the Jarvis extension (
 sudo apt install build-essential cmake ninja-build dpkg-dev qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools qt6-l10n-tools \
   qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-templates \
   qml6-module-qtquick-window qml6-module-qtquick-dialogs qml6-module-qtqml-workerscript qml6-module-qt-labs-platform \
-  qml6-module-qtquick-particles qt6-shadertools-dev \
+  qt6-shadertools-dev \
   python3 python3-venv python3-speechd alsa-utils poppler-utils speech-dispatcher speech-dispatcher-espeak-ng espeak-ng
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build build -j 4

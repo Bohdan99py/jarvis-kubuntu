@@ -63,33 +63,46 @@ Item {
         // Gauges: CPU on the left, memory on the right, as arcs that fill up.
         Repeater {
             // Each fills from the middle of its side outwards, clear of the corner readouts.
-            model: core.compact ? [] : [{ v: core.cpu, mid: 0.5 }, { v: core.ram, mid: 0.0 }]
+            // A count, not an array of values: an array would be rebuilt with every
+            // telemetry sample, and the Repeater would recreate both shaders each second.
+            model: core.compact ? 0 : 2
             delegate: ShaderEffect {
-                required property var modelData
+                id: gauge
+                required property int index
+                readonly property real value: index === 0 ? core.cpu : core.ram
+                readonly property real mid: index === 0 ? 0.5 : 0.0
                 anchors.fill: parent
-                visible: modelData.v >= 0
+                visible: value >= 0
                 property real time: core.ctl.time
                 property real pixel: 2 / Math.max(1, width)
                 property real radius: 0.955
                 property real thickness: 0.012
                 property real segments: 40
                 property real duty: 0.7
-                readonly property real share: Math.max(0, Math.min(1, modelData.v / 100))
-                property real turn: modelData.mid - arcSpan / 2
+                readonly property real share: Math.max(0, Math.min(1, value / 100))
+                property real turn: mid - arcSpan / 2
                 property real ticks: 0
                 property real tickLength: 0
                 property real tickTurn: 0
                 property real arcStart: 0
-                // Up to a fifth of the circle, eased towards the value.
-                property real arcSpan: 0.003 + 0.197 * share
-                Behavior on arcSpan { NumberAnimation { duration: 700; easing.type: Easing.OutCubic } }
+                // Up to a fifth of the circle, eased towards the value on the HUD clock
+                // (a Behavior would redraw at the display's rate every second).
+                property real shown: share
+                property real arcSpan: 0.003 + 0.197 * shown
+                Connections {
+                    target: core.ctl
+                    function onTick(dt) {
+                        if (Math.abs(gauge.share - gauge.shown) > 0.001)
+                            gauge.shown += (gauge.share - gauge.shown) * (1 - Math.exp(-5 * dt))
+                    }
+                }
                 property real pulseAngle: 0
                 property real pulseStrength: 0
                 property real glitch: core.ctl.instability
                 property real intensity: 0.9
                 property real dim: 0
                 property real seed: 9
-                property color color: modelData.v > 85 ? JarvisTheme.amber : Qt.lighter(core.ctl.colorA, 1.1)
+                property color color: gauge.value > 85 ? JarvisTheme.amber : Qt.lighter(core.ctl.colorA, 1.1)
                 property color alertColor: core.ctl.alertColor
                 property real alertMix: 0
                 fragmentShader: "shaders/ring.frag.qsb"

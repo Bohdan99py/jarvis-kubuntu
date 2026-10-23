@@ -35,6 +35,11 @@ float hash(float n) { return fract(sin(n * 91.345 + seed * 17.13) * 47453.5453);
 void main() {
     vec2 uv = qt_TexCoord0 * 2.0 - 1.0;
     float r = length(uv);
+    // Every ring covers the whole square but lights only a thin band: leave the
+    // rest at once (no trigonometry, nothing written) — most of the HUD's fill cost.
+    float reach = max(thickness * 3.0, thickness * 0.5 + 2.0 * tickLength) + 0.04 * glitch + 3.0 * pixel;
+    if (abs(r - radius) > reach)
+        discard;
     float ang = fract(atan(uv.y, uv.x) / 6.2831853 + 1.0);
     float rel = fract(ang - turn + 1.0);
 

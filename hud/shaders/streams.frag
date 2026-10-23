@@ -25,6 +25,9 @@ void main() {
     vec2 uv = qt_TexCoord0 * 2.0 - 1.0;
     uv.x *= aspect;
     float r = length(uv);
+    // Beams start at the core's edge and fade out by 1.6.
+    if (r < innerRadius || r > 1.6)
+        discard;
     float ang = fract(atan(uv.y, uv.x) / 6.2831853 + 1.0 - turn);
     float id = floor(ang * beams);
     float h = hash(id);

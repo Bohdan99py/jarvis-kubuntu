@@ -628,6 +628,59 @@ Dialog {
                             currentIndex: values.indexOf(center.settings.hudQuality)
                             onActivated: index => center.settings.hudQuality = values[index]
                         }
+                        // Which GPU and API draw the interface: measured, and a choice for hybrid laptops.
+                        Label { text: qsTr("Graphics card"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "gpuCombo"
+                            readonly property var values: ["auto", "integrated", "dedicated"]
+                            readonly property var cards: jarvisGraphics.gpus
+                            readonly property string defaultName: cards.length > 0 ? (cards.find(c => c.boot) || cards[0]).name : ""
+                            readonly property string otherName: { const o = cards.filter(c => !c.boot); return o.length > 0 ? o[0].name : "" }
+                            model: [qsTr("System default"),
+                                    defaultName.length > 0 ? qsTr("Integrated: %1").arg(defaultName) : qsTr("Integrated"),
+                                    otherName.length > 0 ? qsTr("Dedicated: %1").arg(otherName) : qsTr("Dedicated (none found)")]
+                            currentIndex: values.indexOf(jarvisGraphics.gpuChoice)
+                            onActivated: index => jarvisGraphics.gpuChoice = values[index]
+                        }
+                        Label { text: qsTr("Graphics API"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "graphicsApiCombo"
+                            readonly property var values: ["auto", "opengl", "vulkan"]
+                            model: [qsTr("Automatic (OpenGL)"), "OpenGL", "Vulkan"]
+                            currentIndex: values.indexOf(jarvisGraphics.apiChoice)
+                            onActivated: index => jarvisGraphics.apiChoice = values[index]
+                        }
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: jarvisGraphics.software ? Theme.danger : Theme.textDim
+                        text: !jarvisGraphics.ready ? qsTr("Renders: measured after the first frame.")
+                            : jarvisGraphics.software ? qsTr("Renders: %1 %2 — SOFTWARE rendering on the CPU (%3). The HUD will be slow; choose Low or the classic chat, or check the graphics driver.").arg(jarvisGraphics.api).arg(jarvisGraphics.apiVersion).arg(jarvisGraphics.renderer)
+                            : qsTr("Renders: %1 %2 on %3 (%4).").arg(jarvisGraphics.api).arg(jarvisGraphics.apiVersion).arg(jarvisGraphics.renderingName).arg(jarvisGraphics.renderer)
+                    }
+                    Label {
+                        visible: text.length > 0
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: Theme.danger
+                        text: [jarvisGraphics.notice].concat(jarvisGraphics.warnings).filter(t => t.length > 0).join("\n")
+                    }
+                    RowLayout {
+                        DarkButton {
+                            visible: jarvisGraphics.restartNeeded
+                            text: qsTr("Restart Jarvis to apply")
+                            primary: true
+                            enabled: !center.chat.busy && !center.voice.busy && !center.desktop.updating
+                            onClicked: center.desktop.restart()
+                        }
+                        DarkButton {
+                            text: qsTr("Copy graphics diagnostics")
+                            onClicked: jarvisGraphics.copyReport()
+                            ToolTip.visible: hovered
+                            ToolTip.delay: 400
+                            ToolTip.text: qsTr("The API, the renderer, the GPU that draws and every GPU found — also printed by \"jarvis --gpu-info\".")
+                        }
                     }
                     OptionSwitch {
                         objectName: "overlaySwitch"

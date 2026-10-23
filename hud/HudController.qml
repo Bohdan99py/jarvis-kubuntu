@@ -6,9 +6,11 @@ import QtQuick
 // its own endless animation: a state change moves the targets and the values glide
 // there (exponential smoothing per frame), so nothing restarts or jumps.
 //
-// Cost control: while idle (and in Low quality) the clock ticks at 30 (20) Hz,
-// so the window redraws only that often; Cinematic and active states run on
-// every vsync. When `running` is false — the window is hidden — nothing ticks.
+// Cost control: the whole window is redrawn whenever any of these values change,
+// so the clock's rate is the HUD's frame rate: Low 20 Hz, Balanced 30 Hz while
+// idle and 60 Hz when active, Cinematic 60 Hz — never the display's own rate
+// (a 144 Hz panel would otherwise redraw every layer 144 times a second).
+// When `running` is false — the window is hidden — nothing ticks.
 Item {
     id: ctl
 
@@ -17,8 +19,17 @@ Item {
     property string hudState: "idle"
     readonly property bool cinematic: quality === "cinematic"
     readonly property bool low: quality === "low"
-    readonly property real detail: low ? 0 : 1
+    // 0 Low, 1 Balanced, 2 Cinematic: what the shaders may spend per pixel
+    // (Cinematic adds the plasma's domain warp and the background haze).
+    readonly property real detail: low ? 0 : cinematic ? 2 : 1
     readonly property bool throttled: low || (!cinematic && hudState === "idle" && pulse < 0.05)
+    // Ticks per second.
+    readonly property int rate: low ? 20 : throttled ? 30 : 60
+    // The display's refresh rate (GraphicsInfo.refreshRate; QML's Screen has none).
+    property real refreshRate: 0
+    // At the display's own rate the clock follows vsync (smoothest); above the cap
+    // a timer paces it, so the frames in between are not rendered at all.
+    readonly property bool onVsync: refreshRate > 0 && refreshRate <= rate * 1.15
 
     // Measured inputs (real telemetry).
     property real level: 0          // the voice being played
@@ -72,7 +83,13 @@ Item {
 
     property real nextImpulse: 1.5
 
-    function approach(value, target, rate, dt) { return value + (target - value) * (1 - Math.exp(-rate * dt)) }
+    // Exponential smoothing that settles: once within 0.001 the value is the target
+    // and stops changing, so nothing bound to it (the cached background, colours)
+    // is redrawn for differences nobody can see.
+    function approach(value, target, rate, dt) {
+        if (Math.abs(target - value) < 0.001) return target
+        return value + (target - value) * (1 - Math.exp(-rate * dt))
+    }
 
     function addWave() {
         const w = waves.slice()
@@ -108,8 +125,10 @@ Item {
         streamIntensity = approach(streamIntensity, (hudState === "processing" ? 0.55 : 0) + (streaming ? 0.6 : 0), 2.5, step)
         const c = Qt.color(JarvisTheme.stateColor(hudState))
         cr = approach(cr, c.r, 3, step); cg = approach(cg, c.g, 3, step); cb = approach(cb, c.b, 3, step)
-        colorB = JarvisTheme.stateDeep(hudState)
-        alertColor = hudState === "error" ? JarvisTheme.red : JarvisTheme.amber
+        const deep = JarvisTheme.stateDeep(hudState)
+        if (!Qt.colorEqual(colorB, deep)) colorB = deep
+        const alert = hudState === "error" ? JarvisTheme.red : JarvisTheme.amber
+        if (!Qt.colorEqual(alertColor, alert)) alertColor = alert
         // Sound: fast attack, slower release, like a VU meter.
         const b = bands || [0, 0, 0]
         sLevel = approach(sLevel, level, level > sLevel ? 22 : 7, step)
@@ -140,13 +159,27 @@ Item {
     }
 
     FrameAnimation {
-        running: ctl.running && !ctl.throttled
-        onTriggered: ctl.advance(Math.min(frameTime, 0.1))
+        // Also capped here: where vsync does not block (some drivers, virtual
+        // displays) frames would otherwise follow each other as fast as possible.
+        property real pending: 0
+        running: ctl.running && ctl.onVsync
+        onTriggered: {
+            pending += frameTime
+            if (pending < 0.8 / ctl.rate) return
+            ctl.advance(Math.min(pending, 0.1))
+            pending = 0
+        }
     }
     Timer {
-        interval: ctl.low ? 50 : 33
+        property real last: 0
+        interval: Math.round(1000 / ctl.rate)
         repeat: true
-        running: ctl.running && ctl.throttled
-        onTriggered: ctl.advance(interval / 1000)
+        running: ctl.running && !ctl.onVsync
+        onRunningChanged: last = Date.now()
+        onTriggered: {
+            const now = Date.now()
+            ctl.advance(Math.min(Math.max(now - last, 1) / 1000, 0.1))
+            last = now
+        }
     }
 }

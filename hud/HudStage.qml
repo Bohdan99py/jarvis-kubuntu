@@ -16,6 +16,7 @@ Item {
     required property var chat           // ChatModel
     required property var voice          // VoiceController
     required property var telemetry      // HudTelemetry
+    property var graphics: null          // GraphicsInfo: what really renders
     required property var settings       // AppSettings
     property var study: null
     property string asked: ""            // the request being answered
@@ -92,7 +93,8 @@ Item {
             Rectangle {
                 width: parent.width * Math.max(0, Math.min(1, parent.parent.fraction)); height: parent.height
                 color: parent.parent.fraction > 0.85 ? JarvisTheme.amber : parent.parent.tint
-                Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                // No animation: telemetry changes every second, and every animation
+                // frame would redraw the whole HUD at the display's rate.
             }
         }
     }
@@ -140,8 +142,8 @@ Item {
         Item { width: 6; height: 1 }
         Repeater {
             model: [["low", qsTr("LOW"), qsTr("Low: fewer rings, no particles, 20 frames per second")],
-                    ["balanced", qsTr("BALANCED"), qsTr("Balanced: all effects, 30 frames per second while idle")],
-                    ["cinematic", qsTr("CINEMATIC"), qsTr("Cinematic: every effect on every frame")]]
+                    ["balanced", qsTr("BALANCED"), qsTr("Balanced: every layer without the background haze, 30 frames per second while idle, 60 when active")],
+                    ["cinematic", qsTr("CINEMATIC"), qsTr("Cinematic: every effect, 60 frames per second")]]
             Chip {
                 required property var modelData
                 text: modelData[1]; tip: modelData[2]
@@ -191,9 +193,12 @@ Item {
                 width: parent.width; spacing: 6
                 Meter { label: qsTr("CPU"); value: stage.fmt(stage.telemetry.cpu, 0, " %"); fraction: stage.telemetry.cpu / 100 }
                 Row {
-                    height: 18; spacing: 1
+                    id: cpuHistory
+                    width: parent.width; height: 18; spacing: 1
+                    clip: true
                     Repeater {
-                        model: stage.telemetry.cpuHistory
+                        // As many recent samples as fit the panel (bars are 4 px + 1 px apart).
+                        model: stage.telemetry.cpuHistory.slice(-Math.max(1, Math.floor(cpuHistory.width / 5)))
                         Rectangle {
                             required property real modelData
                             anchors.bottom: parent.bottom
@@ -203,13 +208,34 @@ Item {
                     }
                 }
                 Meter { label: qsTr("RAM"); value: stage.telemetry.ramTotalGb > 0 ? qsTr("%1 / %2 GB").arg(stage.telemetry.ramUsedGb.toFixed(1)).arg(stage.telemetry.ramTotalGb.toFixed(0)) : "—"; fraction: stage.telemetry.ram / 100 }
-                Meter { label: stage.telemetry.gpuName.length > 0 ? "GPU · " + stage.telemetry.gpuName.replace("NVIDIA GeForce ", "") : qsTr("GPU"); value: stage.fmt(stage.telemetry.gpu, 0, " %"); fraction: stage.telemetry.gpu >= 0 ? stage.telemetry.gpu / 100 : -1 }
+                // Every GPU found; the one that draws Jarvis is marked ◆ and comes first.
+                Repeater {
+                    model: stage.telemetry.gpus.filter(g => g.rendering).concat(stage.telemetry.gpus.filter(g => !g.rendering))
+                    Meter {
+                        required property var modelData
+                        label: (modelData.rendering ? "◆ " : "") + modelData.name.replace("NVIDIA GeForce ", "").replace(" Laptop GPU", "").replace(" Mobile", "")
+                        value: modelData.asleep ? qsTr("asleep") : stage.fmt(modelData.load, 0, " %")
+                        fraction: modelData.load >= 0 ? modelData.load / 100 : -1
+                        tint: modelData.rendering ? JarvisTheme.cyan : JarvisTheme.textDim
+                    }
+                }
                 Meter { visible: stage.telemetry.gpuMemory >= 0; label: qsTr("VRAM"); value: stage.fmt(stage.telemetry.gpuMemory, 0, " %"); fraction: stage.telemetry.gpuMemory / 100 }
+                Text {
+                    visible: !!stage.graphics && stage.graphics.ready && stage.graphics.software
+                    width: parent.width
+                    text: qsTr("Software rendering: the CPU draws the HUD. See Control Center → Application.")
+                    color: JarvisTheme.red; font.pixelSize: 11; wrapMode: Text.Wrap
+                }
             }
             details: Column {
                 width: parent.width; spacing: 2
                 Line { label: qsTr("Temperature"); value: stage.fmt(stage.telemetry.temperature, 0, " °C") }
                 Line { label: qsTr("HUD frames/s"); value: stage.fmt(stage.telemetry.fps, 0) }
+                Line {
+                    label: qsTr("Renderer")
+                    value: stage.graphics && stage.graphics.ready ? stage.graphics.api + " · " + stage.graphics.renderingName : "—"
+                    tint: stage.graphics && stage.graphics.software ? JarvisTheme.red : JarvisTheme.text
+                }
                 Line { label: qsTr("Quality"); value: stage.ctl.quality }
             }
         }
