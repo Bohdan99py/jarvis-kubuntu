@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.17.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.17.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -178,6 +178,8 @@ qt_add_qml_module(jarvis
         kicad_controller.cpp
         hud_telemetry.h
         hud_telemetry.cpp
+        graphics_info.h
+        graphics_info.cpp
         desktop_controller.h
         desktop_controller.cpp
         runtime_paths.h
@@ -213,8 +215,9 @@ qt_add_shaders(jarvis "hud_shaders"
         hud/shaders/spectrum.frag
         hud/shaders/streams.frag
         hud/shaders/field.frag
+        hud/shaders/fieldfx.frag
+        hud/shaders/particles.frag
 )
-qt_add_resources(jarvis hud_images PREFIX "/qt/qml/Jarvis" FILES hud/glow.png)
 qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg
     icons/skills/electronics.svg icons/skills/physics.svg icons/skills/embedded.svg icons/skills/programming.svg
     icons/skills/philosophy.svg icons/skills/games.svg icons/skills/conversation.svg icons/skills/writing.svg
@@ -268,6 +271,7 @@ if(BUILD_TESTING)
     if(JARVIS_NODE)
         add_test(NAME vscode COMMAND ${JARVIS_NODE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/vscode_lib_test.js)
     endif()
+    add_test(NAME graphics COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/graphics_test.py $<TARGET_FILE:jarvis>)
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
 endif()

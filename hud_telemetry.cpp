@@ -6,18 +6,29 @@
 HudTelemetry::HudTelemetry(QObject *parent):QObject(parent) {
     m_timer.setInterval(1000);
     connect(&m_timer,&QTimer::timeout,this,&HudTelemetry::sample);
-    // AMD and Intel report the GPU load in sysfs; NVIDIA's driver does not.
-    for(const QString &card:QDir("/sys/class/drm").entryList({"card?"},QDir::Dirs|QDir::NoDotAndDotDot|QDir::System))
-        if(const QString f="/sys/class/drm/"+card+"/device/gpu_busy_percent";QFile::exists(f)) {m_gpuBusyFile=f;break;}
+    for(const GraphicsInfo::Gpu &g:GraphicsInfo::detectGpus()) {
+        Card card;
+        card.name=g.name;card.slot=g.slot;card.nvidia=g.driver==u"nvidia";
+        // AMD and Intel report the load in sysfs; NVIDIA's driver does not.
+        if(const QString f=g.devicePath+QStringLiteral("/gpu_busy_percent");QFile::exists(f)) card.busyFile=f;
+        card.powerFile=g.devicePath+QStringLiteral("/power/runtime_status");
+        m_cards.append(card);
+    }
     m_noNvidia=QStandardPaths::findExecutable("nvidia-smi").isEmpty();
     connect(&m_nvidia,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this](int code,QProcess::ExitStatus){
-        // "NVIDIA GeForce RTX 3050 Laptop GPU, 12, 1043, 6144"
-        const QStringList f=QString::fromUtf8(m_nvidia.readAllStandardOutput()).split('\n').value(0).split(',');
-        if(code!=0 || f.size()<4) {m_noNvidia=true;return;}
-        m_gpuName=f.at(0).trimmed().left(60);
-        m_gpu=f.at(1).trimmed().toDouble();
-        const double total=f.at(3).trimmed().toDouble();
-        m_gpuMem=total>0 ? 100.0*f.at(2).trimmed().toDouble()/total : -1;
+        if(code!=0) {m_noNvidia=true;return;}
+        // "00000000:01:00.0, NVIDIA GeForce RTX 3050 Laptop GPU, 12, 1043, 6144" per card
+        for(const QString &line:QString::fromUtf8(m_nvidia.readAllStandardOutput()).split(u'\n',Qt::SkipEmptyParts)) {
+            const QStringList f=line.split(u',');
+            if(f.size()<5) continue;
+            for(Card &card:m_cards) {
+                if(!card.nvidia || !f.at(0).trimmed().toLower().endsWith(card.slot.mid(5).toLower())) continue;
+                card.name=f.at(1).trimmed().left(60);
+                card.load=f.at(2).trimmed().toDouble();
+                const double total=f.at(4).trimmed().toDouble();
+                card.memory=total>0 ? 100.0*f.at(3).trimmed().toDouble()/total : -1;
+            }
+        }
         emit updated();
     });
 }
@@ -28,6 +39,12 @@ void HudTelemetry::setActive(bool active) {
     if(active==m_timer.isActive()) return;
     if(active) {m_havePrev=false;m_frameCount=0;sample();m_timer.start();}
     else m_timer.stop();
+    emit activeChanged();
+}
+void HudTelemetry::setGraphics(QObject *graphics) {
+    if(graphics==m_graphics) return;
+    m_graphics=qobject_cast<GraphicsInfo *>(graphics);
+    if(m_graphics) connect(m_graphics,&GraphicsInfo::changed,this,&HudTelemetry::updated);
     emit activeChanged();
 }
 void HudTelemetry::setWindow(QQuickWindow *window) {
@@ -62,11 +79,37 @@ void HudTelemetry::sample() {
     emit updated();
 }
 void HudTelemetry::sampleGpu() {
-    if(!m_gpuBusyFile.isEmpty()) {
-        QFile f(m_gpuBusyFile);
-        if(f.open(QIODevice::ReadOnly)) m_gpu=f.readAll().trimmed().toDouble();
-        return;
+    bool askNvidia=false;
+    for(Card &card:m_cards) {
+        if(!card.busyFile.isEmpty()) {
+            QFile f(card.busyFile);
+            if(f.open(QIODevice::ReadOnly)) card.load=f.readAll().trimmed().toDouble();
+        } else if(card.nvidia) {
+            // A runtime-suspended card is idle; asking nvidia-smi would wake it up.
+            QFile f(card.powerFile);
+            card.asleep=f.open(QIODevice::ReadOnly) && f.readAll().trimmed()=="suspended";
+            if(card.asleep) {card.load=0;card.memory=-1;}
+            else askNvidia=true;
+        }
     }
-    if(m_noNvidia || m_nvidia.state()!=QProcess::NotRunning) return;
-    m_nvidia.start("nvidia-smi",{"--query-gpu=name,utilization.gpu,memory.used,memory.total","--format=csv,noheader,nounits"});
+    if(!askNvidia || m_noNvidia || m_nvidia.state()!=QProcess::NotRunning) return;
+    m_nvidia.start("nvidia-smi",{"--query-gpu=pci.bus_id,name,utilization.gpu,memory.used,memory.total","--format=csv,noheader,nounits"});
+}
+int HudTelemetry::shownGpu() const {
+    if(m_graphics && m_graphics->renderingGpu()>=0 && m_graphics->renderingGpu()<m_cards.size()) return m_graphics->renderingGpu();
+    for(int i=0;i<m_cards.size();++i) if(m_cards.at(i).load>=0) return i;
+    return -1;
+}
+double HudTelemetry::gpu() const { const int i=shownGpu(); return i>=0 ? m_cards.at(i).load : -1; }
+double HudTelemetry::gpuMemory() const { const int i=shownGpu(); return i>=0 ? m_cards.at(i).memory : -1; }
+QString HudTelemetry::gpuName() const { const int i=shownGpu(); return i>=0 ? m_cards.at(i).name : QString(); }
+QVariantList HudTelemetry::gpus() const {
+    QVariantList list;
+    const int rendering=m_graphics ? m_graphics->renderingGpu() : -1;
+    for(int i=0;i<m_cards.size();++i) {
+        const Card &c=m_cards.at(i);
+        list.append(QVariantMap{{QStringLiteral("name"),c.name},{QStringLiteral("load"),c.load},{QStringLiteral("memory"),c.memory},
+                                {QStringLiteral("asleep"),c.asleep},{QStringLiteral("rendering"),i==rendering}});
+    }
+    return list;
 }

@@ -18,7 +18,7 @@ layout(std140, binding = 0) uniform buf {
     float alertMix;
     float instability;  // error: glitch 0..1
     float pulse;        // a recent impulse 0..1
-    float detail;       // quality 0..1
+    float detail;       // quality: 0 low, 1 balanced, 2 cinematic
 };
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -41,6 +41,8 @@ void main() {
     uv.x += slip * (hash(vec2(floor(time * 31.0), row)) - 0.5) * 0.3;
 
     float r = length(uv);
+    if (r > 1.0)
+        discard;
     float a = atan(uv.y, uv.x);
     float t = time;
 
@@ -54,29 +56,32 @@ void main() {
     float surf = base + wob;
     float d = r - surf;
 
-    // Plasma: a swirl that turns faster towards the centre.
-    float swirl = a + t * 0.17 + 1.6 * (1.0 - r);
-    vec2 pp = vec2(cos(swirl), sin(swirl)) * r * 3.0;
-    float warp = detail > 0.5 ? fbm(uv * 2.6 - vec2(t * 0.12, -t * 0.08)) * 1.4 : 0.0;
-    float plasma = fbm(pp + vec2(t * 0.25, -t * 0.19) + warp);
-
     float inside = smoothstep(0.015, -0.015, d);
     float depth = clamp(1.0 - r / max(surf, 0.01), 0.0, 1.0);
     vec3 cA = colorA.rgb, cB = colorB.rgb;
 
-    vec3 body = mix(cB * 0.3, cA, plasma * 0.85 + 0.15) * (0.3 + 0.95 * depth * depth);
-    // Ripples running outwards inside the body, faster with activity.
-    float rip = 0.5 + 0.5 * sin(r * 46.0 - t * (2.5 + 7.0 * energy));
-    body += cA * pow(rip, 8.0) * 0.28 * depth * (0.35 + energy);
-    // Facets: a faint hexagonal lattice deep inside, for a sense of structure.
-    vec2 hp = uv * 9.0 + vec2(t * 0.15, 0.0);
-    float hexv = abs(fract(hp.x + 0.5 * floor(hp.y)) - 0.5) + abs(fract(hp.y) - 0.5);
-    body += cA * smoothstep(0.06, 0.0, abs(hexv - 0.45)) * 0.08 * depth * detail;
-    // Nucleus.
-    float nucleus = exp(-r * r * 38.0) * (1.0 + 1.6 * level + 0.9 * pulse + 0.4 * energy);
-    body += mix(cA, vec3(1.0), 0.65) * nucleus;
-
-    vec3 col = body * inside;
+    // The body only where it is: most of this square is rim, halo and empty space,
+    // and the plasma's noise is the most expensive work of the HUD.
+    vec3 col = vec3(0.0);
+    if (inside > 0.0) {
+        // Plasma: a swirl that turns faster towards the centre.
+        float swirl = a + t * 0.17 + 1.6 * (1.0 - r);
+        vec2 pp = vec2(cos(swirl), sin(swirl)) * r * 3.0;
+        float warp = detail > 1.5 ? fbm(uv * 2.6 - vec2(t * 0.12, -t * 0.08)) * 1.4 : 0.0;
+        float plasma = fbm(pp + vec2(t * 0.25, -t * 0.19) + warp);
+        vec3 body = mix(cB * 0.3, cA, plasma * 0.85 + 0.15) * (0.3 + 0.95 * depth * depth);
+        // Ripples running outwards inside the body, faster with activity.
+        float rip = 0.5 + 0.5 * sin(r * 46.0 - t * (2.5 + 7.0 * energy));
+        body += cA * pow(rip, 8.0) * 0.28 * depth * (0.35 + energy);
+        // Facets: a faint hexagonal lattice deep inside, for a sense of structure.
+        vec2 hp = uv * 9.0 + vec2(t * 0.15, 0.0);
+        float hexv = abs(fract(hp.x + 0.5 * floor(hp.y)) - 0.5) + abs(fract(hp.y) - 0.5);
+        body += cA * smoothstep(0.06, 0.0, abs(hexv - 0.45)) * 0.08 * depth * min(detail, 1.0);
+        // Nucleus.
+        float nucleus = exp(-r * r * 38.0) * (1.0 + 1.6 * level + 0.9 * pulse + 0.4 * energy);
+        body += mix(cA, vec3(1.0), 0.65) * nucleus;
+        col = body * inside;
+    }
     // Rim and halo.
     float rim = exp(-abs(d) * 85.0) * (0.85 + 1.6 * level + 0.6 * energy + 0.6 * pulse);
     col += mix(cA, vec3(1.0), 0.35) * rim;

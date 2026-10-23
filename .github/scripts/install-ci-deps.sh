@@ -60,7 +60,7 @@ packages=(
     # QML smoke test: every QML module the windows import, and the SVG icons.
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtquick-dialogs
-    qml6-module-qtqml-workerscript qml6-module-qt-labs-platform qml6-module-qtquick-particles
+    qml6-module-qtqml-workerscript qml6-module-qt-labs-platform
     "$svg"
     # Integration tests: a private session bus, gdbus calls, fake KWin and notification
     # services in Python (GObject), and desktop-file-validate.

@@ -24,6 +24,9 @@ float hash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
 void main() {
     vec2 uv = qt_TexCoord0 * 2.0 - 1.0;
     float r = length(uv);
+    // Bars live in one annulus; skip the rest of the square.
+    if (r < innerRadius - pixel || r > innerRadius + maxLength + 4.0 * pixel)
+        discard;
     float ang = fract(atan(uv.y, uv.x) / 6.2831853 + 1.0 - turn);
     float id = floor(ang * bars);
     float within = fract(ang * bars);
