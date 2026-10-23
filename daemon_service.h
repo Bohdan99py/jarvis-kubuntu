@@ -10,6 +10,7 @@
 #include "activity_bridge.h"
 #include "assistant.h"
 #include "ide_server.h"
+#include "integration_service.h"
 #include "notifier.h"
 
 namespace jarvis {
@@ -41,19 +42,22 @@ public:
     static QString version();
     // True when the D-Bus caller is the Jarvis window (owner of org.jarvis.Desktop1).
     bool callerIsGui() const;
+    // Shows a tab of the GUI; starts the tray application when it is not running.
+    void openGui(const QString &target, const QString &payload, int attempt = 0);
+    // The event loop is about to end (SIGTERM, Quit, background work off).
+    void stopping() { m_integration.stopping(); }
 
 signals:
     void replyReady(quint64 id, const QString &reply);
 
 private:
     void pollDoNotDisturb();
-    // Shows a tab of the GUI; starts the tray application when it is not running.
-    void openGui(const QString &target, const QString &payload, int attempt = 0);
 
     Assistant m_assistant;
     ActivityBridge m_bridge;
     IdeServer m_ide;
     Notifier m_notifier;
+    IntegrationService m_integration;
     QHash<QString, QString> m_noticeBodies; // key -> text, for "answer the question"
     QTimer m_dndPoll;
 };

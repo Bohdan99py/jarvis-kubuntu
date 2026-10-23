@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Jarvis on the desktop: its state, a small animated core, system activity, the last notification and the overlay at a click",
+        "Description[ru]": "Jarvis на рабочем столе: состояние, маленькое анимированное ядро, активность системы, последнее уведомление и оверлей по щелчку",
+        "Icon": "org.jarvis.Jarvis",
+        "Id": "org.jarvis.hud",
+        "Name": "Jarvis HUD",
+        "Name[ru]": "Jarvis HUD",
+        "Version": "0.19.1",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

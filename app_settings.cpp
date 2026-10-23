@@ -140,8 +140,25 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.awarenessFullscreen = value;
     else if (name == QLatin1String("webSearch"))
         d.webSearch = value;
+    else if (name == QLatin1String("background"))
+        d.background = value;
+    else if (name == QLatin1String("desktopIntegration")) {
+        d.desktopIntegration = value;
+        if (!value)
+            d.shareActiveApp = false; // nothing to share through
+    } else if (name == QLatin1String("shareActiveApp"))
+        d.shareActiveApp = value && d.desktopIntegration;
     else
         return tr("Unknown option.");
+    return store(d);
+}
+
+QString AppSettings::setHudAnimation(const QString &level)
+{
+    if (!jarvis::Config::hudAnimationLevels().contains(level))
+        return tr("Unknown option.");
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    d.hudAnimation = level;
     return store(d);
 }
 

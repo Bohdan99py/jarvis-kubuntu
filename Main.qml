@@ -242,9 +242,18 @@ ApplicationWindow {
             studyWindow.showTab(2)
             return
         }
-        // An offer of help the user accepted: answered in the overlay, with the context.
+        // An offer of help the user accepted (or a KRunner question): answered in the overlay, with the context.
         if (target === "assist") {
             root.showOverlay("", payload)
+            return
+        }
+        // From the desktop widget and other Plasma components (org.jarvis.Integration1).
+        if (target === "overlay") {
+            root.showOverlay("", "")
+            return
+        }
+        if (target === "quick") {
+            quickBar.reveal()
             return
         }
         showMain()

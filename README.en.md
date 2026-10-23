@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.18.0
+# Jarvis for Kubuntu · 0.19.1
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.18.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.19.1_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -105,7 +105,58 @@ Checking a hybrid laptop:
 
 ## Autostart and the tray
 
-Start Jarvis once from the menu after installing: from then on it starts in the tray at every login and keeps running. The user unit `jarvis-tray.service` (systemd, with the Plasma graphical session) restarts it after a crash; sessions without systemd use `~/.config/autostart/jarvis-tray.desktop`. Closing the window only hides it (a lesson keeps recording); "Quit" in the tray menu ends it. At logout Jarvis exits cleanly and saves a recording in progress. Turn it off in Control center → Application.
+Start Jarvis once from the menu after installing: from then on it starts in the tray at every login and keeps running. The user unit `jarvis-tray.service` (systemd, with the Plasma graphical session) restarts it after a crash; sessions without systemd use `~/.config/autostart/jarvis-tray.desktop`. Closing the window only hides it (a lesson keeps recording); "Quit" in the tray menu ends it. At logout Jarvis exits cleanly and saves a recording in progress. Turn it off in Control center → Desktop.
+
+## KDE Plasma integration
+
+Since 0.19 Jarvis fits into Plasma 6 through the standard mechanisms: systemd user services, a Plasma widget, a KRunner plugin and the D-Bus interface `org.jarvis.Integration1`. Plasma and KWin are neither replaced nor reconfigured: Jarvis changes nothing in your desktop layout without your confirmation. Everything is in Control center → Desktop.
+
+**The background service.** `jarvisd` is the user unit `jarvis.service` (systemd `--user`), started at login and separate from the window:
+
+- no second instance (it owns `org.jarvis.Daemon1`); an extra `jarvisd` exits with status 3, which systemd does not count as a failure;
+- after a crash or a hang (90 s watchdog) it is restarted, each time a little later, up to a minute; after 5 failures in 5 minutes it stays stopped instead of looping;
+- `systemctl --user status jarvis` shows a status line (`idle · window open · integration on · background on`); the log: `journalctl --user -u jarvis`;
+- idle, it does not wake the CPU (measured: 0 CPU ticks in 30 s, ~29 MB): system figures are read only on request, the watchdog is pinged every 45 s;
+- it ends cleanly with the session (SIGTERM, `STOPPING=1`).
+
+**Background work** (switch): on — reminders, hints, KRunner and the widget keep working after the window is closed or quit from the tray; off — the service ends 10 s after the window (and 2 minutes after login if the window does not start), reminders wait for the next start. "Start with the system in the tray" moved here too.
+
+**The "Jarvis HUD" widget.** A Plasma 6 plasmoid (`org.jarvis.hud`): Jarvis's state, a small animated HUD core, CPU/memory/heat/battery, the last notification, "Overlay" and "Open Jarvis". Add it with "Add to the desktop…" (after you confirm, Plasma places one widget at the top right of the first screen) or as usual: right click on the desktop → Add Widgets… → Jarvis HUD. In a panel it becomes a core icon with a popup.
+
+- Animations: Off, Low, Normal, High. On battery one step less; under a maximized or fullscreen window the core stops and the figures are asked for less often (20 s instead of 3 s).
+- The rings are drawn once into a layer and turned by render-thread animators: no JavaScript and no CPU repainting per frame; no Canvas, no software rendering.
+- The widget is pure QML on Plasma's own modules (`org.kde.plasma.workspace.dbus`, `org.kde.taskmanager`): no Jarvis library is loaded into plasmashell, so a broken Jarvis can only leave this widget empty. It calls the service only while it is on the bus and never starts it.
+
+**KRunner.** Alt+Space → `jarvis what is Ohm's law` (or `джарвис …`): Enter asks in the overlay, the "Add as a task or reminder" action adds it to the tasks. It works while the integration is on; the name `org.jarvis.Runner` is not D-Bus activatable, so KRunner never starts the service. If Jarvis does not show up in KRunner after the first install: `kquitapp6 krunner`.
+
+**D-Bus API for desktop components** — `org.jarvis.Integration1`, object `/org/jarvis/Integration1` on `org.jarvis.Daemon1`:
+
+| Method | Tier | What it does |
+|---|---|---|
+| `Status() → s` | observe | JSON: version, state (idle/processing/notification/error), window open, background work, integration, awareness (level, paused, Do not disturb), animation (chosen, in effect, battery), last notification (kind and title) |
+| `Actions() → s` | observe | the allowed actions |
+| `SystemMetrics() → s` | observe | CPU, memory, swap, load, temperature, battery |
+| `RunAction(s) → s`, `OpenOverlay() → s` | act | only `overlay`, `main`, `quick`, `tasks`, `memory`, `pause-awareness`, `resume-awareness`, `cancel`; 4 in a row, then 1 per 2 s per client |
+| `Notify(s, s) → s` | act | a notification from Jarvis: plain text (markup escaped), title ≤ 120, body ≤ 500 characters, 3 in a row, then 1 per 20 s per client and 6 per 10 s overall; each replaces the previous one |
+| `ActiveApplication() → s` | personal | the focused application's name (`kate`), never the title; only with "Let desktop components know the active application" and window awareness on; private and excluded windows are not named |
+| signals `StatusChanged(s)`, `NoticePosted(s)` | | state changes (at most 4 per second) |
+
+Privileges: the session bus belongs to one user, but any of the user's processes can call the service — so the integration cannot run a command, start an arbitrary application, or read the memory, the settings or window titles. Desktop-context methods (`AskContext`, `ScreenObserved`) are still accepted from the Jarvis window only, and window reports from KWin only. With the integration off, actions, notifications and the active application are refused (`AccessDenied`) and the KRunner name is released.
+
+**Diagnostics** — on the Desktop tab (or `jarvis --diagnose` in a terminal): the service's answer and version, the `jarvis.service` and `jarvis-tray.service` units (through systemd's D-Bus API: memory, CPU, restarts, restart limit, watchdog), the Plasma session, the widget and the KRunner plugin. "Copy report" for bug reports.
+
+**Restore the standard desktop.** The button (after you confirm) removes every Jarvis widget from desktops and panels and turns the integration off. Panels, other widgets, the wallpaper and KDE settings are not touched: the Plasma scripts Jarvis uses select only `org.jarvis.hud` widgets (tests check this). If the Jarvis window does not start, `jarvis --restore-desktop` does the same from a terminal. If the service does not start, KDE works as usual: the widget says "Jarvis is not running" and KRunner simply does not offer Jarvis. To stop the window starting at login: `systemctl --user disable --now jarvis-tray.service`.
+
+### Wayland limitations
+
+- A Wayland client cannot see other windows. Jarvis learns the active application only through its KWin script, and only with window awareness on; otherwise `ActiveApplication` is unavailable.
+- A client cannot draw "on the desktop" or below windows — that is why the desktop HUD is a Plasma widget, not a Jarvis window.
+- No focus stealing: the overlay opened from the widget or KRunner reliably takes the keyboard only as a layer-shell surface (package `qml6-module-org-kde-layershell`). Without it KWin may show it unfocused — a D-Bus call carries no XDG activation token.
+- "Is the desktop covered" means a maximized or fullscreen window on the widget's screen (Plasma's task model); partly overlapping windows do not count.
+- The global key goes only through the GlobalShortcuts portal (the user confirms it); Jarvis never grabs the keyboard.
+- Window screenshots use KWin's restricted ScreenShot2 interface, granted only to the installed Jarvis (`X-KDE-DBUS-Restricted-Interfaces`); a build run from the source tree gets the Screenshot portal with its dialog.
+- Jarvis can add or remove its widget only while widgets are unlocked (and no KIOSK restriction applies); otherwise Plasma refuses and the widget is added by hand.
+- Kubuntu 24.04 (Plasma 5.27): the service, KRunner, diagnostics and the restore work; the widget needs Plasma 6 (with `org.kde.plasma.workspace.dbus`, Plasma 6.1+).
 
 ## Language
 
@@ -237,3 +288,5 @@ JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.con
 ```
 
 Source strings are English; the Russian translation lives in `i18n/jarvis_ru.ts`. After changing strings run `/usr/lib/qt6/bin/lupdate -locations none -no-obsolete *.cpp *.h *.qml -ts i18n/jarvis_ru.ts` and translate the new messages (the `translations` test checks completeness). To run a development daemon next to an installed one: `JARVIS_DBUS_SERVICE=org.jarvis.DaemonDev ./build/jarvisd`.
+
+The desktop widget without installing the package: `kpackagetool6 -t Plasma/Applet -i plasmoid` (into `~/.local/share/plasma/plasmoids`; remove with `kpackagetool6 -t Plasma/Applet -r org.jarvis.hud`) or in a window of its own: `plasmawindowed org.jarvis.hud`. Pictures of every widget state without Plasma: `QT_QPA_PLATFORM=offscreen ./build/plasmoid_check plasmoid/contents/ui /tmp/hud` (the `plasmoid` test does the same without pictures and fails on any QML warning; it needs `qml6-module-qtquick-shapes`). The widget's Russian translation is `plasmoid/po/ru.po` (the `desktop_files` test requires every `i18n()` string).

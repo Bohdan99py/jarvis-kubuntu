@@ -22,6 +22,7 @@ DaemonService::DaemonService(QObject *parent)
     : QObject(parent)
     , m_bridge(&m_assistant, dbus::daemonService())
     , m_ide(&m_assistant, IdeServer::defaultPath(dbus::daemonService()))
+    , m_integration(&m_assistant, &m_notifier, [this](const QString &target, const QString &payload) { openGui(target, payload); })
 {
     new DaemonAdaptor(this); // child of this; exported with the object
     connect(&m_assistant, &Assistant::replyReady, this, &DaemonService::replyReady);
@@ -87,6 +88,10 @@ bool DaemonService::start(QString *error)
     if (!bus.registerObject(dbus::kPath, this, QDBusConnection::ExportAdaptors))
         return fail(QStringLiteral("cannot register object %1: %2")
                         .arg(dbus::kPath, bus.lastError().message()));
+
+    // The KDE bridge (org.jarvis.Integration1, KRunner); jarvisd works without it.
+    if (QString integrationError; !m_integration.start(&integrationError))
+        qWarning().noquote() << "desktop integration unavailable:" << integrationError;
 
     if (!bus.registerService(dbus::daemonService()))
         return fail(QStringLiteral("cannot own %1 (is jarvisd already running?): %2")

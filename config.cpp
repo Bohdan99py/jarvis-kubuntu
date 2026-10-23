@@ -42,6 +42,11 @@ QStringList Config::awarenessLevels()
     return {u"off"_s, u"manual"_s, u"assistive"_s, u"proactive"_s};
 }
 
+QStringList Config::hudAnimationLevels()
+{
+    return {u"off"_s, u"low"_s, u"normal"_s, u"high"_s};
+}
+
 QString Config::defaultModel()
 {
     return u"claude-haiku-4-5-20251001"_s;
@@ -95,6 +100,11 @@ ConfigData Config::loadFileOnly()
         d.suggestionsPerDay = std::clamp(o.value(u"suggestions_per_day"_s).toInt(4), 1, 20);
         d.awarenessFullscreen = o.value(u"awareness_fullscreen"_s).toBool(false);
         d.webSearch = o.value(u"web_search"_s).toBool(false);
+        d.background = o.value(u"background"_s).toBool(true);
+        d.desktopIntegration = o.value(u"desktop_integration"_s).toBool(true);
+        d.shareActiveApp = o.value(u"share_active_app"_s).toBool(false);
+        const QString animation = o.value(u"hud_animation"_s).toString();
+        d.hudAnimation = hudAnimationLevels().contains(animation) ? animation : u"normal"_s;
     }
     return d;
 }
@@ -161,6 +171,10 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"suggestions_per_day"_s, data.suggestionsPerDay);
     o.insert(u"awareness_fullscreen"_s, data.awarenessFullscreen);
     o.insert(u"web_search"_s, data.webSearch);
+    o.insert(u"background"_s, data.background);
+    o.insert(u"desktop_integration"_s, data.desktopIntegration);
+    o.insert(u"share_active_app"_s, data.shareActiveApp);
+    o.insert(u"hud_animation"_s, data.hudAnimation);
     const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
     if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));

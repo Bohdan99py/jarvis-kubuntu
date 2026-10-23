@@ -1,4 +1,6 @@
 #include <QCoreApplication>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QDebug>
 #include <QSocketNotifier>
 
@@ -12,6 +14,9 @@
 #include "dbus_names.h"
 
 namespace {
+
+// Exit status when another jarvisd owns the bus name (RestartPreventExitStatus= in jarvis.service).
+constexpr int kAlreadyRunning = 3;
 
 // Classic self-pipe trick: the signal handler only write()s one byte,
 // the Qt event loop reads it and quits cleanly (async-signal-safe).
@@ -58,7 +63,16 @@ int main(int argc, char *argv[])
         qWarning() << "could not install signal handlers; stop me with SIGKILL";
     }
 
+    // A second daemon would only fail to own the name: say so with its own exit
+    // status, which jarvis.service does not treat as a crash (no restart loop).
+    if (QDBusConnectionInterface *bus = QDBusConnection::sessionBus().interface();
+        bus && bus->isServiceRegistered(jarvis::dbus::daemonService()).value()) {
+        qInfo().noquote() << "jarvisd: already running as" << jarvis::dbus::daemonService();
+        return kAlreadyRunning;
+    }
+
     jarvis::DaemonService service;
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, &service, &jarvis::DaemonService::stopping);
     QString error;
     if (!service.start(&error)) {
         qCritical().noquote() << "jarvisd:" << error;

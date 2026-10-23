@@ -50,6 +50,11 @@ class AppSettings : public QObject
     Q_PROPERTY(int suggestionsPerDay READ suggestionsPerDay NOTIFY changed FINAL)
     Q_PROPERTY(bool awarenessFullscreen READ awarenessFullscreen NOTIFY changed FINAL)
     Q_PROPERTY(bool webSearch READ webSearch NOTIFY changed FINAL)
+    // Desktop integration (0.19), see ConfigData.
+    Q_PROPERTY(bool background READ background NOTIFY changed FINAL)
+    Q_PROPERTY(bool desktopIntegration READ desktopIntegration NOTIFY changed FINAL)
+    Q_PROPERTY(bool shareActiveApp READ shareActiveApp NOTIFY changed FINAL)
+    Q_PROPERTY(QString hudAnimation READ hudAnimation NOTIFY changed FINAL)
     // The cinematic HUD, kept per user in Jarvis.conf (not in config.json: the
     // daemon has nothing to do with it). Quality: off (classic window), low,
     // balanced, cinematic. memoryOpen: the memory panel beside the HUD.
@@ -95,6 +100,10 @@ public:
     int suggestionsPerDay() const { return m_data.suggestionsPerDay; }
     bool awarenessFullscreen() const { return m_data.awarenessFullscreen; }
     bool webSearch() const { return m_data.webSearch; }
+    bool background() const { return m_data.background; }
+    bool desktopIntegration() const { return m_data.desktopIntegration; }
+    bool shareActiveApp() const { return m_data.shareActiveApp; }
+    QString hudAnimation() const { return m_data.hudAnimation; }
     QString hudQuality() const;
     void setHudQuality(const QString &quality);
     bool memoryOpen() const;
@@ -110,8 +119,11 @@ public:
     Q_INVOKABLE QString setLanguage(const QString &language);
     Q_INVOKABLE QString setReplyLanguage(const QString &language);
     // name: learnDialog, curiosity, trackActivity, trackTitles, shareActivity,
-    // proactive, morningSummary, deepReflection, notifyReplies.
+    // proactive, morningSummary, deepReflection, notifyReplies, background,
+    // desktopIntegration, shareActiveApp.
     Q_INVOKABLE QString setOption(const QString &name, bool value);
+    // The desktop HUD's animations: off, low, normal or high.
+    Q_INVOKABLE QString setHudAnimation(const QString &level);
     // 0 turns break reminders off.
     Q_INVOKABLE QString setBreakMinutes(int minutes);
     // name: snoozeMinutes, morningHour, afternoonHour, eveningHour, nagMinutes,

@@ -61,6 +61,8 @@ packages=(
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtquick-dialogs
     qml6-module-qtqml-workerscript qml6-module-qt-labs-platform
+    # The desktop widget's views, checked outside Plasma (tests/plasmoid_check.cpp).
+    qml6-module-qtquick-shapes
     "$svg"
     # Integration tests: a private session bus, gdbus calls, fake KWin and notification
     # services in Python (GObject), and desktop-file-validate.

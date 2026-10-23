@@ -3,6 +3,7 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from fake_kwin import FakeKWin
 from fake_notifications import FakeNotifications
 from fake_portal import FakePortal
+from fake_desktop import FakeDesktop
 from pathlib import Path
 base=Path.cwd()
 build=Path(os.environ.get('JARVIS_TEST_BUILD', str(base/'build')))
@@ -309,6 +310,107 @@ try:
  assert 'Battery-1.rPin, Resistor-2.lPin' in out and 'Resistance=220' in out,out
  assert "(uint64 0,)" in call('AskFiles','x',"['relative/path.txt']"),'relative paths rejected'
 
+ # ---- Desktop integration (0.19): org.jarvis.Integration1, KRunner, the service's life ----
+ def icall(method,*args,dest='org.jarvis.Daemon1',path='/org/jarvis/Integration1',iface='org.jarvis.Integration1'):
+  return subprocess.run(['gdbus','call','--session','--dest',dest,'--object-path',path,'--method',iface+'.'+method,*args],text=True,capture_output=True)
+ def ijson(method,*args):
+  r=icall(method,*args);assert r.returncode==0,r.stderr
+  return json.loads(unquote(r.stdout))
+ def name_owned(name):
+  return 'true' in subprocess.check_output(['gdbus','call','--session','--dest','org.freedesktop.DBus','--object-path','/org/freedesktop/DBus',
+   '--method','org.freedesktop.DBus.NameHasOwner',name],text=True)
+ from gi.repository import GLib
+ status=ijson('Status')
+ assert status['integration'] is True and status['background'] is True and status['gui'] is False,status
+ assert status['animation']=={'wanted':'normal','effective':'normal' if not status['animation']['onBattery'] else 'low','onBattery':status['animation']['onBattery']},status
+ assert {a['id'] for a in ijson('Actions')['actions']}=={'overlay','main','quick','tasks','memory','pause-awareness','resume-awareness','cancel'}
+ figures=ijson('SystemMetrics');time.sleep(1.1);figures=ijson('SystemMetrics')
+ assert 0<=figures['memory']<=100 and 0<=figures['cpu']<=100 and figures['load']>=0 and 'onBattery' in figures['battery'],figures
+ # Only listed actions, and the ones that show Jarvis go to its window.
+ r=icall('RunAction','rm -rf ~');assert r.returncode!=0 and 'InvalidArgs' in r.stderr,r.stderr
+ desk=FakeDesktop()
+ wait_for(lambda: ijson('Status')['gui'],'the window is seen')
+ assert icall('RunAction','overlay').returncode==0 and icall('OpenOverlay').returncode==0
+ wait_for(lambda: desk.opened.count(('overlay',''))==2,'overlay opened in the window')
+ assert icall('RunAction','pause-awareness').returncode==0
+ wait_for(lambda: ijson('Status')['awareness']['paused'],'awareness paused from the desktop')
+ assert icall('RunAction','resume-awareness').returncode==0
+ wait_for(lambda: not ijson('Status')['awareness']['paused'],'awareness resumed')
+ # Per-caller limits: one connection, a burst of four, then refused.
+ caller=FakeDesktop(own_name=False)
+ for _ in range(4): caller.integration('RunAction','(s)',('tasks',))
+ try: caller.integration('RunAction','(s)',('tasks',));raise AssertionError('fifth action in a row accepted')
+ except GLib.Error as e: assert 'LimitsExceeded' in e.message,e.message
+ # Notifications from desktop components: plain text, rate limited, shown as the last notice.
+ monitor=subprocess.Popen(['gdbus','monitor','--session','--dest','org.jarvis.Daemon1'],stdout=subprocess.PIPE,text=True);time.sleep(.2)
+ caller.integration('Notify','(ss)',('Build finished','<b>12</b> targets'))
+ wait_for(lambda: notifications.find('Build finished'),'notification shown')
+ note=notifications.find('Build finished')[0]
+ assert note['app']=='Jarvis' and note['body']=='&lt;b&gt;12&lt;/b&gt; targets' and not note['actions'],note
+ time.sleep(.6);monitor.terminate();signals=monitor.communicate(timeout=3)[0]
+ assert 'NoticePosted' in signals and 'StatusChanged' in signals and '"state":"notification"' in signals,signals
+ assert ijson('Status')['notice']['title']=='Build finished'
+ caller.integration('Notify','(ss)',('two',''));caller.integration('Notify','(ss)',('three',''))
+ try: caller.integration('Notify','(ss)',('four',''));raise AssertionError('notification flood accepted')
+ except GLib.Error as e: assert 'LimitsExceeded' in e.message,e.message
+ r=icall('Notify','','body');assert 'InvalidArgs' in r.stderr,r.stderr
+ # The active application: refused without consent; with it, the name and never the title.
+ r=icall('ActiveApplication');assert 'AccessDenied' in r.stderr,r.stderr
+ write_config(awareness_window=True,share_active_app=True);call('ReloadConfig') # the fake KWin from the awareness tests
+ wait_for(lambda: 'jarvis-activity' in kwin.scripts,'window awareness on')
+ kwin.focus('secret-plan.txt — Kate','kate','org.kde.kate','{k}',False,'DP-1')
+ wait_for(lambda: ijson('ActiveApplication').get('app')=='kate','active application shared')
+ shared=ijson('ActiveApplication')
+ assert 'secret' not in json.dumps(shared) and 'title' not in shared and shared['desktopId']=='org.kde.kate',shared
+ write_config(awareness_window=True,share_active_app=False);call('ReloadConfig')
+ wait_for(lambda: 'AccessDenied' in icall('ActiveApplication').stderr,'consent withdrawn')
+ # KRunner: "jarvis <question>" asks in the overlay or becomes a task.
+ runner=dict(dest='org.jarvis.Runner',path='/org/jarvis/KRunner',iface='org.kde.krunner1')
+ out=icall('Match','jarvis what is Ohm law',**runner).stdout
+ assert "'ask:what is Ohm law'" in out and 'org.jarvis.Jarvis' in out,out
+ assert icall('Match','firefox',**runner).stdout.strip() in ('([],)','(@a(sssida{sv}) [],)')
+ assert 'TriggerWords' in icall('Config',**runner).stdout
+ assert icall('Run','ask:what is Ohm law','',**runner).returncode==0
+ wait_for(lambda: ('assist','what is Ohm law') in desk.opened,'KRunner question asked in the overlay')
+ assert icall('Run','ask:завтра в 9 купить молоко','task',**runner).returncode==0
+ wait_for(lambda: any('молоко' in t['text'] for t in memory()['tasks']),'KRunner task added')
+ # Integration off: actions refused, the runner's name released, no notice in the status.
+ write_config(desktop_integration=False);call('ReloadConfig')
+ wait_for(lambda: ijson('Status')['integration'] is False,'integration off')
+ assert 'notice' not in ijson('Status')
+ assert 'AccessDenied' in icall('RunAction','overlay').stderr and 'AccessDenied' in icall('Notify','x','y').stderr
+ wait_for(lambda: not name_owned('org.jarvis.Runner'),'runner name released')
+ write_config();call('ReloadConfig')
+ wait_for(lambda: name_owned('org.jarvis.Runner'),'runner name back')
+ caller.close()
+ # A second daemon exits with status 3 (jarvis.service does not restart it); the first keeps serving.
+ assert subprocess.run([str(build/'jarvisd')],env=env,timeout=10,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==3
+ assert call('Version')
+ # systemd: READY, watchdog pings and a status line; STOPPING on the way out.
+ import socket
+ notify=socket.socket(socket.AF_UNIX,socket.SOCK_DGRAM);notify.bind(str(scratch/'notify.sock'));notify.settimeout(5)
+ call('Quit');proc.wait(timeout=3)
+ env.update(NOTIFY_SOCKET=str(scratch/'notify.sock'),WATCHDOG_USEC='10000000')
+ proc=start()
+ told=set()
+ while not {'READY','WATCHDOG','STATUS'} <= told:
+  told.add(notify.recv(4096).decode().split('=',1)[0])
+ call('Quit');proc.wait(timeout=3)
+ while 'STOPPING' not in told: told.add(notify.recv(4096).decode().split('=',1)[0])
+ notify.close();del env['NOTIFY_SOCKET'];del env['WATCHDOG_USEC']
+ # Background work off: the daemon follows the window, and does not wait forever without one.
+ write_config(background=False);env['JARVIS_GUI_GRACE_MS']='800'
+ proc=start()
+ time.sleep(1.5);assert proc.poll() is None,'the window is open: the daemon stays'
+ desk.close()
+ wait_for(lambda: proc.poll() is not None,'daemon ends after the window',timeout=5)
+ assert proc.returncode==0,proc.returncode
+ proc=start()
+ wait_for(lambda: proc.poll() is not None,'daemon without a window ends after the grace time',timeout=5)
+ assert proc.returncode==0
+ write_config();del env['JARVIS_GUI_GRACE_MS']
+ proc=start()
+
  # GUI starts in quick mode, single instance, no QML errors (Russian and English UI)
  gui_env=env.copy();gui_env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software')
 
@@ -346,7 +448,7 @@ try:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()
    assert not any(error in ui_log for error in ('failed to load','ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),ui_log
- print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, awareness, driving, GUI ru/en')
+ print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, awareness, driving, desktop integration, KRunner, service lifetime, GUI ru/en')
 finally:
  proc.terminate();proc.wait(timeout=3)
  shutil.rmtree(scratch)

@@ -23,6 +23,9 @@
 #include "awareness.h"
 #include "driving_store.h"
 #include "config.h"
+#include "desktop_integration.h"
+#include <QJsonArray>
+#include <QThread>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QImage>
@@ -703,6 +706,84 @@ static void awareness() {
     require(Awareness::save(state) && Awareness::load()["categories"].toObject().contains("driving"),"suggestion history saved");
     require((QFile(Awareness::path()).permissions() & (QFileDevice::ReadGroup|QFileDevice::ReadOther))==0,"awareness file is private");
 }
+static void desktopIntegration() {
+    namespace I=jarvis::integration;
+    // Actions are an allowlist: no arguments, nothing else reaches the daemon.
+    require(I::isAction("overlay") && I::isAction("pause-awareness") && I::isAction("cancel"),"known actions");
+    require(!I::isAction("") && !I::isAction("rm -rf /") && !I::isAction("Overlay") && !I::isAction("quit"),"anything else refused");
+    require(I::actionTarget("overlay")=="overlay" && I::actionTarget("tasks")=="tasks" && I::actionTarget("cancel").isEmpty(),"opening actions name a window target");
+    const QJsonArray actions=I::actions(jarvis::Lang::Ru);
+    require(actions.size()==8,"eight actions listed");
+    for(const auto &v:actions) require(I::isAction(v.toObject()["id"].toString()) && !v.toObject()["label"].toString().isEmpty(),"every listed action is allowed and labelled");
+    // Rate limits: a burst, then one call per refill period, per caller.
+    I::RateLimiter limit(3,1000);
+    const qint64 t0=1000000;
+    require(limit.allow("a",t0) && limit.allow("a",t0) && limit.allow("a",t0) && !limit.allow("a",t0),"burst of three");
+    require(limit.allow("b",t0),"callers are counted apart");
+    require(!limit.allow("a",t0+500) && limit.allow("a",t0+1000) && !limit.allow("a",t0+1000),"one more per second");
+    for(int i=0;i<200;++i) limit.allow(QString::number(i),t0+2000);
+    require(limit.allow("a",t0+60000),"many callers do not break the limiter");
+    // System figures.
+    jv_cpu_times a{},b{};
+    require(jv_cpu_times_read(&a)==0,"cpu times");
+    QThread::msleep(60);
+    require(jv_cpu_times_read(&b)==0,"cpu times again");
+    const QJsonObject m=I::systemMetrics(&a,&b);
+    require(m["cpu"].toDouble()>=0 && m["cpu"].toDouble()<=100,"cpu percent");
+    require(m["memory"].toDouble()>0 && m["memory"].toDouble()<=100,"memory percent");
+    require(m["load"].toDouble()>=0,"load average read whatever the locale");
+    require(m["battery"].toObject().contains("onBattery") && m["battery"].toObject()["onBattery"].isBool(),"battery state");
+    require(I::systemMetrics(nullptr,&b)["cpu"].toDouble()==-1,"no cpu figure from one snapshot");
+    // Animation intensity steps down on battery.
+    require(I::effectiveAnimation("high",true)=="normal" && I::effectiveAnimation("normal",true)=="low","one step less on battery");
+    require(I::effectiveAnimation("low",true)=="low" && I::effectiveAnimation("off",true)=="off" && I::effectiveAnimation("off",false)=="off","low and off stay");
+    require(I::effectiveAnimation("high",false)=="high" && I::effectiveAnimation("bogus",false)=="normal","mains power keeps the choice");
+    // KRunner queries.
+    require(I::runnerQuestion("jarvis what is an RC filter")=="what is an RC filter","trigger word");
+    require(I::runnerQuestion("  Jarvis, remind me at 9  ")=="remind me at 9" && I::runnerQuestion("jarvis: hi there")=="hi there","case and punctuation");
+    require(I::runnerQuestion(QStringLiteral("Джарвис который час"))==QStringLiteral("который час"),"Russian trigger");
+    require(I::runnerQuestion("jarvisx hello").isEmpty() && I::runnerQuestion("firefox").isEmpty() && I::runnerQuestion("jarvis").isEmpty()
+            && I::runnerQuestion("jarvis a").isEmpty() && I::runnerQuestion("hello jarvis now").isEmpty(),"other queries ignored");
+    require(I::runnerQuestion("jarvis "+QString(600,'x')).isEmpty(),"overlong query ignored");
+    // Plasma scripts touch Jarvis widgets only.
+    const QString count=I::plasmaCountScript(),add=I::plasmaAddScript(),remove=I::plasmaRemoveScript();
+    for(const QString &script:{count,add,remove}) {
+        require(script.contains("widgets(\"org.jarvis.hud\")"),"scripts select Jarvis widgets");
+        for(const char *forbidden:{"writeConfig","currentConfigGroup","wallpaperPlugin","lockWidgets","loadTemplate","panels()[","removeWidget"})
+            require(!script.contains(QLatin1String(forbidden)),"scripts never change other settings");
+    }
+    require(!count.contains("addWidget") && !count.contains("remove()"),"counting changes nothing");
+    require(add.contains("addWidget(\"org.jarvis.hud\"") && add.contains("if (n === 0)") && !add.contains("remove()"),"adding adds one widget, only when none exists");
+    require(remove.contains("ws[j].remove()") && !remove.contains("addWidget"),"removing removes Jarvis widgets");
+    // Unit health for the diagnostics.
+    using U=I::UnitHealth;
+    const auto level=[](const U &u,bool wanted){return I::assessUnit(u,wanted,jarvis::Lang::En)["level"].toString();};
+    U ok{"jarvis.service","loaded","active","running","success","enabled",0,15*1024*1024,4000000000ULL};
+    require(level(ok,true)=="ok" && I::assessUnit(ok,true,jarvis::Lang::En)["text"].toString().contains("15 MB"),"running service");
+    U restarted=ok;restarted.restarts=2;
+    require(level(restarted,true)=="warn" && I::assessUnit(restarted,true,jarvis::Lang::En)["text"].toString().contains("2"),"restarts are reported");
+    U limited{"jarvis.service","loaded","failed","failed","start-limit-hit","enabled"};
+    require(level(limited,true)=="error" && I::assessUnit(limited,true,jarvis::Lang::En)["text"].toString().contains("restart limit"),"restart limit explained");
+    U hung=limited;hung.result="watchdog";
+    require(I::assessUnit(hung,true,jarvis::Lang::Ru)["text"].toString().contains(QStringLiteral("сторожев")),"watchdog explained");
+    U missing{"jarvis-tray.service","not-found","inactive","dead"};
+    require(level(missing,true)=="error" && level(missing,false)=="off","missing unit");
+    U masked{"jarvis.service","masked","inactive","dead"};
+    require(I::assessUnit(masked,true,jarvis::Lang::En)["text"].toString().contains("unmask"),"masked unit tells how to fix it");
+    U stopped{"jarvis-tray.service","loaded","inactive","dead","success","enabled"};
+    require(level(stopped,false)=="off" && level(stopped,true)=="warn","stopped unit");
+    // Settings: defaults, round trip, invalid values.
+    jarvis::ConfigData d=jarvis::Config::loadFileOnly();
+    require(d.background && d.desktopIntegration && !d.shareActiveApp && d.hudAnimation=="normal","desktop defaults");
+    d.background=false;d.desktopIntegration=false;d.shareActiveApp=true;d.hudAnimation="high";
+    QString error;require(jarvis::Config::save(d,&error),"config saved");
+    const jarvis::ConfigData back=jarvis::Config::loadFileOnly();
+    require(!back.background && !back.desktopIntegration && back.shareActiveApp && back.hudAnimation=="high","desktop settings round trip");
+    QFile raw(jarvis::Config::filePath());require(raw.open(QIODevice::WriteOnly),"raw config");
+    raw.write(R"({"hud_animation":"turbo","background":"yes"})");raw.close();
+    require(jarvis::Config::loadFileOnly().hudAnimation=="normal","unknown intensity falls back to normal");
+    raw.remove();
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -727,5 +808,6 @@ int main(int argc,char **argv) {
     drivingCalculators();
     drivingProgress();
     awareness();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness";
+    desktopIntegration();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration";
 }

@@ -17,6 +17,7 @@ Dialog {
     function showMemory() { tabs.currentIndex=2; open() }
     function showAwareness() { tabs.currentIndex=4; open() }
     function showApp() { tabs.currentIndex=5; open() }
+    function showDesktop() { tabs.currentIndex=6; open() }
     // Opens a skill's page, optionally on a tab ("schematics", "kicad", …).
     function showSkill(id, tab) {
         const skill = desktop.skills.find(s => s.id === id)
@@ -68,7 +69,7 @@ Dialog {
         TabBar {
             id: tabs; objectName: "controlTabs"; Layout.fillWidth: true; background: null; spacing: 4
             Repeater {
-                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Autonomy"), qsTr("Awareness"), qsTr("Application")]
+                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Autonomy"), qsTr("Awareness"), qsTr("Application"), qsTr("Desktop")]
                 TabButton {
                     id: tabButton
                     required property string modelData
@@ -902,13 +903,6 @@ Dialog {
                         checked: center.settings.overlay
                         onToggled: center.settings.overlay = checked
                     }
-                    OptionSwitch {
-                        objectName: "autostartSwitch"
-                        text: qsTr("Start with the system in the tray and keep running")
-                        hint: qsTr("Jarvis starts in the system tray when you log in and comes back by itself if it crashes. Closing the window only hides it; \"Quit\" in the tray menu ends it.")
-                        checked: center.desktop.autostart
-                        onToggled: center.desktop.autostart = checked
-                    }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Label { text: qsTr("Updates: Bohdan99py/jarvis-kubuntu"); color: Theme.textDim }
                     Label { text: qsTr("The button downloads a verified package and opens Discover. Confirm the system installation, then restart the service and the application."); color: Theme.textDim; Layout.fillWidth: true; wrapMode: Text.Wrap }
@@ -929,6 +923,136 @@ Dialog {
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Label { text: qsTr("Meta+J — quick commands\nA KDE menu entry and a system tray icon"); color: Theme.textDim; lineHeight: 1.4 }
                     DarkButton { text: qsTr("Claude API settings"); onClicked: { center.close(); center.apiSettingsRequested() } }
+                }
+            }
+
+            // ---------- Desktop integration ----------
+            ScrollView {
+                id: desktopScroll
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    id: desktopPage
+                    width: desktopScroll.availableWidth
+                    spacing: 12
+                    readonly property var levelColors: ({ ok: Theme.accent, warn: Theme.nodeFact, error: Theme.danger, off: Theme.textDim })
+                    // Diagnostics run when the tab is shown, not before.
+                    Connections {
+                        target: tabs
+                        function onCurrentIndexChanged() { if (tabs.currentIndex === 6 && center.visible) plasma.refresh() }
+                    }
+                    Connections {
+                        target: center
+                        function onOpened() { if (tabs.currentIndex === 6) plasma.refresh() }
+                    }
+                    Label { text: qsTr("Desktop integration"); color: Theme.text; font.pixelSize: 22; font.bold: true }
+                    Label { text: qsTr("How Jarvis lives in KDE Plasma: the background service, a widget on the desktop, KRunner (Alt+Space → \"jarvis …\") and actions other desktop components may start. Nothing in Plasma changes without your confirmation, and \"Restore the standard desktop\" takes every Jarvis addition away."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+
+                    Label { text: qsTr("Service"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    OptionSwitch {
+                        objectName: "autostartSwitch"
+                        text: qsTr("Start with the system in the tray and keep running")
+                        hint: qsTr("Jarvis starts in the system tray when you log in and comes back by itself if it crashes. Closing the window only hides it; \"Quit\" in the tray menu ends it.")
+                        checked: center.desktop.autostart
+                        onToggled: center.desktop.autostart = checked
+                    }
+                    OptionSwitch {
+                        objectName: "backgroundSwitch"
+                        text: qsTr("Background work")
+                        hint: qsTr("The service keeps reminders, hints, KRunner and the desktop widget working after the Jarvis window is closed or quit. Off: the service ends a few seconds after the window (and two minutes after login if the window does not start); reminders wait until Jarvis is open again.")
+                        checked: center.settings.background
+                        onToggled: center.report(center.settings.setOption("background", checked))
+                    }
+
+                    Label { text: qsTr("Plasma"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    OptionSwitch {
+                        objectName: "integrationSwitch"
+                        text: qsTr("Integration with Plasma")
+                        hint: qsTr("KRunner answers \"jarvis <question>\", the desktop widget shows the last notification and opens the overlay, and desktop components may start the actions Jarvis lists (open the overlay, tasks, memory, pause awareness). No component can run commands or read your memory through it. Off: KRunner and the widget only say that the integration is off.")
+                        checked: center.settings.desktopIntegration
+                        onToggled: center.report(center.settings.setOption("desktopIntegration", checked))
+                    }
+                    OptionSwitch {
+                        objectName: "shareActiveAppSwitch"
+                        text: qsTr("Let desktop components know the active application")
+                        hint: qsTr("Its name only (\"kate\", \"firefox\"), never the window title, and nothing about private or excluded windows. Needs window awareness. Any program of your session could then ask for it — leave it off unless a widget or script of yours needs it.")
+                        enabled: center.settings.desktopIntegration && center.settings.awarenessWindow
+                        checked: center.settings.shareActiveApp
+                        onToggled: center.report(center.settings.setOption("shareActiveApp", checked))
+                    }
+
+                    Label { text: qsTr("Desktop HUD"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label {
+                        text: qsTr("A Plasma widget with Jarvis's state, a small animated core, system activity and the last notification; a click opens the overlay. It rests while windows cover the desktop and calms down on battery. Plasma 6 draws it with its own components: a problem in Jarvis never reaches the rest of the desktop.")
+                        color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: plasma.widgetInstalled ? Theme.text : Theme.nodeFact
+                        text: !plasma.widgetInstalled ? qsTr("The widget package is not installed.")
+                            : !plasma.plasmaRunning ? qsTr("Plasma is not running here.")
+                            : plasma.widgetCount < 0 ? qsTr("Checking the desktop…")
+                            : plasma.widgetCount === 0 ? qsTr("Not on the desktop.")
+                            : qsTr("On the desktop: %1").arg(plasma.widgetCount)
+                    }
+                    RowLayout {
+                        DarkButton {
+                            objectName: "addWidgetButton"
+                            text: qsTr("Add to the desktop…")
+                            primary: true
+                            enabled: plasma.widgetInstalled && plasma.plasmaRunning && !plasma.busy && plasma.widgetCount === 0
+                            onClicked: addWidgetConsent.open()
+                        }
+                        DarkButton {
+                            text: qsTr("Remove from the desktop")
+                            enabled: plasma.plasmaRunning && !plasma.busy && plasma.widgetCount > 0
+                            onClicked: removeWidgetConsent.open()
+                        }
+                    }
+                    RowLayout {
+                        spacing: 12
+                        Label { text: qsTr("Animations"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "hudAnimationCombo"
+                            readonly property var values: ["off", "low", "normal", "high"]
+                            model: [qsTr("Off (still)"), qsTr("Low"), qsTr("Normal"), qsTr("High")]
+                            currentIndex: values.indexOf(center.settings.hudAnimation)
+                            onActivated: index => center.report(center.settings.setHudAnimation(values[index]))
+                        }
+                    }
+                    Label { text: qsTr("On battery the widget uses one step less; under maximized or fullscreen windows it stops."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12 }
+                    Label { visible: plasma.status.length > 0; text: plasma.status; color: Theme.accent; wrapMode: Text.Wrap; Layout.fillWidth: true; textFormat: Text.PlainText }
+
+                    Label { text: qsTr("Service diagnostics"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Repeater {
+                        model: plasma.diagnostics
+                        RowLayout {
+                            id: diagRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 10
+                            Rectangle { width: 10; height: 10; radius: 5; Layout.alignment: Qt.AlignTop; Layout.topMargin: 5; color: desktopPage.levelColors[diagRow.modelData.level] || Theme.textDim }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+                                Label { text: diagRow.modelData.name; color: Theme.text; Layout.fillWidth: true; wrapMode: Text.Wrap }
+                                Label { text: diagRow.modelData.text; color: Theme.textDim; font.pixelSize: 12; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
+                            }
+                        }
+                    }
+                    Label { visible: plasma.diagnostics.length === 0; text: plasma.busy ? qsTr("Checking…") : qsTr("Not checked yet."); color: Theme.textDim }
+                    RowLayout {
+                        DarkButton { text: qsTr("Check again"); enabled: !plasma.busy; onClicked: plasma.refresh() }
+                        DarkButton { text: qsTr("Copy report"); enabled: plasma.diagnostics.length > 0; onClicked: plasma.copyReport() }
+                        DarkButton { text: qsTr("Restart service"); enabled: !center.chat.busy; onClicked: { center.desktop.restartDaemon(); refreshLater.restart() } }
+                    }
+                    Label { text: qsTr("The same check in a terminal: jarvis --diagnose · the service log: journalctl --user -u jarvis"); color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Restore the standard desktop"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label { text: qsTr("Removes Jarvis widgets from desktops and panels and turns the Plasma integration off. Your panels, other widgets, wallpaper and KDE settings stay as they are. If Jarvis itself does not start, run: jarvis --restore-desktop"); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    DarkButton { objectName: "restoreDesktopButton"; text: qsTr("Restore the standard desktop…"); enabled: !plasma.busy; onClicked: restoreConsent.open() }
                 }
             }
         }
@@ -957,6 +1081,46 @@ Dialog {
         }
         onAccepted: center.report(center.settings.setOption("awarenessScreen", true))
         onRejected: screenSwitch.checked = Qt.binding(() => center.settings.awarenessScreen)
+    }
+    PlasmaBridge {
+        id: plasma
+        onRestored: refreshLater.restart()
+    }
+    // The service and Plasma need a moment after a restart or a change.
+    Timer { id: refreshLater; interval: 1500; onTriggered: plasma.refresh() }
+    Dialog {
+        id: addWidgetConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Add the Jarvis widget to your desktop?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label {
+            width: 420
+            wrapMode: Text.Wrap
+            text: qsTr("Jarvis will ask Plasma to place one \"Jarvis HUD\" widget at the top right of the first screen's desktop. Nothing else in your layout changes. You can move it, resize it or remove it like any widget, or here.")
+        }
+        onAccepted: plasma.addWidget()
+    }
+    Dialog {
+        id: removeWidgetConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Remove the Jarvis widgets?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label { width: 420; wrapMode: Text.Wrap; text: qsTr("Every \"Jarvis HUD\" widget leaves your desktops and panels. Other widgets are not touched.") }
+        onAccepted: plasma.removeWidgets()
+    }
+    Dialog {
+        id: restoreConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Restore the standard desktop?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label { width: 420; wrapMode: Text.Wrap; text: qsTr("Jarvis widgets are removed and the Plasma integration is turned off (KRunner, widget actions, active-application sharing). Jarvis itself, its memory and the tray keep working; you can turn the integration on again here.") }
+        onAccepted: {
+            center.report(center.settings.setOption("desktopIntegration", false))
+            plasma.removeWidgets()
+        }
     }
     Dialog {
         id: confirmForget

@@ -1,0 +1,21 @@
+[Desktop Entry]
+Name=Jarvis
+Name[ru]=Jarvis
+Comment=Ask Jarvis or add a reminder: "jarvis <question>"
+Comment[ru]=Спросить Jarvis или добавить напоминание: «jarvis <вопрос>»
+X-KDE-ServiceTypes=Plasma/Runner
+Type=Service
+Icon=org.jarvis.Jarvis
+X-KDE-PluginInfo-Author=Bohdan99py
+X-KDE-PluginInfo-Name=org.jarvis.Jarvis
+X-KDE-PluginInfo-Version=@PROJECT_VERSION@
+X-KDE-PluginInfo-EnabledByDefault=true
+X-Plasma-API=DBus
+# jarvisd owns this name while the desktop integration is on. The name is not
+# D-Bus activatable, so KRunner never starts the daemon by itself.
+X-Plasma-DBusRunner-Service=org.jarvis.Runner
+X-Plasma-DBusRunner-Path=/org/jarvis/KRunner
+X-Plasma-Request-Actions-Once=true
+X-Plasma-Runner-Syntaxes=jarvis :q:
+X-Plasma-Runner-Syntax-Descriptions=Asks Jarvis :q: in the overlay, or adds it as a task or reminder
+X-Plasma-Runner-Syntax-Descriptions[ru]=Спрашивает Jarvis «:q:» в оверлее или добавляет это как задачу или напоминание

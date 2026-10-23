@@ -180,6 +180,28 @@ int jv_cpu_count(void)
     return n > 0 ? (int)n : 1;
 }
 
+/* "12.34" from the kernel, whatever LC_NUMERIC says (Qt calls setlocale, and a
+ * Russian locale makes sscanf("%lf") stop at the dot). Advances *p. */
+static int parse_kernel_double(const char **p, double *out)
+{
+    const char *s = *p;
+    while (*s == ' ' || *s == '\t')
+        ++s;
+    if (!isdigit((unsigned char)*s))
+        return -1;
+    double v = 0;
+    while (isdigit((unsigned char)*s))
+        v = v * 10 + (*s++ - '0');
+    if (*s == '.') {
+        double scale = 0.1;
+        for (++s; isdigit((unsigned char)*s); ++s, scale /= 10)
+            v += (*s - '0') * scale;
+    }
+    *out = v;
+    *p = s;
+    return 0;
+}
+
 int jv_loadavg_read(jv_loadavg *l)
 {
     if (!l)
@@ -188,7 +210,11 @@ int jv_loadavg_read(jv_loadavg *l)
     ssize_t n = read_small("/proc/loadavg", buf, sizeof buf);
     if (n < 0)
         return (int)n;
-    return sscanf(buf, "%lf %lf %lf", &l->l1, &l->l5, &l->l15) == 3 ? 0 : -EIO;
+    const char *p = buf;
+    return parse_kernel_double(&p, &l->l1) == 0 && parse_kernel_double(&p, &l->l5) == 0
+                   && parse_kernel_double(&p, &l->l15) == 0
+               ? 0
+               : -EIO;
 }
 
 int jv_uptime_read(double *seconds)
@@ -199,7 +225,8 @@ int jv_uptime_read(double *seconds)
     ssize_t n = read_small("/proc/uptime", buf, sizeof buf);
     if (n < 0)
         return (int)n;
-    return sscanf(buf, "%lf", seconds) == 1 ? 0 : -EIO;
+    const char *p = buf;
+    return parse_kernel_double(&p, seconds) == 0 ? 0 : -EIO;
 }
 
 /* ------------------------------------------------------------------ */
