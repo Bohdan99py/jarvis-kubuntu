@@ -59,6 +59,12 @@ class FakeKWin:
         self.conn.call_sync('org.jarvis.Daemon1', '/org/jarvis/Daemon1', 'org.jarvis.Daemon1', 'WindowActivated',
                             GLib.Variant('(sss)', (caption, app_class, desktop)), None, Gio.DBusCallFlags.NONE, 3000, None)
 
+    def focus(self, caption, app_class, desktop, handle, fullscreen=False, output=''):
+        """What the 0.18 KWin script does: the window id, fullscreen state and screen too."""
+        self.conn.call_sync('org.jarvis.Daemon1', '/org/jarvis/Daemon1', 'org.jarvis.Daemon1', 'WindowFocused',
+                            GLib.Variant('(ssssbs)', (caption, app_class, desktop, handle, fullscreen, output)),
+                            None, Gio.DBusCallFlags.NONE, 3000, None)
+
     def close(self):
         self.conn.unregister_object(self.registration)
         self._bus('ReleaseName', GLib.Variant('(s)', ('org.kde.KWin',)))

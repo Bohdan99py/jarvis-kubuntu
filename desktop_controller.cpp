@@ -10,6 +10,8 @@
 #include "dbus_names.h"
 #include <memory>
 #include <QDir>
+#include <QGuiApplication>
+#include <QLibraryInfo>
 #include <QFileInfo>
 #include <QFile>
 #include <QSaveFile>
@@ -168,6 +170,15 @@ bool DesktopController::trayUnitInstalled() {
     return QFileInfo::exists(QCoreApplication::applicationDirPath()+"/../share/systemd/user/jarvis-tray.service");
 }
 bool DesktopController::autostart() const { return QFileInfo::exists(autostartFile()); }
+void DesktopController::prepareActivation(const QString &token) {
+    // Qt's Wayland plugin hands this token to the compositor with the next requestActivate().
+    static const QRegularExpression valid("^[A-Za-z0-9._:/+=-]{1,200}$");
+    if(valid.match(token).hasMatch()) qputenv("XDG_ACTIVATION_TOKEN",token.toUtf8());
+}
+bool DesktopController::layerShell() const {
+    if(qEnvironmentVariableIsSet("JARVIS_NO_LAYER_SHELL") || !QGuiApplication::platformName().startsWith(QLatin1String("wayland")))return false;
+    return QFileInfo::exists(QLibraryInfo::path(QLibraryInfo::QmlImportsPath)+"/org/kde/layershell/qmldir");
+}
 void DesktopController::setAutostart(bool on) {
     const bool unit=trayUnitInstalled();
     if(on) {

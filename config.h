@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 
 namespace jarvis {
 
@@ -42,6 +43,33 @@ struct ConfigData
     int eveningHour = 19;
     bool reminderSound = true;
     int nagMinutes = 0;
+
+    // ---- Cognitive awareness (0.18) ----
+    // How much Jarvis does with what it observes: "off" (nothing), "manual"
+    // (context only when the user asks, e.g. from the Ctrl+J overlay),
+    // "assistive" (also rare suggestions backed by strong evidence) or
+    // "proactive" (suggestions with more kinds of evidence).
+    QString awarenessLevel = QStringLiteral("manual");
+    // Separate permissions: the focused window's application and title (through
+    // the KWin script), the content of the screen (screenshots analysed on this
+    // computer) and sending a screenshot to Claude.
+    bool awarenessWindow = false;
+    bool awarenessScreen = false;
+    bool awarenessCloudImages = false;
+    // Background screen analysis (assistive/proactive with screen permission):
+    // at most every N minutes; 0 = only when asked.
+    int screenIntervalMinutes = 0;
+    // Suggestion categories switched off: build, electronics, driving, docs, study.
+    QStringList awarenessMuted;
+    // Applications never observed (desktop ids or window classes, lower case).
+    QStringList awarenessExcluded;
+    int suggestionCooldownMinutes = 45;
+    int suggestionsPerDay = 4;
+    // Interrupt fullscreen applications (games, presentations, films).
+    bool awarenessFullscreen = false;
+    // Claude may search the web (Anthropic's web search tool) for current facts:
+    // traffic law, racing results and calendars. Billed per search.
+    bool webSearch = false;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.
@@ -52,6 +80,8 @@ class Config
 public:
     static QString defaultModel();
     static QString filePath();
+    // off, manual, assistive, proactive.
+    static QStringList awarenessLevels();
 
     // File contents only (used by the settings UI so an environment key is
     // never copied into the file).

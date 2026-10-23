@@ -9,11 +9,13 @@
 #include <QTimer>
 
 #include "activity_store.h"
+#include "awareness.h"
 #include "chat_engine.h"
 #include "claude_client.h"
 #include "code_store.h"
 #include "config.h"
 #include "curiosity.h"
+#include "driving_store.h"
 #include "knowledge_store.h"
 #include "language.h"
 #include "learning_store.h"
@@ -40,7 +42,12 @@ public:
     ~Assistant() override;
 
     // `files`: paths of attachments (images, PDF, code, schematics), up to 8.
-    quint64 ask(const QString &input, const QStringList &files = {});
+    // `desktop`: the request comes with the user's desktop context (the Ctrl+J
+    // overlay, "what's on my screen"): {screen: none|text|image, screenText}.
+    // The screenshot itself, if any, is one of `files`.
+    quint64 ask(const QString &input, const QStringList &files = {}, const QJsonObject &desktop = {});
+    // Stops the answer being written (Claude's stream); the part so far stays.
+    void cancel();
     void reloadConfig();
     const ConfigData &config() const { return m_config; }
     QString teach(const QString &q, const QString &a);
@@ -91,7 +98,23 @@ public:
     QString editTask(const QString &id, const QString &text, const QString &when, const QString &repeat);
 
     // From the desktop bridge (jarvisd only).
-    void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
+    void windowActivated(const QString &caption, const QString &appClass, const QString &desktopId,
+                         const QString &handle = {}, bool fullscreen = false, const QString &output = {});
+    // KWin reports focus while activity tracking or window awareness is on.
+    bool wantsWindowReports() const;
+
+    // ---- Cognitive awareness ----
+    // What the user is doing now, as JSON for the overlay and the HUD
+    // (Awareness::context plus pausedUntil and the suggestion summary).
+    QString contextJson();
+    // Text the GUI recognised on the focused window (screen permission only).
+    void screenObserved(const QString &appKey, const QString &text);
+    // Pause suggestions and background observation for `minutes` (0 resumes, -1 until tomorrow morning).
+    QString pauseAwareness(int minutes);
+    // The desktop's "Do not disturb" (org.freedesktop.Notifications Inhibited).
+    void setDoNotDisturb(bool on) { m_dnd = on; }
+    // What Jarvis is asked when the user accepts the suggestion behind notification `key`.
+    QString assistPrompt(const QString &key) const { return m_assistPrompts.value(key); }
     void setScreenLocked(bool locked);
     void setTrackingStatus(const QString &status);
 
@@ -116,6 +139,10 @@ signals:
     void routed(quint64 id, const QString &route);
     // Claude could not answer `id` (network, key, quota…); the reply says why.
     void failed(quint64 id, const QString &reason);
+    // An offer of help passed the importance filter: {category, title, body, score, evidence}.
+    void suggested(const QJsonObject &suggestion);
+    // The observed context changed noticeably (another application or activity); throttled.
+    void contextChanged();
 
 private:
     struct Request
@@ -125,6 +152,7 @@ private:
         QString mode;        // empty for chat, otherwise a code request
         QJsonObject context; // code requests only
         QStringList files;   // attachments of a chat request
+        QJsonObject desktop; // desktop context that goes with it (see ask())
     };
     struct CodeAnswer
     {
@@ -140,6 +168,13 @@ private:
     void answer(const Request &r, Lang lang);
     // A question with attached files: straight to Claude (or a local summary of schematics).
     void answerWithFiles(const Request &r, Lang lang);
+    // A question about the screen or the application the user is in.
+    void answerWithDesktop(const Request &r, Lang lang);
+    QString localDesktopReply(Lang lang) const;
+    // The user's text plus the OCR text of the screen, when the request carries it.
+    QString withScreenText(const QString &text) const;
+    void suggestHelp(qint64 t);
+    void learnFromAwareness(qint64 t);
     // Reminders and tasks in chat. False when `text` is not about them; true when
     // the request is answered (now, or later once Claude has read the time).
     bool handleTaskCommand(const Request &r, Lang lang);
@@ -175,6 +210,15 @@ private:
     QString learnedToday(Lang lang) const;
 
     ConfigData m_config;
+    Awareness m_awareness;
+    QJsonObject m_awarenessState;
+    QJsonObject m_currentDesktop; // desktop context of the request being answered
+    QHash<QString, QString> m_assistPrompts;
+    QString m_lastContextKey;
+    QTimer m_contextNotify;
+    bool m_dnd = false;
+    DrivingStore m_driving;
+    bool m_cancelled = false;
     SkillStore m_skills;
     LearningStore m_memory;
     KnowledgeStore m_knowledge;

@@ -22,6 +22,8 @@
 #include <QDBusPendingReply>
 #include "dbus_names.h"
 #include "markdown_safe.h"
+#include "screen_awareness.h"
+#include <QJsonDocument>
 
 using namespace Qt::StringLiterals;
 
@@ -90,11 +92,24 @@ ChatModel::ChatModel(QObject *parent)
             [this](bool on) { emit activity(QStringLiteral("daemon"), on ? QStringLiteral("on") : QStringLiteral("off")); });
     connect(&m_daemon, &DaemonClient::routed, this,
             [this](const QString &route, bool own) { emit activity(own || route == QLatin1String("reflect") ? QStringLiteral("route") : QStringLiteral("route-ext"), route); });
-    connect(&m_daemon, &DaemonClient::claudeFailed, this, [this](const QString &reason, bool) { emit activity(QStringLiteral("error"), reason); });
+    connect(&m_daemon, &DaemonClient::claudeFailed, this, [this](const QString &reason, bool own) {
+        if (own)
+            m_failed = true;
+        emit activity(QStringLiteral("error"), reason);
+    });
+    connect(&m_daemon, &DaemonClient::contextChanged, this, &ChatModel::refreshContext);
+    connect(&m_daemon, &DaemonClient::suggestion, this, [this](const QString &json) {
+        emit suggested(json.left(4096));
+        emit activity(QStringLiteral("suggestion"),
+                      QJsonDocument::fromJson(json.left(4096).toUtf8()).object().value(QStringLiteral("title")).toString().left(120));
+    });
     connect(&m_daemon, &DaemonClient::notice, this, [this](const QString &, const QString &title) { emit activity(QStringLiteral("notice"), title); });
     // The local engine answers when there is no daemon (or as a fallback).
     connect(&m_assistant, &jarvis::Assistant::routed, this, [this](quint64, const QString &route) { emit activity(QStringLiteral("route"), route); });
-    connect(&m_assistant, &jarvis::Assistant::failed, this, [this](quint64, const QString &reason) { emit activity(QStringLiteral("error"), reason.left(300)); });
+    connect(&m_assistant, &jarvis::Assistant::failed, this, [this](quint64, const QString &reason) {
+        m_failed = true;
+        emit activity(QStringLiteral("error"), reason.left(300));
+    });
 
     m_messages.reserve(kMaxMessages + 1);
     addGreeting();
@@ -157,6 +172,10 @@ QVariant ChatModel::data(const QModelIndex &index, int role) const
         return m.fromUser ? QVariantList() : segments(m.text);
     case FilesRole:
         return m.files;
+    case KindRole:
+        return !m.kind.isEmpty() ? m.kind : m.fromUser ? QStringLiteral("user") : QStringLiteral("jarvis");
+    case StreamingRole:
+        return m_busy && index.row() == m_streamRow;
     default:
         return {};
     }
@@ -171,6 +190,8 @@ QHash<int, QByteArray> ChatModel::roleNames() const
         {MarkdownRole, "markdown"},
         {SegmentsRole, "segments"},
         {FilesRole, "files"},
+        {KindRole, "kind"},
+        {StreamingRole, "streaming"},
     };
 }
 
@@ -179,14 +200,36 @@ void ChatModel::send(const QString &text)
     sendWithFiles(text, {});
 }
 
+namespace {
+
+// "что у меня на экране", "посмотри на экран", "what's on my screen"…
+bool asksAboutScreen(const QString &text)
+{
+    static const QRegularExpression screen(
+        u"(?:что|чо|что-то|что там)\\s+(?:у\\s+меня\\s+|сейчас\\s+|ты\\s+видишь\\s+)*на\\s+(?:мо[её]м\\s+|этом\\s+)?экране|"
+        u"посмотри\\s+на\\s+(?:мой\\s+|этот\\s+)?экран|прочитай\\s+(?:с\\s+)?экран|что\\s+на\\s+экране|"
+        u"what(?:'s|\\s+is)\\s+on\\s+(?:my|the)\\s+screen|look\\s+at\\s+my\\s+screen|read\\s+my\\s+screen|"
+        u"qu'?est-ce\\s+qu'?il\\s+y\\s+a\\s+sur\\s+(?:mon|l')\\s*[ée]cran"_s,
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::UseUnicodePropertiesOption);
+    return screen.match(text).hasMatch();
+}
+
+} // namespace
+
 void ChatModel::sendWithFiles(const QString &text, const QVariantList &files)
+{
+    sendWithContext(text, files, false, false);
+}
+
+void ChatModel::sendWithContext(const QString &text, const QVariantList &files, bool useWindow, bool useScreen)
 {
     const QString trimmed = text.trimmed();
     // One request at a time keeps replies in order.
-    if ((trimmed.isEmpty() && files.isEmpty()) || trimmed.size() > 4096 || m_busy || files.size() > 8)
+    if ((trimmed.isEmpty() && files.isEmpty() && !useScreen) || trimmed.size() > 4096 || m_busy || files.size() > 8)
         return;
 
-    QStringList paths, names;
+    Sent request;
+    request.text = trimmed;
     const QString inbox = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + u"/jarvis/attachments"_s;
     for (const QVariant &v : files) {
         const QUrl url = v.toUrl();
@@ -200,27 +243,204 @@ void ChatModel::sendWithFiles(const QString &text, const QVariantList &files)
             if (QFile::copy(path, copy))
                 path = copy;
         }
-        paths.append(path);
-        names.append(QFileInfo(path).fileName().section(u'-', QFileInfo(path).path() == inbox ? 1 : 0));
+        request.paths.append(path);
+        request.names.append(QFileInfo(path).fileName().section(u'-', QFileInfo(path).path() == inbox ? 1 : 0));
     }
-    if (trimmed.isEmpty() && paths.isEmpty())
+    if (trimmed.isEmpty() && request.paths.isEmpty() && !useScreen)
         return;
     // Old hand-overs are not kept.
     for (const QFileInfo &old : QDir(inbox).entryInfoList(QDir::Files))
         if (old.lastModified().secsTo(QDateTime::currentDateTime()) > 24 * 3600)
             QFile::remove(old.filePath());
 
-    append(trimmed, /*fromUser=*/true, names);
-    m_streamRow = -1;
-    setBusy(true);
-    m_pendingText = trimmed;
-    m_pendingFiles = paths;
-    emit activity(QStringLiteral("request"), QString::number(paths.size()));
+    // A question about the screen carries the desktop context by itself.
+    const bool aboutScreen = asksAboutScreen(trimmed);
+    request.context = useWindow || useScreen || aboutScreen;
+    request.screen = useScreen || aboutScreen;
+    start(request, true);
+}
 
+void ChatModel::start(const Sent &request, bool showMessage)
+{
+    if (showMessage) {
+        QStringList names = request.names;
+        if (request.screen)
+            names.append(tr("screen"));
+        append(request.text.isEmpty() && request.screen ? tr("What's on my screen?") : request.text, /*fromUser=*/true, names);
+    }
+    m_streamRow = -1;
+    m_failed = false;
+    m_lastFailed = false;
+    m_last = request;
+    setLiveReply({});
+    setBusy(true);
+    emit activity(QStringLiteral("request"), QString::number(request.paths.size()));
+
+    if (!request.context) {
+        dispatch(request.text, request.paths, {});
+        return;
+    }
+    const QJsonObject none{{QStringLiteral("screen"), QStringLiteral("none")}};
+    if (!request.screen) {
+        dispatch(request.text, request.paths, none);
+        return;
+    }
+    if (!m_screen || !m_screen->allowed()) {
+        note(tr("Screen awareness is off, so I only know the application and its window title. "
+                "Turn it on in Control center → Awareness to let me read the window."));
+        dispatch(request.text, request.paths, none);
+        return;
+    }
+    // The window the user was in before opening Jarvis, by KWin's id — never a private or excluded one.
+    const QJsonObject context = QJsonDocument::fromJson(m_context.toUtf8()).object();
+    if (context.value(QStringLiteral("excluded")).toBool() || context.value(QStringLiteral("private")).toBool()) {
+        note(tr("The window you came from is private or excluded from observation, so I did not look at it."));
+        dispatch(request.text, request.paths, none);
+        return;
+    }
+    const QString handle = context.value(QStringLiteral("handle")).toString();
+    emit activity(QStringLiteral("tool"), tr("reading the screen"));
+    m_captureId = m_screen->capture(handle, true);
+}
+
+void ChatModel::dispatch(const QString &text, const QStringList &paths, const QJsonObject &desktop)
+{
+    m_pendingText = text;
+    m_pendingFiles = paths;
     if (m_daemon.isAvailable())
-        m_daemon.ask(trimmed, paths);
+        m_daemon.ask(text, paths, desktop.isEmpty() ? QString() : QString::fromUtf8(QJsonDocument(desktop).toJson(QJsonDocument::Compact)));
     else
-        m_assistant.ask(trimmed, paths);
+        m_assistant.ask(text, paths, desktop);
+}
+
+void ChatModel::setScreen(ScreenAwareness *screen)
+{
+    if (m_screen == screen)
+        return;
+    if (m_screen)
+        disconnect(m_screen, nullptr, this, nullptr);
+    m_screen = screen;
+    if (m_screen)
+        connect(m_screen, &ScreenAwareness::captured, this, [this](int id, const QString &path, const QString &text, const QString &error) {
+            if (id != m_captureId || !m_busy) {
+                m_screen->discard(path);
+                return;
+            }
+            m_captureId = 0;
+            if (m_stopping) {
+                m_screen->discard(path);
+                finishStop();
+                return;
+            }
+            QStringList paths = m_last.paths;
+            QJsonObject desktop{{QStringLiteral("screen"), QStringLiteral("none")}};
+            if (!path.isEmpty() && paths.size() < 8) {
+                m_screenImage = path;
+                paths.append(path);
+                desktop[QStringLiteral("screen")] = QStringLiteral("image");
+            } else {
+                m_screen->discard(path);
+            }
+            if (!text.isEmpty()) {
+                desktop[QStringLiteral("screenText")] = text.left(6000);
+                if (path.isEmpty())
+                    desktop[QStringLiteral("screen")] = QStringLiteral("text");
+            }
+            if (!error.isEmpty() && desktop.value(QStringLiteral("screen")).toString() == QLatin1String("none"))
+                note(error);
+            dispatch(m_last.text.isEmpty() ? tr("What's on my screen?") : m_last.text, paths, desktop);
+        });
+    emit screenChanged();
+}
+
+void ChatModel::stop()
+{
+    if (!m_busy || m_stopping)
+        return;
+    m_stopping = true;
+    emit busyChanged();
+    if (m_captureId != 0)
+        return; // the picture being taken is dropped when it arrives
+    if (daemonConnected() && m_daemon.waiting())
+        m_daemon.cancel();
+    else
+        m_assistant.cancel();
+    // The answer normally ends at once; never leave the chat waiting.
+    QTimer::singleShot(3000, this, [this] {
+        if (m_busy && m_stopping) {
+            m_daemon.abandon();
+            finishStop();
+        }
+    });
+}
+
+void ChatModel::finishStop()
+{
+    if (const int row = std::exchange(m_streamRow, -1); row >= 0 && row < m_messages.size() && !m_messages.at(row).fromUser) {
+        m_messages[row].text += tr("\n\n…(stopped)");
+        const QModelIndex at = index(row);
+        emit dataChanged(at, at, {TextRole, MarkdownRole, SegmentsRole, StreamingRole});
+    } else {
+        note(tr("Stopped."));
+    }
+    if (m_screen && !m_screenImage.isEmpty())
+        m_screen->discard(std::exchange(m_screenImage, QString()));
+    m_captureId = 0;
+    m_stopping = false;
+    m_pendingText.clear();
+    m_pendingFiles.clear();
+    emit activity(QStringLiteral("reply"), QStringLiteral("0"));
+    setBusy(false);
+}
+
+void ChatModel::setLiveReply(const QString &text)
+{
+    if (m_liveReply == text)
+        return;
+    m_liveReply = text;
+    emit liveReplyChanged();
+}
+
+void ChatModel::retry()
+{
+    if (!canRetry())
+        return;
+    start(m_last, false);
+}
+
+void ChatModel::note(const QString &text)
+{
+    const QString trimmed = text.trimmed().left(1000);
+    if (!trimmed.isEmpty())
+        append(trimmed, /*fromUser=*/false, {}, QStringLiteral("system"));
+}
+
+void ChatModel::refreshContext()
+{
+    auto take = [this](const QString &json) {
+        if (json.isEmpty() || json == m_context)
+            return;
+        m_context = json;
+        emit contextChanged();
+    };
+    if (!daemonConnected()) {
+        take(m_assistant.contextJson());
+        return;
+    }
+    callDaemon(QStringLiteral("Context"), {}, [take](const QString &result, const QString &error) {
+        if (error.isEmpty())
+            take(result);
+    });
+}
+
+void ChatModel::pauseAwareness(int minutes)
+{
+    if (!daemonConnected()) {
+        m_assistant.pauseAwareness(minutes);
+        refreshContext();
+        return;
+    }
+    callDaemon(QStringLiteral("PauseAwareness"), {minutes}, [this](const QString &, const QString &) { refreshContext(); });
 }
 
 QString ChatModel::saveFile(const QString &name, const QString &content, const QString &language) const
@@ -279,7 +499,7 @@ void ChatModel::clear()
     addGreeting();
 }
 
-void ChatModel::append(QString text, bool fromUser, QStringList files)
+void ChatModel::append(QString text, bool fromUser, QStringList files, QString kind)
 {
     // Bounded history: the oldest message leaves the model when the cap is hit.
     if (m_messages.size() >= kMaxMessages) {
@@ -292,7 +512,7 @@ void ChatModel::append(QString text, bool fromUser, QStringList files)
 
     const int row = int(m_messages.size());
     beginInsertRows({}, row, row);
-    m_messages.append(Message{std::move(text), QTime::currentTime().toString(u"HH:mm"), fromUser, std::move(files)});
+    m_messages.append(Message{std::move(text), QTime::currentTime().toString(u"HH:mm"), fromUser, std::move(files), std::move(kind)});
     endInsertRows();
 }
 
@@ -316,6 +536,7 @@ void ChatModel::onProgress(const QString &textSoFar)
     if (!m_busy)
         return;
     emit activity(QStringLiteral("stream"), QString::number(textSoFar.size()));
+    setLiveReply(textSoFar);
     if (m_streamRow < 0 || m_streamRow >= m_messages.size()) {
         append(textSoFar, /*fromUser=*/false);
         m_streamRow = int(m_messages.size()) - 1;
@@ -336,14 +557,22 @@ void ChatModel::onReply(const QString &reply)
 {
     if (!m_busy)
         return; // stray answer, e.g. from a request we already gave up on
+    const QString kind = m_failed ? QStringLiteral("error") : QString();
     // The answer was shown while it was written: the final text replaces it.
     if (const int row = std::exchange(m_streamRow, -1); row >= 0 && row < m_messages.size() && !m_messages.at(row).fromUser) {
         m_messages[row].text = reply;
+        m_messages[row].kind = kind;
         const QModelIndex at = index(row);
-        emit dataChanged(at, at, {TextRole, MarkdownRole, SegmentsRole});
+        emit dataChanged(at, at, {TextRole, MarkdownRole, SegmentsRole, KindRole, StreamingRole});
     } else {
-        append(reply, /*fromUser=*/false);
+        append(reply, /*fromUser=*/false, {}, kind);
     }
+    m_lastFailed = m_failed;
+    m_failed = false;
+    m_stopping = false;
+    setLiveReply(reply);
+    if (m_screen && !m_screenImage.isEmpty())
+        m_screen->discard(std::exchange(m_screenImage, QString()));
     m_lastReply=reply;emit lastReplyChanged();emit assistantReply(reply);
     emit activity(QStringLiteral("reply"), QString::number(reply.size()));
     m_pendingText.clear();

@@ -20,6 +20,10 @@ class DesktopController : public QObject, protected QDBusContext {
     // Start in the tray at login: an XDG autostart entry plus, where installed,
     // the systemd user unit jarvis-tray.service (restarts Jarvis if it crashes).
     Q_PROPERTY(bool autostart READ autostart WRITE setAutostart NOTIFY autostartChanged)
+    // The overlay can be a Wayland layer-shell surface (KDE's layer-shell-qt QML
+    // module is installed and the session is Wayland): it then appears above
+    // other windows on the active screen and takes the keyboard reliably.
+    Q_PROPERTY(bool layerShell READ layerShell CONSTANT)
 public:
     explicit DesktopController(QObject *parent=nullptr);
     ~DesktopController() override;
@@ -31,11 +35,14 @@ public:
     QString vscodeStatus() const { return m_vscodeStatus; }
     bool vscodeAvailable() const { return !vscodeCli().isEmpty(); }
     bool autostart() const;
+    bool layerShell() const;
     void setAutostart(bool on);
     // True once: the first time the window is closed, explain that Jarvis stays in the tray.
     Q_INVOKABLE bool takeTrayHint();
     // Installs the bundled Jarvis extension with `code --install-extension`.
     Q_INVOKABLE void installVsCodeExtension();
+    // The desktop's XDG activation token for the next window that asks for the focus (Wayland).
+    Q_INVOKABLE void prepareActivation(const QString &token);
     Q_INVOKABLE void setSkillEnabled(const QString &id,bool enabled);
     Q_INVOKABLE void importSkill(const QUrl &url);
     Q_INVOKABLE void fetchSkill(const QUrl &url);
@@ -55,6 +62,8 @@ public:
 public slots:
     Q_SCRIPTABLE void ShowQuick() { emit quickRequested(); }
     Q_SCRIPTABLE void ShowMain() { emit mainRequested(); }
+    // The overlay (Ctrl+J, `jarvis --overlay`). `token`: the caller's XDG activation token, if any.
+    Q_SCRIPTABLE void ShowOverlay(const QString &token) { emit overlayRequested(token.left(200)); }
     // From jarvisd's notifications: "main", "tasks", "study", "curious" or "memory".
     // The payload becomes a chat message from Jarvis, so it is taken only from jarvisd.
     Q_SCRIPTABLE void Open(const QString &target, const QString &payload);
@@ -63,6 +72,7 @@ signals:
     void updateChanged();
     void quickRequested();
     void mainRequested();
+    void overlayRequested(const QString &token);
     void vscodeChanged();
     void autostartChanged();
     void openRequested(const QString &target, const QString &payload);

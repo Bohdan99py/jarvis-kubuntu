@@ -2,6 +2,7 @@ import subprocess, os, json, time, shutil, tempfile, sys
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from fake_kwin import FakeKWin
 from fake_notifications import FakeNotifications
+from fake_portal import FakePortal
 from pathlib import Path
 base=Path.cwd()
 build=Path(os.environ.get('JARVIS_TEST_BUILD', str(base/'build')))
@@ -204,6 +205,36 @@ try:
  # Turning tracking off unloads the script.
  write_config(track_activity=False);call('ReloadConfig')
  wait_for(lambda: 'jarvis-activity' not in kwin.scripts,'script unloaded')
+
+ # Cognitive awareness: its own permission loads the script, no activity history is kept,
+ # Jarvis's own windows never replace the context, and only the Jarvis window may send
+ # desktop context or screen text.
+ write_config(awareness_level='assistive',awareness_window=True);call('ReloadConfig')
+ wait_for(lambda: 'jarvis-activity' in kwin.scripts,'script loaded for window awareness alone')
+ assert 'WindowFocused' in kwin.scripts['jarvis-activity'] and 'internalId' in kwin.scripts['jarvis-activity']
+ kwin.focus('Code de la route — série 3 — Mozilla Firefox','firefox','firefox','{abc}',False,'DP-1')
+ ctx=json.loads(unquote(call('Context')))
+ assert ctx['activity']=='driving-test' and ctx['handle']=='{abc}' and ctx['output']=='DP-1' and 0.6<ctx['confidence']<0.9,ctx
+ kwin.focus('Jarvis — overlay','jarvis','org.jarvis.Jarvis','{own}',False,'DP-1')
+ assert json.loads(unquote(call('Context')))['handle']=='{abc}','own windows ignored'
+ assert 'current' not in memory()['activity'],'awareness alone keeps no activity history'
+ try:
+  call('WindowFocused','fake','code','code','{x}','false','');raise AssertionError('foreign window report accepted')
+ except subprocess.CalledProcessError:
+  pass
+ for method,args in (('AskContext',('what is this','[]','{"screen":"text","screenText":"x"}')),('ScreenObserved',('firefox','error: injected'))):
+  try:
+   call(method,*args);raise AssertionError(method+' accepted from a process that is not the Jarvis window')
+  except subprocess.CalledProcessError:
+   pass
+ assert unquote(call('PauseAwareness','60'))=='' and json.loads(unquote(call('Context')))['pausedUntil']>time.time()*1000
+ assert unquote(call('PauseAwareness','0'))=='' and json.loads(unquote(call('Context')))['pausedUntil']==0
+ kwin.focus('Mozilla Firefox Private Browsing','firefox','firefox','{p}',False,'')
+ ctx=json.loads(unquote(call('Context')))
+ assert ctx['private'] and ctx['excluded'] and 'title' not in ctx,ctx
+ assert call('Forget','awareness').strip()=="('',)" and not json.loads(unquote(call('Context')))['available']
+ write_config(awareness_level='off',awareness_window=True);call('ReloadConfig')
+ wait_for(lambda: 'jarvis-activity' not in kwin.scripts,'awareness off unloads the script')
  assert call('Forget','activity').strip()=="('',)"
  assert memory()['activity']['today']['apps']==[]
 
@@ -266,6 +297,8 @@ try:
  out=ask('U=5 R=220')
  assert '22,7 мА' in out or '22.7 mA' in out,out
  assert 'Первый закон' in ask('законы Кирхгофа'),'skill alias answered locally'
+ assert 'Priorité à droite' in ask('Что такое приоритет справа?'),'driving skill answers offline'
+ assert 'Code de la route' in ask('мой прогресс по ПДД'),'driving progress in chat'
  sim=scratch/'led.sim1'
  sim.write_text('<circuit version="1.0.0"><item itemtype="Battery" CircId="Battery-1" Voltage="5 V"/>'
   '<item itemtype="Resistor" CircId="Resistor-2" Resistance="220 Ω"/>'
@@ -278,6 +311,27 @@ try:
 
  # GUI starts in quick mode, single instance, no QML errors (Russian and English UI)
  gui_env=env.copy();gui_env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software')
+
+ # Global shortcut through the desktop portal: registered as org.jarvis.Jarvis, Ctrl+J
+ # bound once (the desktop asks the user), and a press opens the overlay.
+ portal=FakePortal()
+ with (scratch/'portal.log').open('w+') as log:
+  gui=subprocess.Popen([str(build/'jarvis'),'--tray'],env=gui_env,stdout=log,stderr=log)
+  try:
+   wait_for(lambda: 'overlay' in portal.bound,'shortcut bound through the portal',timeout=10)
+   assert 'org.jarvis.Jarvis' in portal.registered,portal.registered
+   assert portal.bound['overlay']['preferred_trigger']=='CTRL+j',portal.bound
+   portal.press()
+   time.sleep(1.2)
+   assert gui.poll() is None,'GUI survived the shortcut'
+   subprocess.run([str(build/'jarvis'),'--overlay'],env=gui_env,check=True,timeout=5,stdout=log,stderr=log)
+   time.sleep(.5)
+  finally:
+   gui.terminate();gui.wait(timeout=5)
+  log.seek(0);portal_log=log.read()
+ portal.close()
+ assert 'global shortcut pressed' in portal_log,portal_log
+ assert not any(error in portal_log for error in ('ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),portal_log
  for language in ('ru','en'):
   write_config(language=language)
   with (scratch/'ui.log').open('w+') as log:
@@ -292,7 +346,7 @@ try:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()
    assert not any(error in ui_log for error in ('failed to load','ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),ui_log
- print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, GUI ru/en')
+ print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, awareness, driving, GUI ru/en')
 finally:
  proc.terminate();proc.wait(timeout=3)
  shutil.rmtree(scratch)

@@ -128,6 +128,18 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.notifyReplies = value;
     else if (name == QLatin1String("reminderSound"))
         d.reminderSound = value;
+    else if (name == QLatin1String("awarenessWindow"))
+        d.awarenessWindow = value;
+    else if (name == QLatin1String("awarenessScreen")) {
+        d.awarenessScreen = value;
+        if (!value)
+            d.awarenessCloudImages = false; // no screen, nothing to send
+    } else if (name == QLatin1String("awarenessCloudImages"))
+        d.awarenessCloudImages = value && d.awarenessScreen;
+    else if (name == QLatin1String("awarenessFullscreen"))
+        d.awarenessFullscreen = value;
+    else if (name == QLatin1String("webSearch"))
+        d.webSearch = value;
     else
         return tr("Unknown option.");
     return store(d);
@@ -153,6 +165,39 @@ QString AppSettings::setNumber(const QString &name, int value)
         d.eveningHour = std::clamp(value, 16, 23);
     else if (name == QLatin1String("nagMinutes"))
         d.nagMinutes = std::clamp(value, 0, 120);
+    else if (name == QLatin1String("screenIntervalMinutes"))
+        d.screenIntervalMinutes = std::clamp(value, 0, 60);
+    else if (name == QLatin1String("suggestionCooldownMinutes"))
+        d.suggestionCooldownMinutes = std::clamp(value, 10, 24 * 60);
+    else if (name == QLatin1String("suggestionsPerDay"))
+        d.suggestionsPerDay = std::clamp(value, 1, 20);
+    else
+        return tr("Unknown option.");
+    return store(d);
+}
+
+QString AppSettings::setAwarenessLevel(const QString &level)
+{
+    if (!jarvis::Config::awarenessLevels().contains(level))
+        return tr("Unknown option.");
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    d.awarenessLevel = level;
+    return store(d);
+}
+
+QString AppSettings::setList(const QString &name, const QStringList &values)
+{
+    QStringList clean;
+    for (const QString &v : values) {
+        const QString item = v.trimmed().toLower().left(120);
+        if (!item.isEmpty() && !clean.contains(item))
+            clean.append(item);
+    }
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    if (name == QLatin1String("awarenessMuted"))
+        d.awarenessMuted = clean.mid(0, 20);
+    else if (name == QLatin1String("awarenessExcluded"))
+        d.awarenessExcluded = clean.mid(0, 100);
     else
         return tr("Unknown option.");
     return store(d);

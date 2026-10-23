@@ -58,6 +58,7 @@ const QHash<QString, UnitName> &units()
         {u"bit"_s, {u"бит", u"bit", false}},   {u""_s, {u"", u"", true}},
         {u"n"_s, {u"", u"", false}},           {u"kWh"_s, {u"кВт·ч", u"kWh", false}},
         {u"text"_s, {u"", u"", false}},
+        {u"km/h"_s, {u"км/ч", u"km/h", false}}, {u"L"_s, {u"л", u"L", false}},
     };
     return table;
 }
@@ -140,6 +141,20 @@ bool parseQuantity(QString text, const QString &expected, double *value)
     } else if (expected == u"h") {
         if (text.endsWith(u"ч") || text.endsWith(u"h"))
             text.chop(1);
+    } else if (expected == u"km/h") {
+        // "90 km/h" must not read as 90 kilo-something.
+        for (const QString &w : {u"км/ч"_s, u"km/h"_s, u"kmh"_s, u"кмч"_s})
+            if (text.endsWith(w, Qt::CaseInsensitive)) {
+                text.chop(w.size());
+                break;
+            }
+    } else if (expected == u"L") {
+        if (text.endsWith(u"мл") || text.endsWith(u"ml", Qt::CaseInsensitive)) {
+            text.chop(2);
+            scale = 1e-3;
+        } else if (text.endsWith(u"л") || text.endsWith(u"l") || text.endsWith(u"L")) {
+            text.chop(1);
+        }
     } else {
         // Unit words are dropped; their prefixes stay.
         static const QStringList words = {u"Ом·мм²/м"_s, u"°C"_s, u"°С"_s, u"м/с²"_s, u"м/с2"_s, u"м/с"_s, u"m/s2"_s,
@@ -440,6 +455,32 @@ const QList<Calc> &calcs()
          u"Период малых колебаний.", u"Period of small oscillations.",
          u"T = 2π·√(L/g)",
          {{"l", u"Длина", u"Length", "m", "1"}, {"g", u"Ускорение свободного падения", u"Gravity", "m/s2", "9.81"}}},
+        // Driving and motorsport.
+        {"stopping", u"Остановочный путь", u"Stopping distance",
+         u"Путь за время реакции и тормозной путь. Замедление: сухой асфальт ~7–8 м/с², мокрый ~5, снег ~2–3. "
+         u"Для экзамена Code de la route — также школьные правила (V/10)×3 и (V/10)².",
+         u"Distance travelled while reacting plus braking distance. Deceleration: dry asphalt ~7–8 m/s², wet ~5, snow ~2–3. "
+         u"For the Code de la route exam also the rules of thumb (V/10)×3 and (V/10)².",
+         u"Dр = v·tр   Dт = v² / (2·a)   v = V/3,6",
+         {{"v", u"Скорость", u"Speed", "km/h", "90"}, {"t", u"Время реакции", u"Reaction time", "s", "1"},
+          {"a", u"Замедление при торможении", u"Braking deceleration", "m/s2", "7"}}},
+        {"following", u"Безопасная дистанция", u"Following distance",
+         u"Дистанция до впереди идущей машины, чтобы успеть среагировать. Во Франции — не меньше 2 секунд.",
+         u"The gap to the vehicle ahead that leaves time to react. In France at least 2 seconds.",
+         u"D = V/3,6 · t   (≈ десятки × 6 при 2 с)",
+         {{"v", u"Скорость", u"Speed", "km/h", "90"}, {"t", u"Интервал", u"Time gap", "s", "2"}}},
+        {"lapspeed", u"Круг: средняя скорость и отрыв", u"Lap: average speed and gap",
+         u"Средняя скорость по длине трассы и времени круга (1:27.097 или 87.097). Второе время — отрыв на круге в секундах и метрах.",
+         u"Average speed from the track length and a lap time (1:27.097 or 87.097). A second time gives the gap per lap in seconds and metres.",
+         u"Vср = L / t",
+         {{"length", u"Длина круга", u"Lap length", "m", "5.891km"}, {"lap", u"Время круга", u"Lap time", "text", "1:27.097"},
+          {"other", u"Время соперника (необязательно)", u"Rival's lap time (optional)", "text", ""}}},
+        {"stint", u"Топливо и пит-стопы", u"Fuel and pit stops",
+         u"Сколько кругов на баке, сколько остановок до финиша и сколько топлива нужно. Старт с полным баком.",
+         u"Laps per tank, stops to the finish and fuel needed. Starts with a full tank.",
+         u"круги на баке = бак / расход   остановки = ⌈круги·расход / бак⌉ − 1",
+         {{"perlap", u"Расход за круг", u"Fuel per lap", "L", "2.4"}, {"tank", u"Объём бака", u"Tank", "L", "100"},
+          {"laps", u"Кругов до финиша", u"Laps to go", "n", "120"}, {"pitloss", u"Потеря на пит-стопе (необязательно)", u"Time lost per stop (optional)", "s", "25"}}},
     };
     return list;
 }
@@ -1449,6 +1490,81 @@ QJsonObject Calculators::compute(const QString &id, const QJsonObject &values, L
         const double T = 2 * kPi * std::sqrt(val("l") / g);
         put(u"Период T", u"Period T", T, "s");
         put(u"Частота", u"Frequency", 1 / T, "Hz");
+    } else if (id == u"stopping") {
+        if (!has("v") || val("v") <= 0)
+            return failure(missing);
+        const double kmh = val("v"), ms = kmh / 3.6;
+        const double t = has("t") ? val("t") : 1.0, a = has("a") ? val("a") : 7.0;
+        if (t < 0 || a <= 0)
+            return failure(impossible);
+        const double react = ms * t, brake = ms * ms / (2 * a);
+        put(u"Скорость", u"Speed", ms, "m/s");
+        put(u"Путь за время реакции", u"Reaction distance", react, "m");
+        put(u"Тормозной путь", u"Braking distance", brake, "m");
+        put(u"Остановочный путь", u"Stopping distance", react + brake, "m");
+        const double tens = kmh / 10;
+        line(u"Правило Code de la route", u"Code de la route rule of thumb",
+             (ru ? u"реакция ≈ %1 м, остановка на сухой ≈ %2 м, на мокрой ≈ %3 м"_s
+                 : u"reaction ≈ %1 m, stopping on dry road ≈ %2 m, on wet ≈ %3 m"_s)
+                 .arg(number(tens * 3, 3, lang), number(tens * tens, 3, lang), number(tens * tens * 1.5, 3, lang)));
+        line(u"Важно", u"Note", ru ? u"Удвоение скорости — тормозной путь вчетверо длиннее."_s
+                                   : u"Twice the speed means four times the braking distance."_s);
+    } else if (id == u"following") {
+        if (!has("v") || val("v") <= 0)
+            return failure(missing);
+        const double t = has("t") ? val("t") : 2.0;
+        put(u"Дистанция", u"Distance", val("v") / 3.6 * t, "m");
+        put(u"Правило «десятки × 6» (≈ 2 с)", u"\"Tens × 6\" rule (≈ 2 s)", std::floor(val("v") / 10) * 6, "m");
+        if (t < 2)
+            line(u"Внимание", u"Warning", ru ? u"Меньше 2 секунд — во Франции это нарушение (ст. R412-12)."_s
+                                             : u"Less than 2 seconds is an offence in France (article R412-12)."_s);
+    } else if (id == u"lapspeed") {
+        const auto seconds = [](QString text, double *out) {
+            text = text.trimmed().replace(u',', u'.');
+            if (text.isEmpty())
+                return false;
+            double total = 0;
+            for (const QString &part : text.split(u':')) {
+                bool ok = false;
+                const double x = part.toDouble(&ok);
+                if (!ok || x < 0)
+                    return false;
+                total = total * 60 + x;
+            }
+            *out = total;
+            return total > 0;
+        };
+        double lap = 0;
+        if (!has("length") || val("length") <= 0 || !seconds(raw.value(u"lap"_s), &lap))
+            return failure(missing);
+        const double speed = val("length") / lap;
+        line(u"Средняя скорость", u"Average speed", format(speed * 3.6, u"km/h"_s, lang, 4));
+        put(u"В метрах в секунду", u"In metres per second", speed, "m/s");
+        double other = 0;
+        if (!raw.value(u"other"_s).isEmpty()) {
+            if (!seconds(raw.value(u"other"_s), &other))
+                return failure(impossible);
+            const double gap = other - lap;
+            line(u"Разница на круге", u"Gap per lap", (gap >= 0 ? u"+"_s : QString()) + number(gap, 4, lang) + (ru ? u" с"_s : u" s"_s));
+            put(u"Это расстояние на трассе", u"That is on track", std::fabs(gap) * speed, "m");
+            if (std::fabs(gap) > 0.0005)
+                line(u"Догнать 1 секунду", u"To make up 1 second", (ru ? u"%1 круга"_s : u"%1 laps"_s).arg(number(1 / std::fabs(gap), 3, lang)));
+        }
+    } else if (id == u"stint") {
+        if (!need({"perlap", "tank", "laps"}) || val("perlap") <= 0 || val("tank") <= 0 || val("laps") <= 0)
+            return failure(missing);
+        const double perTank = std::floor(val("tank") / val("perlap"));
+        const double fuel = val("laps") * val("perlap");
+        if (perTank < 1)
+            return failure(impossible);
+        const int stops = std::max(0, int(std::ceil(val("laps") / perTank)) - 1);
+        line(u"Кругов на полном баке", u"Laps on a full tank", number(perTank, 4, lang));
+        line(u"Топлива до финиша", u"Fuel to the finish", format(fuel, u"L"_s, lang, 4));
+        line(u"Пит-стопов", u"Pit stops", QString::number(stops));
+        if (has("pitloss") && stops > 0)
+            put(u"Время на остановках", u"Time in the pits", stops * val("pitloss"), "s");
+        line(u"Совет", u"Tip", ru ? u"Добавьте запас на круг прогрева и на сейфти-кар: расход за круг под SC ниже, но кругов больше."_s
+                                  : u"Leave a margin for the formation lap and safety cars: less fuel per lap under SC, but more laps."_s);
     }
     if (lines.isEmpty())
         return failure(missing);

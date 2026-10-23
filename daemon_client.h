@@ -20,7 +20,13 @@ public:
     // is no installed .service file). Asynchronous.
     void tryStartDaemon();
 
-    void ask(const QString &text, const QStringList &files = {});
+    // `desktop`: JSON of the desktop context ({screen, screenText}); sent with AskContext.
+    void ask(const QString &text, const QStringList &files = {}, const QString &desktop = {});
+    // Asks the daemon to stop the answer being written.
+    void cancel();
+    // Stops waiting: a late answer is ignored.
+    void abandon();
+    bool waiting() const noexcept { return m_waiting; }
 
     // Tell the daemon to re-read its config file (fire and forget).
     void reloadConfig();
@@ -39,6 +45,9 @@ signals:
     void routed(const QString &route, bool own);
     void claudeFailed(const QString &reason, bool own);
     void notice(const QString &kind, const QString &title);
+    // An offer of help (JSON: category, title, body, score) and a context change.
+    void suggestion(const QString &json);
+    void contextChanged();
 
 private slots:
     void onReplySignal(quint64 id, const QString &reply);

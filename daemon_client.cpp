@@ -49,6 +49,28 @@ DaemonClient::DaemonClient(QObject *parent)
     bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
                 QString(jarvis::dbus::kInterface), QStringLiteral("Notice"), this,
                 SLOT(onNoticeSignal(QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("Suggestion"), this,
+                SIGNAL(suggestion(QString)));
+    bus.connect(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                QString(jarvis::dbus::kInterface), QStringLiteral("ContextChanged"), this,
+                SIGNAL(contextChanged()));
+}
+
+void DaemonClient::cancel()
+{
+    if (!m_available || !m_waiting)
+        return;
+    QDBusMessage msg = QDBusMessage::createMethodCall(QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
+                                                      QString(jarvis::dbus::kInterface), QStringLiteral("Cancel"));
+    QDBusConnection::sessionBus().asyncCall(msg, kCallTimeoutMs);
+}
+
+void DaemonClient::abandon()
+{
+    m_timeout.stop();
+    m_waiting = false;
+    m_pendingId = 0;
 }
 
 void DaemonClient::onRoutedSignal(quint64 id, const QString &route)
@@ -78,7 +100,7 @@ void DaemonClient::tryStartDaemon()
     QDBusConnection::sessionBus().asyncCall(msg, kCallTimeoutMs); // result is irrelevant
 }
 
-void DaemonClient::ask(const QString &text, const QStringList &files)
+void DaemonClient::ask(const QString &text, const QStringList &files, const QString &desktop)
 {
     if (m_waiting)
         return;
@@ -89,9 +111,12 @@ void DaemonClient::ask(const QString &text, const QStringList &files)
 
     QDBusMessage msg = QDBusMessage::createMethodCall(
         QString(jarvis::dbus::kService), QString(jarvis::dbus::kPath),
-        QString(jarvis::dbus::kInterface), files.isEmpty() ? QStringLiteral("Ask") : QStringLiteral("AskFiles"));
+        QString(jarvis::dbus::kInterface),
+        !desktop.isEmpty() ? QStringLiteral("AskContext") : files.isEmpty() ? QStringLiteral("Ask") : QStringLiteral("AskFiles"));
     msg << text;
-    if (!files.isEmpty())
+    if (!desktop.isEmpty())
+        msg << files << desktop;
+    else if (!files.isEmpty())
         msg << files;
 
     auto *watcher = new QDBusPendingCallWatcher(

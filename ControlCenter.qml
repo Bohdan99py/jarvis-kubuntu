@@ -10,10 +10,13 @@ Dialog {
     required property var voice
     required property var chat
     required property var settings
+    property var screen: null       // ScreenAwareness
+    property var shortcut: null     // GlobalShortcut
     signal apiSettingsRequested()
     function showVoice() { tabs.currentIndex=1; open() }
     function showMemory() { tabs.currentIndex=2; open() }
-    function showApp() { tabs.currentIndex=4; open() }
+    function showAwareness() { tabs.currentIndex=4; open() }
+    function showApp() { tabs.currentIndex=5; open() }
     // Opens a skill's page, optionally on a tab ("schematics", "kicad", …).
     function showSkill(id, tab) {
         const skill = desktop.skills.find(s => s.id === id)
@@ -65,7 +68,7 @@ Dialog {
         TabBar {
             id: tabs; objectName: "controlTabs"; Layout.fillWidth: true; background: null; spacing: 4
             Repeater {
-                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Autonomy"), qsTr("Application")]
+                model: [qsTr("Skills"), qsTr("Voice"), qsTr("Memory"), qsTr("Autonomy"), qsTr("Awareness"), qsTr("Application")]
                 TabButton {
                     id: tabButton
                     required property string modelData
@@ -82,6 +85,13 @@ Dialog {
             ColumnLayout {
                 spacing: 10
                 Label { text: qsTr("Turn on the topics you need. Open a tile for its calculators, formulas and ready answers — they work without the internet."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                OptionSwitch {
+                    text: qsTr("Let Claude search the web for current facts")
+                    hint: qsTr("Traffic law that changed, racing results, calendars and regulations: Claude may run up to three web searches per answer (Anthropic's web search tool, billed per search; your organisation must allow it in the Claude Console). Off: answers come from Claude's knowledge and say when a value should be checked.")
+                    enabled: center.settings.hasKey
+                    checked: center.settings.webSearch
+                    onToggled: center.report(center.settings.setOption("webSearch", checked))
+                }
                 GridView {
                     id: skillGrid
                     objectName: "skillGrid"
@@ -594,6 +604,209 @@ Dialog {
                 }
             }
 
+
+            // ---------- Awareness ----------
+            ScrollView {
+                id: awarenessScroll
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    id: awarenessPage
+                    width: awarenessScroll.availableWidth
+                    spacing: 12
+                    readonly property var ctx: { try { return JSON.parse(center.chat.context) } catch (e) { return {} } }
+                    readonly property var stats: ctx.suggestions || {}
+                    readonly property bool paused: (ctx.pausedUntil || 0) > 0
+                    readonly property string level: center.settings.awarenessLevel
+                    Label { text: qsTr("Cognitive awareness"); color: Theme.text; font.pixelSize: 22; font.bold: true }
+                    Label { text: qsTr("Jarvis can understand what you are working on — the application, the window title, and only if you allow it, what is on the screen — to answer with context (Ctrl+J) and, rarely, to offer help. Everything is analysed on this computer; nothing about the screen is stored; observation never runs in secret."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+
+                    Label { text: qsTr("Level"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Repeater {
+                        model: [["off", qsTr("Off"), qsTr("No observation at all. Ctrl+J still opens the overlay, without context.")],
+                                ["manual", qsTr("Manual"), qsTr("Context only when you ask: the overlay and questions like \"what's on my screen\". No offers.")],
+                                ["assistive", qsTr("Assistive"), qsTr("Also rare offers backed by strong evidence: a build error that keeps coming back, a driving theory test on the screen.")],
+                                ["proactive", qsTr("Proactive"), qsTr("Also offers for electronics, documentation and studying, still limited by the rules below.")]]
+                        RadioButton {
+                            id: levelButton
+                            required property var modelData
+                            Layout.fillWidth: true
+                            checked: awarenessPage.level === modelData[0]
+                            onClicked: center.report(center.settings.setAwarenessLevel(modelData[0]))
+                            contentItem: ColumnLayout {
+                                spacing: 0
+                                anchors.left: levelButton.indicator.right; anchors.leftMargin: 8; anchors.right: parent.right
+                                Label { text: levelButton.modelData[1]; color: Theme.text; font.pixelSize: 15 }
+                                Label { text: levelButton.modelData[2]; color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Permissions"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    OptionSwitch {
+                        text: qsTr("Windows: which application I'm in and its title")
+                        hint: qsTr("A small KWin script tells Jarvis the focused window (Plasma 5 and 6, X11 and Wayland). Titles stay in memory only. Private browsing and password manager windows are never read.")
+                        enabled: awarenessPage.level !== "off"
+                        checked: center.settings.awarenessWindow
+                        onToggled: center.report(center.settings.setOption("awarenessWindow", checked))
+                    }
+                    OptionSwitch {
+                        id: screenSwitch
+                        text: qsTr("Screen: let Jarvis read the window's content")
+                        hint: qsTr("A screenshot of the window you were in, read by Tesseract on this computer, only when you ask (the ◉ button in the overlay, \"what's on my screen\") or, if set below, now and then in the background. \"◉ SCREEN\" is shown whenever it happens. Screenshots are never saved.")
+                        enabled: awarenessPage.level !== "off"
+                        checked: center.settings.awarenessScreen
+                        onToggled: {
+                            if (checked) screenConsent.open()
+                            else center.report(center.settings.setOption("awarenessScreen", false))
+                        }
+                    }
+                    OptionSwitch {
+                        text: qsTr("Send screenshots to Claude")
+                        hint: qsTr("With this on, a question about the screen also carries the picture to Anthropic (scaled down) — better for drawings, schematics and road signs. Off: only the recognised text goes.")
+                        enabled: center.settings.awarenessScreen && awarenessPage.level !== "off"
+                        checked: center.settings.awarenessCloudImages
+                        onToggled: center.report(center.settings.setOption("awarenessCloudImages", checked))
+                    }
+                    RowLayout {
+                        Layout.leftMargin: 56
+                        spacing: 12
+                        enabled: center.settings.awarenessScreen && (awarenessPage.level === "assistive" || awarenessPage.level === "proactive")
+                        Label { text: qsTr("Background screen analysis"); color: parent.enabled ? Theme.text : Theme.textDim }
+                        DarkCombo {
+                            readonly property var values: [0, 2, 5, 10, 15]
+                            model: values.map(v => v === 0 ? qsTr("never (only when I ask)") : qsTr("at most every %1 min").arg(v))
+                            currentIndex: Math.max(0, values.indexOf(center.settings.screenIntervalMinutes))
+                            onActivated: index => center.report(center.settings.setNumber("screenIntervalMinutes", values[index]))
+                        }
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        visible: !!center.screen
+                        text: center.screen ? (center.screen.ocrAvailable ? qsTr("Text recognition: Tesseract (%1).").arg(center.screen.ocrLanguages)
+                                                                          : qsTr("Text recognition needs Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus"))
+                                              + (center.screen.backend.length > 0 ? " " + qsTr("Last screenshot through: %1.").arg(center.screen.backend === "kwin" ? "KWin" : qsTr("the desktop portal")) : "")
+                                              + (center.screen.status.length > 0 ? " " + center.screen.status : "")
+                                            : ""
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap
+                    }
+                    DarkButton {
+                        text: qsTr("Test: read my screen now")
+                        enabled: !!center.screen && center.settings.awarenessScreen && !center.screen.capturing
+                        onClicked: center.screen.test()
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Offers of help"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label { text: qsTr("One useful offer beats ten notifications. Jarvis offers help only on evidence — a repeated error, a recognised test question, going back and forth between docs and code — never because time passed. Never at night, in Do Not Disturb, while the screen is locked, while you are talking to Jarvis, or in games and films."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    GridLayout {
+                        columns: 2
+                        columnSpacing: 16
+                        rowSpacing: 8
+                        enabled: awarenessPage.level === "assistive" || awarenessPage.level === "proactive"
+                        Label { text: qsTr("At most one offer every"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [20, 45, 90, 180]
+                            model: values.map(v => v < 60 ? qsTr("%1 minutes").arg(v) : qsTr("%1 hours").arg(v / 60))
+                            currentIndex: Math.max(0, values.indexOf(center.settings.suggestionCooldownMinutes))
+                            onActivated: index => center.report(center.settings.setNumber("suggestionCooldownMinutes", values[index]))
+                        }
+                        Label { text: qsTr("Offers per day, at most"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: [1, 2, 4, 8]
+                            model: values.map(v => String(v))
+                            currentIndex: Math.max(0, values.indexOf(center.settings.suggestionsPerDay))
+                            onActivated: index => center.report(center.settings.setNumber("suggestionsPerDay", values[index]))
+                        }
+                    }
+                    Repeater {
+                        model: [["build", qsTr("Build errors that keep coming back")], ["driving", qsTr("Driving theory test questions")],
+                                ["electronics", qsTr("Electronics: values and calculations")], ["docs", qsTr("Technical documentation")],
+                                ["study", qsTr("Studying programming")]]
+                        OptionSwitch {
+                            required property var modelData
+                            text: modelData[1]
+                            enabled: awarenessPage.level === "assistive" || awarenessPage.level === "proactive"
+                            checked: center.settings.awarenessMuted.indexOf(modelData[0]) < 0
+                            onToggled: {
+                                const muted = center.settings.awarenessMuted.filter(c => c !== modelData[0])
+                                if (!checked) muted.push(modelData[0])
+                                center.report(center.settings.setList("awarenessMuted", muted))
+                            }
+                        }
+                    }
+                    OptionSwitch {
+                        text: qsTr("Also in fullscreen applications")
+                        hint: qsTr("Off: a fullscreen window (a game, a presentation, a film) is never interrupted.")
+                        enabled: awarenessPage.level === "assistive" || awarenessPage.level === "proactive"
+                        checked: center.settings.awarenessFullscreen
+                        onToggled: center.report(center.settings.setOption("awarenessFullscreen", checked))
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        text: qsTr("Last 30 days: %1 offers, %2 accepted, %3 declined. A \"Not now\" silences that kind of offer for 6 hours and doubles with each refusal; \"Don't offer this\" — for a month.")
+                                  .arg(awarenessPage.stats.shown || 0).arg(awarenessPage.stats.accepted || 0).arg(awarenessPage.stats.declined || 0)
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Never observe these applications"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label { text: qsTr("Desktop file names or window classes, separated by commas (for example: org.telegram.desktop, firefox). Password managers, keyrings and authentication prompts are always excluded."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 12 }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        TextField {
+                            id: excludedField
+                            Layout.fillWidth: true
+                            text: center.settings.awarenessExcluded.join(", ")
+                            placeholderText: "org.telegram.desktop, thunderbird"
+                            placeholderTextColor: Theme.textDim
+                            color: Theme.text
+                            selectByMouse: true
+                            background: Rectangle { color: Theme.bg; radius: 8; border.color: excludedField.activeFocus ? Theme.accent : Theme.border }
+                        }
+                        DarkButton { text: qsTr("Save"); onClicked: center.report(center.settings.setList("awarenessExcluded", excludedField.text.split(","))) }
+                        DarkButton {
+                            text: qsTr("Exclude current")
+                            enabled: !!awarenessPage.ctx.appKey
+                            onClicked: center.report(center.settings.setList("awarenessExcluded", center.settings.awarenessExcluded.concat([awarenessPage.ctx.appKey])))
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Pause"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label {
+                        text: awarenessPage.paused ? qsTr("Paused until %1: no offers, no background screenshots.").arg(new Date(awarenessPage.ctx.pausedUntil).toLocaleString(Qt.locale(), Locale.ShortFormat))
+                                                   : qsTr("Observation is running at the level above.")
+                        color: awarenessPage.paused ? Theme.nodeFact : Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Pause 1 hour"); onClicked: center.chat.pauseAwareness(60) }
+                        DarkButton { text: qsTr("Until tomorrow"); onClicked: center.chat.pauseAwareness(-1) }
+                        DarkButton { text: qsTr("Resume"); enabled: awarenessPage.paused; onClicked: center.chat.pauseAwareness(0) }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: qsTr("Global shortcut"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label {
+                        Layout.fillWidth: true
+                        text: (center.shortcut ? center.shortcut.status : "") + "\n"
+                              + qsTr("The overlay opens from any application. Plasma asks once to confirm the key and keeps it in System Settings → Keyboard → Shortcuts, where it can be changed if Ctrl+J is taken (browsers use it for downloads). Without the portal: bind \"J.A.R.V.I.S. → Overlay\" (jarvis --overlay) there by hand.")
+                        color: Theme.textDim; wrapMode: Text.Wrap
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Bind Ctrl+J"); enabled: !!center.shortcut && !center.shortcut.bound; onClicked: center.shortcut.bind() }
+                        DarkButton { text: qsTr("Change the key…"); enabled: !!center.shortcut; onClicked: center.shortcut.configure() }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    Label { text: center.optionError; visible: text.length > 0; color: Theme.danger; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    RowLayout {
+                        DarkButton { text: qsTr("Forget observed context and offer history"); danger: true; onClicked: center.chat.forget("awareness") }
+                    }
+                }
+            }
+
             // ---------- Application ----------
             ScrollView {
                 id: appScroll
@@ -730,6 +943,20 @@ Dialog {
         english: center.english
         onAskRequested: question => { skillPage.close(); center.close(); center.chat.send(question) }
         onAskWithFilesRequested: (question, files) => { skillPage.close(); center.close(); center.chat.sendWithFiles(question, files) }
+    }
+    Dialog {
+        id: screenConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Let Jarvis read your screen?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label {
+            width: 420
+            wrapMode: Text.Wrap
+            text: qsTr("Jarvis will take a screenshot of the window you work in when you ask (and, if you set an interval, now and then in the background) and recognise its text on this computer. \"◉ SCREEN\" is shown every time. Screenshots are not saved, password and private windows are skipped, and nothing goes to Claude unless you ask a question. You can turn this off or pause it at any moment.")
+        }
+        onAccepted: center.report(center.settings.setOption("awarenessScreen", true))
+        onRejected: screenSwitch.checked = Qt.binding(() => center.settings.awarenessScreen)
     }
     Dialog {
         id: confirmForget

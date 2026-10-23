@@ -13,7 +13,166 @@
     </message>
 </context>
 <context>
+    <name>AwarenessIndicator</name>
+    <message>
+        <source>observation paused</source>
+        <translation>наблюдение на паузе</translation>
+    </message>
+    <message>
+        <source>What Jarvis infers from the focused window (confidence %1 %):
+%2</source>
+        <translation>Что Jarvis понял по активному окну (уверенность %1 %):
+%2</translation>
+    </message>
+    <message>
+        <source>◉ READING SCREEN</source>
+        <translation>◉ ЧИТАЮ ЭКРАН</translation>
+    </message>
+    <message>
+        <source>◉ SCREEN</source>
+        <translation>◉ ЭКРАН</translation>
+    </message>
+    <message>
+        <source>Jarvis is taking a screenshot of the window and reading its text on this computer.</source>
+        <translation>Jarvis делает снимок окна и распознаёт текст на этом компьютере.</translation>
+    </message>
+    <message>
+        <source>Background screen analysis is on: at most every %1 min. Click to pause.</source>
+        <translation>Фоновый анализ экрана включён: не чаще раза в %1 мин. Нажмите, чтобы поставить на паузу.</translation>
+    </message>
+</context>
+<context>
+    <name>ChatComposer</name>
+    <message>
+        <source>Write a message…</source>
+        <translation>Напишите сообщение…</translation>
+    </message>
+    <message>
+        <source>Attach files: photos, PDF datasheets, code, KiCad and SimulIDE schematics · Ctrl+O. You can also drop them onto the chat.</source>
+        <translation>Прикрепить файлы: фото, PDF-даташиты, код, схемы KiCad и SimulIDE · Ctrl+O. Можно и перетащить их в чат.</translation>
+    </message>
+    <message>
+        <source>Attach files</source>
+        <translation>Прикрепить файлы</translation>
+    </message>
+    <message>
+        <source>Listening… speak now</source>
+        <translation>Слушаю… говорите</translation>
+    </message>
+    <message>
+        <source>Message to Jarvis</source>
+        <translation>Сообщение для Jarvis</translation>
+    </message>
+    <message>
+        <source>Stop dictation · Ctrl+Shift+M</source>
+        <translation>Остановить диктовку · Ctrl+Shift+M</translation>
+    </message>
+    <message>
+        <source>Dictate · Ctrl+Shift+M</source>
+        <translation>Диктовать · Ctrl+Shift+M</translation>
+    </message>
+    <message>
+        <source>Microphone</source>
+        <translation>Микрофон</translation>
+    </message>
+    <message>
+        <source>■ Stop</source>
+        <translation>■ Стоп</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Отправить</translation>
+    </message>
+    <message>
+        <source>Stop the answer · Esc</source>
+        <translation>Остановить ответ · Esc</translation>
+    </message>
+    <message>
+        <source>Send · Enter (Shift+Enter: new line)</source>
+        <translation>Отправить · Enter (Shift+Enter — новая строка)</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <source>Enter — send · Shift+Enter — new line · Esc — stop · ↑ — last message · Ctrl+Shift+M — dictate</source>
+        <translation>Enter — отправить · Shift+Enter — новая строка · Esc — стоп · ↑ — прошлое сообщение · Ctrl+Shift+M — диктовка</translation>
+    </message>
+</context>
+<context>
+    <name>ChatMessage</name>
+    <message>
+        <source>YOU</source>
+        <translation>ВЫ</translation>
+    </message>
+    <message>
+        <source>ERROR</source>
+        <translation>ОШИБКА</translation>
+    </message>
+    <message>
+        <source>· copied</source>
+        <translation>· скопировано</translation>
+    </message>
+    <message>
+        <source>· copy</source>
+        <translation>· копировать</translation>
+    </message>
+    <message>
+        <source>Copy</source>
+        <translation>Копировать</translation>
+    </message>
+    <message>
+        <source>Helpful: remember this answer</source>
+        <translation>Полезно: запомнить этот ответ</translation>
+    </message>
+    <message>
+        <source>Wrong: tell me the right answer</source>
+        <translation>Неверно: подсказать правильный ответ</translation>
+    </message>
+    <message>
+        <source>↻ Retry</source>
+        <translation>↻ Повторить</translation>
+    </message>
+    <message>
+        <source>Retry the request</source>
+        <translation>Повторить запрос</translation>
+    </message>
+</context>
+<context>
     <name>ChatModel</name>
+    <message>
+        <source>screen</source>
+        <translation>экран</translation>
+    </message>
+    <message>
+        <source>What&apos;s on my screen?</source>
+        <translation>Что у меня на экране?</translation>
+    </message>
+    <message>
+        <source>Screen awareness is off, so I only know the application and its window title. Turn it on in Control center → Awareness to let me read the window.</source>
+        <translation>Анализ экрана выключен, поэтому я знаю только приложение и заголовок окна. Включите его в «Центр управления → Осведомлённость», чтобы я мог прочитать окно.</translation>
+    </message>
+    <message>
+        <source>The window you came from is private or excluded from observation, so I did not look at it.</source>
+        <translation>Окно, из которого вы пришли, приватное или исключено из наблюдения, поэтому я в него не смотрел.</translation>
+    </message>
+    <message>
+        <source>reading the screen</source>
+        <translation>чтение экрана</translation>
+    </message>
+    <message>
+        <source>
+
+…(stopped)</source>
+        <translation>
+
+…(остановлено)</translation>
+    </message>
+    <message>
+        <source>Stopped.</source>
+        <translation>Остановлено.</translation>
+    </message>
     <message>
         <source>Hi! I&apos;m Jarvis. Write me anything, for example &quot;hi, how are you&quot;. I learn as we talk: tell me about yourself or say &quot;remember that …&quot;.</source>
         <translation>Привет! Я Jarvis. Напиши мне что-нибудь, например «привет, как дела». Я учусь в разговоре: расскажи о себе или скажи «запомни, что …».</translation>
@@ -49,6 +208,25 @@
     <message>
         <source>Saved.</source>
         <translation>Сохранено.</translation>
+    </message>
+</context>
+<context>
+    <name>ChatView</name>
+    <message>
+        <source>stopping…</source>
+        <translation>останавливаю…</translation>
+    </message>
+    <message>
+        <source>working: %1</source>
+        <translation>работаю: %1</translation>
+    </message>
+    <message>
+        <source>thinking…</source>
+        <translation>думаю…</translation>
+    </message>
+    <message>
+        <source>↓ new messages</source>
+        <translation>↓ новые сообщения</translation>
     </message>
 </context>
 <context>
@@ -281,6 +459,18 @@
         <translation>Темп</translation>
     </message>
     <message>
+        <source>Awareness</source>
+        <translation>Осведомлённость</translation>
+    </message>
+    <message>
+        <source>Let Claude search the web for current facts</source>
+        <translation>Разрешить Claude искать актуальные сведения в интернете</translation>
+    </message>
+    <message>
+        <source>Traffic law that changed, racing results, calendars and regulations: Claude may run up to three web searches per answer (Anthropic&apos;s web search tool, billed per search; your organisation must allow it in the Claude Console). Off: answers come from Claude&apos;s knowledge and say when a value should be checked.</source>
+        <translation>Изменившиеся ПДД, результаты гонок, календари и регламенты: до трёх поисков на ответ (инструмент веб-поиска Anthropic, оплачивается за каждый поиск; организация должна разрешить его в Claude Console). Выключено: ответы из знаний Claude с пометкой, что значение стоит проверить.</translation>
+    </message>
+    <message>
         <source>Download the chosen voices</source>
         <translation>Загрузить выбранные голоса</translation>
     </message>
@@ -393,6 +583,218 @@
         <translation>Уведомления работают. Так будут выглядеть напоминания.</translation>
     </message>
     <message>
+        <source>Cognitive awareness</source>
+        <translation>Когнитивная осведомлённость</translation>
+    </message>
+    <message>
+        <source>Jarvis can understand what you are working on — the application, the window title, and only if you allow it, what is on the screen — to answer with context (Ctrl+J) and, rarely, to offer help. Everything is analysed on this computer; nothing about the screen is stored; observation never runs in secret.</source>
+        <translation>Jarvis может понимать, чем вы заняты, — приложение, заголовок окна и, только с вашего разрешения, содержимое экрана, — чтобы отвечать с учётом контекста (Ctrl+J) и изредка предлагать помощь. Всё анализируется на этом компьютере, ничего с экрана не сохраняется, скрытого наблюдения нет.</translation>
+    </message>
+    <message>
+        <source>Level</source>
+        <translation>Уровень</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Выкл.</translation>
+    </message>
+    <message>
+        <source>No observation at all. Ctrl+J still opens the overlay, without context.</source>
+        <translation>Никакого наблюдения. Ctrl+J по-прежнему открывает оверлей, но без контекста.</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>Вручную</translation>
+    </message>
+    <message>
+        <source>Context only when you ask: the overlay and questions like &quot;what&apos;s on my screen&quot;. No offers.</source>
+        <translation>Контекст только по запросу: оверлей и вопросы вроде «что у меня на экране». Без предложений.</translation>
+    </message>
+    <message>
+        <source>Assistive</source>
+        <translation>Помощник</translation>
+    </message>
+    <message>
+        <source>Also rare offers backed by strong evidence: a build error that keeps coming back, a driving theory test on the screen.</source>
+        <translation>Плюс редкие предложения при веских признаках: повторяющаяся ошибка сборки, тест по ПДД на экране.</translation>
+    </message>
+    <message>
+        <source>Proactive</source>
+        <translation>Проактивно</translation>
+    </message>
+    <message>
+        <source>Also offers for electronics, documentation and studying, still limited by the rules below.</source>
+        <translation>Плюс предложения по электронике, документации и учёбе — в рамках правил ниже.</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Разрешения</translation>
+    </message>
+    <message>
+        <source>Windows: which application I&apos;m in and its title</source>
+        <translation>Окна: в каком я приложении и его заголовок</translation>
+    </message>
+    <message>
+        <source>A small KWin script tells Jarvis the focused window (Plasma 5 and 6, X11 and Wayland). Titles stay in memory only. Private browsing and password manager windows are never read.</source>
+        <translation>Небольшой скрипт KWin сообщает Jarvis активное окно (Plasma 5 и 6, X11 и Wayland). Заголовки хранятся только в памяти. Приватные окна браузера и менеджеры паролей не читаются никогда.</translation>
+    </message>
+    <message>
+        <source>Screen: let Jarvis read the window&apos;s content</source>
+        <translation>Экран: разрешить Jarvis читать содержимое окна</translation>
+    </message>
+    <message>
+        <source>A screenshot of the window you were in, read by Tesseract on this computer, only when you ask (the ◉ button in the overlay, &quot;what&apos;s on my screen&quot;) or, if set below, now and then in the background. &quot;◉ SCREEN&quot; is shown whenever it happens. Screenshots are never saved.</source>
+        <translation>Снимок окна, в котором вы работали, распознаётся Tesseract на этом компьютере — только по вашему запросу (кнопка ◉ в оверлее, «что у меня на экране») или, если задано ниже, изредка в фоне. Всякий раз видна метка «◉ ЭКРАН». Снимки не сохраняются.</translation>
+    </message>
+    <message>
+        <source>Send screenshots to Claude</source>
+        <translation>Отправлять снимки экрана в Claude</translation>
+    </message>
+    <message>
+        <source>With this on, a question about the screen also carries the picture to Anthropic (scaled down) — better for drawings, schematics and road signs. Off: only the recognised text goes.</source>
+        <translation>Если включено, вопрос об экране уходит в Anthropic вместе с картинкой (уменьшенной) — лучше для чертежей, схем и дорожных знаков. Выключено: отправляется только распознанный текст.</translation>
+    </message>
+    <message>
+        <source>Background screen analysis</source>
+        <translation>Фоновый анализ экрана</translation>
+    </message>
+    <message>
+        <source>never (only when I ask)</source>
+        <translation>никогда (только по запросу)</translation>
+    </message>
+    <message>
+        <source>at most every %1 min</source>
+        <translation>не чаще раза в %1 мин</translation>
+    </message>
+    <message>
+        <source>Text recognition: Tesseract (%1).</source>
+        <translation>Распознавание текста: Tesseract (%1).</translation>
+    </message>
+    <message>
+        <source>Text recognition needs Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</source>
+        <translation>Для распознавания текста нужен Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</translation>
+    </message>
+    <message>
+        <source>Last screenshot through: %1.</source>
+        <translation>Последний снимок через: %1.</translation>
+    </message>
+    <message>
+        <source>the desktop portal</source>
+        <translation>портал рабочего стола</translation>
+    </message>
+    <message>
+        <source>Test: read my screen now</source>
+        <translation>Проверить: прочитать экран сейчас</translation>
+    </message>
+    <message>
+        <source>Offers of help</source>
+        <translation>Предложения помощи</translation>
+    </message>
+    <message>
+        <source>One useful offer beats ten notifications. Jarvis offers help only on evidence — a repeated error, a recognised test question, going back and forth between docs and code — never because time passed. Never at night, in Do Not Disturb, while the screen is locked, while you are talking to Jarvis, or in games and films.</source>
+        <translation>Одно полезное предложение лучше десяти уведомлений. Jarvis предлагает помощь только при признаках — повторяющаяся ошибка, распознанный вопрос теста, метания между документацией и кодом, — а не потому, что прошло время. Никогда ночью, в режиме «Не беспокоить», при заблокированном экране, во время разговора с Jarvis, в играх и фильмах.</translation>
+    </message>
+    <message>
+        <source>At most one offer every</source>
+        <translation>Не чаще одного предложения в</translation>
+    </message>
+    <message>
+        <source>%1 hours</source>
+        <translation>%1 ч</translation>
+    </message>
+    <message>
+        <source>Offers per day, at most</source>
+        <translation>Предложений в день, не больше</translation>
+    </message>
+    <message>
+        <source>Build errors that keep coming back</source>
+        <translation>Повторяющиеся ошибки сборки</translation>
+    </message>
+    <message>
+        <source>Driving theory test questions</source>
+        <translation>Вопросы теста по ПДД</translation>
+    </message>
+    <message>
+        <source>Electronics: values and calculations</source>
+        <translation>Электроника: номиналы и расчёты</translation>
+    </message>
+    <message>
+        <source>Technical documentation</source>
+        <translation>Техническая документация</translation>
+    </message>
+    <message>
+        <source>Studying programming</source>
+        <translation>Изучение программирования</translation>
+    </message>
+    <message>
+        <source>Also in fullscreen applications</source>
+        <translation>И в полноэкранных приложениях</translation>
+    </message>
+    <message>
+        <source>Off: a fullscreen window (a game, a presentation, a film) is never interrupted.</source>
+        <translation>Выключено: полноэкранное окно (игра, презентация, фильм) никогда не прерывается.</translation>
+    </message>
+    <message>
+        <source>Last 30 days: %1 offers, %2 accepted, %3 declined. A &quot;Not now&quot; silences that kind of offer for 6 hours and doubles with each refusal; &quot;Don&apos;t offer this&quot; — for a month.</source>
+        <translation>За 30 дней: предложений %1, принято %2, отклонено %3. «Не сейчас» заглушает такие предложения на 6 часов, каждый следующий отказ — вдвое дольше; «Не предлагать такое» — на месяц.</translation>
+    </message>
+    <message>
+        <source>Never observe these applications</source>
+        <translation>Никогда не наблюдать за этими приложениями</translation>
+    </message>
+    <message>
+        <source>Desktop file names or window classes, separated by commas (for example: org.telegram.desktop, firefox). Password managers, keyrings and authentication prompts are always excluded.</source>
+        <translation>Имена .desktop-файлов или классы окон через запятую (например: org.telegram.desktop, firefox). Менеджеры паролей, связки ключей и окна аутентификации исключены всегда.</translation>
+    </message>
+    <message>
+        <source>Exclude current</source>
+        <translation>Исключить текущее</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Пауза</translation>
+    </message>
+    <message>
+        <source>Paused until %1: no offers, no background screenshots.</source>
+        <translation>Пауза до %1: без предложений и фоновых снимков.</translation>
+    </message>
+    <message>
+        <source>Observation is running at the level above.</source>
+        <translation>Наблюдение работает на выбранном выше уровне.</translation>
+    </message>
+    <message>
+        <source>Pause 1 hour</source>
+        <translation>Пауза на 1 час</translation>
+    </message>
+    <message>
+        <source>Until tomorrow</source>
+        <translation>До завтра</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>Возобновить</translation>
+    </message>
+    <message>
+        <source>Global shortcut</source>
+        <translation>Глобальное сочетание клавиш</translation>
+    </message>
+    <message>
+        <source>The overlay opens from any application. Plasma asks once to confirm the key and keeps it in System Settings → Keyboard → Shortcuts, where it can be changed if Ctrl+J is taken (browsers use it for downloads). Without the portal: bind &quot;J.A.R.V.I.S. → Overlay&quot; (jarvis --overlay) there by hand.</source>
+        <translation>Оверлей открывается из любого приложения. Plasma один раз просит подтвердить клавишу и хранит её в «Параметры системы → Клавиатура → Комбинации клавиш», где её можно сменить, если Ctrl+J занята (в браузерах это загрузки). Без портала назначьте там вручную «J.A.R.V.I.S. → Оверлей» (jarvis --overlay).</translation>
+    </message>
+    <message>
+        <source>Bind Ctrl+J</source>
+        <translation>Назначить Ctrl+J</translation>
+    </message>
+    <message>
+        <source>Change the key…</source>
+        <translation>Сменить клавишу…</translation>
+    </message>
+    <message>
+        <source>Forget observed context and offer history</source>
+        <translation>Забыть наблюдения и историю предложений</translation>
+    </message>
+    <message>
         <source>Interface language</source>
         <translation>Язык интерфейса</translation>
     </message>
@@ -469,6 +871,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Jarvis skills (*.json)</source>
         <translation>Навыки Jarvis (*.json)</translation>
+    </message>
+    <message>
+        <source>Let Jarvis read your screen?</source>
+        <translation>Разрешить Jarvis читать экран?</translation>
+    </message>
+    <message>
+        <source>Jarvis will take a screenshot of the window you work in when you ask (and, if you set an interval, now and then in the background) and recognise its text on this computer. &quot;◉ SCREEN&quot; is shown every time. Screenshots are not saved, password and private windows are skipped, and nothing goes to Claude unless you ask a question. You can turn this off or pause it at any moment.</source>
+        <translation>Jarvis будет делать снимок окна, в котором вы работаете, когда вы попросите (и, если задан интервал, изредка в фоне), и распознавать текст на этом компьютере. Каждый раз видна метка «◉ ЭКРАН». Снимки не сохраняются, окна паролей и приватные окна пропускаются, в Claude ничего не уходит, пока вы не зададите вопрос. Выключить или поставить на паузу можно в любой момент.</translation>
     </message>
     <message>
         <source>Forget everything about you?</source>
@@ -827,6 +1237,53 @@ A KDE menu entry and a system tray icon</source>
     </message>
 </context>
 <context>
+    <name>GlobalShortcut</name>
+    <message>
+        <source>Looking for the desktop&apos;s shortcut service…</source>
+        <translation>Ищу службу сочетаний клавиш рабочего стола…</translation>
+    </message>
+    <message>
+        <source>No session bus.</source>
+        <translation>Нет сеансовой шины D-Bus.</translation>
+    </message>
+    <message>
+        <source>This desktop has no global shortcut portal. Bind &quot;Jarvis — overlay&quot; (jarvis --overlay) in the system shortcut settings instead.</source>
+        <translation>У этого рабочего стола нет портала глобальных сочетаний. Назначьте «Jarvis — оверлей» (jarvis --overlay) в системных настройках клавиш.</translation>
+    </message>
+    <message>
+        <source>The desktop did not open a shortcut session: %1</source>
+        <translation>Рабочий стол не открыл сеанс сочетаний клавиш: %1</translation>
+    </message>
+    <message>
+        <source>set, no key assigned</source>
+        <translation>задано, клавиша не назначена</translation>
+    </message>
+    <message>
+        <source>Global shortcut: %1</source>
+        <translation>Глобальное сочетание: %1</translation>
+    </message>
+    <message>
+        <source>No global shortcut yet. Press &quot;Bind Ctrl+J&quot; to ask the desktop for one.</source>
+        <translation>Глобального сочетания пока нет. Нажмите «Назначить Ctrl+J», чтобы запросить его у рабочего стола.</translation>
+    </message>
+    <message>
+        <source>Waiting for you to confirm the shortcut in the desktop&apos;s dialog…</source>
+        <translation>Подтвердите сочетание в диалоге рабочего стола…</translation>
+    </message>
+    <message>
+        <source>Open the Jarvis overlay</source>
+        <translation>Открыть оверлей Jarvis</translation>
+    </message>
+    <message>
+        <source>The shortcut was not confirmed. Press &quot;Bind Ctrl+J&quot; to try again.</source>
+        <translation>Сочетание не подтверждено. Нажмите «Назначить Ctrl+J», чтобы попробовать снова.</translation>
+    </message>
+    <message>
+        <source>The desktop could not bind the shortcut: %1</source>
+        <translation>Рабочий стол не смог назначить сочетание: %1</translation>
+    </message>
+</context>
+<context>
     <name>GraphicsInfo</name>
     <message>
         <source>Jarvis could not draw its window with the graphics settings chosen last time (card: %1, API: %2), so it uses the system defaults again.</source>
@@ -867,6 +1324,117 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Set in the environment, changes how Qt renders: %1</source>
         <translation>Задано в окружении и меняет отрисовку Qt: %1</translation>
+    </message>
+</context>
+<context>
+    <name>HudOverlay</name>
+    <message>
+        <source>Jarvis — overlay</source>
+        <translation>Jarvis — оверлей</translation>
+    </message>
+    <message>
+        <source>thinking…</source>
+        <translation>думаю…</translation>
+    </message>
+    <message>
+        <source>The window&apos;s content goes with the question · Ctrl+Shift+S</source>
+        <translation>Содержимое окна уйдёт вместе с вопросом · Ctrl+Shift+S</translation>
+    </message>
+    <message>
+        <source>Let Jarvis read the window with the question · Ctrl+Shift+S</source>
+        <translation>Дать Jarvis прочитать окно вместе с вопросом · Ctrl+Shift+S</translation>
+    </message>
+    <message>
+        <source>Screen awareness is off (Control center → Awareness)</source>
+        <translation>Анализ экрана выключен («Центр управления → Осведомлённость»)</translation>
+    </message>
+    <message>
+        <source>Screen</source>
+        <translation>Экран</translation>
+    </message>
+    <message>
+        <source>Compact · Ctrl+E</source>
+        <translation>Компактно · Ctrl+E</translation>
+    </message>
+    <message>
+        <source>Expand: the whole conversation · Ctrl+E</source>
+        <translation>Развернуть: весь разговор · Ctrl+E</translation>
+    </message>
+    <message>
+        <source>Expand</source>
+        <translation>Развернуть</translation>
+    </message>
+    <message>
+        <source>Open the main window</source>
+        <translation>Открыть главное окно</translation>
+    </message>
+    <message>
+        <source>Close · Esc</source>
+        <translation>Закрыть · Esc</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>Observation is paused: the question goes without desktop context.</source>
+        <translation>Наблюдение на паузе: вопрос уйдёт без контекста рабочего стола.</translation>
+    </message>
+    <message>
+        <source>The previous window is private or excluded: Jarvis does not look at it.</source>
+        <translation>Предыдущее окно приватное или исключено: Jarvis в него не смотрит.</translation>
+    </message>
+    <message>
+        <source>Jarvis does not know which application you came from (Control center → Awareness → Windows).</source>
+        <translation>Jarvis не знает, из какого приложения вы пришли («Центр управления → Осведомлённость → Окна»).</translation>
+    </message>
+    <message>
+        <source>No application context yet.</source>
+        <translation>Контекста приложения пока нет.</translation>
+    </message>
+    <message>
+        <source>title, window text and a screenshot</source>
+        <translation>заголовок, текст окна и снимок</translation>
+    </message>
+    <message>
+        <source>title and window text (read on this computer)</source>
+        <translation>заголовок и текст окна (распознан на этом компьютере)</translation>
+    </message>
+    <message>
+        <source>only the application and window title</source>
+        <translation>только приложение и заголовок окна</translation>
+    </message>
+    <message>
+        <source>Context: %1 · Jarvis gets %2</source>
+        <translation>Контекст: %1 · Jarvis получит %2</translation>
+    </message>
+    <message>
+        <source>stopping…</source>
+        <translation>останавливаю…</translation>
+    </message>
+    <message>
+        <source>copy</source>
+        <translation>копировать</translation>
+    </message>
+    <message>
+        <source>Ask about %1…</source>
+        <translation>Спросите про %1…</translation>
+    </message>
+    <message>
+        <source>Ask Jarvis…</source>
+        <translation>Спросите Jarvis…</translation>
+    </message>
+    <message>
+        <source>Esc — close · Enter — send · Ctrl+E — expand · Ctrl+Shift+S — screen</source>
+        <translation>Esc — закрыть · Enter — отправить · Ctrl+E — развернуть · Ctrl+Shift+S — экран</translation>
+    </message>
+    <message>
+        <source>resume observation</source>
+        <translation>возобновить наблюдение</translation>
+    </message>
+    <message>
+        <source>pause observation for 1 h</source>
+        <translation>пауза наблюдения на 1 ч</translation>
     </message>
 </context>
 <context>
@@ -1464,8 +2032,20 @@ A KDE menu entry and a system tray icon</source>
         <translation>J.A.R.V.I.S.</translation>
     </message>
     <message>
+        <source>screen awareness</source>
+        <translation>анализ экрана</translation>
+    </message>
+    <message>
         <source>Jarvis — personal assistant</source>
         <translation>Jarvis — персональный ассистент</translation>
+    </message>
+    <message>
+        <source>Ask Jarvis (overlay) · %1</source>
+        <translation>Спросить Jarvis (оверлей) · %1</translation>
+    </message>
+    <message>
+        <source>Ask Jarvis (overlay)</source>
+        <translation>Спросить Jarvis (оверлей)</translation>
     </message>
     <message>
         <source>Quick commands</source>
@@ -1478,6 +2058,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>French studies</source>
         <translation>Французский</translation>
+    </message>
+    <message>
+        <source>Resume observation</source>
+        <translation>Возобновить наблюдение</translation>
+    </message>
+    <message>
+        <source>Pause observation for 1 hour</source>
+        <translation>Приостановить наблюдение на 1 час</translation>
     </message>
     <message>
         <source>Quit</source>
@@ -1574,38 +2162,6 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Drop files to attach them</source>
         <translation>Отпустите, чтобы прикрепить файлы</translation>
-    </message>
-    <message>
-        <source>Helpful: remember this answer</source>
-        <translation>Помогло: запомнить этот ответ</translation>
-    </message>
-    <message>
-        <source>Wrong: tell me the right answer</source>
-        <translation>Неверно: расскажу правильный ответ</translation>
-    </message>
-    <message>
-        <source>Copied</source>
-        <translation>Скопировано</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Копировать</translation>
-    </message>
-    <message>
-        <source>Attach files: photos, PDF datasheets, code, KiCad and SimulIDE schematics. You can also drop them onto the chat.</source>
-        <translation>Прикрепить файлы: фото, даташиты в PDF, код, схемы KiCad и SimulIDE. Можно просто перетащить их в чат.</translation>
-    </message>
-    <message>
-        <source>Write a message…</source>
-        <translation>Напиши сообщение…</translation>
-    </message>
-    <message>
-        <source>Microphone</source>
-        <translation>Микрофон</translation>
-    </message>
-    <message>
-        <source>Send</source>
-        <translation>Отправить</translation>
     </message>
     <message>
         <source>update check</source>
@@ -2126,6 +2682,65 @@ Esc — скрыть окно.</translation>
     </message>
 </context>
 <context>
+    <name>ScreenAwareness</name>
+    <message>
+        <source>Screen awareness is off. Turn it on in Control center → Awareness.</source>
+        <translation>Анализ экрана выключен. Включите его в «Центр управления → Осведомлённость».</translation>
+    </message>
+    <message>
+        <source>KWin does not let this build take screenshots; background analysis needs the installed Jarvis.</source>
+        <translation>KWin не разрешает этой сборке делать снимки; для фонового анализа нужен установленный Jarvis.</translation>
+    </message>
+    <message>
+        <source>Could not create a pipe for the screenshot.</source>
+        <translation>Не удалось создать канал для снимка экрана.</translation>
+    </message>
+    <message>
+        <source>KWin returned an empty screenshot.</source>
+        <translation>KWin вернул пустой снимок.</translation>
+    </message>
+    <message>
+        <source>KWin did not allow the screenshot (only the installed Jarvis may take one without asking).</source>
+        <translation>KWin не разрешил снимок (без запроса снимать может только установленный Jarvis).</translation>
+    </message>
+    <message>
+        <source>A screenshot request is already open.</source>
+        <translation>Запрос снимка экрана уже открыт.</translation>
+    </message>
+    <message>
+        <source>The screenshot portal is not available: %1</source>
+        <translation>Портал снимков экрана недоступен: %1</translation>
+    </message>
+    <message>
+        <source>No answer from the screenshot portal.</source>
+        <translation>Портал снимков экрана не ответил.</translation>
+    </message>
+    <message>
+        <source>The screenshot was cancelled.</source>
+        <translation>Снимок экрана отменён.</translation>
+    </message>
+    <message>
+        <source>The desktop refused the screenshot.</source>
+        <translation>Рабочий стол отказал в снимке экрана.</translation>
+    </message>
+    <message>
+        <source>Could not read the screenshot.</source>
+        <translation>Не удалось прочитать снимок экрана.</translation>
+    </message>
+    <message>
+        <source>Text recognition needs Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra</source>
+        <translation>Для распознавания текста нужен Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra</translation>
+    </message>
+    <message>
+        <source>Text recognition failed.</source>
+        <translation>Не удалось распознать текст.</translation>
+    </message>
+    <message>
+        <source>Tesseract could not start.</source>
+        <translation>Tesseract не запустился.</translation>
+    </message>
+</context>
+<context>
     <name>SettingsDialog</name>
     <message>
         <source>Claude API settings</source>
@@ -2209,6 +2824,42 @@ Esc — скрыть окно.</translation>
     <message>
         <source>Schematics</source>
         <translation>Схемы</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Прогресс</translation>
+    </message>
+    <message>
+        <source>Your answers checked: %1, right: %2 (%3 %). The ETG needs 35 of 40 (87.5 %).</source>
+        <translation>Проверено ваших ответов: %1, верных: %2 (%3 %). На ETG нужно 35 из 40 (87,5 %).</translation>
+    </message>
+    <message>
+        <source>No answers checked yet. Send a test question (Ctrl+J with the screen button, or as text) and say which answer you picked: Jarvis translates it, explains the rule and records the theme.</source>
+        <translation>Проверенных ответов пока нет. Пришлите вопрос теста (Ctrl+J с кнопкой экрана или текстом) и скажите, какой ответ выбрали: Jarvis переведёт его, объяснит правило и запишет тему.</translation>
+    </message>
+    <message>
+        <source>%1/%2 right</source>
+        <translation>%1/%2 верно</translation>
+    </message>
+    <message>
+        <source>%1 explained</source>
+        <translation>разобрано: %1</translation>
+    </message>
+    <message>
+        <source>Themes that keep going wrong are highlighted; Jarvis knows them and focuses on them when you practise.</source>
+        <translation>Темы с повторяющимися ошибками подсвечены: Jarvis знает их и делает на них упор в тренировке.</translation>
+    </message>
+    <message>
+        <source>Quiz me</source>
+        <translation>Проверь меня</translation>
+    </message>
+    <message>
+        <source>My weak themes</source>
+        <translation>Мои слабые темы</translation>
+    </message>
+    <message>
+        <source>Reset progress</source>
+        <translation>Сбросить прогресс</translation>
     </message>
     <message>
         <source>Classic circuits with values that work. Open one to zoom in, ask Jarvis how it works, or save it: SPICE for ngspice, a netlist for the KiCad PCB editor, a bill of materials.</source>

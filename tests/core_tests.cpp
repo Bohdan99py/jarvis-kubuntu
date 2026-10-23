@@ -20,6 +20,9 @@
 #include "markdown_safe.h"
 #include "schematic_library.h"
 #include "visual_state.h"
+#include "awareness.h"
+#include "driving_store.h"
+#include "config.h"
 #include <QElapsedTimer>
 #include <QFile>
 #include <QImage>
@@ -31,6 +34,12 @@ static QString factValue(const QJsonArray &facts,const QString &slot) {
 static void skills() {
     jarvis::SkillStore skills;
     require(skills.list().size()==8,"eight bundled skills");
+    bool driving=false,games=false;
+    for(const auto &v:skills.list()) { driving=driving||v.toObject()["id"].toString()=="driving"; games=games||v.toObject()["id"].toString()=="games"; }
+    require(driving && !games,"the Driving & Motorsport skill replaced the Gaming skill");
+    require(skills.prompt().contains("Literal translation") && skills.prompt().contains("never mix road rules with racing rules"),"driving skill guidance on");
+    require(skills.recall(QStringLiteral("Что такое приоритет справа?")).contains(QStringLiteral("справа")),"driving answer offline");
+    require(skills.recall("What do motorsport flags mean?").contains("chequered") || skills.recall("What do motorsport flags mean?").contains("Chequered"),"motorsport answer in English");
     require(skills.prompt().contains("embedded systems engineer"),"embedded skill on by default");
     require(!skills.recall(QStringLiteral("Чем отличается SPI от I2C?")).isEmpty(),"embedded local example");
     require(!skills.recall(QStringLiteral("Что такое закон Ома?")).isEmpty(),"built-in local example");
@@ -569,6 +578,131 @@ static void visualState() {
     require(demoInLog && v.log().size()<=jarvis::VisualState::kMaxLog,"demo events are marked in the log");
     v.setForcedState("warning");require(v.state()=="warning","forced state");v.setForcedState("");require(v.state()=="idle","forced state off");
 }
+
+static void drivingCalculators() {
+    using jarvis::Calculators;using jarvis::Lang;
+    auto line=[](const QJsonObject &r,const QString &label){for(const auto &v:r["lines"].toArray()) if(v.toObject()["label"].toString()==label) return v.toObject()["value"].toString(); return QString();};
+    auto r=Calculators::compute("stopping",QJsonObject{{"v","90 km/h"},{"t","1"},{"a","7"}},Lang::En);
+    require(r["ok"].toBool() && line(r,"Reaction distance")=="25 m","reaction distance at 90 km/h");
+    require(line(r,"Braking distance")=="44.6 m" && line(r,"Stopping distance")=="69.6 m","braking and stopping distance");
+    require(line(r,"Code de la route rule of thumb").contains("81"),"exam rule (V/10)^2");
+    r=Calculators::compute("following",QJsonObject{{"v","130"},{"t","1.5"}},Lang::En);
+    require(line(r,"Distance")=="54.2 m" && !line(r,"Warning").isEmpty(),"following distance and the 2-second rule");
+    r=Calculators::compute("lapspeed",QJsonObject{{"length","5.891km"},{"lap","1:27.097"},{"other","1:27.597"}},Lang::En);
+    require(line(r,"Average speed").startsWith("243.5") && line(r,"Gap per lap").startsWith("+0.5"),"lap speed and gap");
+    r=Calculators::compute("stint",QJsonObject{{"perlap","2.4"},{"tank","100"},{"laps","120"}},Lang::En);
+    require(line(r,"Laps on a full tank")=="41" && line(r,"Pit stops")=="2","fuel and stops");
+    require(!Calculators::compute("stopping",QJsonObject{{"v",""}},Lang::En)["ok"].toBool(),"speed required");
+}
+static void drivingProgress() {
+    using jarvis::DrivingStore;
+    const qint64 t=QDateTime::currentMSecsSinceEpoch();
+    DrivingStore d;
+    d.clear();
+    require(DrivingStore::themes().size()==10,"ten ETG themes");
+    require(DrivingStore::themeOf("R")=="R" && DrivingStore::themeOf(QStringLiteral("priorité"))=="L" && DrivingStore::themeOf(QStringLiteral("первая помощь"))=="A","themes by code and word");
+    require(!d.record("X","right",t) && !d.record("L","maybe",t),"unknown theme or result refused");
+    require(d.record("L","wrong",t) && d.record("L","wrong",t+1) && d.record("L","right",t+2) && d.record("A","right",t+3) && d.record("R","seen",t+4),"results recorded");
+    const auto s=d.stats(jarvis::Lang::En,t+5);
+    require(s["answered"].toInt()==4 && s["right"].toInt()==2,"answers counted, explanations not");
+    require(d.weakThemes(t)==QStringList{"L"},"weak theme found");
+    require(d.promptSummary(t).contains("Traffic law") && d.progressText(jarvis::Lang::Ru,t).contains("35"),"summary for Claude and the chat");
+    DrivingStore reopened;
+    require(reopened.stats(jarvis::Lang::En,t)["answered"].toInt()==4,"progress persists");
+    reopened.clear();
+    require(DrivingStore().stats(jarvis::Lang::En,t)["answered"].toInt()==0,"progress cleared");
+}
+static void awareness() {
+    using jarvis::Awareness;
+    const qint64 t0=QDateTime(QDate::currentDate(),QTime(14,0)).toMSecsSinceEpoch();
+    const qint64 min=60*1000;
+    jarvis::ConfigData cfg;
+    cfg.awarenessLevel="assistive";cfg.awarenessWindow=true;cfg.awarenessScreen=true;
+    Awareness a;a.configure(cfg);
+    // Only the application: a guess with low confidence.
+    a.windowFocused({"","firefox","firefox","{w1}","DP-1",false},t0);
+    auto c=a.context(t0,jarvis::Lang::En);
+    require(c["activity"].toString()=="browsing" && c["confidence"].toDouble()<0.5,"app-only context is a low-confidence guess");
+    require(c["handle"].toString()=="{w1}" && c["output"].toString()=="DP-1","window id and screen kept");
+    // The title says what it is; the screen confirms it.
+    a.windowFocused({QStringLiteral("Code de la route — test de code — Mozilla Firefox"),"firefox","firefox","{w1}","DP-1",false},t0+1000);
+    c=a.context(t0+1000,jarvis::Lang::En);
+    require(c["activity"].toString()=="driving-test" && qAbs(c["confidence"].toDouble()-0.65)<0.01,"title evidence");
+    a.screenObserved("firefox",QStringLiteral("Question 12/40\nVous circulez sur une route prioritaire. Je peux :\nA - dépasser\nB - céder le passage"),t0+2000);
+    c=a.context(t0+2000,jarvis::Lang::En);
+    require(c["confidence"].toDouble()>0.9 && c["evidence"].toArray().size()>=2,"screen evidence raises confidence");
+    // Jarvis's own overlay never replaces the context.
+    a.windowFocused({"Jarvis — overlay","jarvis","org.jarvis.Jarvis","{own}","DP-1",false},t0+3000);
+    require(a.context(t0+3000,jarvis::Lang::En)["handle"].toString()=="{w1}","own windows ignored");
+    // Honest prompt: what Claude can and cannot see.
+    require(a.promptContext(t0+3000,"none").contains("cannot see the window's content"),"title-only context says so");
+    require(a.promptContext(t0+3000,"image").contains("screenshot of that window is attached"),"image context says so");
+    // A driving test offer needs confidence and a couple of minutes, not just an app.
+    QJsonObject state;QString why;
+    require(!a.nextSuggestion(state,t0+3000,false,jarvis::Lang::Ru,&why).isValid() && why=="no evidence","not after a glance");
+    auto s=a.nextSuggestion(state,t0+4*min,false,jarvis::Lang::Ru,&why);
+    require(s.isValid() && s.category=="driving" && s.body.contains(QStringLiteral("перевести вопрос")),"driving offer");
+    // The importance filter.
+    require(!a.nextSuggestion(state,t0+4*min,true,jarvis::Lang::Ru,&why).isValid() && why=="dnd","Do not disturb");
+    Awareness::markShown(state,s,t0+4*min);
+    require(!a.nextSuggestion(state,t0+10*min,false,jarvis::Lang::Ru,&why).isValid() && why=="cooldown","global cooldown");
+    Awareness::feedback(state,"driving","later",t0+10*min);
+    a.screenObserved("firefox",QStringLiteral("Vous circulez sur une route prioritaire. Je peux : A - dépasser"),t0+59*min); // still on the test
+    require(!a.nextSuggestion(state,t0+60*min,false,jarvis::Lang::Ru,&why).isValid() && why=="declined recently","a no silences the category");
+    a.userInteracted(t0+60*min);
+    require(!a.nextSuggestion(state,t0+61*min,false,jarvis::Lang::Ru,&why).isValid() && why=="talking","not while talking to Jarvis");
+    Awareness::pause(state,t0+200*min);
+    require(Awareness::pausedUntil(state,t0+100*min)>0 && !a.nextSuggestion(state,t0+100*min,false,jarvis::Lang::Ru,&why).isValid() && why=="paused","pause");
+    // Build errors: three separate builds with the same error, not one diagnostic repeated.
+    Awareness b;b.configure(cfg);
+    b.windowFocused({QStringLiteral("main.cpp – jarvis – CLion"),"jetbrains-clion","jetbrains-clion","{w2}","",false},t0);
+    require(b.context(t0,jarvis::Lang::En)["label"].toString()=="programming in C++" && b.context(t0,jarvis::Lang::En)["project"].toString()=="jarvis","language and project from the title");
+    for(int i=0;i<5;++i) b.error("vscode","main.cpp:12:5: error: 'foo' was not declared in this scope",t0+i*1000);
+    require(b.context(t0+5000,jarvis::Lang::En)["errors"].toArray().first().toObject()["count"].toInt()==1,"keystroke repeats are one failure");
+    b.error("vscode","main.cpp:40:9: error: 'bar' was not declared in this scope",t0+min);
+    b.error("vscode","main.cpp:41:9: error: 'baz' was not declared in this scope",t0+2*min);
+    require(Awareness::errorSignature("a.cpp:1:2: error: 'x' was not declared")==Awareness::errorSignature("b/c.cpp:30:4: error: 'yy' was not declared"),"signature ignores names, numbers, paths");
+    QJsonObject bs;
+    s=b.nextSuggestion(bs,t0+3*min,false,jarvis::Lang::En,&why);
+    require(s.isValid() && s.category=="build" && s.score>=0.6,"repeated build error offer");
+    jarvis::ConfigData muted=cfg;muted.awarenessMuted={"build"};b.configure(muted);
+    require(!b.nextSuggestion(bs,t0+3*min,false,jarvis::Lang::En,&why).isValid() && why=="muted","muted category");
+    // Screen text: a log left on the screen counts once.
+    Awareness l;l.configure(cfg);
+    l.windowFocused({"bash — Konsole","konsole","org.kde.konsole","{w3}","",false},t0);
+    const QString log=QStringLiteral("[3/7] Building CXX\nFAILED: main.o\nmain.cpp:3:1: error: expected ';' before '}' token\nninja: build stopped: subcommand failed.");
+    for(int i=0;i<4;++i) l.screenObserved("org.kde.konsole",log,t0+i*3*min);
+    require(l.context(t0+10*min,jarvis::Lang::En)["errors"].toArray().first().toObject()["count"].toInt()==1,"an unchanged screen is one failure");
+    require(Awareness::errorLines(log).size()>=2,"error lines found in a build log");
+    // Fullscreen, excluded and private windows; level and permissions.
+    Awareness f;f.configure(cfg);
+    f.windowFocused({"Game","steam_app_1","","{g}","",true},t0);
+    require(!f.nextSuggestion({},t0+30*min,false,jarvis::Lang::En,&why).isValid() && why=="fullscreen","fullscreen is never interrupted");
+    f.windowFocused({"Passwords","org.keepassxc.KeePassXC","org.keepassxc.KeePassXC","{k}","",false},t0);
+    require(f.excludedNow() && f.promptContext(t0,"none").contains("private"),"password managers excluded");
+    f.windowFocused({"Mozilla Firefox Private Browsing","firefox","firefox","{p}","",false},t0);
+    require(f.context(t0,jarvis::Lang::En)["private"].toBool() && !f.context(t0,jarvis::Lang::En).contains("title"),"private title never kept");
+    jarvis::ConfigData excluded=cfg;excluded.awarenessExcluded={"org.telegram.desktop"};f.configure(excluded);
+    f.windowFocused({"Chat","telegram-desktop","org.telegram.desktop","{t}","",false},t0);
+    require(f.excludedNow(),"user exclusions");
+    jarvis::ConfigData manual=cfg;manual.awarenessLevel="manual";f.configure(manual);
+    f.windowFocused({"x.cpp — Kate","kate","org.kde.kate","{k2}","",false},t0);
+    require(!f.nextSuggestion({},t0+30*min,false,jarvis::Lang::En,&why).isValid() && why=="level","manual level never offers");
+    jarvis::ConfigData noWindow=cfg;noWindow.awarenessWindow=false;f.configure(noWindow);
+    f.windowFocused({"y.cpp — Kate","kate","org.kde.kate","{k3}","",false},t0);
+    require(!f.context(t0,jarvis::Lang::En)["available"].toBool(),"no window permission, no context");
+    // Night.
+    Awareness n;n.configure(cfg);
+    const qint64 night=QDateTime(QDate::currentDate(),QTime(23,30)).toMSecsSinceEpoch();
+    n.windowFocused({QStringLiteral("Code de la route"),"firefox","firefox","{n}","",false},night);
+    n.screenObserved("firefox",QStringLiteral("vous circulez, je peux, panneau"),night);
+    require(!n.nextSuggestion({},night+5*min,false,jarvis::Lang::En,&why).isValid() && why=="night","quiet at night");
+    // Persistence and retention of the suggestion history.
+    QJsonObject old;Awareness::markShown(old,s,t0-40LL*24*3600*1000);Awareness::prune(old,t0);
+    require(old["history"].toArray().isEmpty(),"history older than 30 days dropped");
+    require(Awareness::save(state) && Awareness::load()["categories"].toObject().contains("driving"),"suggestion history saved");
+    require((QFile(Awareness::path()).permissions() & (QFileDevice::ReadGroup|QFileDevice::ReadOther))==0,"awareness file is private");
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -590,5 +724,8 @@ int main(int argc,char **argv) {
     markdown();
     schematics();
     visualState();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state";
+    drivingCalculators();
+    drivingProgress();
+    awareness();
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness";
 }

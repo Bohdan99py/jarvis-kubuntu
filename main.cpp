@@ -57,6 +57,7 @@ int main(int argc,char *argv[]) {
     jarvis::applyUiLanguage(jarvis::Config::loadFileOnly().language);
     QCommandLineParser parser;parser.setApplicationDescription("Jarvis desktop assistant");parser.addHelpOption();parser.addVersionOption();
     parser.addOption({"quick","Open the quick command bar"});
+    parser.addOption({"overlay","Open the Jarvis overlay above other windows (bind this to a key: Ctrl+J)"});
     parser.addOption({"tray","Start in the system tray without opening a window (autostart)"});
     parser.addOption({"open","Open a part of Jarvis: main, tasks, study, curious or memory","target"});
     parser.addOption({"gpu-info","Print which graphics API, renderer and GPU Jarvis draws with, and the GPUs found, then exit"});
@@ -67,12 +68,15 @@ int main(int argc,char *argv[]) {
     if(parser.isSet("gpu-info")) return GraphicsInfo::printReport();
     const QString open=parser.value("open").left(20);
     const bool quick=parser.isSet("quick");
+    const bool overlay=parser.isSet("overlay");
     const bool tray=parser.isSet("tray");
     QDBusConnection bus=QDBusConnection::sessionBus();
     if(bus.isConnected() && !bus.registerService("org.jarvis.Desktop1")) {
         if(tray) return 0; // already running: autostart has nothing to do
         QDBusInterface existing("org.jarvis.Desktop1","/org/jarvis/Desktop1","org.jarvis.Desktop1",bus);
-        auto reply=!open.isEmpty()?existing.call("Open",open,QString()):existing.call(quick?"ShowQuick":"ShowMain");
+        // A shortcut daemon starts us with an activation token: hand it on, so the overlay may take the focus.
+        auto reply=overlay?existing.call("ShowOverlay",qEnvironmentVariable("XDG_ACTIVATION_TOKEN"))
+                  :!open.isEmpty()?existing.call("Open",open,QString()):existing.call(quick?"ShowQuick":"ShowMain");
         return reply.type()==QDBusMessage::ErrorMessage ? 1 : 0;
     }
     // This is the Jarvis that draws: a non-default graphics choice is now on trial.
@@ -101,6 +105,7 @@ int main(int argc,char *argv[]) {
     engine.setNetworkAccessManagerFactory(&offline);
     engine.rootContext()->setContextProperty("desktopBridge",&desktop);
     engine.rootContext()->setContextProperty("startQuick",quick);
+    engine.rootContext()->setContextProperty("startOverlay",overlay);
     engine.rootContext()->setContextProperty("startTray",tray);
     engine.rootContext()->setContextProperty("startOpen",open);
     engine.rootContext()->setContextProperty("jarvisGraphics",&graphics);
@@ -137,11 +142,20 @@ int main(int argc,char *argv[]) {
             if(const QString skill=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SKILL");!skill.isEmpty())
                 if(QObject *center=window->findChild<QObject*>("controlCenter"))
                     QMetaObject::invokeMethod(center,"showSkill",Q_ARG(QVariant,skill.section(':',0,0)),Q_ARG(QVariant,skill.section(':',1)));
+            // JARVIS_UI_SNAPSHOT_OVERLAY=compact|expanded opens the overlay and saves it instead.
+            const QString overlayMode=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_OVERLAY");
+            if(!overlayMode.isEmpty()) {
+                QMetaObject::invokeMethod(window,"showOverlay",Q_ARG(QVariant,QString()),Q_ARG(QVariant,QString()));
+                if(auto *o=window->property("overlay").value<QObject*>()) o->setProperty("expanded",overlayMode==QLatin1String("expanded"));
+            }
             // JARVIS_UI_SNAPSHOT_DELAY=<ms> waits longer, e.g. for the HUD demo to play some events.
             const int delay=qBound(200,qEnvironmentVariableIntValue("JARVIS_UI_SNAPSHOT_DELAY"),60000);
             QTimer::singleShot(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_DELAY")?delay:1500,window,[window,shot]{
                 // JARVIS_UI_SNAPSHOT_SCREEN=1 grabs the whole screen, with the compact overlay.
-                const QImage image=qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SCREEN")?window->screen()->grabWindow(0).toImage():window->grabWindow();
+                QQuickWindow *target=window;
+                if(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_OVERLAY"))
+                    if(auto *o=qobject_cast<QQuickWindow*>(window->property("overlay").value<QObject*>())) target=o;
+                const QImage image=qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SCREEN")?window->screen()->grabWindow(0).toImage():target->grabWindow();
                 image.save(shot);QCoreApplication::quit();});
         });
     }

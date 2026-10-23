@@ -2,6 +2,7 @@
 
 #include <QAbstractListModel>
 #include <QHash>
+#include <QJsonObject>
 #include <QList>
 #include <QString>
 #include <QtQml/qqmlregistration.h>
@@ -11,6 +12,7 @@
 #include "assistant.h"
 #include "daemon_client.h"
 #include "notifier.h"
+#include "screen_awareness.h"
 
 // List model for the chat view + bridge between QML and the brain.
 // If jarvisd is on the session bus, requests go to it; otherwise (or if the
@@ -30,6 +32,16 @@ class ChatModel : public QAbstractListModel
     // False while no window shows memory: background changes (activity, daemon
     // updates) are then only noted and fetched once a window shows up again.
     Q_PROPERTY(bool liveUpdates READ liveUpdates WRITE setLiveUpdates NOTIFY liveUpdatesChanged FINAL)
+    // Screen awareness (set from QML): pictures for requests about the screen.
+    Q_PROPERTY(ScreenAwareness *screen READ screen WRITE setScreen NOTIFY screenChanged FINAL)
+    // What the user is doing (awareness context JSON from jarvisd); "{}" when unknown.
+    Q_PROPERTY(QString context READ context NOTIFY contextChanged FINAL)
+    // The answer being written, or the last one (the overlay shows it).
+    Q_PROPERTY(QString liveReply READ liveReply NOTIFY liveReplyChanged FINAL)
+    // A request is being stopped.
+    Q_PROPERTY(bool stopping READ stopping NOTIFY busyChanged FINAL)
+    // The last request failed and can be sent again.
+    Q_PROPERTY(bool canRetry READ canRetry NOTIFY busyChanged FINAL)
 
 public:
     enum Role {
@@ -42,6 +54,10 @@ public:
         SegmentsRole,
         // Names of the files attached to a user message.
         FilesRole,
+        // user, jarvis, system (a note from Jarvis about what it did) or error.
+        KindRole,
+        // The answer being written right now.
+        StreamingRole,
     };
     Q_ENUM(Role)
 
@@ -57,6 +73,19 @@ public:
     Q_INVOKABLE void send(const QString &text);
     // With attachments: file URLs or paths (images, PDF, code, KiCad and SimulIDE files).
     Q_INVOKABLE void sendWithFiles(const QString &text, const QVariantList &files);
+    // With what the user is doing: the focused application and its title
+    // (`useWindow`) and, when `useScreen` and allowed, the window's text (OCR) or picture.
+    Q_INVOKABLE void sendWithContext(const QString &text, const QVariantList &files, bool useWindow, bool useScreen);
+    // Stops the answer being written; what arrived stays.
+    Q_INVOKABLE void stop();
+    // Sends the last request again (after an error).
+    Q_INVOKABLE void retry();
+    // A short note from Jarvis that is not an answer ("screen awareness is off").
+    Q_INVOKABLE void note(const QString &text);
+    // Re-reads the awareness context from jarvisd.
+    Q_INVOKABLE void refreshContext();
+    // Pause suggestions and observation: minutes (0 resumes, -1 until tomorrow).
+    Q_INVOKABLE void pauseAwareness(int minutes);
     // Saves code from an answer into ~/Documents/Jarvis/Files; returns the path or "".
     Q_INVOKABLE QString saveFile(const QString &name, const QString &content, const QString &language) const;
     Q_INVOKABLE void showInFolder(const QString &path) const;
@@ -94,6 +123,12 @@ public:
     bool learningBusy() const { return m_learningBusy; }
     bool liveUpdates() const { return m_liveUpdates; }
     void setLiveUpdates(bool live);
+    ScreenAwareness *screen() const { return m_screen; }
+    void setScreen(ScreenAwareness *screen);
+    QString context() const { return m_context; }
+    QString liveReply() const { return m_liveReply; }
+    bool stopping() const { return m_stopping; }
+    bool canRetry() const { return !m_busy && m_lastFailed && !m_last.text.isEmpty(); }
     // Re-read the config file here and in the daemon (after the settings dialog saved).
     Q_INVOKABLE void reloadConfig();
     // Stop the background daemon (the window keeps working in local mode).
@@ -107,6 +142,11 @@ signals:
     void daemonConnectedChanged();
     void memoryChanged();
     void liveUpdatesChanged();
+    void screenChanged();
+    void liveReplyChanged();
+    void contextChanged();
+    // An offer of help from jarvisd's awareness (JSON: category, title, body, score).
+    void suggested(const QString &json);
     // Without a daemon this window delivers Jarvis's own notifications; a click
     // asks the window to show "main", "tasks", "study", "curious" or "memory".
     void openRequested(const QString &target, const QString &payload);
@@ -124,11 +164,24 @@ private:
         QString time;
         bool fromUser;
         QStringList files = {};
+        QString kind = {};
+    };
+    struct Sent
+    {
+        QString text;
+        QStringList paths;
+        QStringList names;
+        bool context = false;
+        bool screen = false;
     };
 
     static constexpr int kMaxMessages = 500;
 
-    void append(QString text, bool fromUser, QStringList files = {});
+    void append(QString text, bool fromUser, QStringList files = {}, QString kind = {});
+    // Hands a prepared request to jarvisd (or the local engine).
+    void dispatch(const QString &text, const QStringList &paths, const QJsonObject &desktop);
+    void start(const Sent &request, bool showMessage);
+    void finishStop();
     void setBusy(bool busy);
     void addGreeting();
     void onReply(const QString &reply);
@@ -164,4 +217,14 @@ private:
     QStringList m_pendingFiles;
     int m_streamRow = -1; // the answer being written, shown as it grows
     bool m_busy = false;
+    bool m_stopping = false;
+    bool m_failed = false;     // Claude failed this request: the answer is an error message
+    bool m_lastFailed = false;
+    Sent m_last;
+    ScreenAwareness *m_screen = nullptr;
+    int m_captureId = 0;
+    QString m_screenImage;     // a picture prepared for this request, removed after the answer
+    QString m_context = QStringLiteral("{}");
+    QString m_liveReply;
+    void setLiveReply(const QString &text);
 };

@@ -3,7 +3,9 @@
 #include <QDBusAbstractAdaptor>
 #include <QDBusContext>
 #include <QObject>
+#include <QJsonObject>
 #include <QString>
+#include <QTimer>
 
 #include "activity_bridge.h"
 #include "assistant.h"
@@ -29,7 +31,7 @@ public:
     bool start(QString *error);
 
     // Returns the request id, or 0 if the request was rejected.
-    quint64 ask(const QString &text, const QStringList &files = {});
+    quint64 ask(const QString &text, const QStringList &files = {}, const QJsonObject &desktop = {});
     void reloadConfig();
 
     QString teach(const QString &q, const QString &a) { return m_assistant.teach(q, a); }
@@ -37,11 +39,14 @@ public:
     Assistant &assistant() { return m_assistant; }
     const ActivityBridge &bridge() const { return m_bridge; }
     static QString version();
+    // True when the D-Bus caller is the Jarvis window (owner of org.jarvis.Desktop1).
+    bool callerIsGui() const;
 
 signals:
     void replyReady(quint64 id, const QString &reply);
 
 private:
+    void pollDoNotDisturb();
     // Shows a tab of the GUI; starts the tray application when it is not running.
     void openGui(const QString &target, const QString &payload, int attempt = 0);
 
@@ -50,6 +55,7 @@ private:
     IdeServer m_ide;
     Notifier m_notifier;
     QHash<QString, QString> m_noticeBodies; // key -> text, for "answer the question"
+    QTimer m_dndPoll;
 };
 
 // D-Bus face of DaemonService: interface org.jarvis.Daemon1
@@ -68,6 +74,12 @@ private:
 //   method TaskAction(s, s) -> s  task id and done|remove|snooze|reopen ("" = ok)
 //   method EditTask(s, s, s, s) -> s  id, text, when ("" keeps, "-" no time), repeat ("keep" or a code)
 //   method WindowActivated(s, s, s)  focused window; accepted only from KWin
+//   method WindowFocused(s, s, s, s, b, s)  the same with KWin's window id, fullscreen and screen
+//   method Context() -> s     what the user is doing (awareness context JSON)
+//   method AskContext(s, as, s) -> t  a request with desktop context ({screen, screenText}); from the Jarvis window only
+//   method ScreenObserved(s, s)  text recognised on the focused window (app key, text); from the Jarvis window only
+//   method PauseAwareness(i) -> s  pause suggestions for N minutes (0 resumes, -1 until tomorrow)
+//   method Cancel()           stop the answer being written
 //   method ReloadConfig()     re-read ~/.config/jarvis/config.json
 //   method Quit()             stop the daemon (clean exit, systemd will not restart it)
 //   signal Reply(t, s)        answer for request id
@@ -77,6 +89,8 @@ private:
 //   signal Routed(t, s)       how request id is being answered (llm, recall, calculator…; 0 = background)
 //   signal Failed(t, s)       Claude could not answer request id, and why
 //   signal Notice(s)          a notification Jarvis shows (JSON: key, kind, title, body)
+//   signal Suggestion(s)      an offer of help passed the importance filter (JSON: category, title, body, score)
+//   signal ContextChanged()   the observed context changed (another application or activity)
 class DaemonAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
@@ -101,6 +115,13 @@ public slots:
     QString TaskAction(const QString &id, const QString &action);
     QString EditTask(const QString &id, const QString &text, const QString &when, const QString &repeat);
     void WindowActivated(const QString &caption, const QString &appClass, const QString &desktopId);
+    void WindowFocused(const QString &caption, const QString &appClass, const QString &desktopId, const QString &handle,
+                       bool fullscreen, const QString &output);
+    QString Context();
+    quint64 AskContext(const QString &text, const QStringList &files, const QString &desktop);
+    void ScreenObserved(const QString &appKey, const QString &text);
+    QString PauseAwareness(int minutes);
+    void Cancel();
     void ReloadConfig();
     void Quit();
 
@@ -112,6 +133,8 @@ signals:
     void Routed(quint64 id, const QString &route);
     void Failed(quint64 id, const QString &reason);
     void Notice(const QString &json);
+    void Suggestion(const QString &json);
+    void ContextChanged();
 
 private:
     DaemonService *m_service;

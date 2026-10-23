@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.17.1
+# Jarvis for Kubuntu · 0.18.0
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,10 +9,60 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.17.1_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.18.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
+
+## Chat
+
+The chat matches the HUD: holographic cards (your messages amber on the right, Jarvis cyan on the left, errors red, notes from Jarvis a thin centred line). A new message unfolds — a line, the frame, then the text — with a short light pulse; while Jarvis writes, the card glows, a highlight runs along its top edge and its header shows the route (Claude › web search, calculator, memory…). Before the first words arrive, the bottom of the list says what Jarvis is doing. An error has "↻ Retry". The list glides to the newest message, or shows "↓ new messages" while you read above. Markdown, code blocks with Copy/Save, 👍/👎 and streaming work as before.
+
+The input is multi-line (up to six lines): **Enter** sends, **Shift+Enter** starts a new line, **Esc** stops the answer (the "■ Stop" button replaces "Send"; what was written stays, marked "stopped"), **↑** in an empty field brings back the last message, **Ctrl+Shift+M** dictates, **Ctrl+O** attaches files. Its edges react: corner brackets light up with the focus, a microphone level on the left, a scanner along the bottom while Jarvis works, a pulse across the top when a message leaves. The Low quality and software rendering turn the chat effects off.
+
+## Overlay and Ctrl+J
+
+**Ctrl+J** in any application opens the Jarvis overlay above your windows without switching to the main window. It is the same conversation (the same Claude session) as the main window.
+
+- **Compact**: a mini core, the state, a context line ("Context: CLion — programming in C++ (70 %) · Jarvis gets only the application and window title"), the question field and the answer being written right in the panel.
+- **Expanded** (Ctrl+E or ⤢): the whole conversation with code blocks.
+- **◉** (Ctrl+Shift+S) sends the content of the window you came from with the question (if screen awareness is allowed), ⌂ opens the main window, × or **Esc** closes (while an answer is written, Esc stops it first). The focus returns to the previous window. Tab moves between the buttons.
+- The application you came from is kept: the daemon ignores Jarvis's own windows.
+- On KDE Wayland the overlay is a layer-shell surface (`qml6-module-org-kde-layershell`): it opens on the active screen and takes the keyboard. Without the module (Ubuntu 24.04) or on X11 it is an always-on-top window.
+- The 0.17 mini core (Ctrl+Shift+O, ◱) stays; a click on it opens the panel.
+
+**Enabling Ctrl+J.** The global key is registered through the standard portal `org.freedesktop.portal.GlobalShortcuts` (xdg-desktop-portal-kde). On the first start of 0.18 Plasma asks you to confirm the shortcut — accept it. It then appears in System Settings → Keyboard → Shortcuts (Jarvis), where it can be changed: browsers use Ctrl+J for downloads. If you closed the dialog: Control center → Awareness → Bind Ctrl+J. Without the portal (other desktops) bind the "J.A.R.V.I.S. → Overlay" action or the command `jarvis --overlay` by hand. Jarvis never grabs the keyboard and sees no other key presses.
+
+## Cognitive awareness
+
+Jarvis can understand what you are doing, to answer with context and, rarely, offer help. Nothing is observed until you allow it (Control center → Awareness).
+
+**Levels**: Off; Manual (default) — context only when you ask (the overlay, "what's on my screen"); Assistive — also rare offers on strong evidence; Proactive — also offers for electronics, documentation and studying.
+
+**Separate permissions**:
+- **Windows** — the focused application and its title (the same KWin script as activity tracking, but no history is kept). Titles stay in memory; private browsing, password managers, keyrings and authentication prompts are never read; your own list of excluded applications.
+- **Screen** — a screenshot of the window you were in, read by Tesseract on this computer. Only when you ask, or, with an interval set (2–15 min), in the background at the Assistive/Proactive levels. While a picture is taken and read, the chat and the overlay show **"◉ READING SCREEN"**; with background analysis on, "◉ SCREEN" stays lit. Screenshots are never saved; in the background the picture never leaves memory; for a question to Claude it is written to `$XDG_RUNTIME_DIR/jarvis-screen` (RAM, 0600) and removed after the answer.
+- **Send screenshots to Claude** — separately; without it only the recognised text goes, and only with your question.
+
+**How the screen is captured.** The installed Jarvis uses KDE's `org.kde.KWin.ScreenShot2`, which KWin allows to programs that declare it in their desktop file (`X-KDE-DBUS-Restricted-Interfaces`, like Spectacle), and captures exactly the window you came from even while the overlay has the focus. If KWin refuses (a build from source), a request falls back to the `org.freedesktop.portal.Screenshot` portal, where Plasma asks you. There is no background analysis through the portal.
+
+**Context and confidence.** The activity is inferred from several signals, strongest first: screen text, errors from the VS Code extension, the window title, the application. From the application alone the confidence stays low (≈30–50 %) and Jarvis says so. It recognises programming (language and project from the title), a build that keeps failing, electronics (KiCad, SimulIDE, LTspice…), the French driving theory test, technical documentation, studying programming, browsing and more. Claude always gets an honest note of what Jarvis saw: only the title ("do not describe the window's content") or the text/screenshot.
+
+**Offers of help** (Assistive/Proactive) come only from observed events, never "because time passed": a build error that keeps coming back (the same error in three separate builds within 30 minutes — a diagnostic repeated while typing, or a log left on the screen, counts once); a driving theory test recognised from the title and the screen ("I can translate the question and go through the rule that applies"); electronics after real work on a circuit; documentation when you go back and forth between docs and code or errors pile up; studying after long work on a course.
+
+**Not intrusive**: at most one offer every 45 minutes (configurable), 4 a day, a usefulness score (stricter at Assistive), refusals count ("Not now" — 6 h of silence, doubling each time; "Don't offer this" — a month), categories can be switched off; never at night (23–7), in Plasma's Do Not Disturb, on a locked screen, while you talk to Jarvis, in games and films or fullscreen applications (unless allowed). Pause observation for an hour or until morning from the overlay, the tray or the settings; switches apply at once.
+
+**Memory**: subjects you keep studying become facts at most once a day, Code de la route progress, and the history of offers (accepted/declined) for 30 days in `awareness.json` (0600). Titles and screen text are never written to disk; "Forget observed context and offer history" clears it all.
+
+## Driving, traffic rules & motorsport
+
+The "Driving, traffic rules & motorsport" skill replaced the Games skill (the application-category module that keeps Jarvis quiet during games stays).
+
+- **Driving** (France, category B): car control, manoeuvres and parking, junctions, distances, weather, how a car works (ABS, ESP, gearbox), the practical test.
+- **French traffic rules (Code de la route)**: a test question is always answered in four parts — literal translation of the question and options, analysis under French rules, probable answer, confidence and ambiguities; no invented signs; sources Légifrance / Sécurité routière / Service-public. Progress over the 10 ETG themes (L, C, R, U, D, A, P, M, S, E) builds up when you say which answer you chose; Jarvis knows your weak themes. "My driving test progress" in chat or the Progress tab of the skill page; "Quiz me" to practise.
+- **Motorsport**: F1, WEC, WRC, GT, history, engines and aerodynamics, telemetry (send a CSV), strategy, flags, marshals, regulations. Results and current regulations are never presented as current without checking.
+- Calculators: stopping distance (physics and the exam rules (V/10)×3 and (V/10)²), following distance (2 s, R412-12), lap speed and gap, fuel and pit stops.
+- **Fresh data**: Control center → Skills → "Let Claude search the web for current facts" turns on Anthropic's web search (up to 3 searches per answer, billed separately; your organisation must allow it in the Claude Console).
 
 ## Cinematic HUD
 
@@ -23,9 +73,9 @@ The main window is a holographic HUD: the chat on the left, the AI core in the m
 - **Real data only.** The core follows real events: a request sent, the route that answered (Claude, memory, calculator, schematics, code, reminders…), the answer stream (characters per second), memory recalls and writes (a network of real memory words lights up), notifications, errors and local fallbacks. While speaking, the analyser and the core follow the level and spectrum of the *audio being played* (the speech server reports levels in step with playback); while listening, the microphone level. When the sound is not measured (the system voice) the analyser draws no made-up spectrum.
 - **Panels**: System (CPU per core, RAM, GPU and VRAM via `gpu_busy_percent` or `nvidia-smi`, temperature, HUD frames/s), Assistant, Tasks, Voice, Memory, Event stream, and transient Active request and Notification / Warning / Error panels that grow out of the core (point → line → frame → content) and fold away by themselves. Panels lay out without overlapping; hover highlights, a click on the title expands details, a right click pins, dragging moves, a double click puts it back.
 - **Demo** (the DEMO button) plays made-up events to show every effect. They are marked DEMO and never counted.
-- **Compact overlay** (the ◱ button, Ctrl+Shift+O or the tray menu): a small always-on-top core. Drag it anywhere; a click opens Jarvis. On Wayland KWin decides where it first appears.
+- **Overlay**: Ctrl+J — a question panel above every window (see "Overlay and Ctrl+J"); the ◱ button, Ctrl+Shift+O or the tray menu — a small always-on-top core, a click on it opens the panel.
 - **Quality** (the buttons on top or Control Center → Application → Interface): Low — three rings, no particles, 20 fps; Balanced — every layer except the background haze and the plasma's swirl, 30 fps while idle and 60 when active; Cinematic — every effect, 60 fps. The HUD's rate does not follow the display: on a 144 Hz monitor the window is still redrawn at most 60 times a second. The same menu has "Classic chat without the HUD". The animation stops while the window is minimised or hidden.
-- **Shortcuts**: Ctrl+M — memory panel, Ctrl+Shift+O — overlay. Clicking the core starts or stops listening (without voice it focuses the input).
+- **Shortcuts**: Ctrl+J — overlay, Ctrl+M — memory panel, Ctrl+Shift+O — the mini core above other windows. Clicking the core starts or stops listening (without voice it focuses the input).
 
 For visual checks: `JARVIS_HUD_STATE=processing jarvis` pins a state (`idle`, `listening`, `processing`, `speaking`, `notification`, `warning`, `error`); `JARVIS_HUD_STATE=demo` starts the demo.
 
@@ -101,7 +151,7 @@ Reminders arrive as KDE notifications from the background daemon — even with t
 
 ## Skills, calculators and formulas
 
-Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, plus conversation, philosophy, games and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". The Programming skill also converts IEEE 754 floats and doubles to bits and back, Q15/Q16.16 fixed point, IPv4 subnets, colours (HEX/RGB/HSL and RGB565 for MCU displays), text to UTF-8 bytes (a C string and array, Base64), and estimates running time from complexity — in chat too: "192.168.1.10/24", "float 0.1", "0.25 to Q15", "#ff8800 to rgb565", "utf-8 \"Hello\"", "O(n log n) n=1e6"; its answer base grew to 70 (OOP, virtual functions, STL, concurrency, Python, Rust, Go, JavaScript, REST, SQL injection, secure coding, password hashing, algorithms, patterns, Docker, CI, profiling, endianness, floating point…). Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas`, per-example `aliases` and `schematics` (ids of bundled example circuits: the skill page then shows them and a KiCad tab).
+Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, Driving, traffic rules & motorsport, plus conversation, philosophy and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". The Programming skill also converts IEEE 754 floats and doubles to bits and back, Q15/Q16.16 fixed point, IPv4 subnets, colours (HEX/RGB/HSL and RGB565 for MCU displays), text to UTF-8 bytes (a C string and array, Base64), and estimates running time from complexity — in chat too: "192.168.1.10/24", "float 0.1", "0.25 to Q15", "#ff8800 to rgb565", "utf-8 \"Hello\"", "O(n log n) n=1e6"; its answer base grew to 70 (OOP, virtual functions, STL, concurrency, Python, Rust, Go, JavaScript, REST, SQL injection, secure coding, password hashing, algorithms, patterns, Docker, CI, profiling, endianness, floating point…). Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas`, per-example `aliases` and `schematics` (ids of bundled example circuits: the skill page then shows them and a KiCad tab).
 
 ## Files, code and schematics
 

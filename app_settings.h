@@ -37,6 +37,19 @@ class AppSettings : public QObject
     Q_PROPERTY(int eveningHour READ eveningHour NOTIFY changed FINAL)
     Q_PROPERTY(bool reminderSound READ reminderSound NOTIFY changed FINAL)
     Q_PROPERTY(int nagMinutes READ nagMinutes NOTIFY changed FINAL)
+    // Cognitive awareness: level (off, manual, assistive, proactive) and the
+    // separate permissions; see ConfigData.
+    Q_PROPERTY(QString awarenessLevel READ awarenessLevel NOTIFY changed FINAL)
+    Q_PROPERTY(bool awarenessWindow READ awarenessWindow NOTIFY changed FINAL)
+    Q_PROPERTY(bool awarenessScreen READ awarenessScreen NOTIFY changed FINAL)
+    Q_PROPERTY(bool awarenessCloudImages READ awarenessCloudImages NOTIFY changed FINAL)
+    Q_PROPERTY(int screenIntervalMinutes READ screenIntervalMinutes NOTIFY changed FINAL)
+    Q_PROPERTY(QStringList awarenessMuted READ awarenessMuted NOTIFY changed FINAL)
+    Q_PROPERTY(QStringList awarenessExcluded READ awarenessExcluded NOTIFY changed FINAL)
+    Q_PROPERTY(int suggestionCooldownMinutes READ suggestionCooldownMinutes NOTIFY changed FINAL)
+    Q_PROPERTY(int suggestionsPerDay READ suggestionsPerDay NOTIFY changed FINAL)
+    Q_PROPERTY(bool awarenessFullscreen READ awarenessFullscreen NOTIFY changed FINAL)
+    Q_PROPERTY(bool webSearch READ webSearch NOTIFY changed FINAL)
     // The cinematic HUD, kept per user in Jarvis.conf (not in config.json: the
     // daemon has nothing to do with it). Quality: off (classic window), low,
     // balanced, cinematic. memoryOpen: the memory panel beside the HUD.
@@ -71,6 +84,17 @@ public:
     int eveningHour() const { return m_data.eveningHour; }
     bool reminderSound() const { return m_data.reminderSound; }
     int nagMinutes() const { return m_data.nagMinutes; }
+    QString awarenessLevel() const { return m_data.awarenessLevel; }
+    bool awarenessWindow() const { return m_data.awarenessWindow; }
+    bool awarenessScreen() const { return m_data.awarenessScreen; }
+    bool awarenessCloudImages() const { return m_data.awarenessCloudImages; }
+    int screenIntervalMinutes() const { return m_data.screenIntervalMinutes; }
+    QStringList awarenessMuted() const { return m_data.awarenessMuted; }
+    QStringList awarenessExcluded() const { return m_data.awarenessExcluded; }
+    int suggestionCooldownMinutes() const { return m_data.suggestionCooldownMinutes; }
+    int suggestionsPerDay() const { return m_data.suggestionsPerDay; }
+    bool awarenessFullscreen() const { return m_data.awarenessFullscreen; }
+    bool webSearch() const { return m_data.webSearch; }
     QString hudQuality() const;
     void setHudQuality(const QString &quality);
     bool memoryOpen() const;
@@ -90,8 +114,13 @@ public:
     Q_INVOKABLE QString setOption(const QString &name, bool value);
     // 0 turns break reminders off.
     Q_INVOKABLE QString setBreakMinutes(int minutes);
-    // name: snoozeMinutes, morningHour, afternoonHour, eveningHour, nagMinutes.
+    // name: snoozeMinutes, morningHour, afternoonHour, eveningHour, nagMinutes,
+    // screenIntervalMinutes, suggestionCooldownMinutes, suggestionsPerDay.
     Q_INVOKABLE QString setNumber(const QString &name, int value);
+    // off, manual, assistive or proactive.
+    Q_INVOKABLE QString setAwarenessLevel(const QString &level);
+    // name: awarenessMuted (suggestion categories) or awarenessExcluded (application ids).
+    Q_INVOKABLE QString setList(const QString &name, const QStringList &values);
 
 signals:
     void changed();

@@ -387,7 +387,7 @@ def speak_elevenlabs(text, lang, settings, root, job):
     request = urllib.request.Request(f"{ELEVEN_API}/v1/text-to-speech/{voice}/stream?output_format=pcm_{ELEVEN_RATE}",
                                      data=json.dumps(body).encode(), method="POST",
                                      headers={"xi-api-key": key, "Content-Type": "application/json",
-                                              "Accept": "audio/pcm", "User-Agent": "Jarvis/0.16"})
+                                              "Accept": "audio/pcm", "User-Agent": "Jarvis/0.18"})
     try:
         response = urllib.request.urlopen(request, timeout=30)
     except urllib.error.HTTPError as error:

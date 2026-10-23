@@ -37,9 +37,12 @@ Popup {
         { key: "schematics", title: qsTr("Schematics") + " · " + circuits.length, enabled: true },
         { key: "kicad", title: "KiCad", enabled: true },
         { key: "answers", title: qsTr("Answers") + " · " + examples.length, enabled: examples.length > 0 },
+        { key: "progress", title: qsTr("Progress"), enabled: true },
         { key: "instructions", title: qsTr("Instructions"), enabled: true }
-    ].filter(t => (t.key !== "schematics" && t.key !== "kicad") || circuits.length > 0)
-    readonly property var stackIndex: ({ calculators: 0, formulas: 1, answers: 2, instructions: 3, schematics: 4, kicad: 5 })
+    ].filter(t => ((t.key !== "schematics" && t.key !== "kicad") || circuits.length > 0) && (t.key !== "progress" || skill.id === "driving"))
+    readonly property var stackIndex: ({ calculators: 0, formulas: 1, answers: 2, instructions: 3, progress: 4, schematics: 5, kicad: 6 })
+    // Code de la route practice, from memory (the Driving skill).
+    readonly property var driving: { try { return JSON.parse(chat.memory).driving || {} } catch (e) { return {} } }
 
     KicadController { id: kicad; english: page.english }
 
@@ -328,6 +331,62 @@ Popup {
                     spacing: 8
                     Label { text: qsTr("What Claude is told when this skill is on:"); color: Theme.textDim; font.pixelSize: 12 }
                     TextEdit { text: page.skill.prompt || ""; readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap; color: Theme.text; font.pixelSize: 13; Layout.fillWidth: true; textFormat: TextEdit.PlainText }
+                }
+            }
+
+            // ---------- Progress: the driving theory test ----------
+            ScrollView {
+                clip: true
+                contentWidth: availableWidth
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 10
+                    Label {
+                        Layout.fillWidth: true
+                        text: (page.driving.answered || 0) > 0
+                              ? qsTr("Your answers checked: %1, right: %2 (%3 %). The ETG needs 35 of 40 (87.5 %).").arg(page.driving.answered).arg(page.driving.right).arg(Math.round(100 * page.driving.right / page.driving.answered))
+                              : qsTr("No answers checked yet. Send a test question (Ctrl+J with the screen button, or as text) and say which answer you picked: Jarvis translates it, explains the rule and records the theme.")
+                        color: Theme.text; wrapMode: Text.Wrap; font.pixelSize: 14
+                    }
+                    Repeater {
+                        model: page.driving.themes || []
+                        ColumnLayout {
+                            id: themeRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            spacing: 3
+                            readonly property int answered: modelData.right + modelData.wrong
+                            readonly property bool weak: (page.driving.weak || []).indexOf(modelData.code) >= 0
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label { text: themeRow.modelData.name; color: themeRow.weak ? Theme.nodeFact : Theme.text; font.pixelSize: 13; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Label {
+                                    text: (themeRow.answered > 0 ? qsTr("%1/%2 right").arg(themeRow.modelData.right).arg(themeRow.answered) : "—")
+                                          + (themeRow.modelData.seen > 0 ? " · " + qsTr("%1 explained").arg(themeRow.modelData.seen) : "")
+                                    color: Theme.textDim; font.pixelSize: 12
+                                }
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 4; radius: 2; color: Theme.bg
+                                Rectangle {
+                                    height: parent.height; radius: 2
+                                    width: parent.width * (themeRow.answered > 0 ? themeRow.modelData.accuracy : 0)
+                                    color: themeRow.modelData.accuracy >= 0.875 ? Theme.accent : themeRow.weak ? Theme.danger : Theme.nodeFact
+                                }
+                            }
+                        }
+                    }
+                    Label {
+                        visible: (page.driving.weak || []).length > 0
+                        Layout.fillWidth: true
+                        text: qsTr("Themes that keep going wrong are highlighted; Jarvis knows them and focuses on them when you practise.")
+                        color: Theme.textDim; font.pixelSize: 12; wrapMode: Text.Wrap
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Quiz me"); primary: true; onClicked: page.askRequested(page.english ? "Quiz me on the Code de la route: one question in French, I'll answer." : "Проверь меня по Code de la route: один вопрос на французском, я отвечу.") }
+                        DarkButton { text: qsTr("My weak themes"); onClicked: page.askRequested(page.english ? "my driving test progress" : "мой прогресс по ПДД") }
+                        DarkButton { text: qsTr("Reset progress"); danger: true; onClicked: page.chat.forget("driving") }
+                    }
                 }
             }
 

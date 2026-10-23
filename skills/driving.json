@@ -1,0 +1,433 @@
+{
+ "schema": 1,
+ "id": "driving",
+ "image": "driving",
+ "color": "#ffb347",
+ "name": "Вождение, ПДД и автоспорт",
+ "name_en": "Driving, traffic rules & motorsport",
+ "description": "Вождение (Франция, категория B), французские ПДД и экзамен Code de la route с разбором вопросов и прогрессом по темам, автоспорт: F1, WEC, ралли, GT, телеметрия и стратегия.",
+ "description_en": "Driving (France, category B), French traffic rules and the Code de la route exam with question breakdowns and progress by theme, motorsport: F1, WEC, rally, GT, telemetry and strategy.",
+ "prompt": "Driving, French traffic rules and motorsport — three separate areas; never mix road rules with racing rules.\n\n1) Driving assistant (France, category B licence): car control, manoeuvres and parking, junctions and priority, safe distances, driving in rain, night, fog, snow and on motorways, how a car works (brakes, ABS, ESP, gearboxes, tyres) and the practical exam (épreuve pratique). Give step-by-step technique and the reason behind each step; safety first.\n\n2) French traffic rules (Code de la route) and the theory test (ETG, 40 questions, 35 needed). When the user shares a test question (a screenshot, OCR text or typed text), ALWAYS answer in four separate parts with these headings in the user's language:\n   1. Literal translation — the question and EVERY answer option translated word for word into the user's language, keeping the letters (A, B, C, D) and the exact meaning; quote the French original of each option next to it. Do not improve or interpret wording here.\n   2. Analysis under French rules — the rule that applies and why; cite the article of the Code de la route (e.g. R412-12) or the official sign name when you are sure of it, otherwise say which rule category it is without inventing an article number.\n   3. Probable correct answer — the letter(s); several answers can be correct in the ETG.\n   4. Confidence and ambiguities — high/medium/low and what limits it (unclear image, missing context, a sign that is not visible, a rule that changed recently).\n   Describe only what is actually in the image or text: never invent signs, markings, vehicles or road conditions that are not shown; if something needed is not visible, say so. Rules change (speed limits by department, fines, points): for current values prefer official sources — Légifrance (legifrance.gouv.fr), Sécurité routière (securite-routiere.gouv.fr), Service-public.fr — and, when web search is available, check them; otherwise say that the value should be verified.\n   Track progress: when the user tells you which answer they chose for a question you analysed, compare it with the probable correct one and append <code-route theme=\"X\" result=\"right\"/> or result=\"wrong\"; when you only explained a question, append <code-route theme=\"X\" result=\"seen\"/>. X is the ETG theme: L traffic law (priority, signs, speed, overtaking, parking), C the driver (alcohol, fatigue, phone), R the road (motorway, night, weather), U other road users, D general rules and misc (licence, points, insurance, accidents), A first aid, P getting in and out of the vehicle, M mechanics, S safety equipment, E environment. At most one tag per question; the tags are hidden. When the user asks to practise, quiz them one question at a time, in French with a translation on request, and tag each answer.\n\n3) Motorsport intelligence: Formula 1, WEC and endurance racing (Le Mans), rally/WRC, GT racing, history, racing cars, engines and power units, aerodynamics, tyres, telemetry, race strategy (stints, pit windows, undercut/overcut, safety cars), flags, marshals (commissaires) and safety procedures, sporting and technical regulations. Explain the engineering with numbers and trade-offs; compare cars fairly with the era and rules they were built for. When the user provides telemetry (CSV, a table, a screenshot of traces), read it carefully: braking points, minimum corner speed, throttle application, gear use, deltas — and say what data is missing. Results, standings, calendars, line-ups and the current regulations change every season: never present remembered results as current; use web search when it is available, cite the source and date, otherwise say your knowledge may be out of date.\n\nCalculators of this skill: stopping distance, following distance, lap speed and gap, fuel and pit stops.",
+ "tools": [
+  "stopping",
+  "following",
+  "lapspeed",
+  "stint",
+  "kinematics",
+  "energy"
+ ],
+ "formulas": [
+  {
+   "title": "Путь за время реакции",
+   "formula": "Dр = v · tр   (v в м/с = V/3,6)",
+   "note": "Время реакции ~1 с, у уставшего водителя — до 2 с.",
+   "title_en": "Reaction distance",
+   "note_en": "Reaction time ~1 s, up to 2 s when tired."
+  },
+  {
+   "title": "Тормозной путь",
+   "formula": "Dт = v² / (2·a)",
+   "note": "a ≈ 7–8 м/с² сухой асфальт, ~5 мокрый, 2–3 снег.",
+   "title_en": "Braking distance",
+   "note_en": "a ≈ 7–8 m/s² dry asphalt, ~5 wet, 2–3 snow."
+  },
+  {
+   "title": "Правило экзамена: реакция",
+   "formula": "Dр ≈ (V/10) × 3",
+   "note": "V в км/ч, результат в метрах.",
+   "title_en": "Exam rule: reaction",
+   "note_en": "V in km/h, result in metres."
+  },
+  {
+   "title": "Правило экзамена: остановка на сухом",
+   "formula": "Dостановки ≈ (V/10)²",
+   "note": "На мокрой дороге × 1,5.",
+   "title_en": "Exam rule: stopping on a dry road",
+   "note_en": "On a wet road × 1.5."
+  },
+  {
+   "title": "Безопасная дистанция",
+   "formula": "D = V/3,6 × 2 с ≈ десятки × 6",
+   "note": "Статья R412-12: не меньше 2 секунд.",
+   "title_en": "Following distance",
+   "note_en": "Article R412-12: at least 2 seconds."
+  },
+  {
+   "title": "Кинетическая энергия",
+   "formula": "E = m·v²/2",
+   "note": "При 100 км/ч энергия вчетверо больше, чем при 50.",
+   "title_en": "Kinetic energy",
+   "note_en": "At 100 km/h there is four times the energy of 50 km/h."
+  },
+  {
+   "title": "Средняя скорость на круге",
+   "formula": "Vср = L / tкруга",
+   "title_en": "Average lap speed"
+  },
+  {
+   "title": "Поперечное ускорение в повороте",
+   "formula": "a = v² / R",
+   "note": "В g: a / 9,81. Болид F1 — до 5–6 g в быстрых поворотах.",
+   "title_en": "Cornering acceleration",
+   "note_en": "In g: a / 9.81. An F1 car reaches 5–6 g in fast corners."
+  },
+  {
+   "title": "Аэродинамическая сила",
+   "formula": "F = ½ · ρ · v² · S · C",
+   "note": "ρ ≈ 1,2 кг/м³; C — Cx для сопротивления или Cz для прижима.",
+   "title_en": "Aerodynamic force",
+   "note_en": "ρ ≈ 1.2 kg/m³; C is Cd for drag or Cl for downforce."
+  },
+  {
+   "title": "Мощность на преодоление сопротивления",
+   "formula": "P = F_сопр · v = ½ρ·Cx·S·v³",
+   "note": "Мощность растёт с кубом скорости.",
+   "title_en": "Power against drag",
+   "note_en": "Power grows with the cube of speed."
+  },
+  {
+   "title": "Пит-стопы",
+   "formula": "остановки = ⌈круги · расход / бак⌉ − 1",
+   "title_en": "Pit stops"
+  }
+ ],
+ "examples": [
+  {
+   "question": "Какие ограничения скорости во Франции?",
+   "answer": "Для легковых автомобилей (категория B), если знаки не требуют иного:\n\n| Дорога | Сухо | Дождь |\n|---|---|---|\n| Автомагистраль (autoroute) | 130 км/ч | 110 км/ч |\n| Дорога 2×2 полосы с разделителем | 110 км/ч | 100 км/ч |\n| Прочие дороги вне населённых пунктов | 80 км/ч* | 80 км/ч |\n| Населённый пункт (agglomération) | 50 км/ч | 50 км/ч |\n\n*Департаменты могут вернуть 90 км/ч на отдельных участках — смотрите знаки. При видимости меньше 50 м — не больше 50 км/ч везде. Водитель с испытательным сроком (permis probatoire): 110 на автомагистрали, 100 на дорогах 2×2, 80 на остальных. Значения меняются — проверяйте на securite-routiere.gouv.fr.",
+   "question_en": "What are the speed limits in France?",
+   "answer_en": "For cars (category B), unless signs say otherwise:\n\n| Road | Dry | Rain |\n|---|---|---|\n| Motorway (autoroute) | 130 km/h | 110 km/h |\n| Dual carriageway with a central reservation | 110 km/h | 100 km/h |\n| Other roads outside built-up areas | 80 km/h* | 80 km/h |\n| Built-up area (agglomération) | 50 km/h | 50 km/h |\n\n*Departments may restore 90 km/h on some sections — follow the signs. With visibility under 50 m: 50 km/h at most everywhere. Probationary drivers (permis probatoire): 110 on motorways, 100 on dual carriageways, 80 elsewhere. Values change — check securite-routiere.gouv.fr.",
+   "aliases": [
+    "ограничения скорости во франции",
+    "limitations de vitesse",
+    "speed limits in france",
+    "какая скорость на автомагистрали во франции"
+   ]
+  },
+  {
+   "question": "Что такое приоритет справа?",
+   "answer": "**Priorité à droite**: на перекрёстке без знаков и светофора вы уступаете дорогу транспорту, который подъезжает **справа**. Правило действует, пока знаки не говорят иное: «Уступите дорогу» (перевёрнутый треугольник), «Стоп», жёлтый ромб главной дороги отменяют его. Выезжая с парковки, грунтовой дороги или территории, приоритета справа у вас нет — вы уступаете всем.",
+   "question_en": "What is the priority to the right?",
+   "answer_en": "**Priorité à droite**: at a junction without signs or lights you give way to traffic coming from the **right**. It applies unless signs say otherwise: \"Give way\" (inverted triangle), \"Stop\" or the yellow priority-road diamond override it. When leaving a car park, a dirt track or private ground you never have priority — you give way to everyone.",
+   "aliases": [
+    "priorité à droite",
+    "priorite a droite",
+    "приоритет справа",
+    "priority to the right",
+    "помеха справа"
+   ]
+  },
+  {
+   "question": "Кто имеет приоритет на круговом движении во Франции?",
+   "answer": "На большинстве французских кольцевых развязок (giratoire) на въезде стоят знаки «Уступите дорогу» и «Круговое движение»: приоритет у тех, кто **уже едет по кольцу**, а въезжающий уступает. Если знака «Уступите дорогу» на въезде нет, действует приоритет справа — тогда уступают въезжающим (так, например, на площади Звезды в Париже). Сигнал поворота: правый — перед выездом с кольца.",
+   "question_en": "Who has priority at a roundabout in France?",
+   "answer_en": "Most French roundabouts (giratoire) have \"Give way\" and \"Roundabout\" signs at each entry: traffic **already on the ring** has priority and entering vehicles give way. Without a \"Give way\" sign at the entry the priority to the right applies — the ring gives way to entering traffic (Place de l'Étoile in Paris, for example). Indicate right before leaving the ring.",
+   "aliases": [
+    "giratoire priorité",
+    "кольцо приоритет франция",
+    "roundabout priority france",
+    "rond-point priorité"
+   ]
+  },
+  {
+   "question": "Какой допустимый уровень алкоголя за рулём во Франции?",
+   "answer": "**0,5 г/л** в крови (0,25 мг/л в выдыхаемом воздухе). Для водителей с испытательным сроком (permis probatoire) и водителей автобусов — **0,2 г/л** (0,10 мг/л), то есть практически ни одного бокала. От 0,8 г/л — уголовное правонарушение. Самое безопасное — не пить вообще, если садитесь за руль.",
+   "question_en": "What is the drink-driving limit in France?",
+   "answer_en": "**0.5 g/L** of blood (0.25 mg/L of exhaled air). For probationary drivers (permis probatoire) and bus drivers — **0.2 g/L** (0.10 mg/L), in practice not even one drink. From 0.8 g/L it is a criminal offence. The safest choice is not to drink at all when you drive.",
+   "aliases": [
+    "алкоголь за рулем франция",
+    "alcool au volant",
+    "taux d'alcool",
+    "drink driving limit france"
+   ]
+  },
+  {
+   "question": "Как работает испытательный срок прав во Франции?",
+   "answer": "Новые права (**permis probatoire**) дают **6 баллов** из 12. Без нарушений права получают **+2 балла в год** и через **3 года** — все 12. После обучения с сопровождением (AAC, conduite accompagnée) — **+3 в год**, полные 12 баллов за **2 года**. В этот период: знак «A» сзади машины, ниже лимиты скорости (110/100/80) и алкоголя (0,2 г/л). Потеря всех баллов — аннулирование прав.",
+   "question_en": "How does the probationary licence work in France?",
+   "answer_en": "A new licence (**permis probatoire**) starts with **6 points** out of 12. Without offences it gains **+2 points a year** and reaches 12 after **3 years**. After accompanied driving (AAC, conduite accompagnée) it gains **+3 a year** and reaches 12 in **2 years**. Meanwhile: the \"A\" disc on the back of the car, lower speed limits (110/100/80) and alcohol limit (0.2 g/L). Losing all points cancels the licence.",
+   "aliases": [
+    "permis probatoire",
+    "испытательный срок права",
+    "баллы прав франция",
+    "probationary licence france"
+   ]
+  },
+  {
+   "question": "Как устроен теоретический экзамен ETG?",
+   "answer": "**ETG (épreuve théorique générale, «код»)**: 40 вопросов с картинками или видео, нужно **не меньше 35 верных**. Бывает несколько верных вариантов. Темы: L — законодательство (приоритет, знаки, скорость, обгон, стоянка), C — водитель, R — дорога, U — другие участники движения, D — общие правила и разное, A — первая помощь, P — посадка и выход, M — механика, S — оборудование безопасности, E — экология. Результат действует 5 лет (и 5 попыток практического экзамена).",
+   "question_en": "How is the ETG theory test organised?",
+   "answer_en": "**ETG (épreuve théorique générale, \"the code\")**: 40 questions with pictures or video, **at least 35 right** to pass. Several options can be right. Themes: L — traffic law (priority, signs, speed, overtaking, parking), C — the driver, R — the road, U — other road users, D — general rules and misc, A — first aid, P — getting in and out, M — mechanics, S — safety equipment, E — environment. A pass is valid for 5 years (and 5 attempts at the practical test).",
+   "aliases": [
+    "etg",
+    "экзамен code de la route",
+    "examen du code",
+    "theory test france",
+    "сколько вопросов в коде"
+   ]
+  },
+  {
+   "question": "Какой должна быть безопасная дистанция?",
+   "answer": "Во Франции — не меньше **2 секунд** до впереди идущей машины (статья R412-12). Быстрый счёт: цифра десятков скорости × 6 — при 90 км/ч ≈ 54 м, при 130 ≈ 78 м. На мокрой дороге и ночью увеличьте её. На автомагистрали ориентир — две разметки обочины (deux traits). Калькулятор «Безопасная дистанция» в этом навыке посчитает точно.",
+   "question_en": "What is a safe following distance?",
+   "answer_en": "In France at least **2 seconds** from the vehicle ahead (article R412-12). Quick rule: the tens digit of your speed × 6 — at 90 km/h ≈ 54 m, at 130 ≈ 78 m. Increase it on wet roads and at night. On motorways the guide is two hard-shoulder markings (deux traits). The \"Following distance\" calculator in this skill computes it exactly.",
+   "aliases": [
+    "distance de sécurité",
+    "безопасная дистанция",
+    "safe distance",
+    "following distance"
+   ]
+  },
+  {
+   "question": "Как посчитать остановочный путь?",
+   "answer": "**Остановочный путь = путь за время реакции + тормозной путь.**\n- Реакция (~1 с): v (м/с) × 1 с. Правило экзамена: (V/10) × 3 — при 90 км/ч ≈ 27 м.\n- Торможение: v² / (2·a), a ≈ 7–8 м/с² на сухом. Правило экзамена: (V/10)² для полной остановки на сухом — при 90 км/ч ≈ 81 м; на мокром ×1,5.\nУдвоение скорости увеличивает тормозной путь в четыре раза. Есть калькулятор «Остановочный путь».",
+   "question_en": "How do you work out stopping distance?",
+   "answer_en": "**Stopping distance = reaction distance + braking distance.**\n- Reaction (~1 s): v (m/s) × 1 s. Exam rule of thumb: (V/10) × 3 — at 90 km/h ≈ 27 m.\n- Braking: v² / (2·a), a ≈ 7–8 m/s² on a dry road. Exam rule: (V/10)² for the full stop on a dry road — at 90 km/h ≈ 81 m; on a wet road ×1.5.\nDoubling the speed makes the braking distance four times longer. Use the \"Stopping distance\" calculator.",
+   "aliases": [
+    "distance d'arrêt",
+    "остановочный путь",
+    "тормозной путь",
+    "stopping distance",
+    "braking distance"
+   ]
+  },
+  {
+   "question": "Что обязательно должно быть в машине во Франции?",
+   "answer": "Обязательно: **светоотражающий жилет** (под рукой в салоне, надеть до выхода из машины при остановке на дороге) и **знак аварийной остановки** (triangle de pré-signalisation); документы — права, свидетельство о регистрации (carte grise), страховка. Детские кресла по возрасту/росту. Зимой в горных департаментах (закон «Montagne», с 1 ноября по 31 марта) — зимние шины или цепи/носки на отдельных участках. Наклейка Crit'Air — в зонах ZFE.",
+   "question_en": "What must you carry in a car in France?",
+   "answer_en": "Mandatory: a **high-visibility vest** (within reach inside the car, put it on before getting out after a stop on the road) and a **warning triangle** (triangle de pré-signalisation); documents — licence, registration (carte grise), insurance. Child seats suited to age/height. In winter in mountain departments (loi Montagne, 1 November to 31 March) — winter tyres or chains/socks on designated roads. A Crit'Air sticker in low-emission zones (ZFE).",
+   "aliases": [
+    "gilet triangle obligatoire",
+    "что возить в машине франция",
+    "mandatory equipment car france"
+   ]
+  },
+  {
+   "question": "Когда включать противотуманные фонари?",
+   "answer": "**Передние противотуманные** — в туман, снег или сильный дождь, а также на узких извилистых дорогах. **Задний противотуманный** — только в **туман или снегопад** (не в дождь): он слепит едущих сзади. Дальний свет в тумане не включайте — свет отражается от капель и видимость ухудшается.",
+   "question_en": "When do you use fog lights?",
+   "answer_en": "**Front fog lights** — in fog, snow or heavy rain, and on narrow winding roads. The **rear fog light** — only in **fog or falling snow** (not rain): it dazzles drivers behind. Never use main beam in fog — the light reflects off the droplets and visibility gets worse.",
+   "aliases": [
+    "feux de brouillard",
+    "противотуманные фары",
+    "fog lights"
+   ]
+  },
+  {
+   "question": "Что делать на месте ДТП?",
+   "answer": "Правило **P.A.S.: Protéger, Alerter, Secourir**.\n1. **Защитить**: аварийка, жилет, знак аварийной остановки (~30 м, если безопасно), людей — за ограждение.\n2. **Вызвать помощь**: 112 (европейский), 15 (SAMU), 18 (пожарные), 17 (полиция), 114 — SMS для глухих. Сказать: где, что случилось, сколько пострадавших, их состояние.\n3. **Помогать** в пределах навыков: не перемещать пострадавшего без угрозы (пожар), не снимать шлем с мотоциклиста, при остановке дыхания — массаж сердца.",
+   "question_en": "What do you do at the scene of an accident?",
+   "answer_en": "The **P.A.S. rule: Protéger, Alerter, Secourir** (protect, alert, help).\n1. **Protect**: hazard lights, vest, warning triangle (~30 m if safe), people behind the barrier.\n2. **Alert**: 112 (European), 15 (SAMU), 18 (fire brigade), 17 (police), 114 — text for the deaf. Say where, what happened, how many injured and their state.\n3. **Help** within your skills: don't move a casualty unless there is a danger (fire), don't remove a motorcyclist's helmet, start chest compressions if breathing stopped.",
+   "aliases": [
+    "protéger alerter secourir",
+    "первая помощь дтп",
+    "accident what to do",
+    "номера экстренных служб франция"
+   ]
+  },
+  {
+   "question": "Как работает ABS?",
+   "answer": "**ABS** не даёт колёсам заблокироваться при резком торможении: датчики скорости колёс замечают начало блокировки, и блок гидравлики много раз в секунду сбрасывает и восстанавливает давление в тормозе этого колеса. Колесо продолжает вращаться — машина **остаётся управляемой**, можно объехать препятствие. Тормозной путь на асфальте обычно не короче, а на рыхлом снегу или гравии может быть длиннее. Правило: при экстренном торможении жмите педаль **сильно и до конца**, вибрация педали — это нормально.",
+   "question_en": "How does ABS work?",
+   "answer_en": "**ABS** keeps the wheels from locking under hard braking: wheel-speed sensors notice a wheel starting to lock and the hydraulic unit releases and reapplies that brake many times per second. The wheel keeps turning — the car **stays steerable**, so you can steer around an obstacle. On asphalt the stopping distance is usually not shorter, and on loose snow or gravel it can be longer. Rule: in an emergency press the pedal **hard and fully**; a vibrating pedal is normal.",
+   "aliases": [
+    "abs",
+    "антиблокировочная система",
+    "антиблокировка",
+    "anti-lock brakes"
+   ]
+  },
+  {
+   "question": "Что делает ESP?",
+   "answer": "**ESP (контроль устойчивости)** сравнивает направление, куда вы рулите, с тем, куда реально едет машина (датчики угла руля, рыскания и бокового ускорения). При заносе он подтормаживает отдельные колёса и снижает тягу двигателя: при сносе задней оси (избыточная поворачиваемость) — тормозит внешнее переднее колесо, при сносе передней (недостаточная) — внутреннее заднее. Физику он не отменяет: на слишком высокой скорости в повороте не спасёт.",
+   "question_en": "What does ESP do?",
+   "answer_en": "**ESP (stability control)** compares where you steer with where the car is actually going (steering-angle, yaw-rate and lateral-acceleration sensors). In a skid it brakes individual wheels and cuts engine torque: when the rear steps out (oversteer) it brakes the outer front wheel, when the front washes out (understeer) the inner rear one. It cannot beat physics: too much speed in a corner is still too much.",
+   "aliases": [
+    "esp",
+    "контроль устойчивости",
+    "stability control",
+    "система стабилизации"
+   ]
+  },
+  {
+   "question": "Какая минимальная глубина протектора?",
+   "answer": "По закону — **1,6 мм** (индикаторы износа в канавках). Но уже от 3 мм на мокрой дороге шина заметно хуже отводит воду и растёт риск аквапланирования; зимние шины теряют свойства примерно от 4 мм. Давление проверяйте на холодных шинах раз в месяц, значения — на стойке двери водителя или в крышке бака.",
+   "question_en": "What is the minimum tyre tread depth?",
+   "answer_en": "The legal minimum is **1.6 mm** (tread-wear indicators in the grooves). But from about 3 mm a tyre clears water noticeably worse and the risk of aquaplaning rises; winter tyres lose their grip from about 4 mm. Check pressures on cold tyres monthly; the values are on the driver's door pillar or the fuel flap.",
+   "aliases": [
+    "глубина протектора",
+    "profondeur des pneus",
+    "tread depth",
+    "износ шин"
+   ]
+  },
+  {
+   "question": "Как проходит практический экзамен во Франции?",
+   "answer": "**Épreuve pratique** длится около **32 минут**, из них примерно 25 — за рулём: город и трасса, при возможности автомагистраль; один манёвр (парковка, разворот и т. п.), торможение для остановки в точке, проверка оборудования или вопрос по безопасности/первой помощи, отрезок самостоятельного движения по указателям или GPS. Оценка по сетке — нужно **не меньше 20 баллов из 31** и ни одной исключающей ошибки (проезд на красный, «Стоп» без остановки, опасная ситуация, вмешательство инспектора).",
+   "question_en": "How does the practical driving test work in France?",
+   "answer_en": "The **épreuve pratique** lasts about **32 minutes**, roughly 25 of them driving: town and open road, a motorway if possible; one manoeuvre (parking, turning round…), a controlled stop, an equipment check or a safety/first-aid question, and a stretch of independent driving by signs or GPS. It is marked on a grid: **at least 20 points out of 31** and no eliminating fault (running a red light, not stopping at a Stop, creating danger, the examiner having to intervene).",
+   "aliases": [
+    "épreuve pratique",
+    "практический экзамен франция",
+    "examen de conduite",
+    "driving test france"
+   ]
+  },
+  {
+   "question": "Как правильно парковаться задом между машинами?",
+   "answer": "**Параллельная парковка задом (créneau):**\n1. Встаньте параллельно машине впереди места, ~0,5–1 м сбоку, задние бамперы на одной линии; поворотник.\n2. Медленно назад; когда ваше заднее колесо поравняется с её бампером — руль полностью в сторону бордюра.\n3. Когда машина встанет под ~45° (в левом зеркале видна правая фара машины сзади или бордюр уходит из правого зеркала) — руль прямо, назад по прямой.\n4. Когда передний бампер пройдёт задний бампер передней машины — руль полностью в обратную сторону, доезжайте до параллели.\n5. Выровняйтесь вперёд-назад. Всё время следите за пешеходами и зеркалами.",
+   "question_en": "How do you parallel park?",
+   "answer_en": "**Reverse parallel parking (créneau):**\n1. Stop alongside the car in front of the space, ~0.5–1 m away, rear bumpers level; indicate.\n2. Reverse slowly; when your rear wheel is level with its bumper, steer fully towards the kerb.\n3. At about 45° (the car behind appears in the opposite mirror, the kerb leaves the near-side mirror) straighten the wheel and reverse straight.\n4. When your front bumper clears the other car's rear bumper, steer fully the other way until parallel.\n5. Straighten up forwards and back. Watch pedestrians and mirrors throughout.",
+   "aliases": [
+    "créneau",
+    "параллельная парковка",
+    "parallel parking",
+    "как парковаться задом"
+   ]
+  },
+  {
+   "question": "Как трогаться в горку на механике?",
+   "answer": "1. Нажмите сцепление, включите первую, держите ручник (или ногу на тормозе).\n2. Добавьте газ ~1500–2000 об/мин и медленно отпускайте сцепление до точки схватывания — капот слегка приподнимется, обороты просядут.\n3. Отпустите ручник (или переносите ногу с тормоза на газ), продолжая плавно отпускать сцепление и добавлять газ.\nНа многих машинах есть помощник старта в гору (HSA) — он держит тормоз ~2 секунды после отпускания педали.",
+   "question_en": "How do you do a hill start with a manual gearbox?",
+   "answer_en": "1. Press the clutch, select first, hold the handbrake (or keep your foot on the brake).\n2. Raise the revs to ~1500–2000 rpm and slowly lift the clutch to the biting point — the bonnet rises slightly and the revs dip.\n3. Release the handbrake (or move your foot from brake to throttle) while still lifting the clutch smoothly and adding throttle.\nMany cars have hill-start assist (HSA), which holds the brake for about 2 seconds after you release the pedal.",
+   "aliases": [
+    "старт в горку",
+    "démarrage en côte",
+    "hill start",
+    "трогание на подъеме"
+   ]
+  },
+  {
+   "question": "Что означают сигнальные флаги в автоспорте?",
+   "answer": "- **Зелёный** — трасса свободна, конец опасного участка.\n- **Жёлтый** — опасность, обгон запрещён; **двойной жёлтый** — сильно сбросить скорость, быть готовым остановиться.\n- **Красно-жёлтый в полоску** — скользкое покрытие.\n- **Синий** — пропустите более быстрого (обычно обгоняющего на круг).\n- **Белый** — медленная машина на трассе (служебная или гоночная — зависит от чемпионата).\n- **Красный** — сессия остановлена.\n- **Чёрный с номером** — дисквалификация/в боксы; **чёрный с оранжевым кругом** — техническая неисправность, в боксы; **чёрно-белый по диагонали** — предупреждение за неспортивное поведение.\n- **Клетчатый** — финиш.\nЩиты SC/VSC и FCY — режимы сейфти-кара. Точные процедуры — в регламенте конкретного чемпионата.",
+   "question_en": "What do motorsport flags mean?",
+   "answer_en": "- **Green** — track clear, end of a danger zone.\n- **Yellow** — danger, no overtaking; **double yellow** — slow right down, be ready to stop.\n- **Red and yellow stripes** — slippery surface.\n- **Blue** — let a faster car through (usually lapping you).\n- **White** — slow vehicle on track (service or racing car, depending on the series).\n- **Red** — session stopped.\n- **Black with a number** — disqualified/to the pits; **black with an orange disc** — mechanical problem, pit; **black and white diagonal** — warning for unsporting behaviour.\n- **Chequered** — finish.\nSC/VSC boards and FCY are safety-car procedures. The exact procedures are in each championship's regulations.",
+   "aliases": [
+    "флаги в автоспорте",
+    "racing flags",
+    "drapeaux course",
+    "что значит синий флаг",
+    "что значит желтый флаг"
+   ]
+  },
+  {
+   "question": "Что такое андеркат и оверкат?",
+   "answer": "**Андеркат**: заехать в боксы **раньше** соперника и на свежей резине проехать быстрые круги, пока он едет на изношенной; если выигрыш на кругах больше разницы во времени пит-стопа — вы впереди после его остановки. Работает, когда свежая резина сильно быстрее и трасса позволяет быстро прогреть шины. **Оверкат**: остаться на трассе **дольше** — полезно, если старую резину ещё можно ехать быстро, свежие шины долго прогреваются или впереди чистый воздух, а соперник после пит-стопа застрял в трафике.",
+   "question_en": "What are the undercut and overcut?",
+   "answer_en": "**Undercut**: pit **earlier** than your rival and use fresh tyres for fast laps while they run on worn ones; if the gain over those laps exceeds the gap, you are ahead after their stop. It works when fresh tyres are much faster and warm up quickly. **Overcut**: stay out **longer** — useful when the old tyres still have pace, new tyres take time to warm up, or you have clean air while your rival rejoins in traffic.",
+   "aliases": [
+    "андеркат",
+    "undercut",
+    "overcut",
+    "оверкат",
+    "стратегия пит-стопов"
+   ]
+  },
+  {
+   "question": "Как начисляются очки в Формуле-1?",
+   "answer": "Гонка: **25-18-15-12-10-8-6-4-2-1** за места с 1 по 10. В спринте — 8-7-6-5-4-3-2-1 за первые 8 мест. Дополнительное очко за быстрый круг отменено с сезона 2025. Регламент меняется — для текущего сезона проверьте на formula1.com или fia.com.",
+   "question_en": "How are points awarded in Formula 1?",
+   "answer_en": "Race: **25-18-15-12-10-8-6-4-2-1** for places 1 to 10. Sprint: 8-7-6-5-4-3-2-1 for the first 8. The extra point for the fastest lap was dropped from the 2025 season. Rules change — check formula1.com or fia.com for the current season.",
+   "aliases": [
+    "очки формула 1",
+    "f1 points",
+    "points formule 1",
+    "система очков ф1"
+   ]
+  },
+  {
+   "question": "Что изменилось в регламенте Формулы-1 в 2026 году?",
+   "answer": "Главное в регламенте 2026 года: силовая установка с примерно равной долей ДВС и электричества — MGU-K до 350 кВт, **MGU-H убран**; топливо полностью экологичное (sustainable); машины меньше и легче; **активная аэродинамика** с подвижными передним и задним крыльями (режим малого сопротивления на прямых) вместо DRS, плюс режим дополнительной электрической мощности для обгона. Детали и поправки публикует FIA — сверяйтесь с актуальной версией.",
+   "question_en": "What changed in the 2026 Formula 1 regulations?",
+   "answer_en": "The core of the 2026 rules: a power unit with a roughly equal share of combustion and electric power — MGU-K up to 350 kW, **MGU-H removed**; fully sustainable fuel; smaller, lighter cars; **active aerodynamics** with moving front and rear wings (a low-drag mode on straights) instead of DRS, plus an extra electric-power mode for overtaking. The FIA publishes the details and amendments — check the current version.",
+   "aliases": [
+    "регламент ф1 2026",
+    "f1 2026 rules",
+    "règlement f1 2026"
+   ]
+  },
+  {
+   "question": "Какие классы машин в WEC?",
+   "answer": "В чемпионате мира по гонкам на выносливость (WEC) сейчас два класса: **Hypercar** — прототипы по правилам LMH (Le Mans Hypercar, например Toyota, Ferrari) и LMDh (общее шасси и гибридная система, например Porsche, Cadillac, BMW), уравненные балансом характеристик (BoP); и **LMGT3** — машины на базе GT3 с профессионально-любительскими экипажами. Состав классов и участников меняется — проверяйте на fiawec.com.",
+   "question_en": "What classes race in the WEC?",
+   "answer_en": "The World Endurance Championship currently has two classes: **Hypercar** — prototypes built to LMH rules (Le Mans Hypercar, e.g. Toyota, Ferrari) and LMDh (spec chassis and hybrid, e.g. Porsche, Cadillac, BMW), equalised by Balance of Performance (BoP); and **LMGT3** — GT3-based cars with pro-am crews. Classes and entries change — check fiawec.com.",
+   "aliases": [
+    "классы wec",
+    "wec classes",
+    "hypercar lmdh lmh",
+    "ле-ман классы"
+   ]
+  },
+  {
+   "question": "Что такое баланс характеристик (BoP)?",
+   "answer": "**BoP (Balance of Performance)** — способ уравнять машины разных концепций в одном классе (GT3, Hypercar): организатор задаёт минимальный вес, ограничение мощности, энергию на круг/стинт, иногда размер бака и время заправки. Цель — чтобы исход решали пилоты, команда и стратегия, а не концепция машины. BoP пересматривается в течение сезона по данным телеметрии.",
+   "question_en": "What is Balance of Performance (BoP)?",
+   "answer_en": "**BoP (Balance of Performance)** equalises different car concepts within one class (GT3, Hypercar): the organiser sets minimum weight, power limits, energy per lap/stint, sometimes tank size and refuelling time. The aim is that drivers, teams and strategy decide the result, not the car's concept. BoP is revised during the season using telemetry.",
+   "aliases": [
+    "bop",
+    "balance of performance",
+    "баланс характеристик"
+   ]
+  },
+  {
+   "question": "Как читать телеметрию круга?",
+   "answer": "Сравнивайте круг с эталонным (лучший свой или напарника) по дистанции, а не по времени:\n- **Скорость**: минимальная в повороте и скорость на выходе важнее максимальной.\n- **Тормоз**: точка начала, пиковое давление и как плавно его отпускают (trail braking).\n- **Газ**: когда начинается полное открытие; рывки = нестабильность машины.\n- **Передача и обороты**: ранние/поздние переключения.\n- **Руль**: лишние корректировки — недостаточная/избыточная поворачиваемость.\n- **Дельта времени**: где именно теряется время.\nПришлите данные (CSV или таблицу) — разберу по поворотам.",
+   "question_en": "How do you read lap telemetry?",
+   "answer_en": "Compare a lap with a reference (your best or a team-mate's) by distance, not time:\n- **Speed**: minimum corner speed and exit speed matter more than top speed.\n- **Brake**: braking point, peak pressure and how smoothly it is released (trail braking).\n- **Throttle**: when full throttle starts; stabs mean an unsettled car.\n- **Gear and revs**: early or late shifts.\n- **Steering**: extra corrections show understeer or oversteer.\n- **Time delta**: exactly where time is lost.\nSend the data (CSV or a table) and I'll go through it corner by corner.",
+   "aliases": [
+    "телеметрия",
+    "telemetry",
+    "télémétrie",
+    "как анализировать телеметрию"
+   ]
+  },
+  {
+   "question": "Что делают маршалы на гонке?",
+   "answer": "**Маршалы (commissaires de piste)** — подготовленные добровольцы с лицензией (во Франции — через FFSA). Они показывают флаги на постах, сообщают в дирекцию гонки об инцидентах, убирают обломки и масло, эвакуируют машины, первыми приходят на помощь пилоту вместе с медиками и пожарными. Работа на посту: постоянное наблюдение за своим сектором, связь с соседними постами, собственная безопасность — никогда не поворачиваться спиной к трассе.",
+   "question_en": "What do race marshals do?",
+   "answer_en": "**Marshals (commissaires de piste)** are trained, licensed volunteers (in France through the FFSA). They show flags at their posts, report incidents to race control, clear debris and oil, recover cars and are first on the scene with medics and fire crews. On a post: constant watch over the sector, contact with neighbouring posts and their own safety — never turn your back on the track.",
+   "aliases": [
+    "маршалы",
+    "commissaires de piste",
+    "marshals",
+    "кто такие маршалы"
+   ]
+  },
+  {
+   "question": "Чем ралли отличается от кольцевых гонок?",
+   "answer": "В **ралли (WRC)** экипаж из пилота и штурмана едет по закрытым для движения спецучасткам (гравий, асфальт, снег) по одному, на время; между ними — переезды по обычным дорогам по ПДД. Штурман читает стенограмму (pace notes), составленную на разведке. Побеждает наименьшее суммарное время. В **кольцевых гонках** все стартуют вместе на одной трассе и сражаются колесо в колесо. Машины WRC — Rally1 (с 2025 года без гибридной системы), Rally2 и ниже.",
+   "question_en": "How does rallying differ from circuit racing?",
+   "answer_en": "In **rallying (WRC)** a driver and co-driver tackle closed special stages (gravel, asphalt, snow) one car at a time against the clock, linked by road sections driven under normal traffic law. The co-driver reads pace notes written during the recce. The lowest total time wins. In **circuit racing** everyone starts together on one track and races wheel to wheel. WRC cars: Rally1 (without the hybrid system since 2025), Rally2 and below.",
+   "aliases": [
+    "ралли",
+    "wrc",
+    "rallye",
+    "rally vs circuit"
+   ]
+  },
+  {
+   "question": "Как работает прижимная сила?",
+   "answer": "Антикрыло и днище создают **разницу давлений**: над крылом (перевёрнутым профилем) давление выше, чем под ним, а ускоренный поток под днищем и в диффузоре понижает давление под машиной — машину прижимает к трассе. Прижимная сила растёт примерно с **квадратом скорости**, поэтому в быстрых поворотах сцепление больше, чем дал бы только вес. Цена — **лобовое сопротивление**, отнимающее скорость на прямых. Настройка — компромисс трассы: Монца — минимум крыльев, Монако — максимум.",
+   "question_en": "How does downforce work?",
+   "answer_en": "Wings and the floor create a **pressure difference**: an inverted wing has higher pressure above than below, and the accelerated flow under the floor and through the diffuser lowers the pressure under the car — it is pushed onto the track. Downforce grows roughly with the **square of speed**, so fast corners get more grip than weight alone would give. The price is **drag**, which costs speed on straights. The set-up is a track compromise: Monza runs minimal wings, Monaco maximum.",
+   "aliases": [
+    "прижимная сила",
+    "downforce",
+    "appui aérodynamique",
+    "аэродинамика болида"
+   ]
+  },
+  {
+   "question": "Что такое деградация шин?",
+   "answer": "**Деградация** — падение темпа по мере износа и перегрева резины: от термической (поверхность перегревается, сцепление пропадает — часто лечится аккуратным пилотажем) до механической (стирается протектор). Её видно по росту времени круга при той же загрузке топливом (с поправкой на выгорание топлива ~0,03–0,06 с за кг за круг в зависимости от трассы). От деградации зависят длина стинтов, число пит-стопов и выбор состава.",
+   "question_en": "What is tyre degradation?",
+   "answer_en": "**Degradation** is the loss of pace as rubber wears and overheats: from thermal (the surface overheats and grip drops — often managed by careful driving) to mechanical (the tread wears away). You see it as lap times rising at the same fuel load (corrected for fuel burn, roughly 0.03–0.06 s per kg depending on the track). It decides stint lengths, the number of stops and compound choice.",
+   "aliases": [
+    "деградация шин",
+    "tyre degradation",
+    "dégradation des pneus",
+    "износ резины в гонке"
+   ]
+  }
+ ]
+}

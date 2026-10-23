@@ -2,7 +2,9 @@
 
 #include <QDBusConnection>
 #include <QCoreApplication>
+#include <QDBusConnectionInterface>
 #include <QDBusError>
+#include <QDBusVariant>
 #include <QDBusMessage>
 #include <QDebug>
 #include <QDBusPendingCallWatcher>
@@ -29,9 +31,20 @@ DaemonService::DaemonService(QObject *parent)
     });
     connect(&m_notifier, &Notifier::actionInvoked, this, [this](const QString &key, const QString &action) {
         const QString target = m_assistant.noticeAction(key, action);
-        if (!target.isEmpty())
-            openGui(target, target == QLatin1String("curious") ? m_noticeBodies.value(key) : QString());
+        if (target.isEmpty())
+            return;
+        // An accepted offer of help opens the overlay with the question already asked.
+        const QString payload = target == QLatin1String("curious") ? m_noticeBodies.value(key)
+                                : target == QLatin1String("assist") ? m_assistant.assistPrompt(key)
+                                                                    : QString();
+        openGui(target, payload);
     });
+    // Plasma's "Do not disturb": no offers of help while it is on (reminders still come).
+    m_dndPoll.setInterval(60 * 1000);
+    connect(&m_dndPoll, &QTimer::timeout, this, &DaemonService::pollDoNotDisturb);
+    m_dndPoll.start();
+    QTimer::singleShot(3000, this, &DaemonService::pollDoNotDisturb);
+
 }
 
 void DaemonService::openGui(const QString &target, const QString &payload, int attempt)
@@ -81,7 +94,7 @@ bool DaemonService::start(QString *error)
 
     // The KWin script calls back into this name, so load it only once we own it.
     applyUiLanguage(m_assistant.config().language);
-    m_bridge.apply(m_assistant.config().trackActivity);
+    m_bridge.apply(m_assistant.wantsWindowReports());
     m_assistant.setAutonomous(true); // reminders and hints come from here, GUI or not
     QString ideError;
     if (!m_ide.start(&ideError))
@@ -89,7 +102,30 @@ bool DaemonService::start(QString *error)
     return true;
 }
 
-quint64 DaemonService::ask(const QString &text, const QStringList &files)
+void DaemonService::pollDoNotDisturb()
+{
+    auto msg = QDBusMessage::createMethodCall(QStringLiteral("org.freedesktop.Notifications"), QStringLiteral("/org/freedesktop/Notifications"),
+                                              QStringLiteral("org.freedesktop.DBus.Properties"), QStringLiteral("Get"));
+    msg << QStringLiteral("org.freedesktop.Notifications") << QStringLiteral("Inhibited");
+    auto *w = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(msg, 2000), this);
+    connect(w, &QDBusPendingCallWatcher::finished, this, [this, w] {
+        w->deleteLater();
+        const QDBusMessage reply = w->reply();
+        // Servers without the property (older specs) never inhibit.
+        m_assistant.setDoNotDisturb(reply.type() == QDBusMessage::ReplyMessage
+                                    && reply.arguments().value(0).value<QDBusVariant>().variant().toBool());
+    });
+}
+
+bool DaemonService::callerIsGui() const
+{
+    if (!calledFromDBus())
+        return true;
+    const auto owner = connection().interface()->serviceOwner(QStringLiteral("org.jarvis.Desktop1"));
+    return owner.isValid() && owner.value() == message().service();
+}
+
+quint64 DaemonService::ask(const QString &text, const QStringList &files, const QJsonObject &desktop)
 {
     if ((text.isEmpty() && files.isEmpty()) || text.size() > kMaxRequestChars || files.size() > 8) {
         qWarning().nospace() << "rejected request (" << text.size() << " chars, " << files.size() << " files)";
@@ -98,7 +134,7 @@ quint64 DaemonService::ask(const QString &text, const QStringList &files)
     for (const QString &f : files)
         if (f.size() > 4096 || !f.startsWith(u'/'))
             return 0;
-    const quint64 id = m_assistant.ask(text, files);
+    const quint64 id = m_assistant.ask(text, files, desktop);
     // Log the size only, never the content or the file names.
     qInfo().nospace() << "request #" << id << " (" << text.size() << " chars, " << files.size() << " files)";
     return id;
@@ -107,11 +143,11 @@ quint64 DaemonService::ask(const QString &text, const QStringList &files)
 void DaemonService::reloadConfig()
 {
     qInfo() << "reloading config";
-    const bool wasTracking = m_assistant.config().trackActivity;
+    const bool wasWatching = m_assistant.wantsWindowReports();
     m_assistant.reloadConfig();
     applyUiLanguage(m_assistant.config().language);
-    if (wasTracking != m_assistant.config().trackActivity)
-        m_bridge.apply(m_assistant.config().trackActivity);
+    if (wasWatching != m_assistant.wantsWindowReports())
+        m_bridge.apply(m_assistant.wantsWindowReports());
 }
 
 QString DaemonService::version()
@@ -129,6 +165,11 @@ DaemonAdaptor::DaemonAdaptor(DaemonService *service)
     connect(&service->assistant(), &Assistant::memoryChanged, this, &DaemonAdaptor::MemoryChanged);
     connect(&service->assistant(), &Assistant::activityChanged, this, &DaemonAdaptor::ActivityChanged);
     connect(&service->assistant(), &Assistant::routed, this, &DaemonAdaptor::Routed);
+    connect(&service->assistant(), &Assistant::contextChanged, this, &DaemonAdaptor::ContextChanged);
+    // What a suggestion shows on the desktop anyway: category, title and text — never the evidence.
+    connect(&service->assistant(), &Assistant::suggested, this, [this](const QJsonObject &s) {
+        emit Suggestion(QString::fromUtf8(QJsonDocument(s).toJson(QJsonDocument::Compact)));
+    });
     connect(&service->assistant(), &Assistant::failed, this, [this](quint64 id, const QString &reason) { emit Failed(id, reason.left(500)); });
     // Only what a notification already shows on the desktop: kind and title.
     connect(&service->assistant(), &Assistant::notice, this, [this](const QJsonObject &notice) {
@@ -181,6 +222,57 @@ void DaemonAdaptor::WindowActivated(const QString &caption, const QString &appCl
         return;
     }
     m_service->assistant().windowActivated(caption.left(1000), appClass.left(200), desktopId.left(200));
+}
+
+void DaemonAdaptor::WindowFocused(const QString &caption, const QString &appClass, const QString &desktopId,
+                                  const QString &handle, bool fullscreen, const QString &output)
+{
+    const DaemonService &ctx = *m_service;
+    if (!ctx.calledFromDBus() || !ctx.bridge().isKWin(ctx.message().service())) {
+        if (ctx.calledFromDBus())
+            ctx.sendErrorReply(QDBusError::AccessDenied, QStringLiteral("window reports are accepted from KWin only"));
+        return;
+    }
+    m_service->assistant().windowActivated(caption.left(1000), appClass.left(200), desktopId.left(200), handle.left(80),
+                                           fullscreen, output.left(80));
+}
+
+QString DaemonAdaptor::Context()
+{
+    return m_service->assistant().contextJson();
+}
+
+quint64 DaemonAdaptor::AskContext(const QString &text, const QStringList &files, const QString &desktop)
+{
+    // The window title and screen text go to Claude with this request: only the Jarvis window may ask so.
+    if (!m_service->callerIsGui() || desktop.size() > 16000) {
+        m_service->sendErrorReply(QDBusError::AccessDenied, QStringLiteral("desktop context requests come from the Jarvis window only"));
+        return 0;
+    }
+    const QJsonObject o = QJsonDocument::fromJson(desktop.toUtf8()).object();
+    QJsonObject clean{{QStringLiteral("screen"), o.value(QStringLiteral("screen")).toString().left(10)}};
+    if (const QString text = o.value(QStringLiteral("screenText")).toString(); !text.isEmpty())
+        clean[QStringLiteral("screenText")] = text.left(8000);
+    return m_service->ask(text, files, clean);
+}
+
+void DaemonAdaptor::ScreenObserved(const QString &appKey, const QString &text)
+{
+    if (!m_service->callerIsGui()) {
+        m_service->sendErrorReply(QDBusError::AccessDenied, QStringLiteral("screen observations come from the Jarvis window only"));
+        return;
+    }
+    m_service->assistant().screenObserved(appKey.left(200), text.left(8000));
+}
+
+QString DaemonAdaptor::PauseAwareness(int minutes)
+{
+    return m_service->assistant().pauseAwareness(minutes);
+}
+
+void DaemonAdaptor::Cancel()
+{
+    m_service->assistant().cancel();
 }
 
 QString DaemonAdaptor::Curious()

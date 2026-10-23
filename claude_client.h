@@ -33,6 +33,16 @@ public:
     // Off for clients whose system prompt sets the output language itself (translation).
     void setLanguageHint(bool on) { m_languageHint = on; }
     bool isConfigured() const noexcept { return !m_apiKey.isEmpty(); }
+    // Chat answers may use Anthropic's server-side web search (current law,
+    // results, calendars). Off by default: every search is billed.
+    void setWebSearch(bool on) { m_webSearch = on; }
+    // A chat answer is being written.
+    bool busy() const noexcept { return m_reply != nullptr; }
+    // Stops the answer being written: what arrived so far is the answer
+    // (finished(true, …) with a note), or finished(false, …) if nothing came.
+    void cancel();
+    // The web search tool version this model takes.
+    static QString webSearchTool(const QString &model);
     QString model() const { return m_model; }
 
     // `context` is appended to the system prompt: skills, what Jarvis knows
@@ -96,6 +106,9 @@ private:
     bool m_keepHistory = true;
     bool m_languageHint = true;
     bool m_extracting = false;
+    bool m_webSearch = false;
+    bool m_cancelled = false;
+    QNetworkReply *m_reply = nullptr;
 };
 
 } // namespace jarvis

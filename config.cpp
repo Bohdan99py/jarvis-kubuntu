@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -23,7 +24,23 @@ QString languageValue(const QJsonObject &o, const QString &key)
     return (v == u"ru" || v == u"en") ? v : u"auto"_s;
 }
 
+QStringList cleanList(const QJsonArray &values, int max)
+{
+    QStringList out;
+    for (const QJsonValue &v : values) {
+        const QString item = v.toString().trimmed().toLower().left(120);
+        if (!item.isEmpty() && !out.contains(item) && out.size() < max)
+            out.append(item);
+    }
+    return out;
+}
+
 } // namespace
+
+QStringList Config::awarenessLevels()
+{
+    return {u"off"_s, u"manual"_s, u"assistive"_s, u"proactive"_s};
+}
 
 QString Config::defaultModel()
 {
@@ -66,6 +83,18 @@ ConfigData Config::loadFileOnly()
         d.eveningHour = std::clamp(o.value(u"evening_hour"_s).toInt(19), 16, 23);
         d.reminderSound = o.value(u"reminder_sound"_s).toBool(true);
         d.nagMinutes = std::clamp(o.value(u"nag_minutes"_s).toInt(0), 0, 120);
+        const QString level = o.value(u"awareness_level"_s).toString();
+        d.awarenessLevel = awarenessLevels().contains(level) ? level : u"manual"_s;
+        d.awarenessWindow = o.value(u"awareness_window"_s).toBool(false);
+        d.awarenessScreen = o.value(u"awareness_screen"_s).toBool(false);
+        d.awarenessCloudImages = o.value(u"awareness_cloud_images"_s).toBool(false);
+        d.screenIntervalMinutes = std::clamp(o.value(u"screen_interval_minutes"_s).toInt(0), 0, 60);
+        d.awarenessMuted = cleanList(o.value(u"awareness_muted"_s).toArray(), 20);
+        d.awarenessExcluded = cleanList(o.value(u"awareness_excluded"_s).toArray(), 100);
+        d.suggestionCooldownMinutes = std::clamp(o.value(u"suggestion_cooldown_minutes"_s).toInt(45), 10, 24 * 60);
+        d.suggestionsPerDay = std::clamp(o.value(u"suggestions_per_day"_s).toInt(4), 1, 20);
+        d.awarenessFullscreen = o.value(u"awareness_fullscreen"_s).toBool(false);
+        d.webSearch = o.value(u"web_search"_s).toBool(false);
     }
     return d;
 }
@@ -121,6 +150,17 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"evening_hour"_s, data.eveningHour);
     o.insert(u"reminder_sound"_s, data.reminderSound);
     o.insert(u"nag_minutes"_s, data.nagMinutes);
+    o.insert(u"awareness_level"_s, data.awarenessLevel);
+    o.insert(u"awareness_window"_s, data.awarenessWindow);
+    o.insert(u"awareness_screen"_s, data.awarenessScreen);
+    o.insert(u"awareness_cloud_images"_s, data.awarenessCloudImages);
+    o.insert(u"screen_interval_minutes"_s, data.screenIntervalMinutes);
+    o.insert(u"awareness_muted"_s, QJsonArray::fromStringList(data.awarenessMuted));
+    o.insert(u"awareness_excluded"_s, QJsonArray::fromStringList(data.awarenessExcluded));
+    o.insert(u"suggestion_cooldown_minutes"_s, data.suggestionCooldownMinutes);
+    o.insert(u"suggestions_per_day"_s, data.suggestionsPerDay);
+    o.insert(u"awareness_fullscreen"_s, data.awarenessFullscreen);
+    o.insert(u"web_search"_s, data.webSearch);
     const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
     if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));
