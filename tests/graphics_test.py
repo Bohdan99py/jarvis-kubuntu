@@ -6,6 +6,7 @@ A fake /sys (JARVIS_SYSFS_ROOT) describes the GPUs; the report must name them,
 mark the boot GPU, and set exactly the PRIME offload variables for the choice.
 """
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -64,8 +65,10 @@ def check(condition, message, text):
 
 
 r = report(NVIDIA_HYBRID, '--gpu', 'auto')
-check('card0 NVIDIA GPU 25a2 — nvidia, 0000:01:00.0\n' in r, 'NVIDIA card listed', r)
-check('card1 AMD GPU 1681 — amdgpu, 0000:05:00.0, boot' in r, 'AMD card listed as boot GPU', r)
+# Names come from the PCI ID database when it is installed ("NVIDIA GeForce RTX 3050
+# Mobile"), else from the ids ("NVIDIA GPU 25a2").
+check(re.search(r'card0 NVIDIA (GeForce RTX 3050 Mobile|GPU 25a2) — nvidia, 0000:01:00\.0\n', r), 'NVIDIA card listed', r)
+check(re.search(r'card1 AMD (Radeon 680M[^—]*|GPU 1681) — amdgpu, 0000:05:00\.0, boot\n', r), 'AMD card listed as boot GPU', r)
 check('card0-eDP-1' not in r, 'connectors are not cards', r)
 check('Offload variables set by Jarvis: none' in r, 'auto leaves the environment alone', r)
 
