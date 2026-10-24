@@ -1,6 +1,13 @@
 #include "desktop_integration.h"
 
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QImage>
+#include <QImageReader>
 #include <QRegularExpression>
+#include <QUrl>
+#include <climits>
 
 #include <algorithm>
 
@@ -210,6 +217,7 @@ QJsonObject normalizeDesktop(const QJsonObject &in)
                        {u"corePosition"_s, choice("corePosition", {u"center"_s, u"left"_s, u"right"_s})},
                        {u"dockPosition"_s, choice("dockPosition", {u"bottom"_s, u"top"_s, u"left"_s, u"right"_s})},
                        {u"dockSize"_s, std::round(number("dockSize", 44, 32, 72))},
+                       {u"dockAlignment"_s, choice("dockAlignment", {u"center"_s, u"left"_s, u"right"_s})},
                        {u"dockAutohide"_s, flag("dockAutohide", false)},
                        {u"dockAllScreens"_s, flag("dockAllScreens", false)},
                        {u"replacePanels"_s, flag("replacePanels", true)},
@@ -229,6 +237,163 @@ QString setDesktopValue(QJsonObject &desktop, const QString &key, const QJsonVal
         return u"invalid value"_s;
     desktop = next;
     return {};
+}
+
+namespace {
+
+// A KConfig file as {group: {key: value}}; the group is the whole bracketed path.
+QHash<QString, QHash<QString, QString>> parseKConfig(const QString &text)
+{
+    QHash<QString, QHash<QString, QString>> out;
+    QString group;
+    for (const QString &raw : text.split(u'\n')) {
+        const QString line = raw.trimmed();
+        if (line.isEmpty() || line.startsWith(u'#'))
+            continue;
+        if (line.startsWith(u'[')) {
+            group = line;
+            continue;
+        }
+        const qsizetype eq = line.indexOf(u'=');
+        static const QRegularExpression localized(u"\\[.*\\]$"_s); // Name[ru]=…
+        if (eq > 0)
+            out[group].insert(line.left(eq).trimmed().remove(localized), line.mid(eq + 1).trimmed());
+    }
+    return out;
+}
+
+// A wallpaper package (contents/images[_dark]/WxH.ext): the image closest to the screen's width.
+QString packageImage(const QString &dir, bool dark, int screenWidth)
+{
+    for (const QString &sub : dark ? QStringList{u"contents/images_dark"_s, u"contents/images"_s} : QStringList{u"contents/images"_s}) {
+        const QFileInfoList files = QDir(dir + u'/' + sub).entryInfoList({u"*.png"_s, u"*.jpg"_s, u"*.jpeg"_s, u"*.webp"_s, u"*.avif"_s, u"*.jxl"_s, u"*.svg"_s, u"*.svgz"_s},
+                                                                         QDir::Files, QDir::Name);
+        QString best;
+        int bestDistance = INT_MAX;
+        for (const QFileInfo &f : files) {
+            const int w = f.completeBaseName().section(u'x', 0, 0).toInt();
+            const int distance = w > 0 ? std::abs(w - screenWidth) : INT_MAX - 1;
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = f.absoluteFilePath();
+            }
+        }
+        if (!best.isEmpty())
+            return best;
+    }
+    return {};
+}
+
+double luminanceOf(QRgb c)
+{
+    const auto lin = [](int v) {
+        const double s = v / 255.0;
+        return s <= 0.04045 ? s / 12.92 : std::pow((s + 0.055) / 1.055, 2.4);
+    };
+    // Relative luminance, then back to a perceptual 0..1 (what "light" means to the eye).
+    const double y = 0.2126 * lin(qRed(c)) + 0.7152 * lin(qGreen(c)) + 0.0722 * lin(qBlue(c));
+    return y <= 0.0031308 ? 12.92 * y : 1.055 * std::pow(y, 1 / 2.4) - 0.055;
+}
+
+} // namespace
+
+QString wallpaperImage(const QString &appletsrc, const QString &kdeglobals, const QStringList &dataDirs, int screenWidth)
+{
+    const auto applets = parseKConfig(appletsrc);
+    const auto globals = parseKConfig(kdeglobals);
+    // A dark colour scheme: the window background is dark.
+    bool dark = false;
+    const QStringList rgb = globals.value(u"[Colors:Window]"_s).value(u"BackgroundNormal"_s).split(u',');
+    if (rgb.size() >= 3)
+        dark = luminanceOf(qRgb(rgb[0].toInt(), rgb[1].toInt(), rgb[2].toInt())) < 0.5;
+
+    QString image;
+    // The first screen's desktop containment with an image wallpaper.
+    static const QRegularExpression wallpaperGroup(u"^\\[Containments\\]\\[(\\d+)\\]\\[Wallpaper\\]\\[org\\.kde\\.image\\]\\[General\\]$"_s);
+    int bestScreen = INT_MAX;
+    for (auto it = applets.cbegin(); it != applets.cend(); ++it) {
+        const auto m = wallpaperGroup.match(it.key());
+        if (!m.hasMatch() || it.value().value(u"Image"_s).isEmpty())
+            continue;
+        const auto containment = applets.value(u"[Containments][%1]"_s.arg(m.captured(1)));
+        const int screen = containment.value(u"lastScreen"_s, u"0"_s).toInt();
+        if (screen >= 0 && screen < bestScreen) {
+            bestScreen = screen;
+            image = it.value().value(u"Image"_s);
+        }
+    }
+    // None chosen: the look-and-feel package's default.
+    if (image.isEmpty()) {
+        const QString lnf = globals.value(u"[KDE]"_s).value(u"LookAndFeelPackage"_s, u"org.kde.breeze.desktop"_s);
+        for (const QString &d : dataDirs) {
+            QFile f(d + u"/plasma/look-and-feel/"_s + lnf + u"/contents/defaults"_s);
+            if (f.open(QIODevice::ReadOnly)) {
+                const QString name = parseKConfig(QString::fromUtf8(f.readAll())).value(u"[Wallpaper]"_s).value(u"Image"_s);
+                if (!name.isEmpty())
+                    image = name;
+                break;
+            }
+        }
+        if (image.isEmpty())
+            image = u"Next"_s;
+    }
+    if (image.startsWith(u"file://"_s))
+        image = QUrl(image).toLocalFile();
+    if (!image.startsWith(u'/')) { // a package name
+        for (const QString &d : dataDirs)
+            if (QFileInfo(d + u"/wallpapers/"_s + image).isDir())
+                return packageImage(d + u"/wallpapers/"_s + image, dark, screenWidth);
+        return {};
+    }
+    const QFileInfo info(image);
+    if (info.isDir())
+        return packageImage(info.absoluteFilePath(), dark, screenWidth);
+    return info.isFile() ? info.absoluteFilePath() : QString();
+}
+
+bool isRasterImage(const QString &path)
+{
+    static const QList<QByteArray> raster{"png", "jpg", "jpeg", "webp", "bmp", "avif", "jxl", "tif", "tiff", "heic", "heif"};
+    return raster.contains(QImageReader::imageFormat(path));
+}
+
+Luminance imageLuminance(const QString &path, bool vector)
+{
+    Luminance out;
+    // Raster formats only, unless asked: the daemon has no QGuiApplication, and the SVG
+    // reader needs one (fonts) — reading an SVG wallpaper there aborted jarvisd.
+    if (!vector && !isRasterImage(path))
+        return out;
+    QImageReader reader(path);
+    reader.setAutoTransform(true);
+    const QSize size = reader.size();
+    if (size.isValid() && size.width() > 0)
+        reader.setScaledSize(QSize(96, std::max(1, 96 * size.height() / size.width())));
+    const QImage img = reader.read();
+    if (img.isNull())
+        return out;
+    double sum = 0, centre = 0;
+    int n = 0, nc = 0;
+    for (int y = 0; y < img.height(); ++y)
+        for (int x = 0; x < img.width(); ++x) {
+            const double l = luminanceOf(img.pixel(x, y));
+            sum += l;
+            ++n;
+            if (x >= img.width() / 3 && x < 2 * img.width() / 3 && y >= img.height() / 3 && y < 2 * img.height() / 3) {
+                centre += l;
+                ++nc;
+            }
+        }
+    out.whole = n ? sum / n : -1;
+    out.center = nc ? centre / nc : out.whole;
+    return out;
+}
+
+QJsonObject wallpaperInfo(const Luminance &l)
+{
+    if (l.center < 0)
+        return QJsonObject{{u"known"_s, false}, {u"light"_s, false}};
+    return QJsonObject{{u"known"_s, true}, {u"light"_s, l.center >= 0.55}, {u"luminance"_s, std::round(l.center * 100) / 100}};
 }
 
 QStringList runnerTriggers()

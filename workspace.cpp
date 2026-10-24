@@ -170,6 +170,7 @@ QJsonObject toJson(const Profile &p)
                        {u"paths"_s, QJsonArray::fromStringList(p.paths)},
                        {u"widgets"_s, QJsonArray::fromStringList(p.widgets)},
                        {u"focus"_s, QJsonArray::fromStringList(p.focus)},
+                       {u"activity"_s, p.activity},
                        {u"layout"_s, p.layout}};
 }
 
@@ -195,6 +196,9 @@ Profile fromJson(const QString &id, const QJsonObject &o)
     if (o.contains(u"focus"_s))
         base.focus = stringList(o.value(u"focus"_s), 8);
     base.layout = o.value(u"layout"_s).toObject();
+    const QString activity = o.value(u"activity"_s).toString();
+    if (QStringList{u"normal"_s, u"reduced"_s, u"quiet"_s}.contains(activity))
+        base.activity = activity;
     return base;
 }
 
@@ -245,7 +249,7 @@ QJsonObject summary(const State &state)
     QJsonArray list;
     for (const Profile &p : state.profiles)
         list.append(QJsonObject{{u"id"_s, p.id}, {u"label"_s, p.label}, {u"desktop"_s, p.desktop},
-                                {u"widgets"_s, QJsonArray::fromStringList(p.widgets)}});
+                                {u"widgets"_s, QJsonArray::fromStringList(p.widgets)}, {u"activity"_s, p.activity.isEmpty() ? u"normal"_s : p.activity}});
     return QJsonObject{{u"current"_s, state.current}, {u"previous"_s, state.previous}, {u"profiles"_s, list}};
 }
 

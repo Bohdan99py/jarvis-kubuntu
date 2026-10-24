@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.19.2
+# Jarvis for Kubuntu · 0.19.3
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.19.2_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.19.3_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -178,13 +178,27 @@ Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWi
 
 **Intelligent workspaces:** 0.18's awareness weighs the profile: its categories count more (DEV — a recurring build error → analysis in the overlay; STUDY — a driving-test question → translation and the rule; WORK — KiCad → an offer to open the component calculators), the others less. No new observation: only the context 0.18 was allowed.
 
-**Launcher:** the dock's button opens KRunner's search (the Milou model — the same runners as KRunner: applications, files, settings, the calculator) in the Jarvis look. Jarvis's KRunner runner understands "open KiCad", "switch to study", "find the latest ESP32 project" (projects in your home folder: PlatformIO/ESP-IDF, CMake, KiCad, Cargo, npm, Python, Git — found in the background), "show GPU load", "open the downloads folder", "open the sound settings", "turn on power saver", "jarvis <question>". Everything local works offline.
+### 0.19.3: Start, the dock, the adaptive look
+
+**Start (the JARVIS Launcher)** — the four-square button in the dock, the **Meta** key or the applet's shortcut. A menu on Plasma's application models (Kickoff's own): pinned, recent applications and files, all applications, the categories, places and devices; search as you type through KRunner (applications, files, settings, the calculator, `jarvis <question>`, "switch to dev"); Plasma's lock, log out, sleep, restart and shut down at the bottom; an "Ask Jarvis" button. Keyboard: typing searches, arrows move, Tab switches between sections and items, Enter starts, Escape clears or closes. Right click an application to pin or unpin it. Applications start through KDE's own launcher jobs (each in its own systemd scope); no command line is ever built from typed text.
+
+*Why 0.19.2's Start "did nothing":* its popup was declared a stays-on-top popup menu — libplasma turns that into a second *panel* surface — and hid itself on focus loss at once, while a click on a panel gives the panel the focus, which libplasma reads as "a Plasma view was clicked". Qt Quick tool tips inside the 44 px panel also landed on the buttons and swallowed clicks. Now it is an applet popup (as Kickoff's): KWin places it above the button on the right monitor and gives it the keyboard; it closes only when the focus left and did not come back; tool tips are Plasma's own windows above the panel; the whole cell is the button.
+
+**Dock:** magnification under the pointer with neighbours stepping aside, a light line at the screen edge (long and bright for the active window), window ticks, a pulse for a new window, appear/close animations, drag to reorder the pinned ones, drop a `.desktop` file to pin it or files on a running application to open them in it. A click on an application with several windows lists them (choose, close, keyboard). The context menu is a real Plasma menu (not cut by the panel): new window, pin, choose a window, minimize, maximize, keep above, move to another desktop, close. Dock settings (applied at once): icon size, gaps, inner margin, glass opacity, glow, magnification and its amount, animations, the core button, workspaces, desktops, one button per application, the pinned list and its order; "Panel settings…" opens Plasma's editor (edge, thickness, alignment, auto-hide). The dock's alignment is also in Control center → Desktop. Pinned snap executables (a blank icon) no longer move over.
+
+**Adaptive look:** `jarvisd` finds Plasma's current wallpaper (reading Plasma's files only; raster images itself, Kubuntu's SVG packages through a short `jarvis --measure-image` helper) and tells the widgets whether it is light. On a light wallpaper the panels get denser with a dark outline and the core's readouts get dark plates; on a dark one no extra glow. Under the core a soft radial shade without a frame (strength and softness in the core widget's settings). Shared `JarvisTheme` tokens (surfaces, outlines, a type scale no smaller than 11 px, rounding) for the dock, the launcher, the widgets and the overlay.
+
+**Widgets:** rounded panels, larger type, scaling with the widget, last-minute graphs for the CPU, RAM and each GPU, temperature chips, details (cores, clocks, fans, events) behind the title with a smooth unfold; network — the connection and VPN on their own lines, download and upload with their graphs; power — the charge large, the draw, the profile; media — a larger cover, switching between MPRIS players; Status in words: "Online · Ready, waiting for you", "Claude Haiku 4.5", "only when you ask".
+
+**Workspaces:** a profile's applications as chips with their real names, add by searching the installed ones, remove with ×; Jarvis's activity per profile: as in Awareness, fewer suggestions, or quiet (it only ever lowers what Awareness allows; applies at once). Switching still never closes an application.
+
+**Launcher (KRunner):** Jarvis's KRunner runner understands "open KiCad", "switch to study", "find the latest ESP32 project" (projects in your home folder: PlatformIO/ESP-IDF, CMake, KiCad, Cargo, npm, Python, Git — found in the background), "show GPU load", "open the downloads folder", "open the sound settings", "turn on power saver", "jarvis <question>". Everything local works offline.
 
 **Safety:** the widgets are QML on Plasma's modules and `org.jarvis.visual` only (no compiled Jarvis code in plasmashell); the Plasma scripts touch only Jarvis widgets and panels (tests check it); the standard panels go only after the check; only installed `.desktop` applications start, only the user's files open, only listed settings pages; workspace reports are accepted from KWin only, the voice state from the Jarvis window only; actions are rate limited.
 
 **D-Bus `org.jarvis.Integration1` (new):** `Telemetry(s)` (cpu, memory, gpu, thermal, net, power, media), `MediaControl(s)`, `SetPowerProfile(s)`, `Workspace(s)` (`dev`, `prepare:dev`, `previous`), `Workspaces()`, `SaveWorkspaceLayout()`, `Events()`, `ComponentAlive(s)`, signal `EventPosted(s)`; `Status()` also carries the model, the voice, counters, the workspace, the desktop settings and the parts' heartbeats.
 
-**Limits:** every widget needs Plasma 6 (not Kubuntu 24.04's Plasma 5.27); "covered" means maximized or fullscreen windows; one dock, on the first screen (other monitors keep their panels unless replaced); the Plasma panel under the dock keeps a translucent background (Plasma has no background-less panels); locked widgets or KIOSK forbid changes — Jarvis then changes nothing; window placement works through KWin only, and applications that remember their own position may override it.
+**Limits:** Start uses Plasma's application models from `org.kde.plasma.private.kicker` (Kickoff uses them too); without it the search remains; tested on one monitor in an isolated session (with several, the dock lives in its screen's panel and the menu opens on the button's screen); a blur under the core is impossible for a desktop widget (Plasma does not give a widget the wallpaper's pixels) — a soft shade instead; every widget needs Plasma 6 (not Kubuntu 24.04's Plasma 5.27); "covered" means maximized or fullscreen windows; one dock, on the first screen (other monitors keep their panels unless replaced); the Plasma panel under the dock keeps a translucent background (Plasma has no background-less panels); locked widgets or KIOSK forbid changes — Jarvis then changes nothing; window placement works through KWin only, and applications that remember their own position may override it.
 
 ## Language
 

@@ -12,9 +12,13 @@
         "Id": "org.jarvis.dock",
         "Name": "Jarvis Dock",
         "Name[ru]": "Док Jarvis",
-        "Version": "0.19.2",
+        "Version": "0.19.3",
         "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
     },
     "KPackageStructure": "Plasma/Applet",
-    "X-Plasma-API-Minimum-Version": "6.0"
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.launchermenu",
+        "org.kde.plasma.multitasking"
+    ]
 }

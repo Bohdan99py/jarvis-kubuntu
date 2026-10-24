@@ -63,7 +63,12 @@ public:
     void configure(const ConfigData &config);
     // The workspace profile (0.19.2): suggestions in its focus categories count
     // more, the others less; the profile adds to the context, never observes more.
-    void setWorkspace(const QString &profile, const QStringList &focus);
+    // `activity` (0.19.3): the workspace's own limit on suggestions — normal (the
+    // user's level), reduced (at most assistive) or quiet (none). It only ever
+    // lowers what the user allowed, never raises it.
+    void setWorkspace(const QString &profile, const QStringList &focus, const QString &activity = QString());
+    // The level suggestions follow: the user's, capped by the workspace.
+    QString suggestionLevel() const;
     QString workspace() const { return m_workspace; }
     QString level() const { return m_level; }
     bool windowAllowed() const { return m_level != u"off" && m_windowAllowed; }
@@ -149,6 +154,7 @@ private:
     int returnsTo(const QString &key, qint64 sinceMs) const;
 
     QString m_level = QStringLiteral("manual");
+    QString m_activity;       // the workspace's cap: "", reduced, quiet
     bool m_windowAllowed = false;
     bool m_screenAllowed = false;
     bool m_fullscreenAllowed = false;

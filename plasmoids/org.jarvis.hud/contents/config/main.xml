@@ -10,5 +10,8 @@
     <entry name="expanded" type="Bool"><default>true</default></entry>
     <!-- The widget's own extra (see its configGeneral.qml). -->
     <entry name="extra" type="Bool"><default>true</default></entry>
+    <!-- The shade under the core (0.19.3): strength in %, and a wider, softer falloff. -->
+    <entry name="backdrop" type="Int"><default>60</default><min>0</min><max>100</max></entry>
+    <entry name="backdropSoft" type="Bool"><default>true</default></entry>
   </group>
 </kcfg>

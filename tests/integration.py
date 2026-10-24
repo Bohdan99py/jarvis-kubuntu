@@ -505,7 +505,8 @@ try:
  assert 'global shortcut pressed' in portal_log,portal_log
  assert not any(error in portal_log for error in ('ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),portal_log
  for language in ('ru','en'):
-  write_config(language=language)
+  # With screen awareness on (0.19.3): its indicator's tool tips once made a binding loop at start.
+  write_config(language=language,awareness_level='proactive',awareness_screen=True,awareness_window=True,screen_interval_minutes=15)
   with (scratch/'ui.log').open('w+') as log:
    gui=subprocess.Popen([str(build/'jarvis'),'--quick'],env=gui_env,stdout=log,stderr=log)
    try:

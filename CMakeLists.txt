@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.19.2 LANGUAGES C CXX)
+project(jarvis VERSION 0.19.3 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -294,7 +294,7 @@ set(JARVIS_VISUAL_FILES
     hud/JarvisTheme.qml hud/HudController.qml hud/JarvisCore.qml hud/CoreRings.qml hud/AudioReactiveLayer.qml
     hud/ParticleField.qml hud/DataStreams.qml hud/NeuralNetworkView.qml hud/HolographicPanel.qml
     desktop/qmldir desktop/DesktopState.qml desktop/DesktopCore.qml desktop/HoloMeter.qml desktop/HoloButton.qml
-    desktop/Sparkline.qml desktop/DaemonLink.qml desktop/WidgetConfigPage.qml)
+    desktop/Sparkline.qml desktop/DaemonLink.qml desktop/WidgetConfigPage.qml desktop/CoreBackdrop.qml)
 set(JARVIS_VISUAL_SHADERS core ring spectrum streams particles)
 set(JARVIS_VISUAL_COMMANDS COMMAND ${CMAKE_COMMAND} -E make_directory "${JARVIS_VISUAL_DIR}/shaders")
 foreach(f IN LISTS JARVIS_VISUAL_FILES)
@@ -370,6 +370,15 @@ if(BUILD_TESTING)
     set_tests_properties(plasmoid PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${CMAKE_CURRENT_BINARY_DIR}/qml")
     add_test(NAME desktop_files COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/desktop_files_test.py
         ${CMAKE_CURRENT_BINARY_DIR})
+    # 0.19.3: every interactive element has an action; the dock's popups and tool tips are Plasma's.
+    add_test(NAME ui_audit COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/ui_audit_test.py)
+    # The dock's Start button in a nested, isolated Plasma session (kwin_wayland, plasmashell):
+    # cmake -DJARVIS_PLASMA_TESTS=ON (off by default: CI machines have no Plasma).
+    option(JARVIS_PLASMA_TESTS "Run the tests that start an isolated Plasma session" OFF)
+    if(JARVIS_PLASMA_TESTS)
+        add_test(NAME dock_session COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_dock_test.sh ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(dock_session PROPERTIES TIMEOUT 240 RUN_SERIAL TRUE LABELS plasma)
+    endif()
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
 endif()

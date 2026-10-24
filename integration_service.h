@@ -129,6 +129,9 @@ private:
     QTimer m_statusDelay;     // coalesces status changes
     QTimer m_stateExpiry;     // "notification" and "error" fade back to idle
     QTimer m_lifetime;        // background work off: exit without the window
+    QTimer m_wallpaperCheck;  // the wallpaper's brightness, for the widgets' contrast
+    QJsonObject m_wallpaper;  // {known, light, luminance}
+    QString m_wallpaperKey;   // image path + modification time last measured
     QSet<quint64> m_requests; // requests being answered
     QJsonObject m_notice;     // {kind, title, at}
     QJsonArray m_events;      // the last 12: {at, kind, text}
@@ -148,6 +151,7 @@ private:
     bool m_cpuValid = false;
     bool m_guiSeen = false; // the window was open at some point: a short grace after it closes
     bool m_onBattery = false;
+    void checkWallpaper();
     bool m_gui = false;
     bool m_runnerOwned = false;
 };

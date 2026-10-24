@@ -29,6 +29,7 @@ namespace {
 struct Applied {
     QString gpu=QStringLiteral("auto"),api=QStringLiteral("auto");
     QStringList setVars;    // variables Jarvis set for itself
+    QStringList setValues;  // their values (the report names them after they are dropped)
     QStringList clearedVars;
     // Found before QApplication (no translator yet): kept as facts, worded when shown.
     QStringList environment;  // VAR=value forcing a renderer
@@ -145,7 +146,7 @@ void GraphicsInfo::prepareEnvironment(int argc,char **argv) {
         for(const char *var:offloadVars) if(qEnvironmentVariableIsSet(var)) {qunsetenv(var);a.clearedVars<<QLatin1String(var);}
         return;
     }
-    const auto put=[&](const char *name,const QByteArray &value){qputenv(name,value);a.setVars<<QLatin1String(name);};
+    const auto put=[&](const char *name,const QByteArray &value){qputenv(name,value);a.setVars<<QLatin1String(name);a.setValues<<QString::fromLatin1(value);};
     const Gpu &g=gpus.at(target);
     if(g.driver==u"nvidia") {
         // NVIDIA's PRIME render offload: GLX, EGL (Wayland) and Vulkan.
@@ -398,7 +399,10 @@ QString GraphicsInfo::report() const {
     t<<"Platform: "<<QGuiApplication::platformName()<<", Qt "<<qVersion()<<"\n";
     t<<"Choice: card "<<a.gpu<<", API "<<a.api<<"\n";
     QStringList set;
-    for(const QString &var:a.setVars) set<<var+u'='+qEnvironmentVariable(var.toLatin1().constData(),QStringLiteral("(dropped after the first frame)"));
+    // What Jarvis set, also once it is dropped after the first frame (child processes must
+    // not inherit it): the report says the same on any machine, with or without a GPU.
+    for(int i=0;i<a.setVars.size();++i)
+        set<<a.setVars.at(i)+u'='+a.setValues.value(i)+(qEnvironmentVariableIsSet(a.setVars.at(i).toLatin1().constData())?QString():QStringLiteral(" (dropped after the first frame)"));
     t<<"Offload variables set by Jarvis: "<<(set.isEmpty()?QStringLiteral("none"):set.join(QStringLiteral(", ")))
      <<(a.clearedVars.isEmpty()?QString():QStringLiteral(" (cleared: %1)").arg(a.clearedVars.join(QStringLiteral(", "))))<<"\n";
     if(m_ready) {

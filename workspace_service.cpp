@@ -68,7 +68,7 @@ WorkspaceService::WorkspaceService(Assistant *assistant, TelemetryService *telem
     , m_state(workspace::load())
 {
     const workspace::Profile p = current();
-    m_assistant->setWorkspace(p.id, p.focus);
+    m_assistant->setWorkspace(p.id, p.focus, p.activity);
     // A KWin script left by a daemon that died mid-switch.
     QTimer::singleShot(2000, this, [] {
         if (QDBusConnection::sessionBus().interface()->isServiceRegistered(u"org.kde.KWin"_s).value())
@@ -78,8 +78,15 @@ WorkspaceService::WorkspaceService(Assistant *assistant, TelemetryService *telem
 
 QJsonObject WorkspaceService::summary() const
 {
-    // From the file: the Control center edits the profiles there.
-    return workspace::summary(workspace::load());
+    // From the file: the Control center edits the profiles there. An edited activity
+    // level of the current workspace applies at once (not at the next switch).
+    const workspace::State state = workspace::load();
+    const workspace::Profile p = workspace::find(state, state.current);
+    if (p.activity != m_appliedActivity) {
+        m_appliedActivity = p.activity;
+        m_assistant->setWorkspace(p.id, p.focus, p.activity);
+    }
+    return workspace::summary(state);
 }
 
 bool WorkspaceService::runScript(const QString &mode, const workspace::Profile &profile, QString *error)
@@ -144,7 +151,7 @@ QString WorkspaceService::switchTo(const QString &id, bool prepare, Lang lang, Q
     m_state.current = id;
     workspace::save(m_state);
     const workspace::Profile p = current();
-    m_assistant->setWorkspace(p.id, p.focus);
+    m_assistant->setWorkspace(p.id, p.focus, p.activity);
     m_pendingPrepare = prepare;
     QString error;
     const bool scripted = runScript(u"switch"_s, p, &error);

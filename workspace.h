@@ -24,6 +24,7 @@ struct Profile
     QStringList widgets;  // Plasma widget ids shown in this profile
     QStringList focus;    // awareness categories that matter here (build, electronics, driving, docs, study)
     QJsonObject layout;   // desktop id -> {x, y, width, height}, saved by the user
+    QString activity;     // Jarvis's suggestions here (0.19.3): "normal", "reduced", "quiet" — only lowers the user's level
 };
 
 struct State

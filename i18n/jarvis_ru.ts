@@ -987,6 +987,18 @@
         <translation>Сверху</translation>
     </message>
     <message>
+        <source>Centred</source>
+        <translation>По центру</translation>
+    </message>
+    <message>
+        <source>At the start</source>
+        <translation>В начале</translation>
+    </message>
+    <message>
+        <source>At the end</source>
+        <translation>В конце</translation>
+    </message>
+    <message>
         <source>Hide the dock automatically</source>
         <translation>Автоматически скрывать док</translation>
     </message>
@@ -1015,10 +1027,6 @@
         <translation>Рабочие пространства</translation>
     </message>
     <message>
-        <source>Each profile has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens and the widgets it shows. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking: &quot;Jarvis, prepare the desktop for programming&quot;. Windows are moved with KWin&apos;s own scripting; nothing else on the desktop is touched.</source>
-        <translation>У каждого профиля свой рабочий стол KDE, программы, которые он запускает, файлы, которые открывает «Подготовить», и виджеты, которые он показывает. Переключайте здесь, в доке, в KRunner («переключись в dev») или голосом: «Джарвис, подготовь рабочий стол для программирования». Окна перемещаются штатными скриптами KWin; больше ничего на рабочем столе не трогается.</translation>
-    </message>
-    <message>
         <source>desktop</source>
         <translation>рабочий стол</translation>
     </message>
@@ -1029,10 +1037,6 @@
     <message>
         <source>Prepare</source>
         <translation>Подготовить</translation>
-    </message>
-    <message>
-        <source>Applications (desktop ids, a|b = the first installed)</source>
-        <translation>Программы (id .desktop; a|b — первая установленная)</translation>
     </message>
     <message>
         <source>Files, folders or projects that &quot;prepare&quot; opens</source>
@@ -1375,6 +1379,38 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>French</source>
         <translation>Французский</translation>
+    </message>
+    <message>
+        <source>Each profile has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens, the widgets it shows and how active Jarvis is there. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking: &quot;Jarvis, prepare the desktop for programming&quot;. Windows are moved with KWin&apos;s own scripting; switching never closes an application.</source>
+        <translation>У каждого профиля свой виртуальный рабочий стол KDE, запускаемые приложения, файлы, которые открывает «подготовка», показываемые виджеты и уровень активности Jarvis. Переключайте здесь, в доке, в KRunner («switch to dev») или голосом: «Джарвис, подготовь рабочий стол для программирования». Окна перемещаются средствами скриптов KWin; при переключении ни одно приложение не закрывается.</translation>
+    </message>
+    <message>
+        <source>not installed</source>
+        <translation>не установлено</translation>
+    </message>
+    <message>
+        <source>Remove %1</source>
+        <translation>Убрать %1</translation>
+    </message>
+    <message>
+        <source>Add an application: type its name</source>
+        <translation>Добавить приложение: начните вводить название</translation>
+    </message>
+    <message>
+        <source>Jarvis here</source>
+        <translation>Jarvis здесь</translation>
+    </message>
+    <message>
+        <source>As in Awareness settings</source>
+        <translation>Как в настройках осведомлённости</translation>
+    </message>
+    <message>
+        <source>Fewer suggestions (at most assistive)</source>
+        <translation>Меньше подсказок (не выше «помощника»)</translation>
+    </message>
+    <message>
+        <source>Quiet: no suggestions, answers only</source>
+        <translation>Тихо: без подсказок, только ответы</translation>
     </message>
     <message>
         <source>Background work</source>

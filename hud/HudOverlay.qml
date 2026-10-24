@@ -43,8 +43,17 @@ Window {
     readonly property int compactHeight: 28 + 46 + 10 + composer.implicitHeight + 10 + 14
                                          + (answerArea.visible ? answerArea.Layout.preferredHeight + 10 : 0)
                                          + (contextLine.visible ? contextLine.implicitHeight + 10 : 0)
-    width: open ? (expanded ? 780 : 620) : 230
-    height: open ? (expanded ? Math.min(700, Math.max(420, (screen ? screen.height : 900) * 0.78)) : compactHeight) : 250
+    // 0.19.3: the size changes smoothly — the panel animates to its new size inside the
+    // window; the window takes the larger of the two, so growing never clips and
+    // shrinking follows the panel.
+    readonly property real targetWidth: open ? (expanded ? 780 : 620) : 230
+    readonly property real targetHeight: open ? (expanded ? Math.min(700, Math.max(420, (screen ? screen.height : 900) * 0.78)) : compactHeight) : 250
+    property real panelWidth: targetWidth
+    property real panelHeight: targetHeight
+    Behavior on panelWidth { enabled: overlay.open && overlay.effects; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+    Behavior on panelHeight { enabled: overlay.open && overlay.effects; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+    width: open ? Math.ceil(Math.max(targetWidth, panelWidth)) : targetWidth
+    height: open ? Math.ceil(Math.max(targetHeight, panelHeight)) : targetHeight
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     color: "transparent"
     title: qsTr("Jarvis — overlay")
@@ -117,7 +126,7 @@ Window {
         Rectangle {
             anchors.fill: parent
             radius: 22
-            color: Qt.rgba(0.01, 0.03, 0.07, 0.78)
+            color: Qt.rgba(0.01, 0.03, 0.07, Math.max(0.78, JarvisTheme.surfaceAlpha - 0.05))
             border.color: Qt.rgba(ctl.colorA.r, ctl.colorA.g, ctl.colorA.b, 0.35)
         }
         JarvisCore {
@@ -157,7 +166,10 @@ Window {
     // ---------- The panel ----------
     Item {
         id: panel
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: overlay.panelWidth
+        height: overlay.panelHeight
         visible: overlay.open
         property real reveal: 1
         function ease(v) { return 1 - Math.pow(1 - Math.max(0, Math.min(1, v)), 3) }
@@ -176,13 +188,15 @@ Window {
             width: parent.width
             height: parent.height * panel.ease((panel.reveal - 0.15) / 0.45)
             opacity: panel.ease((panel.reveal - 0.1) / 0.3)
-            radius: 6
+            // The same surface as the dock, the launcher and the desktop widgets.
+            radius: JarvisTheme.radius + 2
             gradient: Gradient {
-                GradientStop { position: 0; color: Qt.rgba(0.03, 0.09, 0.16, 0.95) }
-                GradientStop { position: 1; color: Qt.rgba(0.01, 0.04, 0.08, 0.93) }
+                GradientStop { position: 0; color: Qt.rgba(0.03, 0.09, 0.16, Math.max(0.93, JarvisTheme.surfaceAlpha)) }
+                GradientStop { position: 1; color: Qt.rgba(0.01, 0.04, 0.08, Math.max(0.91, JarvisTheme.surfaceAlpha)) }
             }
             border.width: 1
             border.color: Qt.rgba(ctl.colorA.r, ctl.colorA.g, ctl.colorA.b, 0.55)
+            Rectangle { anchors.fill: parent; anchors.margins: -1; radius: parent.radius + 1; color: "transparent"; border.color: JarvisTheme.outline; z: -1 }
             Repeater {
                 model: 4
                 delegate: Item {
@@ -190,9 +204,9 @@ Window {
                     required property int index
                     readonly property bool atRight: index % 2 === 1
                     readonly property bool atBottom: index > 1
-                    width: 14; height: 14
-                    x: atRight ? frame.width - width : 0
-                    y: atBottom ? frame.height - height : 0
+                    width: 12; height: 12
+                    x: atRight ? frame.width - width - 5 : 5
+                    y: atBottom ? frame.height - height - 5 : 5
                     Rectangle { x: bracket.atRight ? bracket.width - 2 : 0; width: 2; height: bracket.height; color: ctl.colorA }
                     Rectangle { y: bracket.atBottom ? bracket.height - 2 : 0; width: bracket.width; height: 2; color: ctl.colorA }
                 }
@@ -227,7 +241,7 @@ Window {
                         text: overlay.chat.busy ? (overlay.vs.routes.length > 0 ? overlay.vs.routes.map(JarvisTheme.routeName).join(" › ") : qsTr("thinking…"))
                                                 : JarvisTheme.stateName(overlay.vs.state)
                         color: JarvisTheme.stateColor(overlay.vs.state)
-                        font.family: JarvisTheme.mono; font.pixelSize: 10; font.letterSpacing: 1
+                        font.family: JarvisTheme.mono; font.pixelSize: JarvisTheme.fontSmall; font.letterSpacing: 1
                     }
                 }
                 Item { Layout.fillWidth: true }
@@ -276,7 +290,7 @@ Window {
                 elide: Text.ElideRight
                 color: JarvisTheme.textDim
                 font.family: JarvisTheme.mono
-                font.pixelSize: 10
+                font.pixelSize: JarvisTheme.fontSmall
                 text: {
                     if ((overlay.ctx.pausedUntil || 0) > 0)
                         return qsTr("Observation is paused: the question goes without desktop context.")

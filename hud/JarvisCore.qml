@@ -123,14 +123,31 @@ Item {
     }
 
     // Readouts: real numbers only (state, route, stream, counters).
-    component Readout: Column {
+    // On a light wallpaper (0.19.3) each readout sits on a small dark plate, so the thin
+    // mono type stays readable outside the shade under the core; none on a dark one.
+    component Readout: Item {
+        id: readout
         property alias label: cap.text
         property alias value: val.text
         property int align: Text.AlignLeft
-        spacing: 1
-        opacity: 0.55 + 0.45 * Math.min(1, core.ctl.energy + (core.hovered ? 0.4 : 0))
-        Text { id: cap; color: JarvisTheme.textDim; font.family: JarvisTheme.mono; font.pixelSize: 10; font.letterSpacing: 2; horizontalAlignment: parent.align; width: parent.width }
-        Text { id: val; color: core.ctl.colorA; font.family: JarvisTheme.mono; font.pixelSize: 13; font.bold: true; horizontalAlignment: parent.align; width: parent.width; elide: Text.ElideRight }
+        implicitHeight: column.implicitHeight
+        opacity: (JarvisTheme.lightBackdrop ? 0.8 : 0.55) + (JarvisTheme.lightBackdrop ? 0.2 : 0.45) * Math.min(1, core.ctl.energy + (core.hovered ? 0.4 : 0))
+        Rectangle {
+            visible: JarvisTheme.lightBackdrop
+            x: (readout.align === Text.AlignRight ? readout.width - width : 0) + (readout.align === Text.AlignRight ? 6 : -6)
+            y: -4
+            width: Math.min(readout.width, Math.max(cap.implicitWidth, val.implicitWidth)) + 12
+            height: column.implicitHeight + 8
+            radius: JarvisTheme.radiusSmall
+            color: JarvisTheme.alpha(JarvisTheme.surface, 0.78)
+        }
+        Column {
+            id: column
+            width: parent.width
+            spacing: 1
+            Text { id: cap; color: JarvisTheme.textSoft; font.family: JarvisTheme.mono; font.pixelSize: JarvisTheme.fontSmall; font.letterSpacing: 2; horizontalAlignment: readout.align; width: parent.width; elide: Text.ElideRight }
+            Text { id: val; color: core.ctl.colorA; font.family: JarvisTheme.mono; font.pixelSize: 13; font.bold: true; horizontalAlignment: readout.align; width: parent.width; elide: Text.ElideRight }
+        }
     }
     Item {
         visible: !core.compact && core.size > 300
@@ -138,23 +155,23 @@ Item {
         width: core.size
         height: core.size
         Readout {
-            x: 0; y: 0; width: parent.width * 0.26
+            x: 0; y: 0; width: parent.width * 0.32
             label: qsTr("STATE")
             value: JarvisTheme.stateName(core.vs.state).toUpperCase() + (core.vs.demo ? qsTr(" · DEMO") : "")
         }
         Readout {
-            x: parent.width * 0.74; y: 0; width: parent.width * 0.26
+            x: parent.width * 0.68; y: 0; width: parent.width * 0.32
             align: Text.AlignRight
             label: qsTr("ROUTE")
             value: core.vs.routes.length > 0 ? core.vs.routes.map(JarvisTheme.routeName).join(" › ").toUpperCase() : "—"
         }
         Readout {
-            x: 0; y: parent.height - height; width: parent.width * 0.26
+            x: 0; y: parent.height - height; width: parent.width * 0.32
             label: qsTr("REQUESTS · ERRORS")
             value: core.vs.counters.requests + " · " + core.vs.counters.errors
         }
         Readout {
-            x: parent.width * 0.74; y: parent.height - height; width: parent.width * 0.26
+            x: parent.width * 0.68; y: parent.height - height; width: parent.width * 0.32
             align: Text.AlignRight
             label: core.vs.streaming ? qsTr("STREAM") : qsTr("LAST ANSWER")
             value: core.vs.streaming ? qsTr("%1 ch/s").arg(Math.round(core.vs.streamRate))

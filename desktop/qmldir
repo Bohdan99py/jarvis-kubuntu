@@ -16,5 +16,6 @@ DesktopCore 1.0 DesktopCore.qml
 HoloMeter 1.0 HoloMeter.qml
 HoloButton 1.0 HoloButton.qml
 Sparkline 1.0 Sparkline.qml
+CoreBackdrop 1.0 CoreBackdrop.qml
 DaemonLink 1.0 DaemonLink.qml
 WidgetConfigPage 1.0 WidgetConfigPage.qml
