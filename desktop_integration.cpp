@@ -2,6 +2,8 @@
 
 #include <QRegularExpression>
 
+#include <algorithm>
+
 #include "config.h"
 
 #include <algorithm>
@@ -176,16 +178,73 @@ QString effectiveAnimation(const QString &wanted, bool battery)
     return levels.at(i - 1);
 }
 
+QJsonObject normalizeDesktop(const QJsonObject &in)
+{
+    const auto choice = [&in](const char *key, const QStringList &allowed) {
+        const QString v = in.value(QLatin1String(key)).toString();
+        return allowed.contains(v) ? v : allowed.first();
+    };
+    const auto number = [&in](const char *key, double def, double lo, double hi) {
+        const QJsonValue v = in.value(QLatin1String(key));
+        return v.isDouble() ? std::clamp(v.toDouble(), lo, hi) : def;
+    };
+    const auto colour = [&in](const char *key) {
+        static const QRegularExpression hex(u"^#[0-9a-fA-F]{6}$"_s);
+        const QString v = in.value(QLatin1String(key)).toString();
+        return hex.match(v).hasMatch() ? v.toLower() : QString();
+    };
+    const auto flag = [&in](const char *key, bool def) {
+        const QJsonValue v = in.value(QLatin1String(key));
+        return v.isBool() ? v.toBool() : def;
+    };
+    return QJsonObject{{u"mode"_s, choice("mode", {u"standard"_s, u"jarvis"_s})},
+                       {u"theme"_s, choice("theme", {u"classic"_s, u"mark7"_s, u"minimal"_s})},
+                       {u"primary"_s, colour("primary")},
+                       {u"secondary"_s, colour("secondary")},
+                       {u"glow"_s, number("glow", 1.0, 0.0, 1.5)},
+                       {u"opacity"_s, number("opacity", 0.72, 0.3, 0.95)},
+                       {u"motion"_s, number("motion", 1.0, 0.5, 1.5)},
+                       {u"density"_s, choice("density", {u"normal"_s, u"compact"_s, u"comfortable"_s})},
+                       {u"quality"_s, choice("quality", {u"balanced"_s, u"low"_s, u"cinematic"_s})},
+                       {u"coreSize"_s, choice("coreSize", {u"medium"_s, u"small"_s, u"large"_s})},
+                       {u"corePosition"_s, choice("corePosition", {u"center"_s, u"left"_s, u"right"_s})},
+                       {u"dockPosition"_s, choice("dockPosition", {u"bottom"_s, u"top"_s, u"left"_s, u"right"_s})},
+                       {u"dockSize"_s, std::round(number("dockSize", 44, 32, 72))},
+                       {u"dockAutohide"_s, flag("dockAutohide", false)},
+                       {u"dockAllScreens"_s, flag("dockAllScreens", false)},
+                       {u"replacePanels"_s, flag("replacePanels", true)},
+                       {u"effects"_s, flag("effects", true)}};
+}
+
+QString setDesktopValue(QJsonObject &desktop, const QString &key, const QJsonValue &value)
+{
+    const QJsonObject before = normalizeDesktop(desktop);
+    if (!before.contains(key) || key == u"mode")
+        return u"unknown setting"_s; // the mode changes only through the desktop shell
+    QJsonObject next = before;
+    next[key] = value.isString() ? QJsonValue(value.toString().toLower()) : value;
+    next = normalizeDesktop(next);
+    // A number out of range is clamped; anything else that does not survive as given is refused.
+    if (!value.isDouble() && next.value(key) != (value.isString() ? QJsonValue(value.toString().toLower()) : value))
+        return u"invalid value"_s;
+    desktop = next;
+    return {};
+}
+
 QStringList runnerTriggers()
 {
-    return {u"jarvis"_s, u"джарвис"_s};
+    // KRunner asks Jarvis only about queries that start with one of these.
+    return {u"jarvis"_s, u"джарвис"_s, u"открой"_s, u"запусти"_s, u"open"_s, u"launch"_s, u"переключись"_s, u"переключи"_s,
+            u"switch"_s, u"подготовь"_s, u"prepare"_s, u"найди"_s, u"find"_s, u"покажи"_s, u"show"_s, u"режим"_s, u"профиль"_s,
+            u"workspace"_s, u"включи"_s, u"вернись"_s};
 }
 
 QString runnerQuestion(const QString &query)
 {
     static const QRegularExpression head(u"^\\s*(\\S+?)[,:]?(?:\\s+|$)"_s);
     const auto m = head.match(query);
-    if (!m.hasMatch() || !runnerTriggers().contains(m.captured(1).toLower()))
+    static const QStringList names{u"jarvis"_s, u"джарвис"_s};
+    if (!m.hasMatch() || !names.contains(m.captured(1).toLower()))
         return {};
     const QString question = query.mid(m.capturedEnd()).simplified();
     if (question.size() < 2 || question.size() > 500)
@@ -201,9 +260,12 @@ QString plasmaCountScript()
              u"print(n);\n"_s;
 }
 
-QString plasmaAddScript()
+QString plasmaAddScript(const QString &type)
 {
-    return hudCollector()
+    static const QRegularExpression jarvisWidget(u"^org\\.jarvis\\.(hud|dock|system|network|power|media|status)$"_s);
+    if (!jarvisWidget.match(type).hasMatch())
+        return {};
+    return hudCollector().replace(QString(kHudPlugin), type)
            + u"var n = 0;\n"
              u"for (var i = 0; i < all.length; ++i) n += jarvisWidgets(all[i]).length;\n"
              u"if (n === 0) {\n"
@@ -213,12 +275,18 @@ QString plasmaAddScript()
              u"        if (d.addWidget(\"%1\", Math.max(0, g.width - 380), 80, 320, 400)) n = 1;\n"
              u"    }\n"
              u"}\n"
-             u"print(n);\n"_s.arg(kHudPlugin);
+             u"print(n);\n"_s.arg(type);
 }
 
-QString plasmaRemoveScript()
+QString plasmaRemoveScript(const QString &type)
 {
-    return hudCollector()
+    static const QRegularExpression jarvisWidget(u"^(org\\.jarvis\\.(hud|dock|system|network|power|media|status))?$"_s);
+    if (!jarvisWidget.match(type).hasMatch())
+        return {};
+    // "" = every Jarvis widget: filter the containment's widgets by the id prefix.
+    const QString select = type.isEmpty() ? u"c.widgets().filter(function (w) { return String(w.type).indexOf(\"org.jarvis.\") === 0; })"_s
+                                          : u"c.widgets(\"%1\")"_s.arg(type);
+    return u"var all = desktops().concat(panels());\nfunction jarvisWidgets(c) { return %1; }\n"_s.arg(select)
            + u"var n = 0;\n"
              u"for (var i = 0; i < all.length; ++i) {\n"
              u"    var ws = jarvisWidgets(all[i]);\n"

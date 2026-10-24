@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "Jarvis task bar for a panel: open applications, pinned favourites, workspaces, the launcher and Jarvis",
+        "Description[ru]": "Панель задач Jarvis: открытые приложения, избранное, рабочие пространства, запуск и Jarvis",
+        "Icon": "org.jarvis.Jarvis",
+        "Id": "org.jarvis.dock",
+        "Name": "Jarvis Dock",
+        "Name[ru]": "Док Jarvis",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

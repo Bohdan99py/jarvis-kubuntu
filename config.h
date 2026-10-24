@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QString>
 #include <QStringList>
 
@@ -83,6 +84,10 @@ struct ConfigData
     bool shareActiveApp = false;
     // The desktop HUD's animations: off, low, normal, high (one step lower on battery).
     QString hudAnimation = QStringLiteral("normal");
+    // ---- JARVIS DESKTOP (0.19.2) ----
+    // Mode, theme and layout of the desktop shell; normalised by
+    // integration::normalizeDesktop (see there for the keys and limits).
+    QJsonObject desktop;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.

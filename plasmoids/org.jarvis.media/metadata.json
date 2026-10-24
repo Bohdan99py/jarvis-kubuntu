@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "Multimedia",
+        "Description": "What plays (MPRIS): cover, controls, volume and the output device",
+        "Description[ru]": "Что играет (MPRIS): обложка, управление, громкость и устройство вывода",
+        "Icon": "multimedia-player",
+        "Id": "org.jarvis.media",
+        "Name": "Jarvis Media",
+        "Name[ru]": "Jarvis: медиа",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

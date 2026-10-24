@@ -24,10 +24,16 @@
 #include "driving_store.h"
 #include "config.h"
 #include "desktop_integration.h"
+#include "desktop_shell_scripts.h"
+#include "system_sampler.h"
+#include "workspace.h"
+#include <QDir>
 #include <QJsonArray>
 #include <QThread>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QFileInfo>
+#include <QStandardPaths>
 #include <QImage>
 static void require(bool ok,const char *message) { if(!ok)qFatal("%s",message); }
 static QString factValue(const QJsonArray &facts,const QString &slot) {
@@ -784,6 +790,147 @@ static void desktopIntegration() {
     require(jarvis::Config::loadFileOnly().hudAnimation=="normal","unknown intensity falls back to normal");
     raw.remove();
 }
+static void writeFile(const QString &path,const QByteArray &bytes) {
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile f(path);require(f.open(QIODevice::WriteOnly) && f.write(bytes)==bytes.size(),"fake file written");
+}
+static void desktopShell(const QString &dir) {
+    namespace W=jarvis::workspace;
+    // Commands in plain words: the launcher, KRunner, the chat and the voice share them.
+    const auto kind=[](const char *text){return W::parseCommand(QString::fromUtf8(text)).kind;};
+    const auto arg=[](const char *text){return W::parseCommand(QString::fromUtf8(text)).arg;};
+    W::Command c=W::parseCommand(QStringLiteral("Джарвис, подготовь рабочий стол для программирования"));
+    require(c.kind=="workspace" && c.arg=="dev" && c.prepare,"prepare the desktop for programming = DEV, prepare");
+    require(kind("переключись в Study")==QString("workspace") && arg("переключись в Study")==QString("study"),"switch to study");
+    require(arg("switch to dev")==QString("dev") && !W::parseCommand("switch to dev").prepare,"English switch, no prepare");
+    require(arg("режим работы с KiCad")==QString("work") && arg("профиль general")==QString("general"),"work and general");
+    require(kind("вернись к предыдущему профилю")==QString("previous-workspace"),"previous workspace");
+    require(kind("Открой KiCad")==QString("open-app") && arg("Открой KiCad")==QString("kicad"),"open an application");
+    require(kind("открой папку загрузок")==QString("open-folder") && arg("открой папку загрузок")==QString("downloads"),"open the downloads folder");
+    require(kind("Найди последний проект ESP32")==QString("find-project") && arg("Найди последний проект ESP32")==QString("esp32"),"find the latest ESP32 project");
+    require(kind("Покажи нагрузку GPU")==QString("show-metric") && arg("Покажи нагрузку GPU")==QString("gpu"),"show the GPU load");
+    require(arg("show memory usage")==QString("memory") && arg("какая температура")==QString("thermal"),"other figures");
+    require(kind("открой настройки звука")==QString("settings") && arg("открой настройки звука")==QString("sound"),"sound settings");
+    require(!W::settingsModule("sound").isEmpty() && W::settingsModule("rm -rf").isEmpty(),"settings pages are an allowlist");
+    require(kind("включи режим энергосбережения")==QString("power-profile") && arg("включи режим энергосбережения")==QString("power-saver"),"power saver");
+    require(kind("как дела")==QString() && kind("расскажи о законе Ома")==QString() && kind("what is a transistor")==QString(),"questions stay questions");
+    require(W::folderPath("downloads")==QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) && W::folderPath("etc").isEmpty(),"known folders only");
+    // Profiles: defaults, round trip, broken files.
+    W::State st=W::load();
+    require(st.profiles.size()==4 && st.current=="general","four profiles, general first");
+    const W::Profile dev=W::find(st,"dev");
+    require(dev.desktop==4 && dev.focus.contains("build") && dev.widgets.contains("org.jarvis.system"),"DEV defaults");
+    for(W::Profile &p:st.profiles) if(p.id=="study") {p.desktop=7;p.apps={"org.kde.okular"};p.layout=QJsonObject{{"org.kde.okular",QJsonObject{{"x",10},{"y",20},{"width",800},{"height",600}}}};}
+    st.current="study";st.previous="general";
+    require(W::save(st),"workspaces saved");
+    require((QFile(W::filePath()).permissions() & (QFileDevice::ReadGroup|QFileDevice::ReadOther))==0,"workspaces file is private");
+    const W::State back=W::load();
+    require(back.current=="study" && back.previous=="general" && W::find(back,"study").desktop==7 && W::find(back,"study").apps==QStringList{"org.kde.okular"},"workspaces round trip");
+    require(W::find(back,"study").layout.value("org.kde.okular").toObject().value("width").toInt()==800,"layout kept");
+    writeFile(W::filePath(),R"({"current":"hacker","profiles":{"dev":{"desktop":999,"apps":"x"}}})");
+    const W::State broken=W::load();
+    require(broken.current=="general" && W::find(broken,"dev").desktop==20 && W::find(broken,"dev").apps.isEmpty(),"broken workspaces clamped");
+    QFile::remove(W::filePath());
+    require(W::summary(W::load()).value("profiles").toArray().size()==4,"summary lists the profiles");
+    // Projects: markers, kinds, newest first, words.
+    const QString home=dir+"/home";
+    writeFile(home+"/code/esp32-weather/platformio.ini","[env:esp32dev]\nplatform = espressif32\n");
+    writeFile(home+"/code/esp32-weather/src/main.cpp","int main(){}");
+    writeFile(home+"/code/robot/CMakeLists.txt","project(robot)");
+    writeFile(home+"/boards/psu/psu.kicad_pro","{}");
+    writeFile(home+"/.hidden/secret/CMakeLists.txt","x");
+    writeFile(home+"/code/node_modules/dep/package.json","{}");
+    const QList<W::Project> esp=W::findProjects("esp32",home);
+    require(esp.size()==1 && esp.first().kind=="esp32" && esp.first().name=="esp32-weather","the ESP32 project");
+    const QList<W::Project> all=W::findProjects("",home);
+    require(all.size()==3,"three projects; hidden and node_modules skipped");
+    require(W::findProjects("kicad psu",home).first().kind=="kicad","a KiCad project by kind and name");
+    // The sampler on a fake /proc and /sys.
+    const QString root=dir+"/root";
+    writeFile(root+"/proc/stat","cpu  100 0 100 800 0 0 0 0\ncpu0 50 0 50 400 0 0 0 0\ncpu1 50 0 50 400 0 0 0 0\nintr 1\n");
+    QList<jarvis::sampler::CpuTimes> a=jarvis::sampler::readCpuTimes(root);
+    require(a.size()==3 && a.first().total==1000 && a.first().busy==200,"cpu times parsed");
+    writeFile(root+"/proc/stat","cpu  400 0 100 1000 0 0 0 0\ncpu0 350 0 50 400 0 0 0 0\ncpu1 50 0 50 600 0 0 0 0\n");
+    const QList<jarvis::sampler::CpuTimes> b=jarvis::sampler::readCpuTimes(root);
+    require(jarvis::sampler::cpuUsage(a.at(0),b.at(0))==60 && jarvis::sampler::cpuUsage(a.at(1),b.at(1))==100 && jarvis::sampler::cpuUsage(a.at(2),b.at(2))==0,"per-core usage");
+    require(jarvis::sampler::cpuUsage(b.at(0),b.at(0))==-1,"no time, no figure");
+    writeFile(root+"/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq","2400000");
+    writeFile(root+"/sys/devices/system/cpu/cpu10/cpufreq/scaling_cur_freq","800000");
+    writeFile(root+"/sys/devices/system/cpu/cpu2/cpufreq/scaling_cur_freq","1600000");
+    require(jarvis::sampler::cpuFrequencies(root)==QList<double>({2400,1600,800}),"frequencies in CPU order");
+    writeFile(root+"/sys/class/hwmon/hwmon0/name","k10temp");
+    writeFile(root+"/sys/class/hwmon/hwmon0/temp1_input","45250");
+    writeFile(root+"/sys/class/hwmon/hwmon0/temp1_label","Tctl");
+    writeFile(root+"/sys/class/hwmon/hwmon0/temp2_input","-273000");
+    writeFile(root+"/sys/class/hwmon/hwmon1/name","thinkpad");
+    writeFile(root+"/sys/class/hwmon/hwmon1/fan1_input","2900");
+    const QJsonObject th=jarvis::sampler::thermal(root);
+    require(th["sensors"].toArray().size()==1 && th["sensors"].toArray().first().toObject()["label"].toString()=="Tctl"
+            && th["sensors"].toArray().first().toObject()["celsius"].toDouble()==45.3,"temperatures (nonsense dropped)");
+    require(th["fans"].toArray().size()==1 && th["fans"].toArray().first().toObject()["rpm"].toDouble()==2900,"fans");
+    writeFile(root+"/proc/net/dev","Inter-|   Receive\n face |bytes packets errs drop fifo frame compressed multicast|bytes\n    lo: 999 1 0 0 0 0 0 0 999 1 0 0 0 0 0 0\n  wlan0: 1000 10 0 0 0 0 0 0 500 5 0 0 0 0 0 0\n");
+    const auto net=jarvis::sampler::readNet(root);
+    require(net.size()==1 && net.value("wlan0").rx==1000 && net.value("wlan0").tx==500,"network counters without loopback");
+    writeFile(root+"/proc/net/route","Iface\tDestination\tGateway\nwlan0\t0000A8C0\t00000000\nwlan0\t00000000\t0100A8C0\n");
+    require(jarvis::sampler::defaultInterface(root)=="wlan0","the default route's interface");
+    writeFile(root+"/sys/class/power_supply/AC/type","Mains");
+    writeFile(root+"/sys/class/power_supply/AC/online","0");
+    writeFile(root+"/sys/class/power_supply/BAT0/type","Battery");
+    writeFile(root+"/sys/class/power_supply/BAT0/status","Discharging");
+    writeFile(root+"/sys/class/power_supply/BAT0/capacity","64");
+    writeFile(root+"/sys/class/power_supply/BAT0/energy_now","30000000");
+    writeFile(root+"/sys/class/power_supply/BAT0/energy_full","50000000");
+    writeFile(root+"/sys/class/power_supply/BAT0/power_now","10000000");
+    writeFile(root+"/sys/class/power_supply/hidpp_battery_0/type","Battery");
+    writeFile(root+"/sys/class/power_supply/hidpp_battery_0/scope","Device");
+    QJsonObject bat=jarvis::sampler::battery(root);
+    require(bat["present"].toBool() && bat["percent"].toDouble()==64 && bat["minutesLeft"].toDouble()==180 && bat["watts"].toDouble()==10 && !bat["onAc"].toBool(),"battery and time left");
+    writeFile(root+"/sys/class/power_supply/BAT0/power_now","0");
+    require(jarvis::sampler::battery(root)["minutesLeft"].toDouble()==-1,"no estimate without a sound rate");
+    // Desktop settings: defaults, ranges, refusals; the mode only through the shell.
+    QJsonObject d=jarvis::integration::normalizeDesktop({});
+    require(d["mode"].toString()=="standard" && d["theme"].toString()=="classic" && d["quality"].toString()=="balanced" && d["dockSize"].toInt()==44,"desktop defaults");
+    require(jarvis::integration::setDesktopValue(d,"theme","mark7").isEmpty() && d["theme"].toString()=="mark7","theme set");
+    require(!jarvis::integration::setDesktopValue(d,"theme","rainbow").isEmpty() && d["theme"].toString()=="mark7","unknown theme refused");
+    require(jarvis::integration::setDesktopValue(d,"dockSize",500).isEmpty() && d["dockSize"].toInt()==72,"dock size clamped");
+    require(jarvis::integration::setDesktopValue(d,"primary","#FFAA00").isEmpty() && d["primary"].toString()=="#ffaa00","colour set");
+    require(!jarvis::integration::setDesktopValue(d,"primary","red; drop table").isEmpty() && d["primary"].toString()=="#ffaa00","bad colour refused");
+    require(!jarvis::integration::setDesktopValue(d,"mode","jarvis").isEmpty() && d["mode"].toString()=="standard","mode only through the shell");
+    require(!jarvis::integration::setDesktopValue(d,"wallpaper","x").isEmpty(),"unknown keys refused");
+    // The Plasma scripts: what each may and may not do.
+    namespace S=jarvis::shell;
+    const QJsonObject inspection{{"version","6.6.6"},{"screen",QJsonObject{{"width",1920},{"height",1080}}},
+                                 {"launchers",QJsonArray{"applications:org.kde.dolphin.desktop","javascript:alert(1)"}},
+                                 {"panels",QJsonArray{QJsonObject{{"id",2},{"jarvis",false}},QJsonObject{{"id",9},{"jarvis",false}}}}};
+    QJsonObject desk=jarvis::integration::normalizeDesktop({});
+    QJsonObject plan=S::makePlan(inspection,desk,{"org.jarvis.system"});
+    require(plan["core"].toObject()["width"].toInt()==460 && plan["core"].toObject()["x"].toInt()==(1920-460)/2,"core centred, medium");
+    require(plan["dock"].toObject()["launchers"].toArray()==QJsonArray{"applications:org.kde.dolphin.desktop"},"only real launchers move over");
+    require(plan["replacePanels"].toArray()==QJsonArray{2,9},"the standard panels are named for replacement");
+    require(plan["widgets"].toArray().size()==5,"five holographic widgets placed");
+    for(const QJsonValue &w:plan["widgets"].toArray()) {
+        const QJsonObject o=w.toObject();
+        require(o["x"].toInt()>=0 && o["x"].toInt()+o["width"].toInt()<=1920 && o["y"].toInt()+o["height"].toInt()<=1080,"widgets on the screen");
+    }
+    desk["replacePanels"]=false;desk["coreSize"]="large";desk["corePosition"]="left";desk["dockAutohide"]=true;
+    plan=S::makePlan(inspection,desk,{});
+    require(plan["replacePanels"].toArray().isEmpty() && plan["core"].toObject()["x"].toInt()==80 && plan["dock"].toObject()["hiding"].toString()=="autohide","choices followed");
+    require(S::describePlan(plan,true).join(" ").contains(QStringLiteral("Стандартные панели остаются")),"the preview says panels stay");
+    const QString apply=S::applyScript(plan),inspect=S::inspectScript();
+    for(const char *forbidden:{"remove()","wallpaperPlugin","writeGlobalConfig","lockWidgets","loadTemplate","currentConfigGroup = [\"General\"];\n            var l = ws[j].writeConfig"})
+        require(!apply.contains(QLatin1String(forbidden)) && !inspect.contains(QLatin1String(forbidden)),"apply and inspect never remove or reconfigure");
+    require(!inspect.contains("addWidget") && !inspect.contains("new Panel") && !inspect.contains("writeConfig"),"inspect only reads");
+    require(apply.contains("new Panel(\"org.kde.panel\")") && apply.contains("addWidget(\"org.kde.plasma.systemtray\")") && apply.contains("if (have[\"org.jarvis.hud\"] === undefined)"),"apply adds, once");
+    const QString fin=S::finalizeScript(QJsonArray{2});
+    require(fin.contains("ids.indexOf(ps[i].id) >= 0") && fin.contains("types.indexOf(\"org.jarvis.dock\") < 0"),"finalize removes only named panels, never the dock");
+    const QString rm=S::removeScript(QJsonObject{{"panels",QJsonArray{30}},{"widgets",QJsonArray{31}}});
+    require(rm.contains("indexOf(\"org.jarvis.\") === 0") && !rm.contains("wallpaper"),"remove takes Jarvis parts only");
+    require(S::parsePrinted("noise {\"ok\":true,\"missing\":[]} tail")["ok"].toBool() && S::parsePrinted("Error").isEmpty(),"printed JSON parsed");
+    require(S::widgetIds().size()==7,"seven Jarvis widgets");
+    // Typed widget scripts accept Jarvis widgets only.
+    require(jarvis::integration::plasmaAddScript("org.jarvis.system").contains("addWidget(\"org.jarvis.system\"") && jarvis::integration::plasmaAddScript("org.kde.plasma.kickoff").isEmpty(),"only Jarvis widgets are added");
+    require(jarvis::integration::plasmaRemoveScript("").contains("indexOf(\"org.jarvis.\") === 0") && jarvis::integration::plasmaRemoveScript("org.kde.plasma.panel").isEmpty(),"only Jarvis widgets are removed");
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -809,5 +956,6 @@ int main(int argc,char **argv) {
     drivingProgress();
     awareness();
     desktopIntegration();
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration";
+    desktopShell(scratch.path());
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration, desktop shell (commands, workspaces, projects, sampler, settings, Plasma scripts)";
 }

@@ -50,34 +50,6 @@ QString readText(const QString &path) {
     QFile f(path);
     return f.open(QIODevice::ReadOnly) ? QString::fromLatin1(f.read(256)).trimmed() : QString();
 }
-QString vendorName(const QString &id) {
-    if(id==u"10de") return QStringLiteral("NVIDIA");
-    if(id==u"1002") return QStringLiteral("AMD");
-    if(id==u"8086") return QStringLiteral("Intel");
-    if(id==u"1af4") return QStringLiteral("Virtio");
-    if(id==u"15ad") return QStringLiteral("VMware");
-    if(id==u"1234") return QStringLiteral("QEMU");
-    return id;
-}
-// Device names from the PCI ID database (hwdata), when it is installed.
-QHash<QString,QString> pciNames(const QSet<QString> &wanted) {
-    QHash<QString,QString> names;
-    for(const char *path:{"/usr/share/hwdata/pci.ids","/usr/share/misc/pci.ids","/usr/share/pci.ids"}) {
-        QFile f(QString::fromLatin1(path));
-        if(!f.open(QIODevice::ReadOnly)) continue;
-        QString vendor;
-        while(!f.atEnd() && names.size()<wanted.size()) {
-            const QByteArray line=f.readLine();
-            if(line.isEmpty() || line.startsWith('#')) continue;
-            if(line.at(0)!='\t') {vendor=QString::fromLatin1(line.left(4)).toLower();continue;}   // "10de  NVIDIA Corporation"
-            if(line.size()<8 || line.at(1)=='\t') continue;                                      // subsystems
-            const QString key=vendor+u':'+QString::fromLatin1(line.mid(1,4)).toLower();         // "\t25a2  GA107M [GeForce RTX 3050 Mobile]"
-            if(wanted.contains(key)) names.insert(key,QString::fromUtf8(line.mid(7)).trimmed());
-        }
-        break;
-    }
-    return names;
-}
 // The GPU that renders by default: the boot GPU, else the first one found.
 int defaultIndex(const QList<GraphicsInfo::Gpu> &gpus) {
     for(int i=0;i<gpus.size();++i) if(gpus.at(i).boot) return i;
@@ -115,38 +87,6 @@ QString vendorFromText(const QString &text) {
     return {};
 }
 } // namespace
-
-QList<GraphicsInfo::Gpu> GraphicsInfo::detectGpus() {
-    QList<Gpu> list;
-    QSet<QString> wanted;
-    static const QRegularExpression cardName(QStringLiteral("^card\\d+$"));
-    // JARVIS_SYSFS_ROOT replaces /sys only in tests (fake hybrid laptops).
-    const QDir drm(qEnvironmentVariable("JARVIS_SYSFS_ROOT",QStringLiteral("/sys"))+QStringLiteral("/class/drm"));
-    for(const QString &card:drm.entryList(QDir::Dirs|QDir::NoDotAndDotDot|QDir::System,QDir::Name)) {
-        if(!cardName.match(card).hasMatch()) continue;
-        Gpu g;
-        g.card=card;
-        g.devicePath=drm.filePath(card)+QStringLiteral("/device");
-        g.vendorId=readText(g.devicePath+QStringLiteral("/vendor")).remove(QStringLiteral("0x")).toLower();
-        g.deviceId=readText(g.devicePath+QStringLiteral("/device")).remove(QStringLiteral("0x")).toLower();
-        if(g.vendorId.isEmpty()) continue;
-        g.slot=QFileInfo(QFileInfo(g.devicePath).canonicalFilePath()).fileName();
-        g.driver=QFileInfo(QFileInfo(g.devicePath+QStringLiteral("/driver")).canonicalFilePath()).fileName();
-        g.boot=readText(g.devicePath+QStringLiteral("/boot_vga"))==u"1";
-        if(std::any_of(list.cbegin(),list.cend(),[&](const Gpu &o){return o.slot==g.slot;})) continue;
-        wanted.insert(g.vendorId+u':'+g.deviceId);
-        list.append(g);
-    }
-    const QHash<QString,QString> names=pciNames(wanted);
-    for(Gpu &g:list) {
-        QString n=names.value(g.vendorId+u':'+g.deviceId);
-        // "GA107M [GeForce RTX 3050 Mobile]" → "GeForce RTX 3050 Mobile"
-        const qsizetype open=n.indexOf(u'['),close=n.lastIndexOf(u']');
-        if(open>=0 && close>open) n=n.mid(open+1,close-open-1);
-        g.name=vendorName(g.vendorId)+u' '+(n.isEmpty() ? QStringLiteral("GPU %1").arg(g.deviceId) : n);
-    }
-    return list;
-}
 
 void GraphicsInfo::prepareEnvironment(int argc,char **argv) {
     Applied &a=applied();
@@ -307,7 +247,7 @@ void GraphicsInfo::watch(QQuickWindow *window) {
                     renderer=QString::fromUtf8(p.deviceName);
                     vendorId=p.vendorID;
                     cpu=p.deviceType==VK_PHYSICAL_DEVICE_TYPE_CPU;
-                    vendor=vendorName(QStringLiteral("%1").arg(p.vendorID,4,16,QLatin1Char('0')));
+                    vendor=jarvis::gpuVendorName(QStringLiteral("%1").arg(p.vendorID,4,16,QLatin1Char('0')));
                     version=QStringLiteral("%1.%2.%3").arg(VK_API_VERSION_MAJOR(p.apiVersion)).arg(VK_API_VERSION_MINOR(p.apiVersion)).arg(VK_API_VERSION_PATCH(p.apiVersion));
                 }
 #endif

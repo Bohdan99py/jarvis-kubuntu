@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "The Jarvis core on the desktop: the same animated core as in the window, reacting to what Jarvis does",
+        "Description[ru]": "Ядро Jarvis на рабочем столе: то же анимированное ядро, что и в окне, реагирует на действия Jarvis",
+        "Icon": "org.jarvis.Jarvis",
+        "Id": "org.jarvis.hud",
+        "Name": "Jarvis Core",
+        "Name[ru]": "Ядро Jarvis",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

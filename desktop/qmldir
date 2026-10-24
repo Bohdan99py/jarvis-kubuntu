@@ -1,0 +1,20 @@
+module org.jarvis.visual
+# The Jarvis HUD's look for the Plasma desktop (0.19.2): the window's own
+# HUD files (hud/) plus thin adapters (desktop/), installed as plain files —
+# no compiled code is loaded into plasmashell.
+singleton JarvisTheme 1.0 JarvisTheme.qml
+HudController 1.0 HudController.qml
+JarvisCore 1.0 JarvisCore.qml
+CoreRings 1.0 CoreRings.qml
+AudioReactiveLayer 1.0 AudioReactiveLayer.qml
+ParticleField 1.0 ParticleField.qml
+DataStreams 1.0 DataStreams.qml
+NeuralNetworkView 1.0 NeuralNetworkView.qml
+HolographicPanel 1.0 HolographicPanel.qml
+DesktopState 1.0 DesktopState.qml
+DesktopCore 1.0 DesktopCore.qml
+HoloMeter 1.0 HoloMeter.qml
+HoloButton 1.0 HoloButton.qml
+Sparkline 1.0 Sparkline.qml
+DaemonLink 1.0 DaemonLink.qml
+WidgetConfigPage 1.0 WidgetConfigPage.qml

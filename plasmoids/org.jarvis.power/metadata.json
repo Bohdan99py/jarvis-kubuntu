@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Battery, time left, charging and the power profile",
+        "Description[ru]": "Батарея, оставшееся время, зарядка и профиль питания",
+        "Icon": "battery",
+        "Id": "org.jarvis.power",
+        "Name": "Jarvis Power",
+        "Name[ru]": "Jarvis: питание",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

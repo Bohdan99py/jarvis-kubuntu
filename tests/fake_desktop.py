@@ -15,6 +15,9 @@ XML = '''<node><interface name="org.jarvis.Desktop1">
 <method name="ShowOverlay"><arg type="s" direction="in"/></method>
 <method name="ShowMain"/>
 <method name="ShowQuick"/>
+<method name="Launch"><arg type="s" direction="in"/></method>
+<method name="OpenPath"><arg type="s" direction="in"/></method>
+<method name="OpenSettings"><arg type="s" direction="in"/></method>
 </interface></node>'''
 
 
@@ -36,7 +39,10 @@ class FakeDesktop:
 
     def _call(self, conn, sender, path, interface, method, params, invocation):
         args = params.unpack()
-        self.opened.append((args[0], args[1]) if method == 'Open' else (method, ''))
+        if method == 'Open':
+            self.opened.append((args[0], args[1]))
+        else:
+            self.opened.append((method, args[0] if args else ''))
         invocation.return_value(None)
 
     def integration(self, method, signature='()', args=()):

@@ -218,6 +218,18 @@ void Assistant::startNext()
         emit routed(r.id, u"tasks"_s);
         return;
     }
+    // Desktop commands: workspaces, applications, folders, projects, live figures.
+    if (m_desktopHandler) {
+        const workspace::Command command = workspace::parseCommand(r.text);
+        if (!command.kind.isEmpty()) {
+            const QString reply = m_desktopHandler(command, lang);
+            if (!reply.isEmpty()) {
+                emit routed(r.id, u"desktop"_s);
+                finishLater(r.id, reply, false, 120);
+                return;
+            }
+        }
+    }
     // "пример схемы на 555": the bundled example circuits, offline.
     QString schematic;
     if (SchematicLibrary::answer(r.text, lang, &schematic)) {
@@ -1756,6 +1768,10 @@ void Assistant::suggestHelp(qint64 t)
     const bool ru = lang == Lang::Ru;
     const QString key = u"assist:"_s + s.category;
     m_assistPrompts.insert(key, s.prompt);
+    if (s.open.isEmpty())
+        m_assistTargets.remove(key);
+    else
+        m_assistTargets.insert(key, s.open);
     qInfo().noquote() << "suggestion:" << s.category << "score" << s.score; // never the evidence: it may hold titles
     emitNotice(key, u"assist"_s, s.title, s.body,
                {{u"help"_s, ru ? u"Помочь"_s : u"Help me"_s}, {u"later"_s, ru ? u"Не сейчас"_s : u"Not now"_s},
@@ -1865,7 +1881,9 @@ QString Assistant::noticeAction(const QString &key, const QString &action)
                                                                         : u"later"_s;
         Awareness::feedback(m_awarenessState, category, answer, t);
         Awareness::save(m_awarenessState);
-        return answer == u"accepted" ? u"assist"_s : QString();
+        if (answer != u"accepted")
+            return {};
+        return m_assistTargets.value(key, u"assist"_s);
     }
     QJsonObject state = m_knowledge.autonomyState();
     if (key == u"break") {
@@ -2119,6 +2137,22 @@ void Assistant::absorbReview(const QJsonObject &result)
                    + (ru ? u"Объединено: %1 · забыто: %2 · новых выводов: %3"_s : u"Merged: %1 · forgotten: %2 · new conclusions: %3"_s)
                          .arg(merged).arg(forgotten).arg(added),
                {{u"default"_s, QString()}});
+}
+
+} // namespace jarvis
+
+namespace jarvis {
+
+QJsonObject Assistant::nextTask() const
+{
+    // tasks() lists open items first, reminders by due time.
+    for (const QJsonValue &v : m_tasks.tasks()) {
+        const QJsonObject t = v.toObject();
+        if (t.value(u"done"_s).toDouble() > 0)
+            break;
+        return QJsonObject{{u"id"_s, t.value(u"id"_s)}, {u"text"_s, t.value(u"text"_s).toString().left(200)}, {u"due"_s, t.value(u"due"_s)}};
+    }
+    return {};
 }
 
 } // namespace jarvis

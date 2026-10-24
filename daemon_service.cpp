@@ -22,7 +22,7 @@ DaemonService::DaemonService(QObject *parent)
     : QObject(parent)
     , m_bridge(&m_assistant, dbus::daemonService())
     , m_ide(&m_assistant, IdeServer::defaultPath(dbus::daemonService()))
-    , m_integration(&m_assistant, &m_notifier, [this](const QString &target, const QString &payload) { openGui(target, payload); })
+    , m_integration(&m_assistant, &m_notifier, [this](const QString &method, const QVariantList &args) { callGui(method, args); })
 {
     new DaemonAdaptor(this); // child of this; exported with the object
     connect(&m_assistant, &Assistant::replyReady, this, &DaemonService::replyReady);
@@ -35,6 +35,11 @@ DaemonService::DaemonService(QObject *parent)
         if (target.isEmpty())
             return;
         // An accepted offer of help opens the overlay with the question already asked.
+        // Awareness may open a part of Jarvis instead of asking ("skill:electronics:calculators").
+        if (target.startsWith(QLatin1String("skill:"))) {
+            openGui(QStringLiteral("skill"), target.mid(6));
+            return;
+        }
         const QString payload = target == QLatin1String("curious") ? m_noticeBodies.value(key)
                                 : target == QLatin1String("assist") ? m_assistant.assistPrompt(key)
                                                                     : QString();
@@ -50,11 +55,16 @@ DaemonService::DaemonService(QObject *parent)
 
 void DaemonService::openGui(const QString &target, const QString &payload, int attempt)
 {
+    callGui(QStringLiteral("Open"), {target, payload}, attempt);
+}
+
+void DaemonService::callGui(const QString &method, const QVariantList &args, int attempt)
+{
     auto msg = QDBusMessage::createMethodCall(QStringLiteral("org.jarvis.Desktop1"), QStringLiteral("/org/jarvis/Desktop1"),
-                                              QStringLiteral("org.jarvis.Desktop1"), QStringLiteral("Open"));
-    msg << target << payload;
+                                              QStringLiteral("org.jarvis.Desktop1"), method);
+    msg.setArguments(args);
     auto *w = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(msg, 3000), this);
-    connect(w, &QDBusPendingCallWatcher::finished, this, [this, w, target, payload, attempt] {
+    connect(w, &QDBusPendingCallWatcher::finished, this, [this, w, method, args, attempt] {
         w->deleteLater();
         if (!w->isError() || attempt >= 4)
             return;
@@ -67,7 +77,7 @@ void DaemonService::openGui(const QString &target, const QString &payload, int a
             start << QStringLiteral("jarvis-tray.service") << QStringLiteral("replace");
             QDBusConnection::sessionBus().asyncCall(start, 3000);
         }
-        QTimer::singleShot(1500, this, [this, target, payload, attempt] { openGui(target, payload, attempt + 1); });
+        QTimer::singleShot(1500, this, [this, method, args, attempt] { callGui(method, args, attempt + 1); });
     });
 }
 

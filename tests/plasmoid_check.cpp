@@ -1,7 +1,9 @@
-// Loads the Plasma widget's views (plasmoid/contents/ui: HudView, MiniCore)
-// outside Plasma with the states jarvisd reports, and fails on any QML warning
-// or error. With an output directory it also saves a picture of each state.
-//   plasmoid_check <plasmoid/contents/ui> [output directory]
+// Loads the views of the Jarvis desktop widgets (plasmoids/*/contents/ui) and
+// the desktop core (module org.jarvis.visual, QML_IMPORT_PATH=build/qml)
+// outside Plasma, with the data jarvisd reports (real shapes, online,
+// offline, without data), and fails on any QML warning or error. With an
+// output directory it also saves a picture of each case.
+//   plasmoid_check <plasmoids directory> [output directory]
 #include <QDateTime>
 #include <QDir>
 #include <QEventLoop>
@@ -11,6 +13,7 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QRegularExpression>
 #include <QTimer>
 #include <QVariant>
 
@@ -30,76 +33,99 @@ void collect(QtMsgType type, const QMessageLogContext &, const QString &message)
 
 } // namespace
 
-// What Plasma's KLocalizedContext gives the widget: i18n() with arguments.
+// What Plasma's KLocalizedContext gives the widgets: i18nd() with arguments.
 class Localized : public QObject
 {
     Q_OBJECT
 public:
-    Q_INVOKABLE QString i18n(const QString &text) const { return text; }
-    Q_INVOKABLE QString i18n(const QString &text, const QVariant &arg) const { return QString(text).replace(QLatin1String("%1"), arg.toString()); }
-};
-
-struct Case
-{
-    const char *name;
-    int width, height;
-    const char *properties; // QML property assignments for HudView
+    static QString fill(QString text, const QVariantList &args)
+    {
+        for (int i = 0; i < args.size(); ++i)
+            text.replace(QStringLiteral("%%1").arg(i + 1), args.at(i).toString());
+        return text;
+    }
+    Q_INVOKABLE QString i18nd(const QString &, const QString &t) const { return t; }
+    Q_INVOKABLE QString i18nd(const QString &, const QString &t, const QVariant &a) const { return fill(t, {a}); }
+    Q_INVOKABLE QString i18nd(const QString &, const QString &t, const QVariant &a, const QVariant &b) const { return fill(t, {a, b}); }
+    Q_INVOKABLE QString i18nd(const QString &, const QString &t, const QVariant &a, const QVariant &b, const QVariant &c) const { return fill(t, {a, b, c}); }
 };
 
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
     if (argc < 2) {
-        std::fprintf(stderr, "usage: plasmoid_check <plasmoid/contents/ui> [output directory]\n");
+        std::fprintf(stderr, "usage: plasmoid_check <plasmoids directory> [output directory]\n");
         return 2;
     }
-    const QString ui = QDir(QString::fromLocal8Bit(argv[1])).absolutePath();
+    const QString root = QDir(QString::fromLocal8Bit(argv[1])).absolutePath();
     const QString out = argc > 2 ? QString::fromLocal8Bit(argv[2]) : QString();
     qInstallMessageHandler(collect);
 
-    const char *status = R"({"version":"0.19.1","state":"idle","integration":true,"background":true,"gui":true,
-        "awareness":{"level":"assistive","paused":false,"dnd":false},
-        "animation":{"wanted":"normal","effective":"normal","onBattery":false},
-        "notice":{"kind":"reminder","title":"Call the workshop about the car","at":%1}})";
-    const char *metrics = R"({"cpu":23.5,"memory":61.2,"temperature":54,"battery":{"present":true,"percent":76,"onBattery":false}})";
     const QString now = QString::number(QDateTime::currentMSecsSinceEpoch() - 4 * 60000);
-    const QString idle = QString::fromLatin1(status).arg(now);
-    QString busy = idle;
-    busy.replace(QLatin1String("\"state\":\"idle\""), QLatin1String("\"state\":\"processing\""))
-        .replace(QLatin1String("\"onBattery\":false}"), QLatin1String("\"onBattery\":true}"))
-        .replace(QLatin1String("\"paused\":false"), QLatin1String("\"paused\":true"));
-    QString failed = idle;
-    failed.replace(QLatin1String("\"state\":\"idle\""), QLatin1String("\"state\":\"error\""));
-    QString off = idle;
-    off.replace(QLatin1String("\"integration\":true"), QLatin1String("\"integration\":false"));
+    // Shapes as jarvisd sends them (taken from a real machine).
+    const QString telemetry = QStringLiteral(R"({"cpu":{"cores":12,"history":[6,5.6,14,9,22,18,7],"load":2.56,"mhz":[2395,2394,2392,416],"mhzAverage":2050,"mhzMax":2396,"perCore":[5.6,9.6,7.7,0.8,12,5.3,8.5,1.2,92,3.6,4.8,0.4],"usage":17.2},
+        "gpu":{"cards":[{"asleep":false,"boot":false,"clockMhz":210,"driver":"nvidia","load":3,"memory":0.7,"name":"NVIDIA GeForce RTX 3050 6GB Laptop GPU","temperature":35,"vramTotalMb":6144,"vramUsedMb":44},
+                        {"asleep":false,"boot":true,"clockMhz":533,"driver":"amdgpu","load":66,"memory":90.9,"name":"AMD Radeon 680M","temperature":38,"vramTotalMb":512,"vramUsedMb":465}]},
+        "memory":{"percent":46,"swapTotalGb":0.5,"swapUsedGb":0,"totalGb":14.9,"usedGb":6.9},
+        "thermal":{"fans":[],"sensors":[{"celsius":43,"chip":"acpitz_0","label":"temp1"},{"celsius":43.1,"chip":"k10temp","label":"Tctl"},{"celsius":38,"chip":"amdgpu","label":"edge"}]},
+        "net":{"interface":"wlp3s0","manager":true,"name":"Livebox-8750","rxBytesPerSecond":215500,"rxHistory":[172,2155,90000,215500,30000],"txBytesPerSecond":2816,"txHistory":[172,2816,1200,900,3000],"type":"wifi","vpn":true,"vpnName":"Work VPN"},
+        "power":{"charging":false,"minutesLeft":134,"onAc":false,"percent":64,"powerSaver":false,"present":true,"profile":"balanced","status":"Discharging","watts":9.8},
+        "media":{"available":true,"player":"firefox","status":"Playing","title":"Interstellar Main Theme","artist":"Hans Zimmer","album":"Interstellar","artUrl":"","volume":-1,"canNext":true,"canPrevious":true,"canPlay":true,
+                 "audio":{"output":"Built-in Audio Analog Stereo","volume":42,"muted":false}}})");
+    const QString status = QStringLiteral(R"({"version":"0.19.2","state":"processing","integration":true,"claude":true,"model":"claude-haiku-4-5-20251001","webSearch":true,
+        "awareness":{"level":"assistive","paused":false,"dnd":false},"voice":{"listening":true,"speaking":false,"engine":"piper","at":1},
+        "activity":{"requests":12,"errors":1,"routes":["recall","llm"],"latency":1840},"workspace":{"current":"dev","previous":"general","profiles":[]},
+        "desktop":{"mode":"jarvis","theme":"classic","quality":"balanced","effects":true},"task":{"text":"Call the workshop","due":%1},
+        "events":[{"at":%1,"kind":"route","text":"llm"},{"at":%1,"kind":"workspace","text":"DEV"},{"at":%1,"kind":"notice","text":"Break time"}]})").arg(now);
 
-    const QList<std::pair<QString, QString>> cases{
-        {QStringLiteral("idle"), QStringLiteral("width: 320; height: 420; online: true; intensity: \"normal\"; status: JSON.parse('%1'); metrics: JSON.parse('%2')").arg(idle, QLatin1String(metrics))},
-        {QStringLiteral("processing-battery"), QStringLiteral("width: 320; height: 420; online: true; intensity: \"high\"; status: JSON.parse('%1'); metrics: JSON.parse('%2')").arg(busy, QLatin1String(metrics))},
-        {QStringLiteral("error-small"), QStringLiteral("width: 190; height: 230; online: true; intensity: \"low\"; status: JSON.parse('%1'); metrics: JSON.parse('%2')").arg(failed, QLatin1String(metrics))},
-        {QStringLiteral("covered"), QStringLiteral("width: 320; height: 420; online: true; covered: true; intensity: \"off\"; status: JSON.parse('%1'); metrics: JSON.parse('%2')").arg(idle, QLatin1String(metrics))},
-        {QStringLiteral("integration-off"), QStringLiteral("width: 320; height: 420; online: true; intensity: \"normal\"; status: JSON.parse('%1')").arg(off)},
-        {QStringLiteral("outdated"), QStringLiteral("width: 320; height: 420; online: true; intensity: \"normal\"")},
-        {QStringLiteral("offline"), QStringLiteral("width: 320; height: 420; online: false; intensity: \"off\"")},
-        {QStringLiteral("panel-icon"), QString()},
+    struct Case
+    {
+        QString name;
+        QString widget;  // plasmoid id; "" = the visual module only
+        QString qml;     // the object to create (its size and properties)
+    };
+    const auto view = [&](const QString &type, const QString &props) { return type + QStringLiteral(" { width: 360; height: 520; %1 }").arg(props); };
+    const QString live = QStringLiteral("online: true; telemetry: JSON.parse(%1); status: JSON.parse(%2)").arg(QStringLiteral("'") + QString(telemetry).replace(u'\n', u' ') + u'\'', u'\'' + QString(status).replace(u'\n', u' ') + u'\'');
+    const QString empty = QStringLiteral("online: false");
+    const QList<Case> cases{
+        {QStringLiteral("system"), QStringLiteral("org.jarvis.system"), view(QStringLiteral("SystemView"), live)},
+        {QStringLiteral("system-offline"), QStringLiteral("org.jarvis.system"), view(QStringLiteral("SystemView"), empty)},
+        {QStringLiteral("network"), QStringLiteral("org.jarvis.network"), view(QStringLiteral("NetworkView"), live)},
+        {QStringLiteral("network-offline"), QStringLiteral("org.jarvis.network"), view(QStringLiteral("NetworkView"), empty)},
+        {QStringLiteral("power"), QStringLiteral("org.jarvis.power"), view(QStringLiteral("PowerView"), live)},
+        {QStringLiteral("power-offline"), QStringLiteral("org.jarvis.power"), view(QStringLiteral("PowerView"), empty)},
+        {QStringLiteral("media"), QStringLiteral("org.jarvis.media"), view(QStringLiteral("MediaView"), live)},
+        {QStringLiteral("media-offline"), QStringLiteral("org.jarvis.media"), view(QStringLiteral("MediaView"), empty)},
+        {QStringLiteral("status"), QStringLiteral("org.jarvis.status"), view(QStringLiteral("StatusView"), live)},
+        {QStringLiteral("status-offline"), QStringLiteral("org.jarvis.status"), view(QStringLiteral("StatusView"), empty)},
+        {QStringLiteral("system-compact"), QStringLiteral("org.jarvis.system"), QStringLiteral("SystemViewCompact { %1 }").arg(live)},
+        {QStringLiteral("status-compact"), QStringLiteral("org.jarvis.status"), QStringLiteral("StatusViewCompact { %1 }").arg(live)},
+        {QStringLiteral("core"), QString(), QStringLiteral("JV.DesktopCore { width: 420; height: 420; online: true; status: JSON.parse(%1); metrics: ({cpu: 37, memory: 61}) }")
+                                                .arg(u'\'' + QString(status).replace(u'\n', u' ') + u'\'')},
+        {QStringLiteral("core-offline"), QString(), QStringLiteral("JV.DesktopCore { width: 300; height: 300; online: false; quality: \"low\" }")},
+        {QStringLiteral("core-mark7"), QString(), QStringLiteral("JV.DesktopCore { width: 420; height: 420; online: true; quality: \"cinematic\"; Component.onCompleted: JV.JarvisTheme.preset = \"mark7\" }")},
+        {QStringLiteral("core-minimal"), QString(), QStringLiteral("JV.DesktopCore { width: 300; height: 300; online: true; Component.onCompleted: JV.JarvisTheme.preset = \"minimal\" }")},
     };
 
     QQmlEngine engine;
     Localized localized;
     engine.rootContext()->setContextObject(&localized);
     int failures = 0;
-    for (const auto &[name, props] : cases) {
+    // The core is shaders: this checks that it loads and runs without a warning; an offscreen
+    // grab may not show the shaders themselves (look at it in a Plasma session for that).
+    for (const Case &c : cases) {
         g_problems.clear();
-        QString qml = QStringLiteral("import QtQuick\nRectangle { color: \"#1b2330\"; width: inner.width + 24; height: inner.height + 24\n");
-        qml += props.isEmpty() ? QStringLiteral("MiniCore { id: inner; x: 12; y: 12; width: 48; height: 48; compact: true; hudState: \"notification\"; intensity: \"low\" }\n}")
-                               : QStringLiteral("HudView { id: inner; x: 12; y: 12; %1 }\n}").arg(props);
+        const QString dir = c.widget.isEmpty() ? root : root + u'/' + c.widget + QStringLiteral("/contents/ui");
+        const QString qml = QStringLiteral("import QtQuick\nimport org.jarvis.visual as JV\nRectangle {\n color: \"#0b1520\"; width: inner.width + 24; height: inner.height + 24\n"
+                                           " Component.onDestruction: JV.JarvisTheme.preset = \"classic\"\n %1\n}\n")
+                                .arg(QString(c.qml).replace(QRegularExpression(QStringLiteral("^([\\w.]+) \\{")), QStringLiteral("\\1 { id: inner; x: 12; y: 12; ")));
         QQmlComponent component(&engine);
-        // The base URL puts the widget's directory in scope: HudView, MiniCore, theme.js.
-        component.setData(qml.toUtf8(), QUrl::fromLocalFile(ui + QStringLiteral("/check-%1.qml").arg(name)));
-        std::unique_ptr<QObject> root(component.create());
-        auto *item = qobject_cast<QQuickItem *>(root.get());
+        // The base URL puts the widget's own directory in scope (its views).
+        component.setData(qml.toUtf8(), QUrl::fromLocalFile(dir + QStringLiteral("/check-%1.qml").arg(c.name)));
+        std::unique_ptr<QObject> object(component.create());
+        auto *item = qobject_cast<QQuickItem *>(object.get());
         if (!item) {
-            std::fprintf(stderr, "FAIL %s: %s\n", qPrintable(name), qPrintable(component.errorString()));
+            std::fprintf(stderr, "FAIL %s: %s\n", qPrintable(c.name), qPrintable(component.errorString()));
             ++failures;
             continue;
         }
@@ -108,17 +134,18 @@ int main(int argc, char **argv)
         item->setParentItem(window.contentItem());
         window.show();
         QEventLoop loop;
-        QTimer::singleShot(700, &loop, &QEventLoop::quit); // a few frames of animation
+        QTimer::singleShot(1200, &loop, &QEventLoop::quit); // the panels unfold, the core runs a little
         loop.exec();
         if (!out.isEmpty())
-            window.grabWindow().save(out + QStringLiteral("/%1.png").arg(name));
+            window.grabWindow().save(out + QStringLiteral("/%1.png").arg(c.name));
+        object.reset();
         if (!g_problems.isEmpty()) {
-            std::fprintf(stderr, "FAIL %s: %d QML warnings\n", qPrintable(name), int(g_problems.size()));
+            std::fprintf(stderr, "FAIL %s: %d QML warnings\n", qPrintable(c.name), int(g_problems.size()));
             ++failures;
         }
     }
     if (failures == 0)
-        std::printf("PASS: the desktop widget's views load in %d states without warnings\n", int(cases.size()));
+        std::printf("PASS: %d cases of the desktop widgets' views and the desktop core load without warnings\n", int(cases.size()));
     return failures == 0 ? 0 : 1;
 }
 

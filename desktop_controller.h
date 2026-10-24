@@ -57,6 +57,11 @@ public:
     Q_INVOKABLE void searchWeb(const QString &query);
     Q_INVOKABLE QString launch(const QString &id);
     Q_INVOKABLE void restartDaemon();
+    // The voice state for the desktop widgets (jarvisd accepts it from this window only).
+    Q_INVOKABLE void reportVoice(bool listening, bool speaking, const QString &engine);
+    // Workspaces through jarvisd (it moves the windows and starts the applications).
+    Q_INVOKABLE void switchWorkspace(const QString &id);
+    Q_INVOKABLE void saveWorkspaceLayout();
     // Quietly asks GitHub whether a newer release exists (no download).
     Q_INVOKABLE void checkForUpdates();
 public slots:
@@ -67,6 +72,13 @@ public slots:
     // From jarvisd's notifications: "main", "tasks", "study", "curious" or "memory".
     // The payload becomes a chat message from Jarvis, so it is taken only from jarvisd.
     Q_SCRIPTABLE void Open(const QString &target, const QString &payload);
+    // Workspaces and the launcher (0.19.2), from jarvisd only: jarvisd decides, the
+    // window starts what was asked — outside the service's sandbox, in the session.
+    // An installed application by desktop id; an existing file or folder of the
+    // user; an allowed System Settings page (workspace::settingsKeys).
+    Q_SCRIPTABLE void Launch(const QString &desktopId);
+    Q_SCRIPTABLE void OpenPath(const QString &path);
+    Q_SCRIPTABLE void OpenSettings(const QString &key);
 signals:
     void skillsChanged();
     void updateChanged();
@@ -79,6 +91,7 @@ signals:
     // A newer release exists; emitted once per version.
     void updateAvailable(const QString &version);
 private:
+    bool calledByDaemon() const;
     void installSkill(const QByteArray &bytes);
     QString launchApplication(const QString &desktopId);
     static QString vscodeCli();

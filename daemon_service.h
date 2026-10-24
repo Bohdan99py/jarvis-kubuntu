@@ -44,6 +44,8 @@ public:
     bool callerIsGui() const;
     // Shows a tab of the GUI; starts the tray application when it is not running.
     void openGui(const QString &target, const QString &payload, int attempt = 0);
+    // Any method of org.jarvis.Desktop1 (Open, Launch, OpenPath, OpenSettings), with the same retries.
+    void callGui(const QString &method, const QVariantList &args, int attempt = 0);
     // The event loop is about to end (SIGTERM, Quit, background work off).
     void stopping() { m_integration.stopping(); }
 

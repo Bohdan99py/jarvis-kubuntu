@@ -71,6 +71,20 @@ bool onBattery(const QJsonObject &metrics);
 // On battery the HUD steps down one level (high -> normal -> low); off stays off.
 QString effectiveAnimation(const QString &wanted, bool onBattery);
 
+// JARVIS DESKTOP settings (config.json "desktop"), every key present and in range:
+//   mode         standard | jarvis          (what the desktop is now; the shell sets it)
+//   theme        classic | mark7 | minimal
+//   primary, secondary  "" (the theme's) or "#rrggbb"
+//   glow 0..1.5, opacity 0.3..0.95, motion 0.5..1.5, density compact | normal | comfortable
+//   quality      low | balanced | cinematic (the desktop core and widgets)
+//   coreSize     small | medium | large;  corePosition center | left | right
+//   dockPosition bottom | top | left | right; dockSize 32..72 px; dockAutohide; dockAllScreens
+//   replacePanels  remove the standard panels once the Jarvis dock works (they come back with a restore)
+//   effects      widget animations at all
+QJsonObject normalizeDesktop(const QJsonObject &in);
+// Applies one change from the Control center; "" or why it was refused.
+QString setDesktopValue(QJsonObject &desktop, const QString &key, const QJsonValue &value);
+
 // KRunner: the question after a trigger word ("jarvis what is RC filter",
 // "джарвис …"), or "" when the query is not for Jarvis.
 QStringList runnerTriggers();
@@ -80,10 +94,11 @@ QString runnerQuestion(const QString &query);
 // touch only widgets whose plugin is kHudPlugin: panels, other widgets and
 // wallpapers are never read or changed. Each prints one number.
 QString plasmaCountScript();
-// Adds one widget to the desktop of the first screen, top right, unless one exists.
-QString plasmaAddScript();
-// Removes every Jarvis widget from desktops and panels.
-QString plasmaRemoveScript();
+// Adds one widget (a Jarvis widget id; default the core) to the desktop of the
+// first screen, top right, unless one exists. "" for an id that is not Jarvis's.
+QString plasmaAddScript(const QString &type = QString(kHudPlugin));
+// Removes the Jarvis widgets of `type` ("" = every Jarvis widget) from desktops and panels.
+QString plasmaRemoveScript(const QString &type = QString(kHudPlugin));
 
 // A systemd user unit as the diagnostics see it.
 struct UnitHealth

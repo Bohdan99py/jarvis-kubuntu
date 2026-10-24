@@ -72,6 +72,12 @@ QString pick(Lang lang, const QString &ru, const QString &en)
 
 Awareness::Awareness() = default;
 
+void Awareness::setWorkspace(const QString &profile, const QStringList &focus)
+{
+    m_workspace = profile;
+    m_workspaceFocus = focus;
+}
+
 void Awareness::configure(const ConfigData &config)
 {
     m_level = Config::awarenessLevels().contains(config.awarenessLevel) ? config.awarenessLevel : u"manual"_s;
@@ -679,6 +685,12 @@ Awareness::Suggestion Awareness::nextSuggestion(const QJsonObject &state, qint64
                                 : u"I can check component values or help with calculations."_s);
         s.prompt = ru ? u"Помоги со схемой, над которой я работаю: проверь номиналы компонентов и расчёты."_s
                       : u"Help me with the circuit I'm working on: check the component values and calculations."_s;
+        // In the WORK profile the quick calculators are what helps at the bench.
+        if (m_workspace == u"work" && !problems) {
+            s.body = ru ? u"Открыть быстрые калькуляторы компонентов (делитель, светодиод, RC, 555)?"_s
+                        : u"Open the quick component calculators (divider, LED, RC, 555)?"_s;
+            s.open = u"skill:electronics:calculators"_s;
+        }
         candidates.append(s);
     }
     // Documentation: going back and forth between the docs and the work, or reading while errors pile up.
@@ -727,6 +739,12 @@ Awareness::Suggestion Awareness::nextSuggestion(const QJsonObject &state, qint64
         if (nowMs - qint64(c.value(u"last"_s).toDouble()) < 6 * kHour) {
             reason = u"offered recently"_s;
             continue;
+        }
+        // The workspace says what matters now: its categories count more, others less.
+        if (!m_workspaceFocus.isEmpty()) {
+            const bool focused = m_workspaceFocus.contains(s.category);
+            s.score *= focused ? 1.12 : 0.85;
+            s.evidence.append(u"workspace %1"_s.arg(m_workspace.toUpper()));
         }
         // What the user takes up counts; what they wave away lowers the score.
         const double accepted = c.value(u"accepted"_s).toInt(), declined = c.value(u"declined"_s).toInt();

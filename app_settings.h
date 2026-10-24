@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
 #include "config.h"
@@ -55,6 +56,8 @@ class AppSettings : public QObject
     Q_PROPERTY(bool desktopIntegration READ desktopIntegration NOTIFY changed FINAL)
     Q_PROPERTY(bool shareActiveApp READ shareActiveApp NOTIFY changed FINAL)
     Q_PROPERTY(QString hudAnimation READ hudAnimation NOTIFY changed FINAL)
+    // JARVIS DESKTOP (0.19.2): theme, layout and quality of the desktop shell (see integration::normalizeDesktop).
+    Q_PROPERTY(QVariantMap desktop READ desktop NOTIFY changed FINAL)
     // The cinematic HUD, kept per user in Jarvis.conf (not in config.json: the
     // daemon has nothing to do with it). Quality: off (classic window), low,
     // balanced, cinematic. memoryOpen: the memory panel beside the HUD.
@@ -104,6 +107,7 @@ public:
     bool desktopIntegration() const { return m_data.desktopIntegration; }
     bool shareActiveApp() const { return m_data.shareActiveApp; }
     QString hudAnimation() const { return m_data.hudAnimation; }
+    QVariantMap desktop() const { return m_data.desktop.toVariantMap(); }
     QString hudQuality() const;
     void setHudQuality(const QString &quality);
     bool memoryOpen() const;
@@ -124,6 +128,10 @@ public:
     Q_INVOKABLE QString setOption(const QString &name, bool value);
     // The desktop HUD's animations: off, low, normal or high.
     Q_INVOKABLE QString setHudAnimation(const QString &level);
+    // One desktop shell setting (not the mode: DesktopShell changes that).
+    Q_INVOKABLE QString setDesktop(const QString &key, const QVariant &value);
+    // Re-reads the file (after DesktopShell changed the mode).
+    Q_INVOKABLE void reload() { refresh(true); }
     // 0 turns break reminders off.
     Q_INVOKABLE QString setBreakMinutes(int minutes);
     // name: snoozeMinutes, morningHour, afternoonHour, eveningHour, nagMinutes,

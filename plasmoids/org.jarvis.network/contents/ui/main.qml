@@ -1,0 +1,70 @@
+import QtQuick
+import QtQuick.Layouts
+import org.kde.plasma.plasmoid
+import org.kde.plasma.core as PlasmaCore
+import org.kde.kirigami as Kirigami
+import org.jarvis.visual as JV
+
+// Jarvis Network (0.19.2): Plasma's side of the widget — the link to jarvisd, the
+// compact and expanded views, the workspace that shows or hides it. What it
+// draws is NetworkView.qml, plain Qt Quick (checked outside Plasma by the tests).
+PlasmoidItem {
+    id: root
+    readonly property bool onDesktop: Plasmoid.formFactor === PlasmaCore.Types.Planar || Plasmoid.formFactor === PlasmaCore.Types.MediaCenter
+    readonly property var workspace: link.status.workspace || {}
+    // In JARVIS DESKTOP the current workspace decides which widgets are shown.
+    readonly property bool inProfile: {
+        if (link.desktop.mode !== "jarvis" || !workspace.profiles)
+            return true
+        const p = workspace.profiles.find(x => x.id === workspace.current)
+        return !p || p.widgets.indexOf(Plasmoid.pluginName) >= 0
+    }
+    readonly property bool shown: inProfile && (onDesktop || root.expanded)
+    readonly property bool effects: Plasmoid.configuration.effects && link.desktop.effects !== false
+
+    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
+    Plasmoid.icon: "network-wireless"
+    preferredRepresentation: onDesktop && Plasmoid.configuration.expanded ? fullRepresentation : compactRepresentation
+    toolTipMainText: "NETWORK"
+
+    JV.DaemonLink {
+        id: link
+        component: "network"
+        kinds: ["net"]
+        // Low quality: half as often; nobody looking: rarely.
+        interval: !root.shown ? 15000 : (link.desktop.quality === "low" ? 3000 : 1000)
+        polling: root.inProfile
+    }
+
+    compactRepresentation: MouseArea {
+        Layout.minimumWidth: chips.implicitWidth + 8
+        Layout.minimumHeight: Kirigami.Units.iconSizes.small
+        onClicked: root.expanded = !root.expanded
+        NetworkViewCompact {
+            id: chips
+            anchors.centerIn: parent
+            telemetry: link.telemetry
+            status: link.status
+            online: link.online
+        }
+    }
+
+    fullRepresentation: Item {
+        Layout.preferredWidth: Kirigami.Units.gridUnit * 16
+        Layout.preferredHeight: Kirigami.Units.gridUnit * 14
+        Layout.minimumWidth: Kirigami.Units.gridUnit * 10
+        Layout.minimumHeight: Kirigami.Units.gridUnit * 6
+        opacity: root.inProfile ? 1 : 0
+        enabled: root.inProfile
+        Behavior on opacity { NumberAnimation { duration: 300 } }
+        NetworkView {
+            anchors.fill: parent
+            telemetry: link.telemetry
+            status: link.status
+            online: link.online
+            effects: root.effects
+            extra: Plasmoid.configuration.extra
+            onAction: (name, arg) => {}
+        }
+    }
+}

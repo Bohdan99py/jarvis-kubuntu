@@ -383,6 +383,76 @@ try:
  write_config();call('ReloadConfig')
  wait_for(lambda: name_owned('org.jarvis.Runner'),'runner name back')
  caller.close()
+ # ---- The desktop shell (0.19.2): telemetry, workspaces, KRunner commands, voice, heartbeats ----
+ # (the fake Jarvis window `desk` from above still owns org.jarvis.Desktop1)
+ wait_for(lambda: ijson('Status')['gui'],'the window is seen again')
+ t=ijson('Telemetry','cpu,memory,gpu,thermal,net,power,media,bogus')
+ assert set(t)=={'cpu','memory','gpu','thermal','net','power','media'},t.keys()
+ assert t['cpu']['cores']>0 and 'perCore' in t['cpu'] and 'cards' in t['gpu'] and 'sensors' in t['thermal'],t
+ assert 'available' in t['media'] and 'rxBytesPerSecond' in t['net'] and 'present' in t['power'],t
+ r=icall('MediaControl','play-pause');assert r.returncode==0 and 'no media player' in r.stdout,r
+ assert 'unknown' in icall('MediaControl','rm -rf').stdout
+ # Workspaces: a profile with an application of our own, so the test needs nothing installed.
+ apps=scratch/'data/applications';apps.mkdir(parents=True,exist_ok=True)
+ (apps/'jarvis.test.app.desktop').write_text('[Desktop Entry]\nType=Application\nName=Jarvis Test Tool\nExec=true\n')
+ (scratch/'config/jarvis/workspaces.json').write_text(json.dumps({'current':'general','profiles':{'dev':{'desktop':4,'apps':['jarvis.test.app','not.installed|jarvis.test.app'],'paths':[str(scratch)]}}}))
+ assert ijson('Workspaces')['current']=='general'
+ monitor=subprocess.Popen(['gdbus','monitor','--session','--dest','org.jarvis.Daemon1'],stdout=subprocess.PIPE,text=True);time.sleep(.2)
+ assert icall('Workspace','prepare:dev').returncode==0
+ wait_for(lambda: ijson('Status')['workspace']['current']=='dev','switched to DEV')
+ assert ijson('Status')['workspace']['previous']=='general'
+ time.sleep(.5);monitor.terminate();signals=monitor.communicate(timeout=3)[0]
+ assert 'EventPosted' in signals and 'workspace' in signals,signals
+ # The KWin script: loaded with the profile, reporting back (KWin only), then unloaded.
+ wait_for(lambda: 'jarvis-workspace' in kwin.scripts,'workspace script loaded in KWin')
+ script=kwin.scripts['jarvis-workspace']
+ data=json.loads(script.split('var data = ',1)[1].split(';\n',1)[0])
+ assert data['desktop']==4 and data['apps']==['jarvis.test.app','jarvis.test.app'] and data['mode']=='switch',data
+ r=icall('WorkspaceReport',json.dumps({'token':data['token'],'mode':'switch','running':[]}))
+ assert 'AccessDenied' in r.stderr,'reports only from KWin'
+ kwin.conn.call_sync('org.jarvis.Daemon1','/org/jarvis/Integration1','org.jarvis.Integration1','WorkspaceReport',
+                     GLib.Variant('(s)',(json.dumps({'token':data['token'],'mode':'switch','running':['org.kde.dolphin']}),)),None,0,3000,None)
+ wait_for(lambda: ('Launch','jarvis.test.app') in desk.opened,'the missing application started by the window')
+ wait_for(lambda: ('OpenPath',str(scratch)) in desk.opened,'prepare opened the profile path')
+ wait_for(lambda: 'jarvis-workspace' not in kwin.scripts,'workspace script unloaded')
+ kwin.conn.call_sync('org.jarvis.Daemon1','/org/jarvis/Integration1','org.jarvis.Integration1','WorkspaceReport',
+                     GLib.Variant('(s)',(json.dumps({'token':data['token'],'mode':'switch','running':[]}),)),None,0,3000,None)
+ time.sleep(.3);assert desk.opened.count(('Launch','jarvis.test.app'))==1,'a stale report is ignored'
+ assert icall('Workspace','previous').returncode==0
+ wait_for(lambda: ijson('Status')['workspace']['current']=='general','back to the previous workspace')
+ assert 'InvalidArgs' in icall('Workspace','nonsense').stderr
+ # Chat and voice commands share the parser.
+ desk.opened.clear()
+ out=ask('открой папку загрузок')
+ assert 'Downloads' in out or 'Загрузки' in out or 'downloads' in out.lower(),out
+ wait_for(lambda: any(m=='OpenPath' for m,_ in desk.opened),'the chat opened the folder')
+ out=ask('открой Jarvis Test Tool')
+ wait_for(lambda: ('Launch','jarvis.test.app') in desk.opened,'the chat opened an application')
+ out=ask('покажи нагрузку процессора');assert 'CPU' in out,out
+ launches=sum(1 for m,_ in desk.opened if m=='Launch')
+ ask('открой окно в мир');time.sleep(.3)
+ assert sum(1 for m,_ in desk.opened if m=='Launch')==launches,'not an application: it stays a question'
+ # KRunner: workspaces, folders, figures; only known projects.
+ out=icall('Match','переключись в study',**runner).stdout;assert "'ws:study'" in out,out
+ out=icall('Match','открой папку загрузок',**runner).stdout;assert "'dir:downloads'" in out,out
+ out=icall('Match','покажи нагрузку gpu',**runner).stdout;assert "'metric:gpu'" in out and ', 50,' in out,out
+ out=icall('Match','открой jarvis test tool',**runner).stdout;assert "'app:jarvis.test.app'" in out,out
+ desk.opened.clear()
+ icall('Run','proj:/etc','',**runner);icall('Run','dir:downloads','',**runner)
+ wait_for(lambda: any(m=='OpenPath' for m,_ in desk.opened),'KRunner opened the folder')
+ assert ('OpenPath','/etc') not in desk.opened,'an unknown project path is refused'
+ icall('Run','ws:work','',**runner)
+ wait_for(lambda: ijson('Status')['workspace']['current']=='work','KRunner switched the workspace')
+ # Voice state from the window only; heartbeats of the shell's parts.
+ assert 'AccessDenied' in icall('ReportVoice','true','false','piper').stderr
+ desk.conn.call_sync('org.jarvis.Daemon1','/org/jarvis/Integration1','org.jarvis.Integration1','ReportVoice',
+                     GLib.Variant('(bbs)',(True,False,'piper')),None,0,3000,None)
+ wait_for(lambda: ijson('Status')['voice'].get('listening') is True,'voice state shown')
+ icall('ComponentAlive','dock');icall('ComponentAlive','evil')
+ comps=ijson('Status')['components'];assert 'dock' in comps and 'evil' not in comps,comps
+ assert ijson('Events')['events'],'events kept'
+ st=ijson('Status');assert st['desktop']['mode']=='standard' and st['activity']['requests']>0 and 'model' in st,st
+ (scratch/'config/jarvis/workspaces.json').unlink()
  # A second daemon exits with status 3 (jarvis.service does not restart it); the first keeps serving.
  assert subprocess.run([str(build/'jarvisd')],env=env,timeout=10,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==3
  assert call('Version')
@@ -448,7 +518,7 @@ try:
     gui.terminate();gui.wait(timeout=5)
    log.seek(0);ui_log=log.read()
    assert not any(error in ui_log for error in ('failed to load','ReferenceError','TypeError','Binding loop','Cannot assign','is not defined','Unable to assign')),ui_log
- print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, awareness, driving, desktop integration, KRunner, service lifetime, GUI ru/en')
+ print('PASS: D-Bus Teach/Graph/Ask, reply language, dialogue learning, corrections, notes, reminders, tasks, notifications, calculators, attachments, actions, activity, awareness, driving, desktop integration, KRunner, desktop shell (telemetry, workspaces, commands, voice, heartbeats), service lifetime, GUI ru/en')
 finally:
  proc.terminate();proc.wait(timeout=3)
  shutil.rmtree(scratch)

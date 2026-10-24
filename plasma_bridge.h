@@ -51,8 +51,9 @@ public:
 
     // Widget count and diagnostics.
     Q_INVOKABLE void refresh();
-    Q_INVOKABLE void addWidget();
-    Q_INVOKABLE void removeWidgets();
+    // A Jarvis widget id (org.jarvis.hud, .system, …); removeWidgets("") removes every Jarvis widget.
+    Q_INVOKABLE void addWidget(const QString &type = QStringLiteral("org.jarvis.hud"));
+    Q_INVOKABLE void removeWidgets(const QString &type = QStringLiteral("org.jarvis.hud"));
     Q_INVOKABLE void copyReport() const;
 
     // For the terminal: run diagnostics / the restore and print the result.

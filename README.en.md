@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.19.1
+# Jarvis for Kubuntu · 0.19.2
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.19.1_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.19.2_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -145,7 +145,7 @@ Privileges: the session bus belongs to one user, but any of the user's processes
 
 **Diagnostics** — on the Desktop tab (or `jarvis --diagnose` in a terminal): the service's answer and version, the `jarvis.service` and `jarvis-tray.service` units (through systemd's D-Bus API: memory, CPU, restarts, restart limit, watchdog), the Plasma session, the widget and the KRunner plugin. "Copy report" for bug reports.
 
-**Restore the standard desktop.** The button (after you confirm) removes every Jarvis widget from desktops and panels and turns the integration off. Panels, other widgets, the wallpaper and KDE settings are not touched: the Plasma scripts Jarvis uses select only `org.jarvis.hud` widgets (tests check this). If the Jarvis window does not start, `jarvis --restore-desktop` does the same from a terminal. If the service does not start, KDE works as usual: the widget says "Jarvis is not running" and KRunner simply does not offer Jarvis. To stop the window starting at login: `systemctl --user disable --now jarvis-tray.service`.
+**Restore the standard desktop.** The button (after you confirm) puts Plasma's layout back from the backup made before JARVIS DESKTOP (below), or — without a backup — removes every Jarvis widget and panel. The wallpaper and KDE settings are not touched: the Plasma scripts Jarvis uses select only Jarvis widgets (tests check this). The Plasma integration has its own switch. If the Jarvis window does not start, `jarvis --restore-desktop` does the same from a terminal. If the service does not start, KDE works as usual: the widget says "Jarvis is not running" and KRunner simply does not offer Jarvis. To stop the window starting at login: `systemctl --user disable --now jarvis-tray.service`.
 
 ### Wayland limitations
 
@@ -157,6 +157,34 @@ Privileges: the session bus belongs to one user, but any of the user's processes
 - Window screenshots use KWin's restricted ScreenShot2 interface, granted only to the installed Jarvis (`X-KDE-DBUS-Restricted-Interfaces`); a build run from the source tree gets the Screenshot portal with its dialog.
 - Jarvis can add or remove its widget only while widgets are unlocked (and no KIOSK restriction applies); otherwise Plasma refuses and the widget is added by hand.
 - Kubuntu 24.04 (Plasma 5.27): the service, KRunner, diagnostics and the restore work; the widget needs Plasma 6 (with `org.kde.plasma.workspace.dbus`, Plasma 6.1+).
+
+## JARVIS DESKTOP — your Plasma desktop in the Jarvis look
+
+Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWin and plasmashell stay and every Linux application works as before; Jarvis adds its widgets and a panel through Plasma 6's own mechanisms (plasmoids, panels, Plasma scripting, KWin, D-Bus).
+
+**What appears:**
+
+- **The Jarvis core on the desktop** — the window's own core (the 0.18 `hud/` files installed as the QML module `org.jarvis.visual`; no second implementation). Large on an empty desktop, a background element when windows are open, still under a maximized or fullscreen window; real events (an answer, a notification, a workspace switch) make it pulse. Idle it draws 6/12/24 frames a second for Low/Balanced/Cinematic, active the full rate.
+- **Jarvis Dock** — a Plasma panel with a dock widget on Plasma's real task model (`TaskManager.TasksModel`): launching and switching windows, grouping, pinned favourites (from the right-click menu), window counts, the active one lit, a light arc under running applications, a pulse at launch, an amber pulse for attention, the Jarvis button (click: overlay, right click: the window), the launcher, the GENERAL/STUDY/WORK/DEV profiles and the KDE desktops. Beside it Plasma's own system tray and clock (volume, network and notifications are their own applets). Auto-hide, position and size are the panel's.
+- **Holographic widgets** (each in Add Widgets…): System (CPU and every core, clocks, RAM, every GPU — load, VRAM, temperature, clock; a sleeping NVIDIA card is not woken; sensors and fans), Network (speed, history, connection, VPN through NetworkManager), Power (charge, time left only with a sound estimate, the power profile and its switch), Media (MPRIS: cover, controls, volume and the PipeWire output device), Status (the service, the model, the current task, microphone and voice, awareness, workspace, the last events). Each has a compact panel view, an expanded desktop view, its own settings, effects that can be switched off and an honest "—" without data. All data comes from one cache in `jarvisd` (`Telemetry`); no process per widget.
+
+**Turn it on:** Control center → Desktop → JARVIS DESKTOP: Check compatibility (Plasma 6, widgets and module installed, widgets unlocked, the service answers) → review the plan and the theme preview → Turn on JARVIS DESKTOP… → confirm. The order: a backup of Plasma's layout (`~/.local/share/jarvis/desktop-backup/…`: `plasma-org.kde.plasma.desktop-appletsrc`, `plasmashellrc` and the `layout.js` Plasma dumps itself) → the core, widgets and dock are added → a check that everything is there and that the dock and the core really started (they report to `jarvisd`) → only then the standard panels go (optional: "Replace the standard panels with the dock"). Any failure takes the additions away at once; the standard panels are untouched. From a terminal: `jarvis --desktop-mode jarvis`.
+
+**Back to standard KDE:** "Back to standard KDE…" or `jarvis --restore-desktop` — plasmashell stops, the layout files come back from the first backup, plasmashell starts again: the desktop exactly as before JARVIS DESKTOP. The current layout is saved aside first (`before-restore-…`). If Jarvis crashes or is stopped, KDE keeps working: the dock stays a working task bar (the task model is Plasma's), the core and widgets say "not running".
+
+**Themes:** Classic JARVIS (the 0.18 blue HUD), Mark VII (amber and red, two extra rings), Minimal (calm colours, low quality) — shared `JarvisTheme` colour tokens for the window and the desktop; your own primary and secondary colour, glow, transparency, animation speed, density, quality (Low/Balanced/Cinematic), core size and place, dock position and size.
+
+**Workspaces** GENERAL, STUDY, WORK, DEV: each has a KDE desktop, applications, files to "prepare", widgets and the awareness categories that matter (`~/.config/jarvis/workspaces.json`, edited in the Control center). Switch in the dock, in KRunner ("switch to dev"), by voice or chat ("Jarvis, prepare the desktop for programming"). Jarvis loads a one-shot KWin script that moves the profile's windows to its desktop, places them as saved ("Save the window layout") and switches the desktop; the Jarvis window starts the missing applications (outside the service's sandbox). "Previous workspace" goes back.
+
+**Intelligent workspaces:** 0.18's awareness weighs the profile: its categories count more (DEV — a recurring build error → analysis in the overlay; STUDY — a driving-test question → translation and the rule; WORK — KiCad → an offer to open the component calculators), the others less. No new observation: only the context 0.18 was allowed.
+
+**Launcher:** the dock's button opens KRunner's search (the Milou model — the same runners as KRunner: applications, files, settings, the calculator) in the Jarvis look. Jarvis's KRunner runner understands "open KiCad", "switch to study", "find the latest ESP32 project" (projects in your home folder: PlatformIO/ESP-IDF, CMake, KiCad, Cargo, npm, Python, Git — found in the background), "show GPU load", "open the downloads folder", "open the sound settings", "turn on power saver", "jarvis <question>". Everything local works offline.
+
+**Safety:** the widgets are QML on Plasma's modules and `org.jarvis.visual` only (no compiled Jarvis code in plasmashell); the Plasma scripts touch only Jarvis widgets and panels (tests check it); the standard panels go only after the check; only installed `.desktop` applications start, only the user's files open, only listed settings pages; workspace reports are accepted from KWin only, the voice state from the Jarvis window only; actions are rate limited.
+
+**D-Bus `org.jarvis.Integration1` (new):** `Telemetry(s)` (cpu, memory, gpu, thermal, net, power, media), `MediaControl(s)`, `SetPowerProfile(s)`, `Workspace(s)` (`dev`, `prepare:dev`, `previous`), `Workspaces()`, `SaveWorkspaceLayout()`, `Events()`, `ComponentAlive(s)`, signal `EventPosted(s)`; `Status()` also carries the model, the voice, counters, the workspace, the desktop settings and the parts' heartbeats.
+
+**Limits:** every widget needs Plasma 6 (not Kubuntu 24.04's Plasma 5.27); "covered" means maximized or fullscreen windows; one dock, on the first screen (other monitors keep their panels unless replaced); the Plasma panel under the dock keeps a translucent background (Plasma has no background-less panels); locked widgets or KIOSK forbid changes — Jarvis then changes nothing; window placement works through KWin only, and applications that remember their own position may override it.
 
 ## Language
 
@@ -288,5 +316,7 @@ JARVIS_TEST_BUILD="$PWD/build" dbus-run-session --config-file=tests/test-bus.con
 ```
 
 Source strings are English; the Russian translation lives in `i18n/jarvis_ru.ts`. After changing strings run `/usr/lib/qt6/bin/lupdate -locations none -no-obsolete *.cpp *.h *.qml -ts i18n/jarvis_ru.ts` and translate the new messages (the `translations` test checks completeness). To run a development daemon next to an installed one: `JARVIS_DBUS_SERVICE=org.jarvis.DaemonDev ./build/jarvisd`.
+
+An isolated Plasma session for trying JARVIS DESKTOP without risk to the real desktop (virtual KWin, its own plasmashell, bus and directories): `QML_IMPORT_PATH=$PWD/build/qml tests/plasma-session.sh /tmp/jp bash -c "./build/jarvisd & sleep 1; ./build/jarvis --desktop-mode jarvis; spectacle -b -n -f -o /tmp/jp/shot.png"` (copy the widgets to `/tmp/jp/data/plasma/plasmoids/` first).
 
 The desktop widget without installing the package: `kpackagetool6 -t Plasma/Applet -i plasmoid` (into `~/.local/share/plasma/plasmoids`; remove with `kpackagetool6 -t Plasma/Applet -r org.jarvis.hud`) or in a window of its own: `plasmawindowed org.jarvis.hud`. Pictures of every widget state without Plasma: `QT_QPA_PLATFORM=offscreen ./build/plasmoid_check plasmoid/contents/ui /tmp/hud` (the `plasmoid` test does the same without pictures and fails on any QML warning; it needs `qml6-module-qtquick-shapes`). The widget's Russian translation is `plasmoid/po/ru.po` (the `desktop_files` test requires every `i18n()` string).

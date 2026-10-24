@@ -11,6 +11,10 @@
         <source>Unknown option.</source>
         <translation>Неизвестный параметр.</translation>
     </message>
+    <message>
+        <source>This value is not allowed.</source>
+        <translation>Такое значение недопустимо.</translation>
+    </message>
 </context>
 <context>
     <name>AwarenessIndicator</name>
@@ -331,6 +335,10 @@
         <translation>Попробуйте в чате: «что ты обо мне знаешь», «о чём мы говорили», «что я делаю», «что я делал сегодня», «забудь …».</translation>
     </message>
     <message>
+        <source>Puts Plasma&apos;s layout back exactly as it was before JARVIS DESKTOP (from the backup), or — without a backup — removes every Jarvis widget and panel. Your wallpaper, themes and KDE settings are not touched. If Jarvis itself does not start, run: jarvis --restore-desktop</source>
+        <translation>Возвращает раскладку Plasma точно такой, какой она была до JARVIS DESKTOP (из резервной копии), а без копии — убирает все виджеты и панели Jarvis. Обои, темы и настройки KDE не затрагиваются. Если сам Jarvis не запускается, выполните: jarvis --restore-desktop</translation>
+    </message>
+    <message>
         <source>Add the Jarvis widget to your desktop?</source>
         <translation>Добавить виджет Jarvis на рабочий стол?</translation>
     </message>
@@ -345,14 +353,6 @@
     <message>
         <source>Every &quot;Jarvis HUD&quot; widget leaves your desktops and panels. Other widgets are not touched.</source>
         <translation>Все виджеты «Jarvis HUD» будут убраны с рабочих столов и панелей. Другие виджеты не затрагиваются.</translation>
-    </message>
-    <message>
-        <source>Restore the standard desktop?</source>
-        <translation>Восстановить стандартный рабочий стол?</translation>
-    </message>
-    <message>
-        <source>Jarvis widgets are removed and the Plasma integration is turned off (KRunner, widget actions, active-application sharing). Jarvis itself, its memory and the tray keep working; you can turn the integration on again here.</source>
-        <translation>Виджеты Jarvis будут убраны, интеграция с Plasma выключена (KRunner, действия виджета, передача активного приложения). Сам Jarvis, его память и значок в трее продолжат работать; интеграцию можно снова включить здесь.</translation>
     </message>
     <message>
         <source>Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay.</source>
@@ -847,6 +847,246 @@
         <translation>Как Jarvis живёт в KDE Plasma: фоновая служба, виджет на рабочем столе, KRunner (Alt+Пробел → «jarvis …») и действия, которые могут запускать другие компоненты рабочего стола. Без вашего подтверждения в Plasma ничего не меняется, а «Восстановить стандартный рабочий стол» убирает всё, что добавил Jarvis.</translation>
     </message>
     <message>
+        <source>JARVIS DESKTOP is on</source>
+        <translation>JARVIS DESKTOP включён</translation>
+    </message>
+    <message>
+        <source>STANDARD KDE</source>
+        <translation>СТАНДАРТНЫЙ KDE</translation>
+    </message>
+    <message>
+        <source>Your Plasma desktop in the Jarvis look: the Jarvis core on the desktop, the Jarvis Dock with your applications, holographic widgets and workspaces. KWin and plasmashell stay, every Linux application works as before. Jarvis checks Plasma, backs up the layout, shows what will change and changes it only after you confirm; the standard panels go only once the dock is verified to work, and a restore brings everything back.</source>
+        <translation>Ваш рабочий стол Plasma в стиле Jarvis: ядро Jarvis на рабочем столе, Jarvis Dock с вашими программами, голографические виджеты и рабочие пространства. KWin и plasmashell остаются, все программы Linux работают как прежде. Jarvis проверяет Plasma, делает резервную копию раскладки, показывает, что изменится, и меняет только после вашего подтверждения; стандартные панели убираются лишь после проверки, что док работает, а восстановление возвращает всё обратно.</translation>
+    </message>
+    <message>
+        <source>Check compatibility</source>
+        <translation>Проверить совместимость</translation>
+    </message>
+    <message>
+        <source>Turn on JARVIS DESKTOP…</source>
+        <translation>Включить JARVIS DESKTOP…</translation>
+    </message>
+    <message>
+        <source>Back to standard KDE…</source>
+        <translation>Вернуть стандартный KDE…</translation>
+    </message>
+    <message>
+        <source>What will change:</source>
+        <translation>Что изменится:</translation>
+    </message>
+    <message>
+        <source>Restore point: %1 · from a terminal: jarvis --restore-desktop</source>
+        <translation>Точка восстановления: %1 · из терминала: jarvis --restore-desktop</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Внешний вид</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>Тема</translation>
+    </message>
+    <message>
+        <source>Classic JARVIS — blue HUD, restrained</source>
+        <translation>Классический JARVIS — голубой HUD, сдержанно</translation>
+    </message>
+    <message>
+        <source>Mark VII — amber, more rings, expressive</source>
+        <translation>Mark VII — янтарь, больше колец, выразительно</translation>
+    </message>
+    <message>
+        <source>Minimal — calm, few effects</source>
+        <translation>Минимальный — спокойно, мало эффектов</translation>
+    </message>
+    <message>
+        <source>Primary and secondary colour</source>
+        <translation>Основной и вторичный цвет</translation>
+    </message>
+    <message>
+        <source>Theme colours</source>
+        <translation>Цвета темы</translation>
+    </message>
+    <message>
+        <source>Glow</source>
+        <translation>Свечение</translation>
+    </message>
+    <message>
+        <source>Panel transparency</source>
+        <translation>Прозрачность панелей</translation>
+    </message>
+    <message>
+        <source>Animation speed</source>
+        <translation>Скорость анимаций</translation>
+    </message>
+    <message>
+        <source>Density</source>
+        <translation>Плотность</translation>
+    </message>
+    <message>
+        <source>Compact</source>
+        <translation>Компактно</translation>
+    </message>
+    <message>
+        <source>Comfortable</source>
+        <translation>Просторно</translation>
+    </message>
+    <message>
+        <source>Desktop quality</source>
+        <translation>Качество рабочего стола</translation>
+    </message>
+    <message>
+        <source>Low — fewest effects, least GPU</source>
+        <translation>Лёгкое — меньше всего эффектов и нагрузки на ГП</translation>
+    </message>
+    <message>
+        <source>Balanced</source>
+        <translation>Баланс</translation>
+    </message>
+    <message>
+        <source>Cinematic — full detail</source>
+        <translation>Кино — полная детализация</translation>
+    </message>
+    <message>
+        <source>Core size and place</source>
+        <translation>Размер и место ядра</translation>
+    </message>
+    <message>
+        <source>Small</source>
+        <translation>Маленькое</translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation>Среднее</translation>
+    </message>
+    <message>
+        <source>Large</source>
+        <translation>Большое</translation>
+    </message>
+    <message>
+        <source>Centre</source>
+        <translation>В центре</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Слева</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Справа</translation>
+    </message>
+    <message>
+        <source>Dock</source>
+        <translation>Док</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>Снизу</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>Сверху</translation>
+    </message>
+    <message>
+        <source>Hide the dock automatically</source>
+        <translation>Автоматически скрывать док</translation>
+    </message>
+    <message>
+        <source>It slides in when the pointer touches the screen edge.</source>
+        <translation>Он появляется, когда указатель касается края экрана.</translation>
+    </message>
+    <message>
+        <source>Replace the standard panels with the dock</source>
+        <translation>Заменить стандартные панели доком</translation>
+    </message>
+    <message>
+        <source>Off: the Jarvis Dock is added and your panels stay. On: they are removed after the dock is verified to work, and come back with a restore.</source>
+        <translation>Выключено: Jarvis Dock добавляется, ваши панели остаются. Включено: они убираются после проверки работы дока и возвращаются при восстановлении.</translation>
+    </message>
+    <message>
+        <source>Effects in the desktop widgets</source>
+        <translation>Эффекты в виджетах рабочего стола</translation>
+    </message>
+    <message>
+        <source>Off: the core and the widgets stand still and only update their numbers.</source>
+        <translation>Выключено: ядро и виджеты неподвижны и только обновляют числа.</translation>
+    </message>
+    <message>
+        <source>Workspaces</source>
+        <translation>Рабочие пространства</translation>
+    </message>
+    <message>
+        <source>Each profile has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens and the widgets it shows. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking: &quot;Jarvis, prepare the desktop for programming&quot;. Windows are moved with KWin&apos;s own scripting; nothing else on the desktop is touched.</source>
+        <translation>У каждого профиля свой рабочий стол KDE, программы, которые он запускает, файлы, которые открывает «Подготовить», и виджеты, которые он показывает. Переключайте здесь, в доке, в KRunner («переключись в dev») или голосом: «Джарвис, подготовь рабочий стол для программирования». Окна перемещаются штатными скриптами KWin; больше ничего на рабочем столе не трогается.</translation>
+    </message>
+    <message>
+        <source>desktop</source>
+        <translation>рабочий стол</translation>
+    </message>
+    <message>
+        <source>Switch</source>
+        <translation>Переключить</translation>
+    </message>
+    <message>
+        <source>Prepare</source>
+        <translation>Подготовить</translation>
+    </message>
+    <message>
+        <source>Applications (desktop ids, a|b = the first installed)</source>
+        <translation>Программы (id .desktop; a|b — первая установленная)</translation>
+    </message>
+    <message>
+        <source>Files, folders or projects that &quot;prepare&quot; opens</source>
+        <translation>Файлы, папки или проекты, которые открывает «Подготовить»</translation>
+    </message>
+    <message>
+        <source>System</source>
+        <translation>Система</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Сеть</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Питание</translation>
+    </message>
+    <message>
+        <source>Media</source>
+        <translation>Медиа</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Save the window layout of this workspace</source>
+        <translation>Сохранить расположение окон этого пространства</translation>
+    </message>
+    <message>
+        <source>Create the workspaces&apos; desktops…</source>
+        <translation>Создать рабочие столы для пространств…</translation>
+    </message>
+    <message>
+        <source>Widgets</source>
+        <translation>Виджеты</translation>
+    </message>
+    <message>
+        <source>Add a widget to the desktop, or remove it. Move and resize them in Plasma&apos;s edit mode; Plasma keeps where they are.</source>
+        <translation>Добавьте виджет на рабочий стол или уберите его. Перемещайте и меняйте размер в режиме редактирования Plasma; Plasma запоминает их расположение.</translation>
+    </message>
+    <message>
+        <source>Core</source>
+        <translation>Ядро</translation>
+    </message>
+    <message>
+        <source>Edit the layout in Plasma</source>
+        <translation>Редактировать раскладку в Plasma</translation>
+    </message>
+    <message>
+        <source>Done editing</source>
+        <translation>Закончить редактирование</translation>
+    </message>
+    <message>
         <source>Service</source>
         <translation>Служба</translation>
     </message>
@@ -919,6 +1159,42 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Jarvis will take a screenshot of the window you work in when you ask (and, if you set an interval, now and then in the background) and recognise its text on this computer. &quot;◉ SCREEN&quot; is shown every time. Screenshots are not saved, password and private windows are skipped, and nothing goes to Claude unless you ask a question. You can turn this off or pause it at any moment.</source>
         <translation>Jarvis будет делать снимок окна, в котором вы работаете, когда вы попросите (и, если задан интервал, изредка в фоне), и распознавать текст на этом компьютере. Каждый раз видна метка «◉ ЭКРАН». Снимки не сохраняются, окна паролей и приватные окна пропускаются, в Claude ничего не уходит, пока вы не зададите вопрос. Выключить или поставить на паузу можно в любой момент.</translation>
+    </message>
+    <message>
+        <source>Desktop colour</source>
+        <translation>Цвет рабочего стола</translation>
+    </message>
+    <message>
+        <source>Turn on JARVIS DESKTOP?</source>
+        <translation>Включить JARVIS DESKTOP?</translation>
+    </message>
+    <message>
+        <source>Jarvis will make these changes to your Plasma desktop:</source>
+        <translation>Jarvis внесёт в рабочий стол Plasma такие изменения:</translation>
+    </message>
+    <message>
+        <source>If anything does not work, the changes are undone at once. You can always go back with &quot;Back to standard KDE&quot; or jarvis --restore-desktop.</source>
+        <translation>Если что-то не заработает, изменения сразу отменяются. Вернуться можно в любой момент: «Вернуть стандартный KDE» или jarvis --restore-desktop.</translation>
+    </message>
+    <message>
+        <source>Back to the standard KDE desktop?</source>
+        <translation>Вернуть стандартный рабочий стол KDE?</translation>
+    </message>
+    <message>
+        <source>plasmashell restarts for a moment and Plasma&apos;s layout comes back from the backup made before JARVIS DESKTOP (%1). Changes you made to panels and widgets since then are saved aside, not kept. Your applications keep running.</source>
+        <translation>plasmashell ненадолго перезапустится, и раскладка Plasma вернётся из резервной копии, сделанной до JARVIS DESKTOP (%1). Изменения панелей и виджетов, сделанные с тех пор, сохраняются отдельно, но не остаются. Ваши программы продолжают работать.</translation>
+    </message>
+    <message>
+        <source>There is no backup: every Jarvis widget and panel is removed; nothing else changes.</source>
+        <translation>Резервной копии нет: все виджеты и панели Jarvis убираются, больше ничего не меняется.</translation>
+    </message>
+    <message>
+        <source>Create virtual desktops for the workspaces?</source>
+        <translation>Создать рабочие столы для пространств?</translation>
+    </message>
+    <message>
+        <source>KWin gets as many virtual desktops as the workspaces need (named GENERAL, STUDY, WORK, DEV). Existing desktops are not renamed or removed.</source>
+        <translation>KWin получит столько рабочих столов, сколько нужно пространствам (с именами GENERAL, STUDY, WORK, DEV). Существующие рабочие столы не переименовываются и не удаляются.</translation>
     </message>
     <message>
         <source>Forget everything about you?</source>
@@ -1217,10 +1493,6 @@ A KDE menu entry and a system tray icon</source>
         <translation>Восстановить стандартный рабочий стол</translation>
     </message>
     <message>
-        <source>Removes Jarvis widgets from desktops and panels and turns the Plasma integration off. Your panels, other widgets, wallpaper and KDE settings stay as they are. If Jarvis itself does not start, run: jarvis --restore-desktop</source>
-        <translation>Убирает виджеты Jarvis с рабочих столов и панелей и выключает интеграцию с Plasma. Ваши панели, другие виджеты, обои и настройки KDE остаются как есть. Если сам Jarvis не запускается, выполните: jarvis --restore-desktop</translation>
-    </message>
-    <message>
         <source>Restore the standard desktop…</source>
         <translation>Восстановить стандартный рабочий стол…</translation>
     </message>
@@ -1398,6 +1670,13 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Choose a skill JSON file up to 160 KB.</source>
         <translation>Выберите JSON-файл навыка до 160 КБ.</translation>
+    </message>
+</context>
+<context>
+    <name>DesktopShell</name>
+    <message>
+        <source>Unknown option.</source>
+        <translation>Неизвестный параметр.</translation>
     </message>
 </context>
 <context>
@@ -2749,6 +3028,10 @@ A KDE menu entry and a system tray icon</source>
 </context>
 <context>
     <name>PlasmaBridge</name>
+    <message>
+        <source>Unknown widget.</source>
+        <translation>Неизвестный виджет.</translation>
+    </message>
     <message>
         <source>The Jarvis widget is not installed (package org.jarvis.hud). Install the Jarvis package, then try again.</source>
         <translation>Виджет Jarvis не установлен (пакет org.jarvis.hud). Установите пакет Jarvis и попробуйте снова.</translation>

@@ -948,6 +948,337 @@ Dialog {
                     Label { text: qsTr("Desktop integration"); color: Theme.text; font.pixelSize: 22; font.bold: true }
                     Label { text: qsTr("How Jarvis lives in KDE Plasma: the background service, a widget on the desktop, KRunner (Alt+Space → \"jarvis …\") and actions other desktop components may start. Nothing in Plasma changes without your confirmation, and \"Restore the standard desktop\" takes every Jarvis addition away."); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
 
+                    // ---- JARVIS DESKTOP (0.19.2) ----
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: shellColumn.implicitHeight + 28
+                        radius: 14
+                        color: Theme.bg
+                        border.color: shell.mode === "jarvis" ? Theme.accent : Theme.border
+                        ColumnLayout {
+                            id: shellColumn
+                            anchors.fill: parent
+                            anchors.margins: 14
+                            spacing: 10
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label { text: "JARVIS DESKTOP"; color: Theme.text; font.pixelSize: 19; font.bold: true; font.letterSpacing: 2 }
+                                Item { Layout.fillWidth: true }
+                                Label {
+                                    objectName: "desktopModeLabel"
+                                    text: shell.mode === "jarvis" ? qsTr("JARVIS DESKTOP is on") : qsTr("STANDARD KDE")
+                                    color: shell.mode === "jarvis" ? Theme.accent : Theme.textDim
+                                    font.bold: true
+                                }
+                            }
+                            Label {
+                                Layout.fillWidth: true
+                                wrapMode: Text.Wrap
+                                color: Theme.textDim
+                                text: qsTr("Your Plasma desktop in the Jarvis look: the Jarvis core on the desktop, the Jarvis Dock with your applications, holographic widgets and workspaces. KWin and plasmashell stay, every Linux application works as before. Jarvis checks Plasma, backs up the layout, shows what will change and changes it only after you confirm; the standard panels go only once the dock is verified to work, and a restore brings everything back.")
+                            }
+                            // The look, as the desktop will show it: the real core with the chosen theme.
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 190
+                                radius: 10
+                                color: JarvisTheme.void_
+                                border.color: JarvisTheme.line
+                                clip: true
+                                HudController {
+                                    id: previewCtl
+                                    running: center.visible && tabs.currentIndex === 6
+                                    quality: center.settings.desktop.quality || "balanced"
+                                    hudState: "idle"
+                                    maxRate: 24
+                                }
+                                QtObject {
+                                    id: previewVs
+                                    readonly property string state: "idle"
+                                    readonly property bool demo: false
+                                    readonly property var routes: []
+                                    readonly property var counters: ({ requests: 0, errors: 0 })
+                                    readonly property bool streaming: false
+                                    readonly property real streamRate: 0
+                                    readonly property real lastLatency: 0
+                                }
+                                JarvisCore {
+                                    anchors.centerIn: parent
+                                    anchors.verticalCenterOffset: -14
+                                    width: 150; height: 150
+                                    ctl: previewCtl
+                                    vs: previewVs
+                                    compact: true
+                                }
+                                // The dock as it will look: glass, a holographic edge, the workspaces.
+                                Rectangle {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 8
+                                    width: dockRow.implicitWidth + 20
+                                    height: Math.max(26, (center.settings.desktop.dockSize || 44) * 0.6)
+                                    radius: 8
+                                    color: JarvisTheme.glass
+                                    border.color: JarvisTheme.line
+                                    Row {
+                                        id: dockRow
+                                        anchors.centerIn: parent
+                                        spacing: 6
+                                        Repeater {
+                                            model: ["GENERAL", "STUDY", "WORK", "DEV"]
+                                            Rectangle {
+                                                required property string modelData
+                                                required property int index
+                                                width: chipText.implicitWidth + 12; height: 18; radius: 5
+                                                color: "transparent"
+                                                border.color: index === 0 ? JarvisTheme.amber : JarvisTheme.line
+                                                Text { id: chipText; anchors.centerIn: parent; text: modelData; color: JarvisTheme.text; font.pixelSize: 9 }
+                                            }
+                                        }
+                                        Repeater {
+                                            model: 4
+                                            Rectangle { width: 18; height: 18; radius: 9; color: Qt.rgba(JarvisTheme.cyan.r, JarvisTheme.cyan.g, JarvisTheme.cyan.b, 0.25); border.color: JarvisTheme.cyan }
+                                        }
+                                    }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                DarkButton {
+                                    objectName: "desktopCheckButton"
+                                    text: shell.busy && !shell.checked ? qsTr("Checking…") : qsTr("Check compatibility")
+                                    enabled: !shell.busy
+                                    onClicked: shell.check()
+                                }
+                                DarkButton {
+                                    objectName: "desktopApplyButton"
+                                    text: qsTr("Turn on JARVIS DESKTOP…")
+                                    primary: true
+                                    enabled: !shell.busy && shell.checked && shell.compatible && shell.mode !== "jarvis"
+                                    onClicked: applyConsent.open()
+                                }
+                                DarkButton {
+                                    objectName: "desktopRestoreButton"
+                                    text: qsTr("Back to standard KDE…")
+                                    enabled: !shell.busy && (shell.mode === "jarvis" || shell.hasBackup)
+                                    onClicked: shellRestoreConsent.open()
+                                }
+                            }
+                            Repeater {
+                                model: shell.checks
+                                RowLayout {
+                                    id: checkRow
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    Label { text: checkRow.modelData.ok ? "✓" : "✗"; color: checkRow.modelData.ok ? Theme.accent : Theme.danger; font.bold: true }
+                                    Label { text: checkRow.modelData.name + " — " + checkRow.modelData.text; color: Theme.text; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
+                                }
+                            }
+                            Label { visible: shell.plan.length > 0; text: qsTr("What will change:"); color: Theme.text; font.bold: true }
+                            Repeater {
+                                model: shell.plan
+                                Label { required property string modelData; text: "• " + modelData; color: Theme.textDim; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
+                            }
+                            Label { visible: shell.status.length > 0; text: shell.status; color: Theme.accent; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText }
+                            Label {
+                                visible: shell.hasBackup
+                                text: qsTr("Restore point: %1 · from a terminal: jarvis --restore-desktop").arg(shell.backupPath)
+                                color: Theme.textDim; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap; textFormat: Text.PlainText
+                            }
+                        }
+                    }
+
+                    Label { text: qsTr("Appearance"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    GridLayout {
+                        columns: 2
+                        columnSpacing: 16
+                        rowSpacing: 8
+                        Layout.fillWidth: true
+                        Label { text: qsTr("Theme"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "desktopThemeCombo"
+                            readonly property var values: ["classic", "mark7", "minimal"]
+                            model: [qsTr("Classic JARVIS — blue HUD, restrained"), qsTr("Mark VII — amber, more rings, expressive"), qsTr("Minimal — calm, few effects")]
+                            currentIndex: values.indexOf(center.settings.desktop.theme || "classic")
+                            onActivated: index => center.report(center.settings.setDesktop("theme", values[index]))
+                        }
+                        Label { text: qsTr("Primary and secondary colour"); color: Theme.text }
+                        RowLayout {
+                            Rectangle { width: 30; height: 30; radius: 6; color: JarvisTheme.primary; border.color: Theme.border
+                                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { colourDialog.key = "primary"; colourDialog.selectedColor = JarvisTheme.primary; colourDialog.open() } } }
+                            Rectangle { width: 30; height: 30; radius: 6; color: JarvisTheme.secondary; border.color: Theme.border
+                                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { colourDialog.key = "secondary"; colourDialog.selectedColor = JarvisTheme.secondary; colourDialog.open() } } }
+                            DarkButton { text: qsTr("Theme colours"); onClicked: { center.settings.setDesktop("primary", ""); center.report(center.settings.setDesktop("secondary", "")) } }
+                        }
+                        Label { text: qsTr("Glow"); color: Theme.text }
+                        Slider { from: 0; to: 1.5; stepSize: 0.05; value: center.settings.desktop.glow !== undefined ? center.settings.desktop.glow : 1; Layout.preferredWidth: 240; onMoved: center.settings.setDesktop("glow", value) }
+                        Label { text: qsTr("Panel transparency"); color: Theme.text }
+                        Slider { from: 0.95; to: 0.3; stepSize: 0.05; value: center.settings.desktop.opacity !== undefined ? center.settings.desktop.opacity : 0.72; Layout.preferredWidth: 240; onMoved: center.settings.setDesktop("opacity", value) }
+                        Label { text: qsTr("Animation speed"); color: Theme.text }
+                        Slider { from: 0.5; to: 1.5; stepSize: 0.05; value: center.settings.desktop.motion !== undefined ? center.settings.desktop.motion : 1; Layout.preferredWidth: 240; onMoved: center.settings.setDesktop("motion", value) }
+                        Label { text: qsTr("Density"); color: Theme.text }
+                        DarkCombo {
+                            readonly property var values: ["compact", "normal", "comfortable"]
+                            model: [qsTr("Compact"), qsTr("Normal"), qsTr("Comfortable")]
+                            currentIndex: values.indexOf(center.settings.desktop.density || "normal")
+                            onActivated: index => center.report(center.settings.setDesktop("density", values[index]))
+                        }
+                        Label { text: qsTr("Desktop quality"); color: Theme.text }
+                        DarkCombo {
+                            objectName: "desktopQualityCombo"
+                            readonly property var values: ["low", "balanced", "cinematic"]
+                            model: [qsTr("Low — fewest effects, least GPU"), qsTr("Balanced"), qsTr("Cinematic — full detail")]
+                            currentIndex: values.indexOf(center.settings.desktop.quality || "balanced")
+                            onActivated: index => center.report(center.settings.setDesktop("quality", values[index]))
+                        }
+                        Label { text: qsTr("Core size and place"); color: Theme.text }
+                        RowLayout {
+                            DarkCombo {
+                                Layout.preferredWidth: 120
+                                readonly property var values: ["small", "medium", "large"]
+                                model: [qsTr("Small"), qsTr("Medium"), qsTr("Large")]
+                                currentIndex: values.indexOf(center.settings.desktop.coreSize || "medium")
+                                onActivated: index => { center.report(center.settings.setDesktop("coreSize", values[index])); shell.update() }
+                            }
+                            DarkCombo {
+                                Layout.preferredWidth: 120
+                                readonly property var values: ["center", "left", "right"]
+                                model: [qsTr("Centre"), qsTr("Left"), qsTr("Right")]
+                                currentIndex: values.indexOf(center.settings.desktop.corePosition || "center")
+                                onActivated: index => { center.report(center.settings.setDesktop("corePosition", values[index])); shell.update() }
+                            }
+                        }
+                        Label { text: qsTr("Dock"); color: Theme.text }
+                        RowLayout {
+                            DarkCombo {
+                                Layout.preferredWidth: 120
+                                readonly property var values: ["bottom", "top", "left", "right"]
+                                model: [qsTr("Bottom"), qsTr("Top"), qsTr("Left"), qsTr("Right")]
+                                currentIndex: values.indexOf(center.settings.desktop.dockPosition || "bottom")
+                                onActivated: index => { center.report(center.settings.setDesktop("dockPosition", values[index])); shell.update() }
+                            }
+                            SpinBox {
+                                from: 32; to: 72
+                                value: center.settings.desktop.dockSize || 44
+                                onValueModified: { center.settings.setDesktop("dockSize", value); shell.update() }
+                            }
+                        }
+                    }
+                    OptionSwitch {
+                        text: qsTr("Hide the dock automatically")
+                        hint: qsTr("It slides in when the pointer touches the screen edge.")
+                        checked: !!center.settings.desktop.dockAutohide
+                        onToggled: { center.report(center.settings.setDesktop("dockAutohide", checked)); shell.update() }
+                    }
+                    OptionSwitch {
+                        text: qsTr("Replace the standard panels with the dock")
+                        hint: qsTr("Off: the Jarvis Dock is added and your panels stay. On: they are removed after the dock is verified to work, and come back with a restore.")
+                        checked: center.settings.desktop.replacePanels !== false
+                        onToggled: center.report(center.settings.setDesktop("replacePanels", checked))
+                    }
+                    OptionSwitch {
+                        text: qsTr("Effects in the desktop widgets")
+                        hint: qsTr("Off: the core and the widgets stand still and only update their numbers.")
+                        checked: center.settings.desktop.effects !== false
+                        onToggled: center.report(center.settings.setDesktop("effects", checked))
+                    }
+
+                    Label { text: qsTr("Workspaces"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label {
+                        Layout.fillWidth: true; wrapMode: Text.Wrap; color: Theme.textDim
+                        text: qsTr("Each profile has a KDE virtual desktop, the applications it starts, the files \"prepare\" opens and the widgets it shows. Switch here, in the dock, in KRunner (\"switch to dev\") or by asking: \"Jarvis, prepare the desktop for programming\". Windows are moved with KWin's own scripting; nothing else on the desktop is touched.")
+                    }
+                    Repeater {
+                        id: profileList
+                        model: shell.profiles
+                        Rectangle {
+                            id: profileCard
+                            required property var modelData
+                            Layout.fillWidth: true
+                            implicitHeight: profileColumn.implicitHeight + 20
+                            radius: 10
+                            color: Theme.bg
+                            border.color: Theme.border
+                            ColumnLayout {
+                                id: profileColumn
+                                anchors.fill: parent
+                                anchors.margins: 10
+                                spacing: 6
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Label { text: profileCard.modelData.label; color: Theme.text; font.bold: true; font.letterSpacing: 2 }
+                                    Label { text: qsTr("desktop"); color: Theme.textDim }
+                                    SpinBox {
+                                        from: 1; to: 20
+                                        value: profileCard.modelData.desktop
+                                        onValueModified: center.report(shell.setProfile(profileCard.modelData.id, "desktop", value))
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    DarkButton { text: qsTr("Switch"); onClicked: center.desktop.switchWorkspace(profileCard.modelData.id) }
+                                    DarkButton { text: qsTr("Prepare"); onClicked: center.desktop.switchWorkspace("prepare:" + profileCard.modelData.id) }
+                                }
+                                TextField {
+                                    Layout.fillWidth: true
+                                    text: (profileCard.modelData.apps || []).join(", ")
+                                    placeholderText: qsTr("Applications (desktop ids, a|b = the first installed)")
+                                    onEditingFinished: center.report(shell.setProfile(profileCard.modelData.id, "apps", text.split(",").map(x => x.trim()).filter(x => x.length > 0)))
+                                }
+                                TextField {
+                                    Layout.fillWidth: true
+                                    text: (profileCard.modelData.paths || []).join(", ")
+                                    placeholderText: qsTr("Files, folders or projects that \"prepare\" opens")
+                                    onEditingFinished: center.report(shell.setProfile(profileCard.modelData.id, "paths", text.split(",").map(x => x.trim()).filter(x => x.length > 0)))
+                                }
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: 10
+                                    Repeater {
+                                        model: [["org.jarvis.system", qsTr("System")], ["org.jarvis.network", qsTr("Network")], ["org.jarvis.power", qsTr("Power")],
+                                                ["org.jarvis.media", qsTr("Media")], ["org.jarvis.status", qsTr("Status")]]
+                                        CheckBox {
+                                            required property var modelData
+                                            text: modelData[1]
+                                            checked: (profileCard.modelData.widgets || []).indexOf(modelData[0]) >= 0
+                                            onToggled: {
+                                                let list = (profileCard.modelData.widgets || []).filter(w => w !== modelData[0])
+                                                if (checked) list.push(modelData[0])
+                                                center.report(shell.setProfile(profileCard.modelData.id, "widgets", list))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Save the window layout of this workspace"); onClicked: center.desktop.saveWorkspaceLayout() }
+                        DarkButton { text: qsTr("Create the workspaces' desktops…"); onClicked: desktopsConsent.open() }
+                    }
+
+                    Label { text: qsTr("Widgets"); color: Theme.text; font.pixelSize: 17; font.bold: true }
+                    Label {
+                        Layout.fillWidth: true; wrapMode: Text.Wrap; color: Theme.textDim
+                        text: qsTr("Add a widget to the desktop, or remove it. Move and resize them in Plasma's edit mode; Plasma keeps where they are.")
+                    }
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        Repeater {
+                            model: [["org.jarvis.hud", qsTr("Core")], ["org.jarvis.system", qsTr("System")], ["org.jarvis.network", qsTr("Network")],
+                                    ["org.jarvis.power", qsTr("Power")], ["org.jarvis.media", qsTr("Media")], ["org.jarvis.status", qsTr("Status")]]
+                            RowLayout {
+                                required property var modelData
+                                spacing: 2
+                                DarkButton { text: "+ " + modelData[1]; enabled: plasma.plasmaRunning && !plasma.busy; onClicked: plasma.addWidget(modelData[0]) }
+                                DarkButton { text: "−"; enabled: plasma.plasmaRunning && !plasma.busy; onClicked: plasma.removeWidgets(modelData[0]); ToolTip.visible: hovered; ToolTip.text: qsTr("Remove") }
+                            }
+                        }
+                    }
+                    RowLayout {
+                        DarkButton { text: qsTr("Edit the layout in Plasma"); onClicked: shell.setEditMode(true) }
+                        DarkButton { text: qsTr("Done editing"); onClicked: shell.setEditMode(false) }
+                    }
+
                     Label { text: qsTr("Service"); color: Theme.text; font.pixelSize: 17; font.bold: true }
                     OptionSwitch {
                         objectName: "autostartSwitch"
@@ -1051,8 +1382,8 @@ Dialog {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     Label { text: qsTr("Restore the standard desktop"); color: Theme.text; font.pixelSize: 17; font.bold: true }
-                    Label { text: qsTr("Removes Jarvis widgets from desktops and panels and turns the Plasma integration off. Your panels, other widgets, wallpaper and KDE settings stay as they are. If Jarvis itself does not start, run: jarvis --restore-desktop"); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                    DarkButton { objectName: "restoreDesktopButton"; text: qsTr("Restore the standard desktop…"); enabled: !plasma.busy; onClicked: restoreConsent.open() }
+                    Label { text: qsTr("Puts Plasma's layout back exactly as it was before JARVIS DESKTOP (from the backup), or — without a backup — removes every Jarvis widget and panel. Your wallpaper, themes and KDE settings are not touched. If Jarvis itself does not start, run: jarvis --restore-desktop"); color: Theme.textDim; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                    DarkButton { objectName: "restoreDesktopButton"; text: qsTr("Restore the standard desktop…"); enabled: !plasma.busy && !shell.busy; onClicked: shellRestoreConsent.open() }
                 }
             }
         }
@@ -1110,17 +1441,54 @@ Dialog {
         Label { width: 420; wrapMode: Text.Wrap; text: qsTr("Every \"Jarvis HUD\" widget leaves your desktops and panels. Other widgets are not touched.") }
         onAccepted: plasma.removeWidgets()
     }
+    DesktopShell {
+        id: shell
+        onFinished: (ok, message) => { center.settings.reload(); plasma.refresh() }
+    }
+    ColorDialog {
+        id: colourDialog
+        property string key: "primary"
+        title: qsTr("Desktop colour")
+        onAccepted: center.report(center.settings.setDesktop(key, String(selectedColor).substring(0, 7)))
+    }
     Dialog {
-        id: restoreConsent
+        id: applyConsent
         anchors.centerIn: Overlay.overlay
         modal: true
-        title: qsTr("Restore the standard desktop?")
+        title: qsTr("Turn on JARVIS DESKTOP?")
         standardButtons: Dialog.Yes | Dialog.No
-        Label { width: 420; wrapMode: Text.Wrap; text: qsTr("Jarvis widgets are removed and the Plasma integration is turned off (KRunner, widget actions, active-application sharing). Jarvis itself, its memory and the tray keep working; you can turn the integration on again here.") }
-        onAccepted: {
-            center.report(center.settings.setOption("desktopIntegration", false))
-            plasma.removeWidgets()
+        ColumnLayout {
+            width: 480
+            Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: qsTr("Jarvis will make these changes to your Plasma desktop:") }
+            Repeater {
+                model: shell.plan
+                Label { required property string modelData; Layout.fillWidth: true; wrapMode: Text.Wrap; text: "• " + modelData; color: Theme.textDim; textFormat: Text.PlainText }
+            }
+            Label { Layout.fillWidth: true; wrapMode: Text.Wrap; text: qsTr("If anything does not work, the changes are undone at once. You can always go back with \"Back to standard KDE\" or jarvis --restore-desktop.") }
         }
+        onAccepted: shell.apply()
+    }
+    Dialog {
+        id: shellRestoreConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Back to the standard KDE desktop?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label {
+            width: 460; wrapMode: Text.Wrap
+            text: shell.hasBackup ? qsTr("plasmashell restarts for a moment and Plasma's layout comes back from the backup made before JARVIS DESKTOP (%1). Changes you made to panels and widgets since then are saved aside, not kept. Your applications keep running.").arg(shell.backupPath)
+                                  : qsTr("There is no backup: every Jarvis widget and panel is removed; nothing else changes.")
+        }
+        onAccepted: shell.restore()
+    }
+    Dialog {
+        id: desktopsConsent
+        anchors.centerIn: Overlay.overlay
+        modal: true
+        title: qsTr("Create virtual desktops for the workspaces?")
+        standardButtons: Dialog.Yes | Dialog.No
+        Label { width: 440; wrapMode: Text.Wrap; text: qsTr("KWin gets as many virtual desktops as the workspaces need (named GENERAL, STUDY, WORK, DEV). Existing desktops are not renamed or removed.") }
+        onAccepted: shell.createWorkspaceDesktops()
     }
     Dialog {
         id: confirmForget

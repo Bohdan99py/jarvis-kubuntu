@@ -1,4 +1,5 @@
 #include "config.h"
+#include "desktop_integration.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -105,6 +106,9 @@ ConfigData Config::loadFileOnly()
         d.shareActiveApp = o.value(u"share_active_app"_s).toBool(false);
         const QString animation = o.value(u"hud_animation"_s).toString();
         d.hudAnimation = hudAnimationLevels().contains(animation) ? animation : u"normal"_s;
+        d.desktop = integration::normalizeDesktop(o.value(u"desktop"_s).toObject());
+    } else {
+        d.desktop = integration::normalizeDesktop({});
     }
     return d;
 }
@@ -175,6 +179,7 @@ bool Config::save(const ConfigData &data, QString *error)
     o.insert(u"desktop_integration"_s, data.desktopIntegration);
     o.insert(u"share_active_app"_s, data.shareActiveApp);
     o.insert(u"hud_animation"_s, data.hudAnimation);
+    o.insert(u"desktop"_s, integration::normalizeDesktop(data.desktop));
     const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
     if (f.write(bytes) != bytes.size() || !f.commit())
         return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));

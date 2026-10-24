@@ -119,8 +119,13 @@ void PlasmaBridge::runScript(const QString &script, const std::function<void(int
     }, 8000);
 }
 
-void PlasmaBridge::addWidget()
+void PlasmaBridge::addWidget(const QString &type)
 {
+    if (jarvis::integration::plasmaAddScript(type).isEmpty()) {
+        m_status = tr("Unknown widget.");
+        emit changed();
+        return;
+    }
     if (!widgetInstalled()) {
         m_status = tr("The Jarvis widget is not installed (package org.jarvis.hud). Install the Jarvis package, then try again.");
         emit changed();
@@ -132,7 +137,7 @@ void PlasmaBridge::addWidget()
         return;
     }
     const int before = m_widgets;
-    runScript(jarvis::integration::plasmaAddScript(), [this, before](int count, const QString &error) {
+    runScript(jarvis::integration::plasmaAddScript(type), [this, before](int count, const QString &error) {
         m_widgets = count;
         m_status = !error.isEmpty() ? tr("Plasma refused: %1").arg(error)
                    : count <= 0     ? tr("Plasma did not add the widget. Are the widgets locked? Unlock them (right click on the desktop) or add \"Jarvis HUD\" yourself from \"Add Widgets…\".")
@@ -141,7 +146,7 @@ void PlasmaBridge::addWidget()
     });
 }
 
-void PlasmaBridge::removeWidgets()
+void PlasmaBridge::removeWidgets(const QString &type)
 {
     if (!m_plasma) {
         m_status = tr("Plasma is not running: nothing to remove.");
@@ -149,7 +154,7 @@ void PlasmaBridge::removeWidgets()
         emit restored(0);
         return;
     }
-    runScript(jarvis::integration::plasmaRemoveScript(), [this](int removed, const QString &error) {
+    runScript(jarvis::integration::plasmaRemoveScript(type), [this](int removed, const QString &error) {
         m_widgets = error.isEmpty() ? 0 : -1;
         m_status = !error.isEmpty() ? tr("Plasma refused: %1").arg(error)
                    : removed > 0    ? tr("Removed Jarvis widgets: %1. Panels, other widgets and the wallpaper were not touched.").arg(removed)

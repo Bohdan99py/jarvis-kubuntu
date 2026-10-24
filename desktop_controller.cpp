@@ -4,6 +4,9 @@
 #include "language.h"
 #include "calc_engine.h"
 #include "markdown_safe.h"
+#include "workspace.h"
+#include <QDBusError>
+#include <QDBusMessage>
 #include <QDesktopServices>
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
@@ -116,6 +119,49 @@ void DesktopController::Open(const QString &target,const QString &payload) {
         if(!owner.isValid() || owner.value()!=message().service()) text.clear();
     }
     emit openRequested(target.left(20),text);
+}
+bool DesktopController::calledByDaemon() const {
+    if(!calledFromDBus()) return true;
+    const auto owner=connection().interface()->serviceOwner(QString(jarvis::dbus::kService));
+    return owner.isValid() && owner.value()==message().service();
+}
+void DesktopController::Launch(const QString &desktopId) {
+    if(!calledByDaemon()) {sendErrorReply(QDBusError::AccessDenied,QStringLiteral("only jarvisd asks the window to start applications"));return;}
+    const QString error=launchApplication(desktopId.left(120));
+    if(!error.isEmpty()) qWarning().noquote()<<"launch:"<<error;
+}
+void DesktopController::OpenPath(const QString &path) {
+    if(!calledByDaemon()) {sendErrorReply(QDBusError::AccessDenied,QStringLiteral("only jarvisd asks the window to open files"));return;}
+    // The user's own files only: something under the home folder or a mounted disk that exists.
+    const QFileInfo info(path.left(4096));
+    const QString real=info.canonicalFilePath();
+    const QString home=QDir::homePath();
+    if(real.isEmpty() || !(real==home || real.startsWith(home+u'/') || real.startsWith(QStringLiteral("/media/")) || real.startsWith(QStringLiteral("/mnt/")))) {
+        qWarning().noquote()<<"open path refused:"<<path.left(200);
+        return;
+    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(real));
+}
+void DesktopController::OpenSettings(const QString &key) {
+    if(!calledByDaemon()) {sendErrorReply(QDBusError::AccessDenied,QStringLiteral("only jarvisd asks the window to open settings"));return;}
+    const QString module=jarvis::workspace::settingsModule(key.left(20));
+    if(module.isEmpty()) return;
+    if(!QProcess::startDetached(QStringLiteral("systemsettings"),{module})) QProcess::startDetached(QStringLiteral("kcmshell6"),{module});
+}
+void DesktopController::reportVoice(bool listening,bool speaking,const QString &engine) {
+    auto msg=QDBusMessage::createMethodCall(QString(jarvis::dbus::kService),QStringLiteral("/org/jarvis/Integration1"),QStringLiteral("org.jarvis.Integration1"),QStringLiteral("ReportVoice"));
+    msg<<listening<<speaking<<engine.left(40);
+    msg.setAutoStartService(false); // a voice change never starts the service
+    QDBusConnection::sessionBus().asyncCall(msg,2000);
+}
+void DesktopController::switchWorkspace(const QString &id) {
+    auto msg=QDBusMessage::createMethodCall(QString(jarvis::dbus::kService),QStringLiteral("/org/jarvis/Integration1"),QStringLiteral("org.jarvis.Integration1"),QStringLiteral("Workspace"));
+    msg<<id.left(40);
+    QDBusConnection::sessionBus().asyncCall(msg,3000);
+}
+void DesktopController::saveWorkspaceLayout() {
+    auto msg=QDBusMessage::createMethodCall(QString(jarvis::dbus::kService),QStringLiteral("/org/jarvis/Integration1"),QStringLiteral("org.jarvis.Integration1"),QStringLiteral("SaveWorkspaceLayout"));
+    QDBusConnection::sessionBus().asyncCall(msg,3000);
 }
 QString DesktopController::safeMarkdown(const QString &text) const { return jarvis::text::safeMarkdown(text); }
 void DesktopController::openSkillsFolder() {

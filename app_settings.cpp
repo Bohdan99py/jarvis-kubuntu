@@ -1,4 +1,6 @@
 #include "app_settings.h"
+#include "desktop_integration.h"
+#include <QJsonValue>
 
 #include <QQmlEngine>
 #include <QRegularExpression>
@@ -150,6 +152,15 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.shareActiveApp = value && d.desktopIntegration;
     else
         return tr("Unknown option.");
+    return store(d);
+}
+
+QString AppSettings::setDesktop(const QString &key, const QVariant &value)
+{
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    const QString error = jarvis::integration::setDesktopValue(d.desktop, key, QJsonValue::fromVariant(value));
+    if (!error.isEmpty())
+        return error == u"unknown setting" ? tr("Unknown option.") : tr("This value is not allowed.");
     return store(d);
 }
 
