@@ -23,8 +23,10 @@ Item {
     // (Cinematic adds the plasma's domain warp and the background haze).
     readonly property real detail: low ? 0 : cinematic ? 2 : 1
     readonly property bool throttled: low || (!cinematic && hudState === "idle" && pulse < 0.05)
+    // A ceiling the host may set: the desktop core idles at a few frames a second.
+    property int maxRate: 60
     // Ticks per second.
-    readonly property int rate: low ? 20 : throttled ? 30 : 60
+    readonly property int rate: Math.max(1, Math.min(maxRate, low ? 20 : throttled ? 30 : 60))
     // The display's refresh rate (GraphicsInfo.refreshRate; QML's Screen has none).
     property real refreshRate: 0
     // At the display's own rate the clock follows vsync (smoothest); above the cap
@@ -111,7 +113,7 @@ Item {
     function advance(step) {
         const t = targets[hudState] || targets.idle
         dt = step
-        time += step
+        time += step * JarvisTheme.motion
         // States glide into each other.
         const k = hudState === "error" ? 9 : 3.2
         energy = approach(energy, t.energy + 0.25 * sLevel, k, step)

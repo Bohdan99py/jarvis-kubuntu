@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Holographic system monitor: CPU and its cores, memory, GPUs and VRAM, temperatures, clocks and fans",
+        "Description[ru]": "Голографический монитор: процессор и ядра, память, видеокарты и VRAM, температуры, частоты, вентиляторы",
+        "Icon": "utilities-system-monitor",
+        "Id": "org.jarvis.system",
+        "Name": "Jarvis System",
+        "Name[ru]": "Jarvis: система",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

@@ -19,6 +19,7 @@ Item {
     property bool pinned: false
     property bool busy: false            // a scan runs down the frame
     property int autoHide: 0             // ms; 0 = stays
+    property bool movable: true          // the title bar drags it (not inside a Plasma widget)
     property string column: "left"       // left or right
     property int order: 0
     property point origin: Qt.point(slotX, slotY)
@@ -104,8 +105,8 @@ Item {
         opacity: panel.ease(panel.open)
         radius: 3
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(0.05, 0.12, 0.2, 0.82) }
-            GradientStop { position: 1; color: Qt.rgba(0.02, 0.06, 0.11, 0.7) }
+            GradientStop { position: 0; color: Qt.rgba(0.05, 0.12, 0.2, Math.min(1, 0.82 * JarvisTheme.glassOpacity / 0.72)) }
+            GradientStop { position: 1; color: Qt.rgba(0.02, 0.06, 0.11, Math.min(1, 0.7 * JarvisTheme.glassOpacity / 0.72)) }
         }
         border.width: 1
         border.color: panel.hovered ? Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, 0.85)
@@ -180,10 +181,12 @@ Item {
             onDoubleTapped: panel.dragged = false
         }
         TapHandler {
+            enabled: panel.movable
             acceptedButtons: Qt.RightButton
             onTapped: panel.pinned = !panel.pinned
         }
         DragHandler {
+            enabled: panel.movable
             target: panel
             xAxis.minimum: 0
             xAxis.maximum: panel.parent ? panel.parent.width - panel.width : 0

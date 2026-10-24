@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.18.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.19.2 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -80,6 +80,16 @@ qt_add_library(jarvis_core STATIC
     schematic_library.cpp
     visual_state.h
     visual_state.cpp
+    desktop_integration.h
+    desktop_integration.cpp
+    gpu_devices.h
+    gpu_devices.cpp
+    system_sampler.h
+    system_sampler.cpp
+    workspace.h
+    workspace.cpp
+    desktop_shell_scripts.h
+    desktop_shell_scripts.cpp
     chat_engine.h
     chat_engine.cpp
     system_info.h
@@ -128,6 +138,14 @@ qt_add_executable(jarvisd
     ide_server.cpp
     notifier.h
     notifier.cpp
+    integration_service.h
+    integration_service.cpp
+    telemetry_service.h
+    telemetry_service.cpp
+    workspace_service.h
+    workspace_service.cpp
+    systemd_notify.h
+    systemd_notify.cpp
     runtime_paths.h
     dbus_names.h
 )
@@ -195,6 +213,10 @@ qt_add_qml_module(jarvis
         screen_awareness.cpp
         global_shortcut.h
         global_shortcut.cpp
+        plasma_bridge.h
+        plasma_bridge.cpp
+        desktop_shell.h
+        desktop_shell.cpp
         runtime_paths.h
         chat_model.h
         chat_model.cpp
@@ -246,7 +268,7 @@ qt_add_resources(jarvis app_icons PREFIX "/" FILES icons/org.jarvis.Jarvis.svg
 # ---------------------------------------------------------------------------
 install(TARGETS jarvis jarvisd jv_sysinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES scripts/voice.py scripts/update.py scripts/speak.py scripts/study.py DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/scripts)
-install(FILES kwin/activity.js DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/kwin)
+install(FILES kwin/activity.js kwin/workspace.js DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/kwin)
 
 # VS Code extension, packed as .vsix without Node (vscode/make_vsix.py).
 set(JARVIS_VSIX "${CMAKE_CURRENT_BINARY_DIR}/jarvis-vscode.vsix")
@@ -261,6 +283,59 @@ add_custom_target(vscode_extension ALL DEPENDS "${JARVIS_VSIX}")
 install(FILES "${JARVIS_VSIX}" DESTINATION ${CMAKE_INSTALL_DATADIR}/jarvis/vscode)
 install(FILES icons/org.jarvis.Jarvis.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 install(FILES org.jarvis.Jarvis.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+
+# The Jarvis look for the Plasma desktop (0.19.2): the QML module
+# org.jarvis.visual — the window's own HUD files and shaders plus thin desktop
+# adapters, installed as plain files (no compiled code goes into plasmashell).
+# Assembled in the build tree too (build/qml) for the tests and for trying the
+# widgets without installing: QML_IMPORT_PATH=build/qml.
+set(JARVIS_VISUAL_DIR "${CMAKE_CURRENT_BINARY_DIR}/qml/org/jarvis/visual")
+set(JARVIS_VISUAL_FILES
+    hud/JarvisTheme.qml hud/HudController.qml hud/JarvisCore.qml hud/CoreRings.qml hud/AudioReactiveLayer.qml
+    hud/ParticleField.qml hud/DataStreams.qml hud/NeuralNetworkView.qml hud/HolographicPanel.qml
+    desktop/qmldir desktop/DesktopState.qml desktop/DesktopCore.qml desktop/HoloMeter.qml desktop/HoloButton.qml
+    desktop/Sparkline.qml desktop/DaemonLink.qml desktop/WidgetConfigPage.qml)
+set(JARVIS_VISUAL_SHADERS core ring spectrum streams particles)
+set(JARVIS_VISUAL_COMMANDS COMMAND ${CMAKE_COMMAND} -E make_directory "${JARVIS_VISUAL_DIR}/shaders")
+foreach(f IN LISTS JARVIS_VISUAL_FILES)
+    get_filename_component(name "${f}" NAME)
+    list(APPEND JARVIS_VISUAL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${f}" "${JARVIS_VISUAL_DIR}/${name}")
+endforeach()
+foreach(s IN LISTS JARVIS_VISUAL_SHADERS)
+    list(APPEND JARVIS_VISUAL_COMMANDS COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_BINARY_DIR}/.qsb/hud/shaders/${s}.frag.qsb" "${JARVIS_VISUAL_DIR}/shaders/${s}.frag.qsb")
+endforeach()
+add_custom_command(OUTPUT "${JARVIS_VISUAL_DIR}/.stamp"
+    ${JARVIS_VISUAL_COMMANDS}
+    COMMAND ${CMAKE_COMMAND} -E touch "${JARVIS_VISUAL_DIR}/.stamp"
+    DEPENDS ${JARVIS_VISUAL_FILES} jarvis
+    VERBATIM)
+add_custom_target(visual_module ALL DEPENDS "${JARVIS_VISUAL_DIR}/.stamp")
+if(NOT JARVIS_QML_INSTALL_DIR)
+    set(JARVIS_QML_INSTALL_DIR "${QT6_INSTALL_QML}")
+endif()
+install(DIRECTORY "${JARVIS_VISUAL_DIR}/" DESTINATION "${JARVIS_QML_INSTALL_DIR}/org/jarvis/visual" PATTERN ".stamp" EXCLUDE)
+
+# KDE Plasma integration (0.19, 0.19.2): the desktop widgets (pure QML on
+# Plasma's own modules and org.jarvis.visual), their Russian translation
+# (one domain, jarvis-desktop) and the KRunner runner. Installing only adds
+# files: nothing goes on the user's desktop until they choose JARVIS DESKTOP
+# (or add a widget) in the Control center.
+set(JARVIS_PLASMOIDS org.jarvis.hud org.jarvis.dock org.jarvis.system org.jarvis.network org.jarvis.power org.jarvis.media org.jarvis.status)
+foreach(p IN LISTS JARVIS_PLASMOIDS)
+    install(FILES plasmoids/${p}/metadata.json DESTINATION ${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/${p})
+    install(DIRECTORY plasmoids/${p}/contents DESTINATION ${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/${p})
+endforeach()
+set(JARVIS_PLASMOID_MO "${CMAKE_CURRENT_BINARY_DIR}/jarvis-desktop.mo")
+add_custom_command(OUTPUT "${JARVIS_PLASMOID_MO}"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/plasmoids/po/make_mo.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/plasmoids/po/ru.po" "${JARVIS_PLASMOID_MO}"
+    DEPENDS plasmoids/po/ru.po plasmoids/po/make_mo.py
+    VERBATIM)
+add_custom_target(plasmoid_translation ALL DEPENDS "${JARVIS_PLASMOID_MO}")
+install(FILES "${JARVIS_PLASMOID_MO}" DESTINATION ${CMAKE_INSTALL_LOCALEDIR}/ru/LC_MESSAGES)
+configure_file(krunner/org.jarvis.Jarvis.desktop.in "${CMAKE_CURRENT_BINARY_DIR}/krunner/org.jarvis.Jarvis.desktop" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/krunner/org.jarvis.Jarvis.desktop" DESTINATION ${CMAKE_INSTALL_DATADIR}/krunner/dbusplugins)
 
 install(CODE "set(JARVIS_SOURCE_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")")
 install(CODE "set(JARVIS_BINDIR_REL \"${CMAKE_INSTALL_BINDIR}\")")
@@ -288,6 +363,13 @@ if(BUILD_TESTING)
         add_test(NAME vscode COMMAND ${JARVIS_NODE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/vscode_lib_test.js)
     endif()
     add_test(NAME graphics COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/graphics_test.py $<TARGET_FILE:jarvis>)
+    # The desktop widget's views outside Plasma (offscreen, software rendering).
+    add_executable(plasmoid_check tests/plasmoid_check.cpp)
+    target_link_libraries(plasmoid_check PRIVATE Qt6::Quick)
+    add_test(NAME plasmoid COMMAND plasmoid_check ${CMAKE_CURRENT_SOURCE_DIR}/plasmoids)
+    set_tests_properties(plasmoid PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${CMAKE_CURRENT_BINARY_DIR}/qml")
+    add_test(NAME desktop_files COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/desktop_files_test.py
+        ${CMAKE_CURRENT_BINARY_DIR})
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
 endif()

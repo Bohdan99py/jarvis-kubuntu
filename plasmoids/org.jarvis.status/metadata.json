@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Bohdan99py"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "The Jarvis service, the language model, the current task, microphone and voice, awareness and the last events",
+        "Description[ru]": "Служба Jarvis, языковая модель, текущая задача, микрофон и голос, осведомлённость и последние события",
+        "Icon": "org.jarvis.Jarvis",
+        "Id": "org.jarvis.status",
+        "Name": "Jarvis Status",
+        "Name[ru]": "Jarvis: состояние",
+        "Version": "0.19.2",
+        "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

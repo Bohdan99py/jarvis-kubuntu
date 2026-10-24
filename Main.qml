@@ -58,6 +58,18 @@ ApplicationWindow {
         streamRate: visualState.streamRate
         streaming: visualState.streaming
     }
+    // ---------- The desktop shell (0.19.2) ----------
+    // One theme for the window's HUD and the Plasma desktop: the tokens follow the settings.
+    readonly property var desktopLook: appSettings.desktop
+    Binding { target: JarvisTheme; property: "preset"; value: root.desktopLook.theme || "classic" }
+    Binding { target: JarvisTheme; property: "customPrimary"; value: root.desktopLook.primary ? root.desktopLook.primary : "transparent" }
+    Binding { target: JarvisTheme; property: "customSecondary"; value: root.desktopLook.secondary ? root.desktopLook.secondary : "transparent" }
+    Binding { target: JarvisTheme; property: "glow"; value: root.desktopLook.glow !== undefined ? root.desktopLook.glow : 1 }
+    Binding { target: JarvisTheme; property: "motion"; value: root.desktopLook.motion !== undefined ? root.desktopLook.motion : 1 }
+    // The status widget on the desktop shows whether Jarvis listens or speaks.
+    readonly property var voiceState: [voiceEngine.recording || study.listening, voiceEngine.speaking, voiceEngine.activeEngine]
+    onVoiceStateChanged: desktopBridge.reportVoice(voiceState[0], voiceState[1], voiceState[2])
+
     // ---------- Overlay, screen awareness and the global shortcut ----------
     // The overlay is a layer-shell surface on KDE Wayland (when the QML module
     // exists), otherwise an always-on-top window. Created once and kept: the
@@ -242,9 +254,24 @@ ApplicationWindow {
             studyWindow.showTab(2)
             return
         }
-        // An offer of help the user accepted: answered in the overlay, with the context.
+        // An offer of help the user accepted (or a KRunner question): answered in the overlay, with the context.
         if (target === "assist") {
             root.showOverlay("", payload)
+            return
+        }
+        // From the desktop widget and other Plasma components (org.jarvis.Integration1).
+        if (target === "overlay") {
+            root.showOverlay("", "")
+            return
+        }
+        if (target === "quick") {
+            quickBar.reveal()
+            return
+        }
+        // Awareness in the WORK profile: a skill's tools ("electronics:calculators").
+        if (target === "skill") {
+            showMain()
+            controlCenter.showSkill(payload.split(":")[0], payload.split(":")[1] || "")
             return
         }
         showMain()

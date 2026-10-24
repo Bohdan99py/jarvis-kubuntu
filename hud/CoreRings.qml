@@ -13,7 +13,8 @@ import QtQuick
 Item {
     id: rings
     required property var ctl
-    property int count: ctl.low ? 3 : ctl.cinematic ? 8 : 7
+    // Mark VII adds two rings of its own (not in Low).
+    property int count: ctl.low ? 3 : (ctl.cinematic ? 8 : 7) + (JarvisTheme.mark7 ? 2 : 0)
 
     readonly property var specs: [
         // radius, thickness, segments, duty, dim, ticks, tickLength, motion, speed, arc, rebuild, glitchy, pulses, intensity, alert
@@ -24,17 +25,21 @@ Item {
         { r: 0.60, w: 0.004, seg: 1,   duty: 1.0,  dim: 0.0,  ticks: 180, tl: 0.011, motion: "still", speed: 0.003,  arc: 1.0,  rebuild: false, pulses: true,  i: 0.45, alert: 0.2 },
         { r: 0.78, w: 0.010, seg: 3,   duty: 0.55, dim: 0.0,  ticks: 0,   tl: 0,     motion: "scan",  speed: 0.05,   arc: 1.0,  rebuild: true,  pulses: true,  i: 0.6,  alert: 1.0 },
         { r: 0.90, w: 0.002, seg: 1,   duty: 1.0,  dim: 0.0,  ticks: 360, tl: 0.012, motion: "still", speed: -0.002, arc: 1.0,  rebuild: false, pulses: false, i: 0.35, alert: 0.2 },
-        { r: 0.46, w: 0.022, seg: 4,   duty: 0.2,  dim: 0.0,  ticks: 0,   tl: 0,     motion: "drift", speed: -0.07,  arc: 1.0,  rebuild: true,  pulses: false, i: 0.9,  alert: 0.6 }
+        { r: 0.46, w: 0.022, seg: 4,   duty: 0.2,  dim: 0.0,  ticks: 0,   tl: 0,     motion: "drift", speed: -0.07,  arc: 1.0,  rebuild: true,  pulses: false, i: 0.9,  alert: 0.6 },
+        // Mark VII only.
+        { r: 0.63, w: 0.009, seg: 12,  duty: 0.7,  dim: 0.0,  ticks: 0,   tl: 0,     motion: "step",  speed: -0.4,   arc: 0.86, rebuild: true,  pulses: true,  i: 0.7,  alert: 1.0 },
+        { r: 0.85, w: 0.006, seg: 24,  duty: 0.45, dim: 0.2,  ticks: 48,  tl: 0.01,  motion: "drift", speed: 0.012,  arc: 1.0,  rebuild: false, pulses: true,  i: 0.5,  alert: 0.5 }
     ]
     // Low quality keeps the three that read best.
-    readonly property var order: ctl.low ? [0, 1, 2] : [0, 1, 2, 3, 4, 5, 6, 7]
+    readonly property var order: ctl.low ? [0, 1, 2] : ctl.cinematic ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] : [0, 1, 2, 3, 4, 5, 6, 8, 9]
 
     Repeater {
         model: rings.count
         delegate: ShaderEffect {
             id: ring
             required property int index
-            readonly property var spec: rings.specs[rings.order[index]]
+            // While the quality changes, the count and the order update one after the other: never undefined.
+            readonly property var spec: rings.specs[rings.order[index]] || rings.specs[0]
             anchors.fill: parent
 
             property real time: rings.ctl.time
@@ -55,7 +60,7 @@ Item {
             property real glitch: rings.ctl.instability
             property real intensity: spec.i * (0.75 + 0.45 * rings.ctl.energy) + (index < 2 ? 0.4 * rings.ctl.sLevel : 0)
             property real dim: spec.dim
-            property real seed: rings.order[index] * 3.7 + 1
+            property real seed: (rings.order[index] || 0) * 3.7 + 1
             property color color: rings.ctl.colorA
             property color alertColor: rings.ctl.alertColor
             property real alertMix: rings.ctl.alertMix * spec.alert

@@ -1,4 +1,5 @@
 #pragma once
+#include "gpu_devices.h"
 #include <QObject>
 #include <QPointer>
 #include <QQuickWindow>
@@ -40,17 +41,9 @@ class GraphicsInfo : public QObject {
     // Of the screen the first watched window is on; 0 unknown.
     Q_PROPERTY(double refreshRate READ refreshRate NOTIFY refreshRateChanged)
 public:
-    struct Gpu {
-        QString card;       // card0
-        QString slot;       // PCI address, 0000:01:00.0
-        QString vendorId;   // 10de
-        QString deviceId;
-        QString name;       // NVIDIA GeForce RTX 3050 Mobile
-        QString driver;     // nvidia, amdgpu, i915, ...
-        QString devicePath; // /sys/class/drm/card0/device
-        bool boot=false;    // the GPU the firmware (and usually the desktop) starts on
-    };
-    static QList<Gpu> detectGpus();
+    // The cards themselves are found by the core library (jarvisd's telemetry uses them too).
+    using Gpu = jarvis::GpuDevice;
+    static QList<Gpu> detectGpus() { return jarvis::detectGpus(); }
     // Before QApplication: the choice from the settings (or --gpu / --graphics-api).
     static void prepareEnvironment(int argc, char **argv);
     // After QApplication, before the first window.

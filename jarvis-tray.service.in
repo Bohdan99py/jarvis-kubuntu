@@ -1,5 +1,6 @@
 [Unit]
 Description=J.A.R.V.I.S. tray application
+Documentation=https://github.com/Bohdan99py/jarvis-kubuntu
 # Started with the graphical session (Plasma 5.25+ and other systemd-managed
 # sessions), stopped with it. Sessions without systemd use the XDG autostart
 # entry the application writes instead (it carries X-systemd-skip=true).

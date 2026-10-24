@@ -68,7 +68,7 @@ def setup(root, model=MODEL):
                 temp = Path(temp)
                 archive = temp / "model.zip"
                 url = f"https://alphacephei.com/vosk/models/{model}.zip"
-                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.18"})
+                request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.19.2"})
                 with urllib.request.urlopen(request, timeout=60) as response, archive.open("wb") as out:
                     if not response.url.startswith("https://"):
                         raise ValueError(message("https"))
@@ -177,7 +177,7 @@ def voice_message(key, **values):
     return VOICE_MESSAGES.get(LANG, VOICE_MESSAGES["en"])[key].format(**values)
 
 def download(url, target, limit):
-    request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.18"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Jarvis/0.19.2"})
     with urllib.request.urlopen(request, timeout=60) as response, target.open("wb") as out:
         if not response.url.startswith("https://"):
             raise ValueError(message("https"))

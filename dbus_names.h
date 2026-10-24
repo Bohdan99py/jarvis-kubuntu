@@ -19,4 +19,12 @@ inline QString daemonService()
     return name.isEmpty() ? QString(kService) : name;
 }
 
+// The KRunner runner's bus name, owned by jarvisd while the desktop
+// integration is on. No activation file: KRunner never starts the daemon.
+inline QString runnerService()
+{
+    const QString daemon = daemonService();
+    return daemon == QLatin1String(kService) ? QStringLiteral("org.jarvis.Runner") : daemon + QStringLiteral(".Runner");
+}
+
 } // namespace jarvis::dbus

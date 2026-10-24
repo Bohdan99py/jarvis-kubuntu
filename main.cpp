@@ -24,6 +24,9 @@
 #include "language.h"
 #include "visual_state.h"
 #include "graphics_info.h"
+#include "plasma_bridge.h"
+#include "desktop_shell.h"
+#include <cstdio>
 
 // SIGTERM (logout, systemctl stop) ends the event loop normally, so a lesson
 // recording is finished and saved instead of being cut off.
@@ -63,9 +66,20 @@ int main(int argc,char *argv[]) {
     parser.addOption({"gpu-info","Print which graphics API, renderer and GPU Jarvis draws with, and the GPUs found, then exit"});
     parser.addOption({"gpu","For this start: the graphics card for the interface (auto, integrated or dedicated)","card"});
     parser.addOption({"graphics-api","For this start: Qt's graphics API (auto, opengl or vulkan)","api"});
+    parser.addOption({"diagnose","Check the background service, its systemd units, Plasma, the desktop widget and KRunner, then exit"});
+    parser.addOption({"restore-desktop","Put back the Plasma desktop as it was before JARVIS DESKTOP (from the backup), then exit"});
+    parser.addOption({"desktop-mode","Switch the Plasma desktop: jarvis (check, back up, apply, verify) or standard (restore), then exit","mode"});
     parser.process(app);
     GraphicsInfo::applyApi();
     if(parser.isSet("gpu-info")) return GraphicsInfo::printReport();
+    // Recovery and diagnostics work without the window (and while another Jarvis runs).
+    if(parser.isSet("diagnose")) return PlasmaBridge::printDiagnostics();
+    if(parser.isSet("restore-desktop")) return DesktopShell::runFromTerminal("standard");
+    if(parser.isSet("desktop-mode")) {
+        const QString mode=parser.value("desktop-mode");
+        if(mode!="jarvis" && mode!="standard") {std::fprintf(stderr,"--desktop-mode: jarvis or standard\n");return 2;}
+        return DesktopShell::runFromTerminal(mode);
+    }
     const QString open=parser.value("open").left(20);
     const bool quick=parser.isSet("quick");
     const bool overlay=parser.isSet("overlay");

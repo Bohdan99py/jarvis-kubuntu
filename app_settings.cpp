@@ -1,4 +1,6 @@
 #include "app_settings.h"
+#include "desktop_integration.h"
+#include <QJsonValue>
 
 #include <QQmlEngine>
 #include <QRegularExpression>
@@ -140,8 +142,34 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.awarenessFullscreen = value;
     else if (name == QLatin1String("webSearch"))
         d.webSearch = value;
+    else if (name == QLatin1String("background"))
+        d.background = value;
+    else if (name == QLatin1String("desktopIntegration")) {
+        d.desktopIntegration = value;
+        if (!value)
+            d.shareActiveApp = false; // nothing to share through
+    } else if (name == QLatin1String("shareActiveApp"))
+        d.shareActiveApp = value && d.desktopIntegration;
     else
         return tr("Unknown option.");
+    return store(d);
+}
+
+QString AppSettings::setDesktop(const QString &key, const QVariant &value)
+{
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    const QString error = jarvis::integration::setDesktopValue(d.desktop, key, QJsonValue::fromVariant(value));
+    if (!error.isEmpty())
+        return error == u"unknown setting" ? tr("Unknown option.") : tr("This value is not allowed.");
+    return store(d);
+}
+
+QString AppSettings::setHudAnimation(const QString &level)
+{
+    if (!jarvis::Config::hudAnimationLevels().contains(level))
+        return tr("Unknown option.");
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    d.hudAnimation = level;
     return store(d);
 }
 

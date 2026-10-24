@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QString>
 #include <QStringList>
 
@@ -70,6 +71,23 @@ struct ConfigData
     // Claude may search the web (Anthropic's web search tool) for current facts:
     // traffic law, racing results and calendars. Billed per search.
     bool webSearch = false;
+
+    // ---- Desktop integration (0.19) ----
+    // jarvisd keeps working (reminders, hints, KRunner, the desktop widget) when
+    // the Jarvis window is closed or quit; off: it ends with the window.
+    bool background = true;
+    // The KDE bridge: org.jarvis.Integration1 actions and notifications, KRunner
+    // and the desktop widget. Off: they only report that the integration is off.
+    bool desktopIntegration = true;
+    // Opt-in: desktop widgets may ask which application is focused (its name,
+    // never the title); needs window awareness as well.
+    bool shareActiveApp = false;
+    // The desktop HUD's animations: off, low, normal, high (one step lower on battery).
+    QString hudAnimation = QStringLiteral("normal");
+    // ---- JARVIS DESKTOP (0.19.2) ----
+    // Mode, theme and layout of the desktop shell; normalised by
+    // integration::normalizeDesktop (see there for the keys and limits).
+    QJsonObject desktop;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.
@@ -82,6 +100,8 @@ public:
     static QString filePath();
     // off, manual, assistive, proactive.
     static QStringList awarenessLevels();
+    // off, low, normal, high.
+    static QStringList hudAnimationLevels();
 
     // File contents only (used by the settings UI so an environment key is
     // never copied into the file).

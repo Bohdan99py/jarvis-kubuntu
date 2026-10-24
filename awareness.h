@@ -52,6 +52,7 @@ public:
         QString title;
         QString body;
         QString prompt;   // what Jarvis is asked when the user accepts
+        QString open;     // instead of asking: a part of Jarvis to open ("skill:electronics:calculators")
         double score = 0;
         QStringList evidence;
         bool isValid() const { return !category.isEmpty(); }
@@ -60,6 +61,10 @@ public:
     Awareness();
 
     void configure(const ConfigData &config);
+    // The workspace profile (0.19.2): suggestions in its focus categories count
+    // more, the others less; the profile adds to the context, never observes more.
+    void setWorkspace(const QString &profile, const QStringList &focus);
+    QString workspace() const { return m_workspace; }
     QString level() const { return m_level; }
     bool windowAllowed() const { return m_level != u"off" && m_windowAllowed; }
 
@@ -148,6 +153,8 @@ private:
     bool m_screenAllowed = false;
     bool m_fullscreenAllowed = false;
     QStringList m_muted;
+    QString m_workspace;
+    QStringList m_workspaceFocus;
     QStringList m_excluded;
     qint64 m_cooldownMs = 45 * 60 * 1000;
     int m_perDay = 4;

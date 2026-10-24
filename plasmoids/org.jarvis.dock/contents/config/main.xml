@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <!-- Pinned applications, in Plasma's own format (applications:<id>.desktop). -->
+    <entry name="launchers" type="StringList">
+      <default>applications:org.kde.dolphin.desktop,applications:org.kde.konsole.desktop,applications:systemsettings.desktop</default>
+    </entry>
+    <!-- Only the windows of this panel's screen (one dock per monitor). -->
+    <entry name="filterByScreen" type="Bool"><default>true</default></entry>
+    <!-- The GENERAL/STUDY/WORK/DEV switch and the virtual desktops. -->
+    <entry name="showProfiles" type="Bool"><default>true</default></entry>
+    <entry name="effects" type="Bool"><default>true</default></entry>
+  </group>
+</kcfg>

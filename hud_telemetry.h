@@ -9,6 +9,7 @@
 #include <QtQml/qqmlregistration.h>
 #include "jv_sys.h"
 #include "graphics_info.h"
+#include "gpu_devices.h"
 // Live numbers for the HUD panels: CPU, memory, temperature, the GPU and the
 // interface's own frame rate. Measured only while `active` (a panel shows them),
 // once a second; every GPU found every 2 s, through sysfs (AMD, Intel) or
@@ -60,20 +61,16 @@ signals:
     void updated();
 private:
     void sample();
-    void sampleGpu();
     int shownGpu() const;   // the rendering card, else the first one measured
-    struct Card { QString name; QString slot; double load=-1,memory=-1; bool asleep=false,nvidia=false; QString busyFile,powerFile; };
     QTimer m_timer;
-    QProcess m_nvidia;
+    jarvis::GpuMonitor m_gpus; // shared with jarvisd's telemetry (core library)
     QPointer<QQuickWindow> m_window;
     QPointer<GraphicsInfo> m_graphics;
-    QList<Card> m_cards;
     QMetaObject::Connection m_frames;
     jv_cpu_times m_prev{};
     bool m_havePrev=false;
     std::atomic<int> m_frameCount{0}; // counted on the render thread
     int m_ticks=0;
-    bool m_noNvidia=false;
     double m_cpu=-1,m_ram=-1,m_ramUsed=-1,m_ramTotal=-1,m_temp=-1,m_fps=-1;
     QVariantList m_cpuHistory;
 };

@@ -1,15 +1,37 @@
 [Unit]
 Description=J.A.R.V.I.S. assistant daemon
+Documentation=https://github.com/Bohdan99py/jarvis-kubuntu
 After=dbus.socket
 # jarvisd may start before the Plasma session: it waits for KWin by itself.
+# No endless restarts: after five failures in five minutes the unit stays
+# failed until the user acts (`jarvis --diagnose` explains the state).
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=dbus
 BusName=org.jarvis.Daemon1
 ExecStartPre=+/usr/bin/mkdir -p -m 0700 %h/.local/share/jarvis
 ExecStart=@JARVIS_BINDIR@/jarvisd
+# A crash or a hang brings the daemon back, each time a little later (up to a
+# minute; RestartSteps needs systemd 254+, older versions keep 2 s). A clean
+# exit — Quit, or background work off and the window closed — stays stopped.
 Restart=on-failure
 RestartSec=2
+RestartSteps=5
+RestartMaxDelaySec=60
+# Status 3: another jarvisd already owns the bus name. Not a failure, no restart.
+SuccessExitStatus=3
+RestartPreventExitStatus=3
+# jarvisd pings the watchdog from its event loop; a hung loop is restarted.
+# STATUS= lines show what it does in `systemctl --user status jarvis`.
+WatchdogSec=90
+NotifyAccess=main
+TimeoutStopSec=10
+# Idle cost: a background helper yields the CPU and the disk to the user's work.
+Nice=5
+IOSchedulingClass=best-effort
+IOSchedulingPriority=6
 
 # Sandbox: the daemon reads the system and home read-only and writes only its
 # memory folder and the runtime directory (generated KWin script).

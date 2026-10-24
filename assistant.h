@@ -23,6 +23,9 @@
 #include "task_store.h"
 #include "reminder_parser.h"
 #include "vocab_store.h"
+#include "workspace.h"
+
+#include <functional>
 
 namespace jarvis {
 
@@ -117,6 +120,17 @@ public:
     QString assistPrompt(const QString &key) const { return m_assistPrompts.value(key); }
     void setScreenLocked(bool locked);
     void setTrackingStatus(const QString &status);
+
+    // ---- Desktop (0.19.2) ----
+    // jarvisd handles desktop commands from the chat and the voice ("prepare the
+    // desktop for programming", "open the downloads folder"): the handler returns
+    // the reply, or "" to let the request go on as usual. Without one (the window's
+    // own engine) such requests are answered like any other.
+    using DesktopHandler = std::function<QString(const workspace::Command &, Lang)>;
+    void setDesktopHandler(DesktopHandler handler) { m_desktopHandler = std::move(handler); }
+    void setWorkspace(const QString &profile, const QStringList &focus) { m_awareness.setWorkspace(profile, focus); }
+    // The next open reminder or task: {id, text, due (ms, 0 none)}; empty when none.
+    QJsonObject nextTask() const;
 
 signals:
     void replyReady(quint64 id, const QString &reply);
@@ -257,6 +271,8 @@ private:
     qint64 m_lastReflection = 0;
     int m_newTurns = 0;
     QString m_trackingStatus;
+    DesktopHandler m_desktopHandler;
+    QHash<QString, QString> m_assistTargets; // notice key -> part of Jarvis to open
     QString m_currentText;
     QString m_lastQuestion;
     QString m_lastAnswer;

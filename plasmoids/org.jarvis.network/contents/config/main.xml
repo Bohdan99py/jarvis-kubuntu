@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <!-- Animations and effects at all (the desktop quality comes from Jarvis). -->
+    <entry name="effects" type="Bool"><default>true</default></entry>
+    <!-- On the desktop: the expanded view (otherwise the compact one). -->
+    <entry name="expanded" type="Bool"><default>true</default></entry>
+    <!-- The widget's own extra (see its configGeneral.qml). -->
+    <entry name="extra" type="Bool"><default>true</default></entry>
+  </group>
+</kcfg>
