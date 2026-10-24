@@ -33,5 +33,13 @@ sleep 4
 "$@"
 status=$?
 kill $(jobs -p) 2>/dev/null
+# Whatever the command started in the background (a jarvisd, an application) belongs to
+# this session too: every process of ours whose XDG_RUNTIME_DIR is this session'"'"'s goes
+# (nothing else — the real desktop has another runtime directory).
+sleep 1
+for p in $(pgrep -u "$(id -u)"); do
+  [ "$p" = "$$" ] || [ "$p" = "$PPID" ] && continue   # this shell and dbus-run-session end by themselves
+  { tr "\0" "\n" < /proc/$p/environ; } 2>/dev/null | grep -qx "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" && kill "$p" 2>/dev/null
+done
 exit $status
 ' bash "$@"
