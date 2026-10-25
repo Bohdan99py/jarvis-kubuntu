@@ -94,8 +94,12 @@ qt_add_library(jarvis_core STATIC
     chat_engine.cpp
     system_info.h
     system_info.cpp
+    secret_store.h
+    secret_store.cpp
     config.h
     config.cpp
+    settings_catalog.h
+    settings_catalog.cpp
     claude_client.h
     claude_client.cpp
     assistant.h
@@ -106,13 +110,13 @@ target_include_directories(jarvis_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAK
 file(GLOB JARVIS_SCHEMATICS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/schematics/*.svg")
 qt_add_resources(jarvis_core schematics PREFIX "/" FILES schematics/examples.json ${JARVIS_SCHEMATICS})
 qt_add_resources(jarvis_core bundled_skills PREFIX "/" FILES skills/philosophy.json skills/electronics.json skills/embedded.json skills/physics.json skills/programming.json skills/driving.json skills/conversation.json skills/writing.json)
-target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Gui Qt6::Network jarvis_sys)
+target_link_libraries(jarvis_core PUBLIC Qt6::Core Qt6::Gui Qt6::Network Qt6::DBus jarvis_sys)
 jarvis_warnings(jarvis_core)
 
 # Russian translation of the English source strings (C++ and QML). Only
 # lrelease is needed (package qt6-l10n-tools); the .qm is embedded in the core
 # library so the GUI and the daemon share it. Refresh the .ts after changing
-# strings: lupdate -locations none -no-obsolete *.cpp *.h *.qml hud/*.qml -ts i18n/jarvis_ru.ts
+# strings: lupdate -locations none -no-obsolete *.cpp *.h *.qml hud/*.qml settings/*.qml -ts i18n/jarvis_ru.ts
 find_program(JARVIS_LRELEASE NAMES lrelease lrelease-qt6
     HINTS "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}" "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBEXECS}" /usr/lib/qt6/bin
     REQUIRED)
@@ -158,7 +162,7 @@ jarvis_warnings(jarvisd)
 qt_add_executable(jarvis main.cpp)
 
 # Theme.qml is a QML singleton (Theme.accent, Theme.bg, ...).
-set_source_files_properties(Theme.qml Texts.qml QuickCommands.qml hud/JarvisTheme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(Theme.qml Texts.qml QuickCommands.qml hud/JarvisTheme.qml settings/SettingsState.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(jarvis
     URI Jarvis
@@ -167,7 +171,6 @@ qt_add_qml_module(jarvis
     QML_FILES
         Main.qml
         QuickBar.qml
-        ControlCenter.qml
         SynapseGraph.qml
         MemoryPanel.qml
         Theme.qml
@@ -175,10 +178,25 @@ qt_add_qml_module(jarvis
         QuickCommands.qml
         DarkButton.qml
         DarkMenuItem.qml
-        SettingsDialog.qml
         StudyWindow.qml
         SkillPage.qml
         CodeBlock.qml
+        settings/SettingsState.qml
+        settings/SettingRow.qml
+        settings/SettingSwitch.qml
+        settings/SettingCombo.qml
+        settings/SettingSlider.qml
+        settings/SettingGroup.qml
+        settings/KdeLink.qml
+        settings/ConfirmDialog.qml
+        settings/SettingsWindow.qml
+        settings/DesktopPage.qml
+        settings/ConversationPage.qml
+        settings/IntelligencePage.qml
+        settings/PrivacyPage.qml
+        settings/ActionsPage.qml
+        settings/SkillsPage.qml
+        settings/SystemPage.qml
         hud/JarvisTheme.qml
         hud/HudController.qml
         hud/CoreRings.qml
@@ -217,6 +235,8 @@ qt_add_qml_module(jarvis
         plasma_bridge.cpp
         desktop_shell.h
         desktop_shell.cpp
+        kde_settings.h
+        kde_settings.cpp
         runtime_paths.h
         chat_model.h
         chat_model.cpp
@@ -357,6 +377,12 @@ if(BUILD_TESTING)
     add_executable(jarvis_core_tests tests/core_tests.cpp)
     target_link_libraries(jarvis_core_tests PRIVATE jarvis_core)
     add_test(NAME core COMMAND jarvis_core_tests)
+    # 0.21: keys in the password store, on a fake Secret Service and a private bus.
+    find_program(JARVIS_DBUS_RUN_SESSION dbus-run-session)
+    if(JARVIS_DBUS_RUN_SESSION)
+        add_test(NAME secrets COMMAND ${JARVIS_DBUS_RUN_SESSION} --config-file=${CMAKE_CURRENT_SOURCE_DIR}/tests/test-bus.conf --
+                 ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/secrets_test.py $<TARGET_FILE:jarvis_core_tests>)
+    endif()
     add_test(NAME helpers COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_helpers.py)
     find_program(JARVIS_NODE NAMES node nodejs)
     if(JARVIS_NODE)
@@ -382,6 +408,10 @@ if(BUILD_TESTING)
         set_tests_properties(dock_session PROPERTIES TIMEOUT 600 RUN_SERIAL TRUE LABELS plasma)
         add_test(NAME desktop_shell_session COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_desktop_shell_test.sh ${CMAKE_CURRENT_BINARY_DIR})
         set_tests_properties(desktop_shell_session PROPERTIES TIMEOUT 300 RUN_SERIAL TRUE LABELS plasma)
+        # 0.21: the settings window with the keyboard — dock height both ways, synonyms, KDE Sound,
+        # a key conflict, a malformed API key, screen analysis off, a page reset, a restart, no jarvisd.
+        add_test(NAME settings_session COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_settings_test.sh ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(settings_session PROPERTIES TIMEOUT 600 RUN_SERIAL TRUE LABELS plasma)
     endif()
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)

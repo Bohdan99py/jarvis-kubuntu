@@ -285,6 +285,60 @@ print(JSON.stringify({ changed: changed }));
 )JS"_s;
 }
 
+QJsonObject dockConfigKeys()
+{
+    // The same defaults and limits as plasmoids/org.jarvis.dock/contents/config/main.xml.
+    const auto number = [](int def, int lo, int hi) { return QJsonObject{{u"default"_s, def}, {u"min"_s, lo}, {u"max"_s, hi}}; };
+    const auto flag = [](bool def) { return QJsonObject{{u"default"_s, def}}; };
+    return QJsonObject{{u"iconSize"_s, number(62, 40, 85)},
+                       {u"magnification"_s, flag(true)},
+                       {u"magnifyAmount"_s, number(35, 5, 60)},
+                       {u"panelStyle"_s, flag(true)},
+                       {u"showProfiles"_s, flag(true)},
+                       {u"showDesktops"_s, flag(true)},
+                       {u"showJarvis"_s, flag(true)},
+                       {u"groupWindows"_s, flag(true)}};
+}
+
+QString dockScript(const QJsonObject &changes)
+{
+    QJsonArray keys;
+    for (const QString &k : dockConfigKeys().keys())
+        keys.append(k);
+    return QString::fromUtf16(kPrelude) + u"var changes = %1;\nvar keys = %2;\n"_s.arg(json(changes), json(QJsonObject{{u"k"_s, keys}})) + uR"JS(
+var out = { found: false };
+var ps = panels();
+for (var i = 0; i < ps.length && !out.found; ++i) {
+    var p = ps[i], ws = p.widgets();
+    for (var j = 0; j < ws.length; ++j) {
+        if (ws[j].type !== "org.jarvis.dock") continue;
+        var w = ws[j], pc = changes.panel || {}, cc = changes.config || {};
+        if (pc.location !== undefined) p.location = pc.location;
+        if (pc.height !== undefined) p.height = pc.height;
+        if (pc.alignment !== undefined) p.alignment = pc.alignment;
+        if (pc.hiding !== undefined) p.hiding = pc.hiding;
+        w.currentConfigGroup = ["General"];
+        var wrote = false;
+        for (var c in cc) { w.writeConfig(c, cc[c]); wrote = true; }
+        if (wrote) w.reloadConfig();
+        out.found = true;
+        out.panel = p.id;
+        out.location = String(p.location);
+        out.height = p.height;
+        out.alignment = String(p.alignment);
+        out.hiding = String(p.hiding);
+        out.config = {};
+        for (var k = 0; k < keys.k.length; ++k) {
+            var v = w.readConfig(keys.k[k]);
+            if (v !== undefined && v !== null && String(v) !== "") out.config[keys.k[k]] = String(v);
+        }
+        break;
+    }
+}
+print(JSON.stringify(out));
+)JS"_s;
+}
+
 QJsonObject parsePrinted(const QString &output)
 {
     const qsizetype start = output.indexOf(u'{');

@@ -37,6 +37,8 @@ class VoiceController : public QObject {
     // ElevenLabs: the key is never shown, only "…abcd". Voices: [{id, name, description}].
     Q_PROPERTY(bool elevenReady READ elevenReady NOTIFY changed)
     Q_PROPERTY(QString elevenKeyHint READ elevenKeyHint NOTIFY changed)
+    // Where the ElevenLabs key is: keyring, file, environment or "" (0.21).
+    Q_PROPERTY(QString elevenKeyStore READ elevenKeyStore NOTIFY changed)
     Q_PROPERTY(QVariantList elevenVoices READ elevenVoices NOTIFY changed)
     Q_PROPERTY(QString elevenVoice READ elevenVoice NOTIFY changed)
     Q_PROPERTY(QString elevenModel READ elevenModel WRITE setElevenModel NOTIFY changed)
@@ -89,6 +91,7 @@ public:
 
     bool elevenReady() const;
     QString elevenKeyHint() const;
+    QString elevenKeyStore() const;
     QVariantList elevenVoices() const { return m_elevenVoices; }
     QString elevenVoice() const;
     QString elevenModel() const;
@@ -96,7 +99,8 @@ public:
     double elevenStability() const;
     void setElevenStability(double value);
     bool elevenLoading() const { return m_elevenLoading; }
-    // Saves the key (owner-only file) and fetches the account's voices; "" removes it.
+    // Saves the key (the password store, or an owner-only file without one) and
+    // fetches the account's voices; "" removes it.
     Q_INVOKABLE void setElevenKey(const QString &key);
     Q_INVOKABLE void loadElevenVoices();
     Q_INVOKABLE void chooseElevenVoice(const QString &id, const QString &name);
@@ -116,6 +120,11 @@ public:
     Q_INVOKABLE void installChatterbox();
     // A clear 5–20 s recording of one voice: Chatterbox speaks like it. Empty url removes it.
     Q_INVOKABLE void setChatterboxSample(const QUrl &file);
+    // Settings → reset of "Talking to Jarvis": engine, pace, voices' tuning and
+    // "speak aloud" back to their defaults. Keys, installed voices and the sample stay.
+    Q_INVOKABLE void resetSettings();
+    // What resetSettings() would change, for people.
+    Q_INVOKABLE QStringList resetPreview() const;
 signals:
     void changed();
     void languageChanged();
@@ -136,6 +145,10 @@ private:
     void syncServer();
     QString serverPython() const;
     QString modelName() const;
+    // The ElevenLabs key: ELEVENLABS_API_KEY, the password store, speech.json.
+    QString elevenKey() const;
+    // speak.py reads the key from its environment when it is not in speech.json.
+    QProcessEnvironment speechEnvironment() const;
     QProcess m_worker,m_speech,m_server;
     QString m_serverPython;
     QTimer m_timeout;
@@ -150,5 +163,6 @@ private:
     bool m_outputMeasured=false;
     void resetOutputLevel();
     mutable std::optional<QJsonObject> m_speechCache,m_piperCache;
+    mutable std::optional<std::pair<QString,QString>> m_elevenKeyCache; // key, where
     bool m_recording=false,m_enabled=false,m_receivedError=false;
 };

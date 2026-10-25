@@ -414,7 +414,7 @@ QString IntegrationService::runAction(const QString &id)
         return u"unknown action"_s;
     }
     if (!enabled())
-        return denied(u"the desktop integration is off (Jarvis → Control center → Desktop)"_s);
+        return denied(u"the desktop integration is off (Jarvis → Settings → Desktop)"_s);
     if (!m_actionLimit.allow(caller(), now())) {
         if (calledFromDBus())
             sendErrorReply(QDBusError::LimitsExceeded, u"too many actions; try again in a moment"_s);
@@ -439,9 +439,9 @@ QString IntegrationService::activeApplication()
     if (!cfg.desktopIntegration)
         return denied(u"the desktop integration is off"_s);
     if (!cfg.shareActiveApp)
-        return denied(u"sharing the active application is off (Jarvis → Control center → Desktop)"_s);
+        return denied(u"sharing the active application is off (Jarvis → Settings → Desktop)"_s);
     if (!cfg.awarenessWindow || cfg.awarenessLevel == u"off")
-        return denied(u"window awareness is off (Jarvis → Control center → Awareness)"_s);
+        return denied(u"window awareness is off (Jarvis → Settings → Memory and privacy)"_s);
     const QJsonObject ctx = QJsonDocument::fromJson(m_assistant->contextJson().toUtf8()).object();
     if (!ctx.value(u"available"_s).toBool())
         return compact(QJsonObject{{u"available"_s, false}});
@@ -511,7 +511,7 @@ bool IntegrationService::callerIsGui() const
 bool IntegrationService::acting(const QString &what)
 {
     if (!enabled()) {
-        denied(u"the desktop integration is off (Jarvis → Control center → Desktop)"_s);
+        denied(u"the desktop integration is off (Jarvis → Settings → Desktop)"_s);
         return false;
     }
     if (!m_actionLimit.allow(caller(), now())) {

@@ -98,8 +98,8 @@ msgstr "Закрыть все окна (%1)"
 msgid "Download"
 msgstr "Загрузка"
 
-msgid "Edge (bottom, top, left, right), thickness, alignment, auto-hide or always visible: Plasma's panel editor, or Jarvis → Control center → Desktop. Both apply at once."
-msgstr "Край (снизу, сверху, слева, справа), толщина, выравнивание, автоскрытие или постоянная видимость — в редакторе панели Plasma или в Jarvis → Центр управления → Рабочий стол. Изменения применяются сразу."
+msgid "Edge (bottom, top, left, right), thickness, alignment, auto-hide or always visible: Plasma's panel editor, or Jarvis → Settings → Desktop. Both apply at once."
+msgstr "Край (снизу, сверху, слева, справа), толщина, выравнивание, автоскрытие или постоянная видимость — в редакторе панели Plasma или в Jarvis → Настройки → Рабочий стол. Изменения применяются сразу."
 
 msgid "Enter start · ↑↓←→ move · Tab sections · Esc close"
 msgstr "Enter — запуск · ↑↓←→ — выбор · Tab — разделы · Esc — закрыть"
@@ -392,11 +392,11 @@ msgstr "Последние события"
 msgid "The last request failed"
 msgstr "Последний запрос не выполнен"
 
-msgid "The shade is denser on a light wallpaper (Jarvis measures it) and fades out before the widget's edge. Quality, theme and size: Jarvis → Control center → Desktop. The core rests while a maximized or fullscreen window covers the desktop."
-msgstr "На светлых обоях подложка плотнее (Jarvis измеряет яркость обоев) и сходит на нет до края виджета. Качество, тема и размер — Jarvis → Центр управления → Рабочий стол. Ядро замирает, пока рабочий стол закрыт развёрнутым или полноэкранным окном."
+msgid "The shade is denser on a light wallpaper (Jarvis measures it) and fades out before the widget's edge. Quality, theme and size: Jarvis → Settings → Desktop. The core rests while a maximized or fullscreen window covers the desktop."
+msgstr "На светлых обоях подложка плотнее (Jarvis измеряет яркость обоев) и сходит на нет до края виджета. Качество, тема и размер — Jarvis → Настройки → Рабочий стол. Ядро замирает, пока рабочий стол закрыт развёрнутым или полноэкранным окном."
 
-msgid "Theme, quality and the widgets of each workspace are set in Jarvis → Control center → Desktop."
-msgstr "Тема, качество и виджеты каждого рабочего пространства задаются в Jarvis → Центр управления → Рабочий стол."
+msgid "Theme, quality and the widgets of each workspace are set in Jarvis → Settings → Desktop."
+msgstr "Тема, качество и виджеты каждого рабочего пространства задаются в Jarvis → Настройки → Рабочий стол."
 
 msgid "Unknown track"
 msgstr "Неизвестная композиция"

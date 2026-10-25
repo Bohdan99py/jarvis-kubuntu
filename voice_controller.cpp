@@ -1,5 +1,6 @@
 #include "voice_controller.h"
 #include "runtime_paths.h"
+#include "secret_store.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -106,6 +107,7 @@ void VoiceController::say(const QString &text,const QString &lang) {
     m_speechBuffer.clear();m_speechError=false;
     QStringList args{jarvisScript("speak.py")};
     if(!lang.isEmpty())args.append(lang);
+    m_speech.setProcessEnvironment(speechEnvironment());
     m_speech.start(systemPython(),args);
     m_speech.write(text.left(6000).toUtf8());m_speech.closeWriteChannel();
 }
@@ -155,6 +157,7 @@ void VoiceController::syncServer() {
     }
     m_serverPython=python;
     if(python.isEmpty() || !QFileInfo::exists(python)) return;
+    m_server.setProcessEnvironment(speechEnvironment());
     m_server.start(python,{jarvisScript("speak.py"),"--serve"});
 }
 
@@ -298,13 +301,24 @@ void VoiceController::preview(const QString &lang) {
 
 // ---- ElevenLabs --------------------------------------------------------------------
 
-bool VoiceController::elevenReady() const {
-    return !qEnvironmentVariable("ELEVENLABS_API_KEY").trimmed().isEmpty()
-           || !speechSettings().value("elevenlabs").toObject().value("api_key").toString().isEmpty();
+QString VoiceController::elevenKey() const {
+    if(!m_elevenKeyCache) {
+        QString key=qEnvironmentVariable("ELEVENLABS_API_KEY").trimmed(),where=QStringLiteral("environment");
+        if(key.isEmpty()) {key=jarvis::SecretStore::read(QLatin1String(jarvis::SecretStore::kElevenLabs));where=QStringLiteral("keyring");}
+        if(key.isEmpty()) {key=speechSettings().value("elevenlabs").toObject().value("api_key").toString();where=QStringLiteral("file");}
+        m_elevenKeyCache=std::make_pair(key,key.isEmpty()?QString():where);
+    }
+    return m_elevenKeyCache->first;
 }
+QString VoiceController::elevenKeyStore() const { elevenKey(); return m_elevenKeyCache->second; }
+QProcessEnvironment VoiceController::speechEnvironment() const {
+    QProcessEnvironment env=QProcessEnvironment::systemEnvironment();
+    if(elevenKeyStore()==QLatin1String("keyring")) env.insert(QStringLiteral("ELEVENLABS_API_KEY"),elevenKey());
+    return env;
+}
+bool VoiceController::elevenReady() const { return !elevenKey().isEmpty(); }
 QString VoiceController::elevenKeyHint() const {
-    QString key=qEnvironmentVariable("ELEVENLABS_API_KEY").trimmed();
-    if(key.isEmpty()) key=speechSettings().value("elevenlabs").toObject().value("api_key").toString();
+    const QString key=elevenKey();
     return key.size()>8 ? QChar(0x2026)+key.right(4) : QString();
 }
 QString VoiceController::elevenVoice() const {
@@ -322,15 +336,26 @@ void VoiceController::setElevenKey(const QString &key) {
     const QString value=key.trimmed();
     static const QRegularExpression valid(QStringLiteral("^[A-Za-z0-9_-]{16,200}$"));
     if(!value.isEmpty() && !valid.match(value).hasMatch()) {m_status=tr("This does not look like an ElevenLabs API key.");emit changed();return;}
-    updateSection("elevenlabs","api_key",value.isEmpty() ? QJsonValue(QJsonValue::Undefined) : QJsonValue(value));
+    QString error;
+    if(jarvis::SecretStore::available()) {
+        const QString account=QLatin1String(jarvis::SecretStore::kElevenLabs);
+        if(value.isEmpty() ? !jarvis::SecretStore::remove(account,&error) : !jarvis::SecretStore::write(account,QStringLiteral("Jarvis: ElevenLabs API key"),value,&error)) {
+            m_status=tr("The key was not saved: %1").arg(error);emit changed();return;
+        }
+    }
+    m_elevenKeyCache.reset();
+    // A key in the password store leaves the file; without a store the file keeps it.
+    const bool inFile=!jarvis::SecretStore::available() && !value.isEmpty();
+    updateSection("elevenlabs","api_key",inFile ? QJsonValue(value) : QJsonValue(QJsonValue::Undefined));
+    // The speech server took the old key with its environment.
+    if(m_server.state()!=QProcess::NotRunning) {m_server.closeWriteChannel();if(!m_server.waitForFinished(1500))m_server.kill();m_serverPython.clear();syncServer();}
     if(value.isEmpty()) {m_elevenVoices.clear();m_status=tr("The ElevenLabs key was removed.");emit changed();return;}
     m_status=tr("Key saved. Loading your ElevenLabs voices…");
     loadElevenVoices();
 }
 void VoiceController::loadElevenVoices() {
     if(m_elevenLoading) return;
-    QString key=qEnvironmentVariable("ELEVENLABS_API_KEY").trimmed();
-    if(key.isEmpty()) key=speechSettings().value("elevenlabs").toObject().value("api_key").toString();
+    const QString key=elevenKey();
     if(key.isEmpty()) {m_status=tr("Enter an ElevenLabs API key to use its voices.");emit changed();return;}
     QNetworkRequest request(QUrl(QStringLiteral("https://api.elevenlabs.io/v1/voices")));
     request.setRawHeader("xi-api-key",key.toUtf8());
@@ -432,4 +457,33 @@ void VoiceController::readEvents() {
         else if(!text.isEmpty())m_status=text;
         emit changed();
     }
+}
+
+// ---- Reset (settings window) -------------------------------------------------------
+
+QStringList VoiceController::resetPreview() const {
+    QStringList out;
+    if(m_enabled) out<<tr("Speak answers aloud: off");
+    if(engine()!=QLatin1String("auto")) out<<tr("Voice engine: best available");
+    if(!qFuzzyCompare(rate(),1.0)) out<<tr("Speaking pace: 100 %");
+    const auto eleven=speechSettings().value("elevenlabs").toObject();
+    if(eleven.contains("model") || eleven.contains("stability") || eleven.contains("voice_id")) out<<tr("ElevenLabs voice, model and stability: defaults");
+    const auto chatterbox=speechSettings().value("chatterbox").toObject();
+    if(chatterbox.contains("device") || chatterbox.contains("exaggeration")) out<<tr("Chatterbox expressiveness and processor: defaults");
+    return out;
+}
+void VoiceController::resetSettings() {
+    if(m_enabled) setEnabled(false);
+    auto s=speechSettings();
+    s.remove("engine");
+    auto eleven=s.value("elevenlabs").toObject();
+    for(const char *k:{"model","stability","voice_id","voice_name"}) eleven.remove(QLatin1String(k));
+    s["elevenlabs"]=eleven;
+    auto chatterbox=s.value("chatterbox").toObject();
+    for(const char *k:{"device","exaggeration"}) chatterbox.remove(QLatin1String(k));
+    s["chatterbox"]=chatterbox;
+    saveSpeechSettings(s);
+    auto p=piperSettings();p["rate"]=1.0;savePiperSettings(p);
+    m_status=tr("Voice settings reset.");
+    emit changed();
 }

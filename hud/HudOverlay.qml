@@ -255,7 +255,7 @@ Window {
                     on: overlay.useScreen
                     enabled: overlay.screenAllowed
                     tip: overlay.screenAllowed ? (overlay.useScreen ? qsTr("The window's content goes with the question · Ctrl+Shift+S") : qsTr("Let Jarvis read the window with the question · Ctrl+Shift+S"))
-                                               : qsTr("Screen awareness is off (Control center → Awareness)")
+                                               : qsTr("Screen awareness is off (Settings → Memory and privacy)")
                     onClicked: overlay.useScreen = !overlay.useScreen
                     Accessible.name: qsTr("Screen")
                 }
@@ -298,7 +298,7 @@ Window {
                         return qsTr("The previous window is private or excluded: Jarvis does not look at it.")
                     if (!overlay.windowKnown)
                         return overlay.settings && !overlay.settings.awarenessWindow
-                               ? qsTr("Jarvis does not know which application you came from (Control center → Awareness → Windows).")
+                               ? qsTr("Jarvis does not know which application you came from (Settings → Memory and privacy → Allow Jarvis to see the active window).")
                                : qsTr("No application context yet.")
                     const what = overlay.ctx.app + " — " + overlay.ctx.label + " (" + Math.round((overlay.ctx.confidence || 0) * 100) + " %)"
                     const sees = overlay.useScreen ? (overlay.settings && overlay.settings.awarenessCloudImages ? qsTr("title, window text and a screenshot") : qsTr("title and window text (read on this computer)"))

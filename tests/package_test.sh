@@ -60,7 +60,9 @@ if [ -n "$OLD" ]; then
     echo "ok: upgrade $old_version → $new_version: the new files only, scripts as expected"
     dpkg_ -i "$OLD"; [ "$(version)" = "$old_version" ] || fail "going back to $old_version failed"
     grep -q "\"Version\": \"$old_version\"" "$R/usr/share/plasma/plasmoids/org.jarvis.dock/metadata.json" || fail "the old dock did not come back"
-    [ ! -e "$R/usr/share/plasma/plasmoids/org.jarvis.dock/contents/ui/PanelGlass.qml" ] || fail "a file of $new_version stayed after going back"
+    # Exactly the old package's files: nothing of the new one stays.
+    diff <(dpkg-deb -c "$OLD" | awk '{print $6}' | sed 's|^\./|/|; s|/$||' | grep -v '^/$' | sort) <(files | grep -v '^/\.$') >/dev/null \
+        || fail "a file of $new_version stayed after going back"
     echo "ok: rollback $new_version → $old_version: the old files are back"
 fi
 echo "PASS: the package installs, upgrades, rolls back and removes cleanly (in $R, not the system)"

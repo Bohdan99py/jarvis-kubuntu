@@ -1355,8 +1355,8 @@ QString Assistant::localDesktopReply(Lang lang) const
     const QJsonObject c = m_awareness.context(now(), lang);
     QString reply;
     if (!c.value(u"available"_s).toBool()) {
-        reply = ru ? u"Я не знаю, в каком приложении вы работаете: включите «Окна» в «Центр управления → Осведомлённость»."_s
-                   : u"I don't know which application you are in: turn on \"Windows\" in Control center → Awareness."_s;
+        reply = ru ? u"Я не знаю, в каком приложении вы работаете: включите «Разрешить Jarvis видеть активное окно» в «Настройки → Память и приватность»."_s
+                   : u"I don't know which application you are in: turn on \"Allow Jarvis to see the active window\" in Settings → Memory and privacy."_s;
     } else {
         reply = (ru ? u"Сейчас: **%1** — %2 (уверенность %3 %)."_s : u"Right now: **%1** — %2 (confidence %3 %)."_s)
                     .arg(c.value(u"app"_s).toString(), c.value(u"label"_s).toString())

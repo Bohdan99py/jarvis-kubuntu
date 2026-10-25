@@ -287,7 +287,7 @@ void ChatModel::start(const Sent &request, bool showMessage)
     }
     if (!m_screen || !m_screen->allowed()) {
         note(tr("Screen awareness is off, so I only know the application and its window title. "
-                "Turn it on in Control center → Awareness to let me read the window."));
+                "Turn it on in Settings → Memory and privacy to let me read the window."));
         dispatch(request.text, request.paths, none);
         return;
     }

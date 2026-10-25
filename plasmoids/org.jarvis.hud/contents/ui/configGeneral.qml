@@ -22,7 +22,7 @@ KCM.SimpleKCM {
         }
         QQC2.CheckBox { id: soft; text: i18nd("jarvis-desktop", "Soft, wide falloff"); enabled: backdrop.value > 0 }
         QQC2.Label {
-            text: i18nd("jarvis-desktop", "The shade is denser on a light wallpaper (Jarvis measures it) and fades out before the widget's edge. Quality, theme and size: Jarvis → Control center → Desktop. The core rests while a maximized or fullscreen window covers the desktop.")
+            text: i18nd("jarvis-desktop", "The shade is denser on a light wallpaper (Jarvis measures it) and fades out before the widget's edge. Quality, theme and size: Jarvis → Settings → Desktop. The core rests while a maximized or fullscreen window covers the desktop.")
             wrapMode: Text.Wrap; Layout.maximumWidth: Kirigami.Units.gridUnit * 24; opacity: 0.7
         }
     }

@@ -230,7 +230,7 @@ int ScreenAwareness::capture(const QString &handle, bool image)
     if (!m_allowed) {
         const int id = job.id;
         QTimer::singleShot(0, this, [this, id] {
-            emit captured(id, {}, {}, tr("Screen awareness is off. Turn it on in Control center → Awareness."));
+            emit captured(id, {}, {}, tr("Screen awareness is off. Turn it on in Settings → Memory and privacy."));
         });
         return id;
     }
@@ -478,6 +478,19 @@ void ScreenAwareness::finish(const Job &job, const QString &imagePath, const QSt
 {
     m_ocr.removeAll(nullptr);
     setCapturing(false);
+    // The permission was taken back while the picture was being read: nothing of it is used.
+    if (!m_allowed) {
+        discard(imagePath);
+        setStatus({});
+        if (!job.background)
+            emit captured(job.id, {}, {}, tr("Screen awareness is off. Turn it on in Settings → Memory and privacy."));
+        return;
+    }
+    if (!m_cloudImages && !imagePath.isEmpty()) {
+        discard(imagePath);
+        emit captured(job.id, {}, text, error);
+        return;
+    }
     setStatus(error.isEmpty() ? QString() : error);
     if (job.background) {
         if (text.size() < 20)

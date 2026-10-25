@@ -2,10 +2,249 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru" sourcelanguage="en">
 <context>
+    <name>ActionsPage</name>
+    <message>
+        <source>Initiative</source>
+        <translation>Инициатива</translation>
+    </message>
+    <message>
+        <source>One useful offer beats ten notifications: Jarvis offers help only on evidence — a repeated error, a recognised test question — never because time passed. Never at night, in Do Not Disturb, while the screen is locked or in games and films.</source>
+        <translation>Одно полезное предложение лучше десяти уведомлений: Jarvis предлагает помощь только по признакам — повторяющаяся ошибка, узнанный вопрос теста, — а не потому, что прошло время. Никогда ночью, в режиме «Не беспокоить», при заблокированном экране, в играх и фильмах.</translation>
+    </message>
+    <message>
+        <source>How much initiative Jarvis takes</source>
+        <translation>Насколько Jarvis проявляет инициативу</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Выкл.</translation>
+    </message>
+    <message>
+        <source>No observation at all.</source>
+        <translation>Никакого наблюдения.</translation>
+    </message>
+    <message>
+        <source>Only when I ask</source>
+        <translation>Только по моей просьбе</translation>
+    </message>
+    <message>
+        <source>Context for your questions (Ctrl+J). No offers.</source>
+        <translation>Контекст для ваших вопросов (Ctrl+J). Без предложений.</translation>
+    </message>
+    <message>
+        <source>Rare offers</source>
+        <translation>Редкие предложения</translation>
+    </message>
+    <message>
+        <source>Also offers backed by strong evidence.</source>
+        <translation>Также предложения при веских признаках.</translation>
+    </message>
+    <message>
+        <source>More offers</source>
+        <translation>Больше предложений</translation>
+    </message>
+    <message>
+        <source>Also electronics, documentation and studying.</source>
+        <translation>Также электроника, документация и учёба.</translation>
+    </message>
+    <message>
+        <source>Offers of help</source>
+        <translation>Предложения помощи</translation>
+    </message>
+    <message>
+        <source>Choose &quot;Rare offers&quot; or &quot;More offers&quot; above to use these.</source>
+        <translation>Чтобы это работало, выберите выше «Редкие предложения» или «Больше предложений».</translation>
+    </message>
+    <message>
+        <source>At most one offer every</source>
+        <translation>Не чаще одного предложения в</translation>
+    </message>
+    <message>
+        <source>%1 minutes</source>
+        <translation>%1 минут</translation>
+    </message>
+    <message>
+        <source>%1 hours</source>
+        <translation>%1 ч</translation>
+    </message>
+    <message>
+        <source>Offers per day, at most</source>
+        <translation>Предложений в день, не больше</translation>
+    </message>
+    <message>
+        <source>Build errors that keep coming back</source>
+        <translation>Повторяющиеся ошибки сборки</translation>
+    </message>
+    <message>
+        <source>Driving theory test questions</source>
+        <translation>Вопросы теста по ПДД</translation>
+    </message>
+    <message>
+        <source>Electronics: values and calculations</source>
+        <translation>Электроника: номиналы и расчёты</translation>
+    </message>
+    <message>
+        <source>Technical documentation</source>
+        <translation>Техническая документация</translation>
+    </message>
+    <message>
+        <source>Studying programming</source>
+        <translation>Изучение программирования</translation>
+    </message>
+    <message>
+        <source>Also in fullscreen applications</source>
+        <translation>И в полноэкранных приложениях</translation>
+    </message>
+    <message>
+        <source>Off: a fullscreen window (a game, a presentation, a film) is never interrupted.</source>
+        <translation>Выключено: полноэкранное окно (игра, презентация, фильм) никогда не прерывается.</translation>
+    </message>
+    <message>
+        <source>Offers in the last 30 days</source>
+        <translation>Предложения за 30 дней</translation>
+    </message>
+    <message>
+        <source>%1 offers, %2 accepted, %3 declined. A &quot;Not now&quot; silences that kind of offer for 6 hours and doubles with each refusal; &quot;Don&apos;t offer this&quot; — for a month.</source>
+        <translation>Предложений: %1, принято: %2, отклонено: %3. «Не сейчас» отключает такие предложения на 6 часов, и пауза удваивается с каждым отказом; «Не предлагать» — на месяц.</translation>
+    </message>
+    <message>
+        <source>Shown while the Jarvis service runs.</source>
+        <translation>Показывается, пока работает служба Jarvis.</translation>
+    </message>
+    <message>
+        <source>Jarvis speaks up</source>
+        <translation>Jarvis пишет сам</translation>
+    </message>
+    <message>
+        <source>Hints in notifications follow Plasma&apos;s Do Not Disturb.</source>
+        <translation>Подсказки в уведомлениях соблюдают режим «Не беспокоить» Plasma.</translation>
+    </message>
+    <message>
+        <source>Jarvis speaks up by itself</source>
+        <translation>Jarvis сам подаёт голос</translation>
+    </message>
+    <message>
+        <source>At most one hint every half hour and never between 23:00 and 7:00 or while you play or watch something: a break after long work, words due for review, a question when you have not talked for a while.</source>
+        <translation>Не чаще одной подсказки в полчаса и никогда с 23:00 до 7:00 или во время игр и фильмов: перерыв после долгой работы, слова на повторение, вопрос, если вы давно не говорили.</translation>
+    </message>
+    <message>
+        <source>Suggest a break after</source>
+        <translation>Предлагать перерыв через</translation>
+    </message>
+    <message>
+        <source>Needs &quot;See which application I&apos;m working in&quot; (Memory and privacy): that is how Jarvis knows you are at the computer.</source>
+        <translation>Нужно «Видеть, в какой программе я работаю» («Память и приватность»): так Jarvis знает, что вы за компьютером.</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>Никогда</translation>
+    </message>
+    <message>
+        <source>1 hour</source>
+        <translation>1 час</translation>
+    </message>
+    <message>
+        <source>1.5 hours</source>
+        <translation>1,5 часа</translation>
+    </message>
+    <message>
+        <source>2 hours</source>
+        <translation>2 часа</translation>
+    </message>
+    <message>
+        <source>Morning plan</source>
+        <translation>План на утро</translation>
+    </message>
+    <message>
+        <source>When you sit down in the morning: today&apos;s reminders, open tasks and flashcards to review.</source>
+        <translation>Когда вы садитесь за компьютер утром: напоминания на сегодня, открытые задачи и карточки к повторению.</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Разрешения</translation>
+    </message>
+    <message>
+        <source>Let widgets and KRunner use Jarvis</source>
+        <translation>Разрешить виджетам и KRunner обращаться к Jarvis</translation>
+    </message>
+    <message>
+        <source>KRunner answers &quot;jarvis &lt;question&gt;&quot;, the desktop widgets show Jarvis&apos;s state and may start the actions Jarvis lists (open the overlay, tasks, memory, pause observation). No component can run commands or read your memory through it.</source>
+        <translation>KRunner отвечает на «jarvis &lt;вопрос&gt;», виджеты показывают состояние Jarvis и могут запускать перечисленные Jarvis действия (оверлей, задачи, память, пауза наблюдения). Выполнять команды или читать вашу память через это нельзя.</translation>
+    </message>
+    <message>
+        <source>Tell desktop components the active application</source>
+        <translation>Сообщать компонентам рабочего стола активную программу</translation>
+    </message>
+    <message>
+        <source>Its name only (&quot;kate&quot;, &quot;firefox&quot;), never the window title. Any program of your session could then ask for it — leave it off unless a widget of yours needs it. Needs &quot;Allow Jarvis to see the active window&quot;.</source>
+        <translation>Только имя («kate», «firefox»), никогда не заголовок окна. Узнать его сможет любая программа вашего сеанса — не включайте без надобности. Нужно «Разрешить Jarvis видеть активное окно».</translation>
+    </message>
+    <message>
+        <source>What Jarvis always asks before doing</source>
+        <translation>О чём Jarvis всегда спрашивает</translation>
+    </message>
+    <message>
+        <source>Before it changes the Plasma desktop (JARVIS DESKTOP, widgets, virtual desktops), deletes saved data, or starts reading the screen, Jarvis shows what will happen and waits for your yes. Commands you give yourself (open an application, switch a workspace, a power profile chosen in KRunner) run at once. Installing a Jarvis update goes through Discover, where the system itself asks for the administrator password: Jarvis never sees or keeps it.</source>
+        <translation>Прежде чем изменить рабочий стол Plasma (JARVIS DESKTOP, виджеты, виртуальные рабочие столы), удалить сохранённые данные или начать читать экран, Jarvis показывает, что произойдёт, и ждёт вашего согласия. Ваши собственные команды (открыть программу, переключить пространство, профиль питания из KRunner) выполняются сразу. Обновление Jarvis ставится через Discover, где пароль администратора запрашивает сама система: Jarvis его не видит и не хранит.</translation>
+    </message>
+</context>
+<context>
     <name>AppSettings</name>
     <message>
-        <source>The key must not contain spaces or line breaks.</source>
-        <translation>В ключе не должно быть пробелов и переносов строк.</translation>
+        <source>This does not look like a Claude API key: it starts with sk-ant- and has only Latin letters, digits, &quot;-&quot; and &quot;_&quot;, without spaces.</source>
+        <translation>Это не похоже на ключ API Claude: он начинается с sk-ant- и состоит только из латинских букв, цифр, «-» и «_», без пробелов.</translation>
+    </message>
+    <message>
+        <source>The model name has letters, digits, dots and dashes only, for example claude-haiku-4-5-20251001.</source>
+        <translation>В имени модели только латинские буквы, цифры, точки и дефисы, например claude-haiku-4-5-20251001.</translation>
+    </message>
+    <message>
+        <source>The key was not saved: %1</source>
+        <translation>Ключ не сохранён: %1</translation>
+    </message>
+    <message>
+        <source>Enter a key first: there is none to check.</source>
+        <translation>Сначала введите ключ: проверять нечего.</translation>
+    </message>
+    <message>
+        <source>Asking Anthropic…</source>
+        <translation>Спрашиваю Anthropic…</translation>
+    </message>
+    <message>
+        <source>Connected: the key works and the model %1 is available.</source>
+        <translation>Подключено: ключ работает, модель %1 доступна.</translation>
+    </message>
+    <message>
+        <source>Anthropic rejected the key (401). Check that it was copied completely, or create a new one in the Claude Console.</source>
+        <translation>Anthropic отклонил ключ (401). Проверьте, что он скопирован полностью, или создайте новый в Claude Console.</translation>
+    </message>
+    <message>
+        <source>The key has no access to the API or to this model (403).</source>
+        <translation>У ключа нет доступа к API или к этой модели (403).</translation>
+    </message>
+    <message>
+        <source>The model %1 was not found (404). Check its name.</source>
+        <translation>Модель %1 не найдена (404). Проверьте название.</translation>
+    </message>
+    <message>
+        <source>The key works, but there are too many requests right now (429). Try again in a minute.</source>
+        <translation>Ключ работает, но сейчас слишком много запросов (429). Повторите через минуту.</translation>
+    </message>
+    <message>
+        <source>Anthropic is overloaded or unavailable (%1). Try again later.</source>
+        <translation>Anthropic перегружен или недоступен (%1). Повторите позже.</translation>
+    </message>
+    <message>
+        <source>Anthropic did not answer within 15 seconds. Check the internet connection.</source>
+        <translation>Anthropic не ответил за 15 секунд. Проверьте подключение к интернету.</translation>
+    </message>
+    <message>
+        <source>api.anthropic.com cannot be reached: no internet connection, a proxy or a firewall.</source>
+        <translation>api.anthropic.com недоступен: нет интернета, мешает прокси или брандмауэр.</translation>
+    </message>
+    <message>
+        <source>Unexpected answer from Anthropic (%1).</source>
+        <translation>Неожиданный ответ Anthropic (%1).</translation>
     </message>
     <message>
         <source>Unknown option.</source>
@@ -154,8 +393,8 @@
         <translation>Что у меня на экране?</translation>
     </message>
     <message>
-        <source>Screen awareness is off, so I only know the application and its window title. Turn it on in Control center → Awareness to let me read the window.</source>
-        <translation>Анализ экрана выключен, поэтому я знаю только приложение и заголовок окна. Включите его в «Центр управления → Осведомлённость», чтобы я мог прочитать окно.</translation>
+        <source>Screen awareness is off, so I only know the application and its window title. Turn it on in Settings → Memory and privacy to let me read the window.</source>
+        <translation>Анализ экрана выключен, поэтому я знаю только программу и заголовок окна. Включите его в «Настройки → Память и приватность», чтобы я мог прочитать окно.</translation>
     </message>
     <message>
         <source>The window you came from is private or excluded from observation, so I did not look at it.</source>
@@ -257,574 +496,29 @@
     </message>
 </context>
 <context>
-    <name>ControlCenter</name>
+    <name>ConfirmDialog</name>
     <message>
-        <source>Control center</source>
-        <translation>Центр управления</translation>
+        <source>OK</source>
+        <translation>OK</translation>
     </message>
     <message>
-        <source>Skills</source>
-        <translation>Навыки</translation>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
     </message>
+</context>
+<context>
+    <name>ConversationPage</name>
     <message>
-        <source>Voice</source>
-        <translation>Голос</translation>
-    </message>
-    <message>
-        <source>Memory</source>
-        <translation>Память</translation>
-    </message>
-    <message>
-        <source>Application</source>
-        <translation>Приложение</translation>
-    </message>
-    <message>
-        <source>Import JSON</source>
-        <translation>Импорт JSON</translation>
-    </message>
-    <message>
-        <source>Fetch</source>
-        <translation>Получить</translation>
-    </message>
-    <message>
-        <source>Speak answers aloud</source>
-        <translation>Озвучивать ответы</translation>
-    </message>
-    <message>
-        <source>Stop</source>
-        <translation>Стоп</translation>
-    </message>
-    <message>
-        <source>Local recognition is ready</source>
-        <translation>Локальное распознавание готово</translation>
-    </message>
-    <message>
-        <source>English recognition model</source>
-        <translation>Английская модель распознавания</translation>
-    </message>
-    <message>
-        <source>Russian recognition model</source>
-        <translation>Русская модель распознавания</translation>
-    </message>
-    <message>
-        <source>Check voice installation</source>
-        <translation>Проверить установку голоса</translation>
-    </message>
-    <message>
-        <source>Install voice</source>
-        <translation>Установить голос</translation>
-    </message>
-    <message>
-        <source>Learning and privacy</source>
-        <translation>Обучение и приватность</translation>
-    </message>
-    <message>
-        <source>Everything Jarvis learns is stored only in your home folder (~/.local/share/jarvis, owner-only files). You can review and delete it in the memory panel.</source>
-        <translation>Всё, чему учится Jarvis, хранится только в вашей домашней папке (~/.local/share/jarvis, файлы доступны только владельцу). Просмотреть и удалить данные можно в панели памяти.</translation>
-    </message>
-    <message>
-        <source>Learn from our conversations and my actions in Jarvis</source>
-        <translation>Учиться на наших разговорах и моих действиях в Jarvis</translation>
-    </message>
-    <message>
-        <source>Facts like your name, tools and projects, topics you talk about, corrections (&quot;no, the correct answer is …&quot;) and the quick actions you use. With a Claude key, Jarvis also looks back over a finished conversation, keeps what matters and a short summary, and recalls related earlier conversations later. Passwords, keys and card numbers are never stored.</source>
-        <translation>Факты вроде имени, программ и проектов, темы разговоров, исправления («нет, правильно: …») и быстрые действия, которыми вы пользуетесь. С ключом Claude Jarvis ещё и перечитывает законченный разговор, сохраняет важное и краткое содержание, а потом вспоминает связанные прошлые разговоры. Пароли, ключи и номера карт не сохраняются никогда.</translation>
-    </message>
-    <message>
-        <source>Try in chat: &quot;what do you know about me&quot;, &quot;what did we talk about&quot;, &quot;what am I doing&quot;, &quot;what did I do today&quot;, &quot;forget …&quot;.</source>
-        <translation>Попробуйте в чате: «что ты обо мне знаешь», «о чём мы говорили», «что я делаю», «что я делал сегодня», «забудь …».</translation>
-    </message>
-    <message>
-        <source>Puts Plasma&apos;s layout back exactly as it was before JARVIS DESKTOP (from the backup), or — without a backup — removes every Jarvis widget and panel. Your wallpaper, themes and KDE settings are not touched. If Jarvis itself does not start, run: jarvis --restore-desktop</source>
-        <translation>Возвращает раскладку Plasma точно такой, какой она была до JARVIS DESKTOP (из резервной копии), а без копии — убирает все виджеты и панели Jarvis. Обои, темы и настройки KDE не затрагиваются. Если сам Jarvis не запускается, выполните: jarvis --restore-desktop</translation>
-    </message>
-    <message>
-        <source>Add the Jarvis widget to your desktop?</source>
-        <translation>Добавить виджет Jarvis на рабочий стол?</translation>
-    </message>
-    <message>
-        <source>Jarvis will ask Plasma to place one &quot;Jarvis HUD&quot; widget at the top right of the first screen&apos;s desktop. Nothing else in your layout changes. You can move it, resize it or remove it like any widget, or here.</source>
-        <translation>Jarvis попросит Plasma поставить один виджет «Jarvis HUD» в правый верхний угол рабочего стола первого экрана. Больше ничего в вашей раскладке не изменится. Виджет можно двигать, менять размер и удалять как любой другой — или здесь.</translation>
-    </message>
-    <message>
-        <source>Remove the Jarvis widgets?</source>
-        <translation>Убрать виджеты Jarvis?</translation>
-    </message>
-    <message>
-        <source>Every &quot;Jarvis HUD&quot; widget leaves your desktops and panels. Other widgets are not touched.</source>
-        <translation>Все виджеты «Jarvis HUD» будут убраны с рабочих столов и панелей. Другие виджеты не затрагиваются.</translation>
-    </message>
-    <message>
-        <source>Facts, conversation summaries and topics will be deleted. Taught examples, flashcards and activity history stay.</source>
-        <translation>Факты, краткое содержание разговоров и темы будут удалены. Обученные примеры, карточки и история активности останутся.</translation>
-    </message>
-    <message>
-        <source>Curiosity: Jarvis asks questions to get to know me</source>
-        <translation>Любопытство: Jarvis задаёт вопросы, чтобы узнать меня</translation>
-    </message>
-    <message>
-        <source>Autonomy</source>
-        <translation>Автономность</translation>
-    </message>
-    <message>
-        <source>Turn on the topics you need. Open a tile for its calculators, formulas and ready answers — they work without the internet.</source>
-        <translation>Включите нужные темы. Откройте плитку — там калькуляторы, формулы и готовые ответы, они работают без интернета.</translation>
-    </message>
-    <message>
-        <source>%1 calc.</source>
-        <translation>калькуляторов: %1</translation>
-    </message>
-    <message>
-        <source>%1 formulas</source>
-        <translation>формул: %1</translation>
-    </message>
-    <message>
-        <source>%1 answers</source>
-        <translation>ответов: %1</translation>
-    </message>
-    <message>
-        <source>Now and then — at most every ten minutes and never in the middle of a task — Jarvis asks about you, your projects or an app you use a lot, and remembers the answer. Ignore a question to skip it.</source>
-        <translation>Время от времени — не чаще раза в десять минут и не посреди задачи — Jarvis спрашивает о вас, ваших проектах или программе, в которой вы много работаете, и запоминает ответ. Чтобы пропустить вопрос, просто не отвечайте на него.</translation>
-    </message>
-    <message>
-        <source>See which application I&apos;m working in</source>
-        <translation>Видеть, в каком приложении я работаю</translation>
-    </message>
-    <message>
-        <source>A small KWin script reports the focused window to Jarvis. Time per application, habits and suggestions are kept for 14 days. Nothing is recorded while the screen is locked or after 15 minutes without window changes.</source>
-        <translation>Небольшой скрипт KWin сообщает Jarvis активное окно. Время по приложениям, привычки и подсказки хранятся 14 дней. Ничего не записывается, пока экран заблокирован или после 15 минут без смены окон.</translation>
-    </message>
-    <message>
-        <source>Also keep window titles</source>
-        <translation>Сохранять и заголовки окон</translation>
-    </message>
-    <message>
-        <source>Titles show the document or page (for example &quot;main.cpp — jarvis&quot;). Private browsing and password manager windows are always skipped.</source>
-        <translation>Заголовок показывает документ или страницу (например, «main.cpp — jarvis»). Окна приватного просмотра и менеджеров паролей всегда пропускаются.</translation>
-    </message>
-    <message>
-        <source>Tell Claude what I&apos;m doing</source>
-        <translation>Сообщать Claude, чем я занят</translation>
-    </message>
-    <message>
-        <source>Adds the focused application (and title, if kept) and today&apos;s top apps to requests sent to Anthropic, so answers fit your current work.</source>
-        <translation>Добавляет активное приложение (и заголовок, если он сохраняется) и самые используемые сегодня программы к запросам в Anthropic, чтобы ответы учитывали текущую работу.</translation>
-    </message>
-    <message>
-        <source>Clear activity history</source>
-        <translation>Очистить историю активности</translation>
-    </message>
-    <message>
-        <source>Forget facts and topics</source>
-        <translation>Забыть факты и темы</translation>
-    </message>
-    <message>
-        <source>Autonomy and notifications</source>
-        <translation>Автономность и уведомления</translation>
-    </message>
-    <message>
-        <source>Jarvis keeps working in the background: it delivers reminders, speaks up when it has something useful to say and tidies its memory. Notifications follow Plasma&apos;s &quot;Do not disturb&quot; mode.</source>
-        <translation>Jarvis работает в фоне: присылает напоминания, сам подаёт голос, когда есть что-то полезное, и наводит порядок в памяти. Уведомления подчиняются режиму «Не беспокоить» в Plasma.</translation>
-    </message>
-    <message>
-        <source>Reminders always come, even with the window closed. Try in chat: &quot;remind me tomorrow at 9 to call mum&quot;, &quot;in 20 minutes check the build&quot;, &quot;every weekday at 8:30 exercise&quot;, &quot;add a task buy solder&quot;, &quot;my reminders&quot;.</source>
-        <translation>Напоминания приходят всегда, даже при закрытом окне. Попробуйте в чате: «напомни завтра в 9 позвонить маме», «через 20 минут проверь сборку», «по будням в 8:30 зарядка», «добавь задачу купить паяльник», «мои напоминания».</translation>
-    </message>
-    <message>
-        <source>Jarvis speaks up by itself</source>
-        <translation>Jarvis сам подаёт голос</translation>
-    </message>
-    <message>
-        <source>Hints in notifications, at most one every half hour and never between 23:00 and 7:00 or while you play or watch something: a break after long work, French words due for review, a curious question when you have not talked for a while.</source>
-        <translation>Подсказки в уведомлениях — не чаще раза в полчаса, никогда с 23:00 до 7:00 и пока вы играете или смотрите видео: перерыв после долгой работы, французские слова к повторению, любопытный вопрос, если вы давно не общались.</translation>
-    </message>
-    <message>
-        <source>Suggest a break after</source>
-        <translation>Предлагать перерыв через</translation>
-    </message>
-    <message>
-        <source>Never</source>
-        <translation>Никогда</translation>
-    </message>
-    <message>
-        <source>1 hour</source>
-        <translation>1 час</translation>
-    </message>
-    <message>
-        <source>Jarvis&apos;s voice</source>
-        <translation>Голос Jarvis</translation>
-    </message>
-    <message>
-        <source>A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.</source>
-        <translation>Говорит нейросетевой голос (Piper) на этом компьютере: без интернета, никуда ничего не отправляется. Выберите голос для каждого языка и послушайте его.</translation>
-    </message>
-    <message>
-        <source>Instead of the robotic system voice, a neural voice (Piper) that sounds like a person. It runs on this computer without the internet. The download is about 200 MB for the program and ~63 MB per voice.</source>
-        <translation>Вместо роботизированного системного голоса — нейросетевой голос (Piper), который звучит как человек. Работает на этом компьютере без интернета. Загрузка: около 200 МБ программа и ~63 МБ каждый голос.</translation>
-    </message>
-    <message>
-        <source>Russian</source>
-        <translation>Русский</translation>
-    </message>
-    <message>
-        <source>English</source>
-        <translation>Английский</translation>
-    </message>
-    <message>
-        <source>French (studies)</source>
-        <translation>Французский (занятия)</translation>
-    </message>
-    <message>
-        <source>Listen</source>
-        <translation>Послушать</translation>
-    </message>
-    <message>
-        <source>Pace</source>
-        <translation>Темп</translation>
-    </message>
-    <message>
-        <source>Awareness</source>
-        <translation>Осведомлённость</translation>
-    </message>
-    <message>
-        <source>Desktop</source>
-        <translation>Рабочий стол</translation>
-    </message>
-    <message>
-        <source>Let Claude search the web for current facts</source>
-        <translation>Разрешить Claude искать актуальные сведения в интернете</translation>
-    </message>
-    <message>
-        <source>Traffic law that changed, racing results, calendars and regulations: Claude may run up to three web searches per answer (Anthropic&apos;s web search tool, billed per search; your organisation must allow it in the Claude Console). Off: answers come from Claude&apos;s knowledge and say when a value should be checked.</source>
-        <translation>Изменившиеся ПДД, результаты гонок, календари и регламенты: до трёх поисков на ответ (инструмент веб-поиска Anthropic, оплачивается за каждый поиск; организация должна разрешить его в Claude Console). Выключено: ответы из знаний Claude с пометкой, что значение стоит проверить.</translation>
-    </message>
-    <message>
-        <source>Download the chosen voices</source>
-        <translation>Загрузить выбранные голоса</translation>
-    </message>
-    <message>
-        <source>Install the natural voice</source>
-        <translation>Установить естественный голос</translation>
-    </message>
-    <message>
-        <source>Dictation</source>
-        <translation>Диктовка</translation>
-    </message>
-    <message>
-        <source>Press the microphone, say a phrase and press stop. The recognized text appears in the input field — send it with Enter.</source>
-        <translation>Нажмите микрофон, скажите фразу и нажмите стоп. Распознанный текст появится в поле ввода — отправьте его клавишей Enter.</translation>
-    </message>
-    <message>
-        <source>Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognized on this computer.</source>
-        <translation>Установка загрузит Vosk из PyPI и модель (~45 МБ) с alphacephei.com для языка интерфейса. После этого речь распознаётся на этом компьютере.</translation>
-    </message>
-    <message>
-        <source>Reminders</source>
-        <translation>Напоминания</translation>
-    </message>
-    <message>
-        <source>&quot;Snooze&quot; button</source>
-        <translation>Кнопка «Отложить»</translation>
-    </message>
-    <message>
-        <source>%1 minutes</source>
-        <translation>%1 минут</translation>
-    </message>
-    <message>
-        <source>Until I press &quot;Done&quot;</source>
-        <translation>Пока не нажму «Готово»</translation>
-    </message>
-    <message>
-        <source>remind once</source>
-        <translation>напомнить один раз</translation>
-    </message>
-    <message>
-        <source>again every %1 min (3 times)</source>
-        <translation>повторять каждые %1 мин (3 раза)</translation>
-    </message>
-    <message>
-        <source>&quot;In the morning&quot; means</source>
-        <translation>«Утром» — это</translation>
-    </message>
-    <message>
-        <source>&quot;In the afternoon&quot; means</source>
-        <translation>«Днём» — это</translation>
-    </message>
-    <message>
-        <source>&quot;In the evening&quot; means</source>
-        <translation>«Вечером» — это</translation>
-    </message>
-    <message>
-        <source>Sound with reminders</source>
-        <translation>Звук напоминаний</translation>
-    </message>
-    <message>
-        <source>The alarm sound of your Plasma sound theme.</source>
-        <translation>Звук будильника из звуковой темы Plasma.</translation>
-    </message>
-    <message>
-        <source>Repetitions you can say: every day, on weekdays, on weekends, every Monday, on Mondays and Wednesdays, every 2 hours, every 3 days, every 5th of the month, every year on 20 October; and &quot;15 minutes before&quot;. A reminder can be edited with ✎ in the Tasks tab or moved in chat: &quot;move the reminder about the call to 5 pm&quot;.</source>
-        <translation>Повторы можно сказать словами: каждый день, по будням, по выходным, каждый понедельник, по понедельникам и средам, каждые 2 часа, каждые 3 дня, каждое 5 число, каждый год 20 октября; и «за 15 минут до». Напоминание можно изменить кнопкой ✎ на вкладке «Задачи» или перенести в чате: «перенеси напоминание про созвон на 17:00».</translation>
-    </message>
-    <message>
-        <source>1.5 hours</source>
-        <translation>1,5 часа</translation>
-    </message>
-    <message>
-        <source>2 hours</source>
-        <translation>2 часа</translation>
-    </message>
-    <message>
-        <source>Breaks need &quot;See which application I&apos;m working in&quot; on the Memory tab: that is how Jarvis knows you are at the computer.</source>
-        <translation>Для перерывов включите «Видеть, в каком приложении я работаю» на вкладке «Память»: так Jarvis знает, что вы за компьютером.</translation>
-    </message>
-    <message>
-        <source>Morning plan</source>
-        <translation>План на утро</translation>
-    </message>
-    <message>
-        <source>When you sit down in the morning: today&apos;s reminders, open tasks and flashcards to review.</source>
-        <translation>Когда вы садитесь за компьютер утром: напоминания на сегодня, открытые задачи и карточки к повторению.</translation>
-    </message>
-    <message>
-        <source>Review my memory every day</source>
-        <translation>Пересматривать память каждый день</translation>
-    </message>
-    <message>
-        <source>With a Claude key, once a day Jarvis sends the facts it keeps about you and short summaries of your conversations to Claude to merge duplicates, drop outdated facts and note your goals and habits. Facts you added yourself are never deleted.</source>
-        <translation>С ключом Claude раз в день Jarvis отправляет Claude факты о вас и краткие пересказы разговоров, чтобы объединить дубли, убрать устаревшее и отметить ваши цели и привычки. Факты, добавленные вами вручную, не удаляются никогда.</translation>
-    </message>
-    <message>
-        <source>Tell me when something is ready while Jarvis is hidden</source>
-        <translation>Сообщать, когда что-то готово, пока Jarvis скрыт</translation>
-    </message>
-    <message>
-        <source>An answer you were waiting for, a finished transcription or PDF translation, the voice setup.</source>
-        <translation>Ответ, которого вы ждали, готовая расшифровка или перевод PDF, установка голоса.</translation>
-    </message>
-    <message>
-        <source>Send a test notification</source>
-        <translation>Отправить тестовое уведомление</translation>
-    </message>
-    <message>
-        <source>Notifications work. This is how reminders will look.</source>
-        <translation>Уведомления работают. Так будут выглядеть напоминания.</translation>
-    </message>
-    <message>
-        <source>Cognitive awareness</source>
-        <translation>Когнитивная осведомлённость</translation>
-    </message>
-    <message>
-        <source>Jarvis can understand what you are working on — the application, the window title, and only if you allow it, what is on the screen — to answer with context (Ctrl+J) and, rarely, to offer help. Everything is analysed on this computer; nothing about the screen is stored; observation never runs in secret.</source>
-        <translation>Jarvis может понимать, чем вы заняты, — приложение, заголовок окна и, только с вашего разрешения, содержимое экрана, — чтобы отвечать с учётом контекста (Ctrl+J) и изредка предлагать помощь. Всё анализируется на этом компьютере, ничего с экрана не сохраняется, скрытого наблюдения нет.</translation>
-    </message>
-    <message>
-        <source>Level</source>
-        <translation>Уровень</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>Выкл.</translation>
-    </message>
-    <message>
-        <source>No observation at all. Ctrl+J still opens the overlay, without context.</source>
-        <translation>Никакого наблюдения. Ctrl+J по-прежнему открывает оверлей, но без контекста.</translation>
-    </message>
-    <message>
-        <source>Manual</source>
-        <translation>Вручную</translation>
-    </message>
-    <message>
-        <source>Context only when you ask: the overlay and questions like &quot;what&apos;s on my screen&quot;. No offers.</source>
-        <translation>Контекст только по запросу: оверлей и вопросы вроде «что у меня на экране». Без предложений.</translation>
-    </message>
-    <message>
-        <source>Assistive</source>
-        <translation>Помощник</translation>
-    </message>
-    <message>
-        <source>Also rare offers backed by strong evidence: a build error that keeps coming back, a driving theory test on the screen.</source>
-        <translation>Плюс редкие предложения при веских признаках: повторяющаяся ошибка сборки, тест по ПДД на экране.</translation>
-    </message>
-    <message>
-        <source>Proactive</source>
-        <translation>Проактивно</translation>
-    </message>
-    <message>
-        <source>Also offers for electronics, documentation and studying, still limited by the rules below.</source>
-        <translation>Плюс предложения по электронике, документации и учёбе — в рамках правил ниже.</translation>
-    </message>
-    <message>
-        <source>Permissions</source>
-        <translation>Разрешения</translation>
-    </message>
-    <message>
-        <source>Windows: which application I&apos;m in and its title</source>
-        <translation>Окна: в каком я приложении и его заголовок</translation>
-    </message>
-    <message>
-        <source>A small KWin script tells Jarvis the focused window (Plasma 5 and 6, X11 and Wayland). Titles stay in memory only. Private browsing and password manager windows are never read.</source>
-        <translation>Небольшой скрипт KWin сообщает Jarvis активное окно (Plasma 5 и 6, X11 и Wayland). Заголовки хранятся только в памяти. Приватные окна браузера и менеджеры паролей не читаются никогда.</translation>
-    </message>
-    <message>
-        <source>Screen: let Jarvis read the window&apos;s content</source>
-        <translation>Экран: разрешить Jarvis читать содержимое окна</translation>
-    </message>
-    <message>
-        <source>A screenshot of the window you were in, read by Tesseract on this computer, only when you ask (the ◉ button in the overlay, &quot;what&apos;s on my screen&quot;) or, if set below, now and then in the background. &quot;◉ SCREEN&quot; is shown whenever it happens. Screenshots are never saved.</source>
-        <translation>Снимок окна, в котором вы работали, распознаётся Tesseract на этом компьютере — только по вашему запросу (кнопка ◉ в оверлее, «что у меня на экране») или, если задано ниже, изредка в фоне. Всякий раз видна метка «◉ ЭКРАН». Снимки не сохраняются.</translation>
-    </message>
-    <message>
-        <source>Send screenshots to Claude</source>
-        <translation>Отправлять снимки экрана в Claude</translation>
-    </message>
-    <message>
-        <source>With this on, a question about the screen also carries the picture to Anthropic (scaled down) — better for drawings, schematics and road signs. Off: only the recognised text goes.</source>
-        <translation>Если включено, вопрос об экране уходит в Anthropic вместе с картинкой (уменьшенной) — лучше для чертежей, схем и дорожных знаков. Выключено: отправляется только распознанный текст.</translation>
-    </message>
-    <message>
-        <source>Background screen analysis</source>
-        <translation>Фоновый анализ экрана</translation>
-    </message>
-    <message>
-        <source>never (only when I ask)</source>
-        <translation>никогда (только по запросу)</translation>
-    </message>
-    <message>
-        <source>at most every %1 min</source>
-        <translation>не чаще раза в %1 мин</translation>
-    </message>
-    <message>
-        <source>Text recognition: Tesseract (%1).</source>
-        <translation>Распознавание текста: Tesseract (%1).</translation>
-    </message>
-    <message>
-        <source>Text recognition needs Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</source>
-        <translation>Для распознавания текста нужен Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</translation>
-    </message>
-    <message>
-        <source>Last screenshot through: %1.</source>
-        <translation>Последний снимок через: %1.</translation>
-    </message>
-    <message>
-        <source>the desktop portal</source>
-        <translation>портал рабочего стола</translation>
-    </message>
-    <message>
-        <source>Test: read my screen now</source>
-        <translation>Проверить: прочитать экран сейчас</translation>
-    </message>
-    <message>
-        <source>Offers of help</source>
-        <translation>Предложения помощи</translation>
-    </message>
-    <message>
-        <source>One useful offer beats ten notifications. Jarvis offers help only on evidence — a repeated error, a recognised test question, going back and forth between docs and code — never because time passed. Never at night, in Do Not Disturb, while the screen is locked, while you are talking to Jarvis, or in games and films.</source>
-        <translation>Одно полезное предложение лучше десяти уведомлений. Jarvis предлагает помощь только при признаках — повторяющаяся ошибка, распознанный вопрос теста, метания между документацией и кодом, — а не потому, что прошло время. Никогда ночью, в режиме «Не беспокоить», при заблокированном экране, во время разговора с Jarvis, в играх и фильмах.</translation>
-    </message>
-    <message>
-        <source>At most one offer every</source>
-        <translation>Не чаще одного предложения в</translation>
-    </message>
-    <message>
-        <source>%1 hours</source>
-        <translation>%1 ч</translation>
-    </message>
-    <message>
-        <source>Offers per day, at most</source>
-        <translation>Предложений в день, не больше</translation>
-    </message>
-    <message>
-        <source>Build errors that keep coming back</source>
-        <translation>Повторяющиеся ошибки сборки</translation>
-    </message>
-    <message>
-        <source>Driving theory test questions</source>
-        <translation>Вопросы теста по ПДД</translation>
-    </message>
-    <message>
-        <source>Electronics: values and calculations</source>
-        <translation>Электроника: номиналы и расчёты</translation>
-    </message>
-    <message>
-        <source>Technical documentation</source>
-        <translation>Техническая документация</translation>
-    </message>
-    <message>
-        <source>Studying programming</source>
-        <translation>Изучение программирования</translation>
-    </message>
-    <message>
-        <source>Also in fullscreen applications</source>
-        <translation>И в полноэкранных приложениях</translation>
-    </message>
-    <message>
-        <source>Off: a fullscreen window (a game, a presentation, a film) is never interrupted.</source>
-        <translation>Выключено: полноэкранное окно (игра, презентация, фильм) никогда не прерывается.</translation>
-    </message>
-    <message>
-        <source>Last 30 days: %1 offers, %2 accepted, %3 declined. A &quot;Not now&quot; silences that kind of offer for 6 hours and doubles with each refusal; &quot;Don&apos;t offer this&quot; — for a month.</source>
-        <translation>За 30 дней: предложений %1, принято %2, отклонено %3. «Не сейчас» заглушает такие предложения на 6 часов, каждый следующий отказ — вдвое дольше; «Не предлагать такое» — на месяц.</translation>
-    </message>
-    <message>
-        <source>Never observe these applications</source>
-        <translation>Никогда не наблюдать за этими приложениями</translation>
-    </message>
-    <message>
-        <source>Desktop file names or window classes, separated by commas (for example: org.telegram.desktop, firefox). Password managers, keyrings and authentication prompts are always excluded.</source>
-        <translation>Имена .desktop-файлов или классы окон через запятую (например: org.telegram.desktop, firefox). Менеджеры паролей, связки ключей и окна аутентификации исключены всегда.</translation>
-    </message>
-    <message>
-        <source>Exclude current</source>
-        <translation>Исключить текущее</translation>
-    </message>
-    <message>
-        <source>Pause</source>
-        <translation>Пауза</translation>
-    </message>
-    <message>
-        <source>Paused until %1: no offers, no background screenshots.</source>
-        <translation>Пауза до %1: без предложений и фоновых снимков.</translation>
-    </message>
-    <message>
-        <source>Observation is running at the level above.</source>
-        <translation>Наблюдение работает на выбранном выше уровне.</translation>
-    </message>
-    <message>
-        <source>Pause 1 hour</source>
-        <translation>Пауза на 1 час</translation>
-    </message>
-    <message>
-        <source>Until tomorrow</source>
-        <translation>До завтра</translation>
-    </message>
-    <message>
-        <source>Resume</source>
-        <translation>Возобновить</translation>
-    </message>
-    <message>
-        <source>Global shortcut</source>
-        <translation>Глобальное сочетание клавиш</translation>
-    </message>
-    <message>
-        <source>The overlay opens from any application. Plasma asks once to confirm the key and keeps it in System Settings → Keyboard → Shortcuts, where it can be changed if Ctrl+J is taken (browsers use it for downloads). Without the portal: bind &quot;J.A.R.V.I.S. → Overlay&quot; (jarvis --overlay) there by hand.</source>
-        <translation>Оверлей открывается из любого приложения. Plasma один раз просит подтвердить клавишу и хранит её в «Параметры системы → Клавиатура → Комбинации клавиш», где её можно сменить, если Ctrl+J занята (в браузерах это загрузки). Без портала назначьте там вручную «J.A.R.V.I.S. → Оверлей» (jarvis --overlay).</translation>
-    </message>
-    <message>
-        <source>Bind Ctrl+J</source>
-        <translation>Назначить Ctrl+J</translation>
-    </message>
-    <message>
-        <source>Change the key…</source>
-        <translation>Сменить клавишу…</translation>
-    </message>
-    <message>
-        <source>Forget observed context and offer history</source>
-        <translation>Забыть наблюдения и историю предложений</translation>
+        <source>Language</source>
+        <translation>Язык</translation>
     </message>
     <message>
         <source>Interface language</source>
         <translation>Язык интерфейса</translation>
+    </message>
+    <message>
+        <source>Applies at once to every Jarvis window.</source>
+        <translation>Применяется сразу ко всем окнам Jarvis.</translation>
     </message>
     <message>
         <source>System (%1)</source>
@@ -839,366 +533,12 @@
         <translation>Как в моём сообщении</translation>
     </message>
     <message>
-        <source>Desktop integration</source>
-        <translation>Интеграция с рабочим столом</translation>
+        <source>Voice</source>
+        <translation>Голос</translation>
     </message>
     <message>
-        <source>How Jarvis lives in KDE Plasma: the background service, a widget on the desktop, KRunner (Alt+Space → &quot;jarvis …&quot;) and actions other desktop components may start. Nothing in Plasma changes without your confirmation, and &quot;Restore the standard desktop&quot; takes every Jarvis addition away.</source>
-        <translation>Как Jarvis живёт в KDE Plasma: фоновая служба, виджет на рабочем столе, KRunner (Alt+Пробел → «jarvis …») и действия, которые могут запускать другие компоненты рабочего стола. Без вашего подтверждения в Plasma ничего не меняется, а «Восстановить стандартный рабочий стол» убирает всё, что добавил Jarvis.</translation>
-    </message>
-    <message>
-        <source>JARVIS DESKTOP is on</source>
-        <translation>JARVIS DESKTOP включён</translation>
-    </message>
-    <message>
-        <source>STANDARD KDE</source>
-        <translation>СТАНДАРТНЫЙ KDE</translation>
-    </message>
-    <message>
-        <source>Your Plasma desktop in the Jarvis look: the Jarvis core on the desktop, the Jarvis Dock with your applications, holographic widgets and workspaces. KWin and plasmashell stay, every Linux application works as before. Jarvis checks Plasma, backs up the layout, shows what will change and changes it only after you confirm; the standard panels go only once the dock is verified to work, and a restore brings everything back.</source>
-        <translation>Ваш рабочий стол Plasma в стиле Jarvis: ядро Jarvis на рабочем столе, Jarvis Dock с вашими программами, голографические виджеты и рабочие пространства. KWin и plasmashell остаются, все программы Linux работают как прежде. Jarvis проверяет Plasma, делает резервную копию раскладки, показывает, что изменится, и меняет только после вашего подтверждения; стандартные панели убираются лишь после проверки, что док работает, а восстановление возвращает всё обратно.</translation>
-    </message>
-    <message>
-        <source>Check compatibility</source>
-        <translation>Проверить совместимость</translation>
-    </message>
-    <message>
-        <source>Turn on JARVIS DESKTOP…</source>
-        <translation>Включить JARVIS DESKTOP…</translation>
-    </message>
-    <message>
-        <source>Back to standard KDE…</source>
-        <translation>Вернуть стандартный KDE…</translation>
-    </message>
-    <message>
-        <source>What will change:</source>
-        <translation>Что изменится:</translation>
-    </message>
-    <message>
-        <source>Restore point: %1 · from a terminal: jarvis --restore-desktop</source>
-        <translation>Точка восстановления: %1 · из терминала: jarvis --restore-desktop</translation>
-    </message>
-    <message>
-        <source>Appearance</source>
-        <translation>Внешний вид</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>Тема</translation>
-    </message>
-    <message>
-        <source>Classic JARVIS — blue HUD, restrained</source>
-        <translation>Классический JARVIS — голубой HUD, сдержанно</translation>
-    </message>
-    <message>
-        <source>Mark VII — amber, more rings, expressive</source>
-        <translation>Mark VII — янтарь, больше колец, выразительно</translation>
-    </message>
-    <message>
-        <source>Minimal — calm, few effects</source>
-        <translation>Минимальный — спокойно, мало эффектов</translation>
-    </message>
-    <message>
-        <source>Primary and secondary colour</source>
-        <translation>Основной и вторичный цвет</translation>
-    </message>
-    <message>
-        <source>Theme colours</source>
-        <translation>Цвета темы</translation>
-    </message>
-    <message>
-        <source>Glow</source>
-        <translation>Свечение</translation>
-    </message>
-    <message>
-        <source>Panel transparency</source>
-        <translation>Прозрачность панелей</translation>
-    </message>
-    <message>
-        <source>Animation speed</source>
-        <translation>Скорость анимаций</translation>
-    </message>
-    <message>
-        <source>Density</source>
-        <translation>Плотность</translation>
-    </message>
-    <message>
-        <source>Compact</source>
-        <translation>Компактно</translation>
-    </message>
-    <message>
-        <source>Comfortable</source>
-        <translation>Просторно</translation>
-    </message>
-    <message>
-        <source>Desktop quality</source>
-        <translation>Качество рабочего стола</translation>
-    </message>
-    <message>
-        <source>Low — fewest effects, least GPU</source>
-        <translation>Лёгкое — меньше всего эффектов и нагрузки на ГП</translation>
-    </message>
-    <message>
-        <source>Balanced</source>
-        <translation>Баланс</translation>
-    </message>
-    <message>
-        <source>Cinematic — full detail</source>
-        <translation>Кино — полная детализация</translation>
-    </message>
-    <message>
-        <source>Core size and place</source>
-        <translation>Размер и место ядра</translation>
-    </message>
-    <message>
-        <source>Small</source>
-        <translation>Маленькое</translation>
-    </message>
-    <message>
-        <source>Medium</source>
-        <translation>Среднее</translation>
-    </message>
-    <message>
-        <source>Large</source>
-        <translation>Большое</translation>
-    </message>
-    <message>
-        <source>Centre</source>
-        <translation>В центре</translation>
-    </message>
-    <message>
-        <source>Left</source>
-        <translation>Слева</translation>
-    </message>
-    <message>
-        <source>Right</source>
-        <translation>Справа</translation>
-    </message>
-    <message>
-        <source>Bottom</source>
-        <translation>Снизу</translation>
-    </message>
-    <message>
-        <source>Top</source>
-        <translation>Сверху</translation>
-    </message>
-    <message>
-        <source>Centred</source>
-        <translation>По центру</translation>
-    </message>
-    <message>
-        <source>At the start</source>
-        <translation>В начале</translation>
-    </message>
-    <message>
-        <source>At the end</source>
-        <translation>В конце</translation>
-    </message>
-    <message>
-        <source>Hide the dock automatically</source>
-        <translation>Автоматически скрывать док</translation>
-    </message>
-    <message>
-        <source>It slides in when the pointer touches the screen edge.</source>
-        <translation>Он появляется, когда указатель касается края экрана.</translation>
-    </message>
-    <message>
-        <source>Replace the standard panels with the dock</source>
-        <translation>Заменить стандартные панели доком</translation>
-    </message>
-    <message>
-        <source>Off: the Jarvis Dock is added and your panels stay. On: they are removed after the dock is verified to work, and come back with a restore.</source>
-        <translation>Выключено: Jarvis Dock добавляется, ваши панели остаются. Включено: они убираются после проверки работы дока и возвращаются при восстановлении.</translation>
-    </message>
-    <message>
-        <source>Effects in the desktop widgets</source>
-        <translation>Эффекты в виджетах рабочего стола</translation>
-    </message>
-    <message>
-        <source>Off: the core and the widgets stand still and only update their numbers.</source>
-        <translation>Выключено: ядро и виджеты неподвижны и только обновляют числа.</translation>
-    </message>
-    <message>
-        <source>Workspaces</source>
-        <translation>Рабочие пространства</translation>
-    </message>
-    <message>
-        <source>desktop</source>
-        <translation>рабочий стол</translation>
-    </message>
-    <message>
-        <source>Switch</source>
-        <translation>Переключить</translation>
-    </message>
-    <message>
-        <source>Prepare</source>
-        <translation>Подготовить</translation>
-    </message>
-    <message>
-        <source>Files, folders or projects that &quot;prepare&quot; opens</source>
-        <translation>Файлы, папки или проекты, которые открывает «Подготовить»</translation>
-    </message>
-    <message>
-        <source>System</source>
-        <translation>Система</translation>
-    </message>
-    <message>
-        <source>Network</source>
-        <translation>Сеть</translation>
-    </message>
-    <message>
-        <source>Power</source>
-        <translation>Питание</translation>
-    </message>
-    <message>
-        <source>Media</source>
-        <translation>Медиа</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Состояние</translation>
-    </message>
-    <message>
-        <source>Save the window layout of this workspace</source>
-        <translation>Сохранить расположение окон этого пространства</translation>
-    </message>
-    <message>
-        <source>Create the workspaces&apos; desktops…</source>
-        <translation>Создать рабочие столы для пространств…</translation>
-    </message>
-    <message>
-        <source>Widgets</source>
-        <translation>Виджеты</translation>
-    </message>
-    <message>
-        <source>Add a widget to the desktop, or remove it. Move and resize them in Plasma&apos;s edit mode; Plasma keeps where they are.</source>
-        <translation>Добавьте виджет на рабочий стол или уберите его. Перемещайте и меняйте размер в режиме редактирования Plasma; Plasma запоминает их расположение.</translation>
-    </message>
-    <message>
-        <source>Core</source>
-        <translation>Ядро</translation>
-    </message>
-    <message>
-        <source>Edit the layout in Plasma</source>
-        <translation>Редактировать раскладку в Plasma</translation>
-    </message>
-    <message>
-        <source>Done editing</source>
-        <translation>Закончить редактирование</translation>
-    </message>
-    <message>
-        <source>Service</source>
-        <translation>Служба</translation>
-    </message>
-    <message>
-        <source>Start with the system in the tray and keep running</source>
-        <translation>Запускаться вместе с системой в трее и работать постоянно</translation>
-    </message>
-    <message>
-        <source>Jarvis starts in the system tray when you log in and comes back by itself if it crashes. Closing the window only hides it; &quot;Quit&quot; in the tray menu ends it.</source>
-        <translation>Jarvis запускается в трее при входе в систему и сам перезапускается после сбоя. Закрытие окна только прячет его; «Выход» в меню значка в трее завершает работу.</translation>
-    </message>
-    <message>
-        <source>Updates: Bohdan99py/jarvis-kubuntu</source>
-        <translation>Обновления: Bohdan99py/jarvis-kubuntu</translation>
-    </message>
-    <message>
-        <source>The button downloads a verified package and opens Discover. Confirm the system installation, then restart the service and the application.</source>
-        <translation>Кнопка скачивает проверенный пакет и открывает Discover. Подтвердите системную установку, затем перезапустите службу и приложение.</translation>
-    </message>
-    <message>
-        <source>Checking and downloading…</source>
-        <translation>Проверка и загрузка…</translation>
-    </message>
-    <message>
-        <source>Update Jarvis</source>
-        <translation>Обновить Jarvis</translation>
-    </message>
-    <message>
-        <source>Restart service</source>
-        <translation>Перезапустить службу</translation>
-    </message>
-    <message>
-        <source>Stop service</source>
-        <translation>Остановить службу</translation>
-    </message>
-    <message>
-        <source>Reminders and hints pause until Jarvis or the service starts again.</source>
-        <translation>Напоминания и подсказки приостановятся, пока Jarvis или служба не запустятся снова.</translation>
-    </message>
-    <message>
-        <source>Restart Jarvis</source>
-        <translation>Перезапустить Jarvis</translation>
-    </message>
-    <message>
-        <source>Meta+J — quick commands
-A KDE menu entry and a system tray icon</source>
-        <translation>Meta+J — быстрые команды
-Кнопка в меню KDE и значок в системном трее</translation>
-    </message>
-    <message>
-        <source>Claude API settings</source>
-        <translation>Настройки Claude API</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>Готово</translation>
-    </message>
-    <message>
-        <source>Import skill</source>
-        <translation>Импорт навыка</translation>
-    </message>
-    <message>
-        <source>Jarvis skills (*.json)</source>
-        <translation>Навыки Jarvis (*.json)</translation>
-    </message>
-    <message>
-        <source>Let Jarvis read your screen?</source>
-        <translation>Разрешить Jarvis читать экран?</translation>
-    </message>
-    <message>
-        <source>Jarvis will take a screenshot of the window you work in when you ask (and, if you set an interval, now and then in the background) and recognise its text on this computer. &quot;◉ SCREEN&quot; is shown every time. Screenshots are not saved, password and private windows are skipped, and nothing goes to Claude unless you ask a question. You can turn this off or pause it at any moment.</source>
-        <translation>Jarvis будет делать снимок окна, в котором вы работаете, когда вы попросите (и, если задан интервал, изредка в фоне), и распознавать текст на этом компьютере. Каждый раз видна метка «◉ ЭКРАН». Снимки не сохраняются, окна паролей и приватные окна пропускаются, в Claude ничего не уходит, пока вы не зададите вопрос. Выключить или поставить на паузу можно в любой момент.</translation>
-    </message>
-    <message>
-        <source>Desktop colour</source>
-        <translation>Цвет рабочего стола</translation>
-    </message>
-    <message>
-        <source>Turn on JARVIS DESKTOP?</source>
-        <translation>Включить JARVIS DESKTOP?</translation>
-    </message>
-    <message>
-        <source>Jarvis will make these changes to your Plasma desktop:</source>
-        <translation>Jarvis внесёт в рабочий стол Plasma такие изменения:</translation>
-    </message>
-    <message>
-        <source>If anything does not work, the changes are undone at once. You can always go back with &quot;Back to standard KDE&quot; or jarvis --restore-desktop.</source>
-        <translation>Если что-то не заработает, изменения сразу отменяются. Вернуться можно в любой момент: «Вернуть стандартный KDE» или jarvis --restore-desktop.</translation>
-    </message>
-    <message>
-        <source>Back to the standard KDE desktop?</source>
-        <translation>Вернуть стандартный рабочий стол KDE?</translation>
-    </message>
-    <message>
-        <source>plasmashell restarts for a moment and Plasma&apos;s layout comes back from the backup made before JARVIS DESKTOP (%1). Changes you made to panels and widgets since then are saved aside, not kept. Your applications keep running.</source>
-        <translation>plasmashell ненадолго перезапустится, и раскладка Plasma вернётся из резервной копии, сделанной до JARVIS DESKTOP (%1). Изменения панелей и виджетов, сделанные с тех пор, сохраняются отдельно, но не остаются. Ваши программы продолжают работать.</translation>
-    </message>
-    <message>
-        <source>There is no backup: every Jarvis widget and panel is removed; nothing else changes.</source>
-        <translation>Резервной копии нет: все виджеты и панели Jarvis убираются, больше ничего не меняется.</translation>
-    </message>
-    <message>
-        <source>Create virtual desktops for the workspaces?</source>
-        <translation>Создать рабочие столы для пространств?</translation>
-    </message>
-    <message>
-        <source>KWin gets as many virtual desktops as the workspaces need (named GENERAL, STUDY, WORK, DEV). Existing desktops are not renamed or removed.</source>
-        <translation>KWin получит столько рабочих столов, сколько нужно пространствам (с именами GENERAL, STUDY, WORK, DEV). Существующие рабочие столы не переименовываются и не удаляются.</translation>
-    </message>
-    <message>
-        <source>Forget everything about you?</source>
-        <translation>Забыть всё о вас?</translation>
+        <source>Speak answers aloud</source>
+        <translation>Озвучивать ответы</translation>
     </message>
     <message>
         <source>Code, links and tables are not read out — only what a person would say. A new answer interrupts the one still being read.</source>
@@ -1207,6 +547,14 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Voice engine</source>
         <translation>Голосовой движок</translation>
+    </message>
+    <message>
+        <source>the system voice</source>
+        <translation>системный голос</translation>
+    </message>
+    <message>
+        <source>Speaking now: %1. If it fails, the next ready voice takes over, so Jarvis is never silent.</source>
+        <translation>Сейчас говорит: %1. Если он не сработает, подхватит следующий готовый голос — Jarvis не замолчит.</translation>
     </message>
     <message>
         <source>Best available</source>
@@ -1229,28 +577,64 @@ A KDE menu entry and a system tray icon</source>
         <translation>Системный голос (espeak-ng)</translation>
     </message>
     <message>
-        <source>the system voice</source>
-        <translation>системный голос</translation>
+        <source>Speaking pace</source>
+        <translation>Темп речи</translation>
     </message>
     <message>
-        <source>Speaking now: %1. If it fails, the next ready voice takes over, so Jarvis is never silent.</source>
-        <translation>Сейчас говорит: %1. Если он не сработает, подхватит следующий готовый голос — Jarvis не замолчит.</translation>
+        <source>Listen</source>
+        <translation>Послушать</translation>
     </message>
     <message>
-        <source>ElevenLabs</source>
-        <translation>ElevenLabs</translation>
+        <source>Russian</source>
+        <translation>Русский</translation>
     </message>
     <message>
-        <source>Studio-quality voices that sound like a real person, in Russian, English, French and dozens of other languages. The text of each answer is sent to ElevenLabs to be spoken: it needs the internet and an API key (elevenlabs.io → Developers → API keys; the free plan includes a monthly character allowance). The key is stored only on this computer, readable by you alone.</source>
-        <translation>Голоса студийного качества, неотличимые от человека, — на русском, английском, французском и десятках других языков. Текст каждого ответа отправляется в ElevenLabs для озвучивания: нужен интернет и ключ API (elevenlabs.io → Developers → API keys; в бесплатном плане есть месячный лимит символов). Ключ хранится только на этом компьютере и доступен лишь вам.</translation>
+        <source>English</source>
+        <translation>Английский</translation>
     </message>
     <message>
-        <source>Key saved (%1)</source>
-        <translation>Ключ сохранён (%1)</translation>
+        <source>French</source>
+        <translation>Французский</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <source>ElevenLabs key</source>
+        <translation>ElevenLabs: ключ API</translation>
+    </message>
+    <message>
+        <source>Saved (%1) in the system password store.</source>
+        <translation>Сохранён (%1) в системном хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>Taken from the ELEVENLABS_API_KEY environment variable.</source>
+        <translation>Берётся из переменной окружения ELEVENLABS_API_KEY.</translation>
+    </message>
+    <message>
+        <source>Saved (%1) in a file only you can read: there is no system password store here.</source>
+        <translation>Сохранён (%1) в файле, доступном только вам: системного хранилища паролей здесь нет.</translation>
+    </message>
+    <message>
+        <source>Studio voices in the cloud. The text of each answer is sent to ElevenLabs. Key: elevenlabs.io → Developers → API keys.</source>
+        <translation>Студийные голоса в облаке. Текст каждого ответа отправляется в ElevenLabs. Ключ: elevenlabs.io → Developers → API keys.</translation>
+    </message>
+    <message>
+        <source>New key</source>
+        <translation>Новый ключ</translation>
     </message>
     <message>
         <source>ElevenLabs API key</source>
         <translation>Ключ API ElevenLabs</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Показать</translation>
+    </message>
+    <message>
+        <source>Show the key</source>
+        <translation>Показать ключ</translation>
     </message>
     <message>
         <source>Save</source>
@@ -1261,6 +645,14 @@ A KDE menu entry and a system tray icon</source>
         <translation>Удалить</translation>
     </message>
     <message>
+        <source>ElevenLabs voice</source>
+        <translation>Голос ElevenLabs</translation>
+    </message>
+    <message>
+        <source>Your ElevenLabs voices</source>
+        <translation>Ваши голоса ElevenLabs</translation>
+    </message>
+    <message>
         <source>Loading…</source>
         <translation>Загрузка…</translation>
     </message>
@@ -1269,8 +661,8 @@ A KDE menu entry and a system tray icon</source>
         <translation>Загрузить мои голоса</translation>
     </message>
     <message>
-        <source>Model</source>
-        <translation>Модель</translation>
+        <source>ElevenLabs model</source>
+        <translation>Модель ElevenLabs</translation>
     </message>
     <message>
         <source>Multilingual v2 — the most natural reading</source>
@@ -1309,8 +701,16 @@ A KDE menu entry and a system tray icon</source>
         <translation>Chatterbox</translation>
     </message>
     <message>
-        <source>A neural voice by Resemble AI that runs on this computer — nothing is sent anywhere. Give it a 5–20 second recording of a voice and it speaks like that voice. Best with an NVIDIA graphics card; on the processor each sentence takes a few seconds. The download is 1–3 GB for the program and about 3 GB for the model.</source>
-        <translation>Нейросетевой голос от Resemble AI, работает на этом компьютере — ничего никуда не отправляется. Дайте ему запись голоса на 5–20 секунд, и он заговорит этим голосом. Лучше всего с видеокартой NVIDIA; на процессоре каждая фраза синтезируется несколько секунд. Загрузка — 1–3 ГБ программа и около 3 ГБ модель.</translation>
+        <source>A neural voice on this computer; nothing is sent anywhere. Voice sample: %1.</source>
+        <translation>Нейросетевой голос на этом компьютере, ничего никуда не отправляется. Образец голоса: %1.</translation>
+    </message>
+    <message>
+        <source>Chatterbox&apos;s own voice</source>
+        <translation>Собственный голос Chatterbox</translation>
+    </message>
+    <message>
+        <source>A neural voice by Resemble AI that runs on this computer. Download: 1–3 GB for the program and about 3 GB for the model. %1</source>
+        <translation>Нейросетевой голос от Resemble AI, работает на этом компьютере. Загрузка: 1–3 ГБ программа и около 3 ГБ модель. %1</translation>
     </message>
     <message>
         <source>An NVIDIA graphics card was found: the GPU build of PyTorch will be installed.</source>
@@ -1325,16 +725,12 @@ A KDE menu entry and a system tray icon</source>
         <translation>Установить Chatterbox</translation>
     </message>
     <message>
-        <source>Voice sample</source>
-        <translation>Образец голоса</translation>
-    </message>
-    <message>
-        <source>Chatterbox&apos;s own voice</source>
-        <translation>Собственный голос Chatterbox</translation>
-    </message>
-    <message>
         <source>Choose a recording…</source>
         <translation>Выбрать запись…</translation>
+    </message>
+    <message>
+        <source>Remove the sample</source>
+        <translation>Убрать образец</translation>
     </message>
     <message>
         <source>Expressiveness</source>
@@ -1353,8 +749,8 @@ A KDE menu entry and a system tray icon</source>
         <translation>естественно</translation>
     </message>
     <message>
-        <source>Runs on</source>
-        <translation>Где работает</translation>
+        <source>Chatterbox runs on</source>
+        <translation>Chatterbox работает на</translation>
     </message>
     <message>
         <source>Graphics card if there is one</source>
@@ -1373,204 +769,136 @@ A KDE menu entry and a system tray icon</source>
         <translation>Piper</translation>
     </message>
     <message>
-        <source>French</source>
-        <translation>Французский</translation>
+        <source>A neural voice (Piper) speaks on this computer: no internet, nothing is sent anywhere. Choose a voice for each language and listen to it.</source>
+        <translation>Говорит нейросетевой голос (Piper) на этом компьютере: без интернета, никуда ничего не отправляется. Выберите голос для каждого языка и послушайте его.</translation>
     </message>
     <message>
-        <source>Dock position</source>
-        <translation>Положение дока</translation>
+        <source>Instead of the robotic system voice, a neural voice (Piper) that sounds like a person. It runs on this computer without the internet. The download is about 200 MB for the program and ~63 MB per voice.</source>
+        <translation>Вместо роботизированного системного голоса — нейросетевой голос (Piper), который звучит как человек. Работает на этом компьютере без интернета. Загрузка: около 200 МБ программа и ~63 МБ каждый голос.</translation>
     </message>
     <message>
-        <source>Dock height</source>
-        <translation>Высота дока</translation>
+        <source>Download the chosen voices</source>
+        <translation>Загрузить выбранные голоса</translation>
     </message>
     <message>
-        <source>px</source>
-        <translation>пкс</translation>
+        <source>Install the natural voice</source>
+        <translation>Установить естественный голос</translation>
     </message>
     <message>
-        <source>Dock alignment</source>
-        <translation>Выравнивание дока</translation>
+        <source>Russian voice</source>
+        <translation>Русский голос</translation>
     </message>
     <message>
-        <source>Each profile has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens, the widgets it shows and how active Jarvis is there. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking: &quot;Jarvis, prepare the desktop for programming&quot;. Windows are moved with KWin&apos;s own scripting; switching never closes an application.</source>
-        <translation>У каждого профиля свой виртуальный рабочий стол KDE, запускаемые приложения, файлы, которые открывает «подготовка», показываемые виджеты и уровень активности Jarvis. Переключайте здесь, в доке, в KRunner («switch to dev») или голосом: «Джарвис, подготовь рабочий стол для программирования». Окна перемещаются средствами скриптов KWin; при переключении ни одно приложение не закрывается.</translation>
+        <source>English voice</source>
+        <translation>Английский голос</translation>
     </message>
     <message>
-        <source>not installed</source>
-        <translation>не установлено</translation>
+        <source>French voice (studies)</source>
+        <translation>Французский голос (учёба)</translation>
     </message>
     <message>
-        <source>Remove %1</source>
-        <translation>Убрать %1</translation>
+        <source>Microphone</source>
+        <translation>Микрофон</translation>
     </message>
     <message>
-        <source>Add an application: type its name</source>
-        <translation>Добавить приложение: начните вводить название</translation>
+        <source>Dictation</source>
+        <translation>Диктовка</translation>
     </message>
     <message>
-        <source>Jarvis here</source>
-        <translation>Jarvis здесь</translation>
+        <source>Local recognition is ready. Press the microphone in the chat (or Ctrl+Shift+M), speak and press stop.</source>
+        <translation>Локальное распознавание готово. Нажмите микрофон в чате (или Ctrl+Shift+M), скажите фразу и нажмите стоп.</translation>
     </message>
     <message>
-        <source>As in Awareness settings</source>
-        <translation>Как в настройках осведомлённости</translation>
+        <source>Setup downloads Vosk from PyPI and a model (~45 MB) from alphacephei.com for the interface language. After that, speech is recognised on this computer.</source>
+        <translation>Установка скачивает Vosk из PyPI и модель (~45 МБ) с alphacephei.com для языка интерфейса. После этого речь распознаётся на этом компьютере.</translation>
     </message>
     <message>
-        <source>Fewer suggestions (at most assistive)</source>
-        <translation>Меньше подсказок (не выше «помощника»)</translation>
+        <source>The microphone is the one chosen in KDE&apos;s sound settings.</source>
+        <translation>Используется микрофон, выбранный в настройках звука KDE.</translation>
     </message>
     <message>
-        <source>Quiet: no suggestions, answers only</source>
-        <translation>Тихо: без подсказок, только ответы</translation>
+        <source>Check the installation</source>
+        <translation>Проверить установку</translation>
     </message>
     <message>
-        <source>Background work</source>
-        <translation>Фоновая работа</translation>
+        <source>Install dictation</source>
+        <translation>Установить диктовку</translation>
     </message>
     <message>
-        <source>The service keeps reminders, hints, KRunner and the desktop widget working after the Jarvis window is closed or quit. Off: the service ends a few seconds after the window (and two minutes after login if the window does not start); reminders wait until Jarvis is open again.</source>
-        <translation>Служба продолжает работу напоминаний, подсказок, KRunner и виджета после закрытия окна Jarvis или выхода из него. Выключено: служба завершается через несколько секунд после окна (и через две минуты после входа, если окно не запустилось); напоминания ждут, пока Jarvis снова не откроют.</translation>
+        <source>Microphone, speakers and headphones</source>
+        <translation>Микрофон, динамики и наушники</translation>
     </message>
     <message>
-        <source>Plasma</source>
-        <translation>Plasma</translation>
+        <source>Opens System Settings → Sound.</source>
+        <translation>Откроет «Параметры системы → Звук».</translation>
     </message>
     <message>
-        <source>Integration with Plasma</source>
-        <translation>Интеграция с Plasma</translation>
+        <source>Keyboard shortcuts</source>
+        <translation>Горячие клавиши</translation>
     </message>
     <message>
-        <source>KRunner answers &quot;jarvis &lt;question&gt;&quot;, the desktop widget shows the last notification and opens the overlay, and desktop components may start the actions Jarvis lists (open the overlay, tasks, memory, pause awareness). No component can run commands or read your memory through it. Off: KRunner and the widget only say that the integration is off.</source>
-        <translation>KRunner отвечает на «jarvis &lt;вопрос&gt;», виджет показывает последнее уведомление и открывает оверлей, а компоненты рабочего стола могут запускать действия из списка Jarvis (оверлей, задачи, память, пауза осведомлённости). Выполнять команды или читать вашу память через интеграцию нельзя. Выключено: KRunner и виджет лишь сообщают, что интеграция выключена.</translation>
+        <source>Global keys work in any application. Jarvis checks whether a key is already taken and never takes it from another action.</source>
+        <translation>Глобальные клавиши работают в любой программе. Jarvis проверяет, не занято ли сочетание, и никогда не забирает его у другого действия.</translation>
     </message>
     <message>
-        <source>Let desktop components know the active application</source>
-        <translation>Сообщать компонентам рабочего стола активное приложение</translation>
+        <source>Key for the overlay</source>
+        <translation>Клавиша оверлея</translation>
     </message>
     <message>
-        <source>Its name only (&quot;kate&quot;, &quot;firefox&quot;), never the window title, and nothing about private or excluded windows. Needs window awareness. Any program of your session could then ask for it — leave it off unless a widget or script of yours needs it.</source>
-        <translation>Только имя («kate», «firefox»), никогда — заголовок окна, и ничего о приватных или исключённых окнах. Нужна осведомлённость об окнах. Узнать его сможет любая программа вашего сеанса — не включайте, если это не нужно вашему виджету или скрипту.</translation>
+        <source>Now: %1</source>
+        <translation>Сейчас: %1</translation>
     </message>
     <message>
-        <source>Desktop HUD</source>
-        <translation>HUD на рабочем столе</translation>
+        <source>Not set. Without a key the overlay opens from the tray or with jarvis --overlay.</source>
+        <translation>Не назначено. Без клавиши оверлей открывается из трея или командой jarvis --overlay.</translation>
     </message>
     <message>
-        <source>A Plasma widget with Jarvis&apos;s state, a small animated core, system activity and the last notification; a click opens the overlay. It rests while windows cover the desktop and calms down on battery. Plasma 6 draws it with its own components: a problem in Jarvis never reaches the rest of the desktop.</source>
-        <translation>Виджет Plasma с состоянием Jarvis, маленьким анимированным ядром, активностью системы и последним уведомлением; щелчок открывает оверлей. Он замирает, пока рабочий стол закрыт окнами, и успокаивается при работе от батареи. Plasma 6 рисует его своими компонентами: сбой в Jarvis не затронет остальной рабочий стол.</translation>
+        <source>Bind Ctrl+J</source>
+        <translation>Назначить Ctrl+J</translation>
     </message>
     <message>
-        <source>The widget package is not installed.</source>
-        <translation>Пакет виджета не установлен.</translation>
+        <source>Change…</source>
+        <translation>Изменить…</translation>
     </message>
     <message>
-        <source>Plasma is not running here.</source>
-        <translation>Plasma здесь не запущена.</translation>
+        <source>Key for quick commands</source>
+        <translation>Клавиша быстрых команд</translation>
     </message>
     <message>
-        <source>Checking the desktop…</source>
-        <translation>Проверяю рабочий стол…</translation>
+        <source>Not set.</source>
+        <translation>Не назначено.</translation>
     </message>
     <message>
-        <source>Not on the desktop.</source>
-        <translation>На рабочем столе его нет.</translation>
+        <source>KDE&apos;s shortcut service is not available.</source>
+        <translation>Служба комбинаций клавиш KDE недоступна.</translation>
     </message>
     <message>
-        <source>On the desktop: %1</source>
-        <translation>На рабочем столе: %1</translation>
+        <source>Keys inside the Jarvis window</source>
+        <translation>Клавиши в окне Jarvis</translation>
     </message>
     <message>
-        <source>Add to the desktop…</source>
-        <translation>Добавить на рабочий стол…</translation>
+        <source>Ctrl+J — overlay · Ctrl+M — memory panel · Ctrl+Shift+O — compact core · Ctrl+Shift+M — dictation · Ctrl+O — attach files · Ctrl+F — search in settings. These keys are fixed.</source>
+        <translation>Ctrl+J — оверлей · Ctrl+M — панель памяти · Ctrl+Shift+O — компактное ядро · Ctrl+Shift+M — диктовка · Ctrl+O — прикрепить файлы · Ctrl+F — поиск в настройках. Эти клавиши не меняются.</translation>
     </message>
     <message>
-        <source>Remove from the desktop</source>
-        <translation>Убрать с рабочего стола</translation>
+        <source>All keyboard shortcuts</source>
+        <translation>Все комбинации клавиш</translation>
     </message>
     <message>
-        <source>Animations</source>
-        <translation>Анимации</translation>
+        <source>Opens System Settings → Shortcuts, where every key of the system can be changed.</source>
+        <translation>Откроет «Параметры системы → Комбинации клавиш», где меняются все клавиши системы.</translation>
     </message>
     <message>
-        <source>Off (still)</source>
-        <translation>Выкл. (неподвижно)</translation>
+        <source>Chat and overlay</source>
+        <translation>Чат и оверлей</translation>
     </message>
     <message>
-        <source>Low</source>
-        <translation>Слабые</translation>
+        <source>Tell me when an answer is ready while Jarvis is hidden</source>
+        <translation>Сообщать о готовом ответе, когда Jarvis скрыт</translation>
     </message>
     <message>
-        <source>Normal</source>
-        <translation>Обычные</translation>
-    </message>
-    <message>
-        <source>High</source>
-        <translation>Яркие</translation>
-    </message>
-    <message>
-        <source>On battery the widget uses one step less; under maximized or fullscreen windows it stops.</source>
-        <translation>От батареи виджет работает на ступень спокойнее; под развёрнутыми и полноэкранными окнами — замирает.</translation>
-    </message>
-    <message>
-        <source>Service diagnostics</source>
-        <translation>Диагностика службы</translation>
-    </message>
-    <message>
-        <source>Checking…</source>
-        <translation>Проверяю…</translation>
-    </message>
-    <message>
-        <source>Not checked yet.</source>
-        <translation>Ещё не проверялось.</translation>
-    </message>
-    <message>
-        <source>Check again</source>
-        <translation>Проверить снова</translation>
-    </message>
-    <message>
-        <source>Copy report</source>
-        <translation>Скопировать отчёт</translation>
-    </message>
-    <message>
-        <source>The same check in a terminal: jarvis --diagnose · the service log: journalctl --user -u jarvis</source>
-        <translation>Та же проверка в терминале: jarvis --diagnose · журнал службы: journalctl --user -u jarvis</translation>
-    </message>
-    <message>
-        <source>Restore the standard desktop</source>
-        <translation>Восстановить стандартный рабочий стол</translation>
-    </message>
-    <message>
-        <source>Restore the standard desktop…</source>
-        <translation>Восстановить стандартный рабочий стол…</translation>
-    </message>
-    <message>
-        <source>A recording of the voice</source>
-        <translation>Запись голоса</translation>
-    </message>
-    <message>
-        <source>Audio (*.wav *.flac *.mp3 *.ogg)</source>
-        <translation>Аудио (*.wav *.flac *.mp3 *.ogg)</translation>
-    </message>
-    <message>
-        <source>Interface</source>
-        <translation>Интерфейс</translation>
-    </message>
-    <message>
-        <source>Cinematic HUD: every effect</source>
-        <translation>Кинематографический HUD: все эффекты</translation>
-    </message>
-    <message>
-        <source>Balanced HUD</source>
-        <translation>Сбалансированный HUD</translation>
-    </message>
-    <message>
-        <source>Light HUD: no particles, fewer layers</source>
-        <translation>Лёгкий HUD: без частиц, меньше слоёв</translation>
-    </message>
-    <message>
-        <source>Classic chat without the HUD</source>
-        <translation>Классический чат без HUD</translation>
+        <source>An answer you were waiting for, a finished transcription or PDF translation, the voice setup.</source>
+        <translation>Ответ, которого вы ждали, готовая расшифровка или перевод PDF, установка голоса.</translation>
     </message>
     <message>
         <source>Compact core above other windows</source>
@@ -1581,60 +909,132 @@ A KDE menu entry and a system tray icon</source>
         <translation>Маленькое ядро поверх всех окон показывает, чем занят Джарвис. Его можно перетащить куда угодно; щелчок открывает Джарвиса. Ctrl+Shift+O включает и выключает его.</translation>
     </message>
     <message>
-        <source>Graphics card</source>
-        <translation>Видеокарта</translation>
+        <source>Reminders</source>
+        <translation>Напоминания</translation>
     </message>
     <message>
-        <source>System default</source>
-        <translation>Как в системе</translation>
+        <source>Reminders always come, even with the window closed. Try in chat: &quot;remind me tomorrow at 9 to call mum&quot;, &quot;every weekday at 8:30 exercise&quot;.</source>
+        <translation>Напоминания приходят всегда, даже при закрытом окне. Попробуйте в чате: «напомни завтра в 9 позвонить маме», «каждый будний день в 8:30 зарядка».</translation>
     </message>
     <message>
-        <source>Integrated: %1</source>
-        <translation>Встроенная: %1</translation>
+        <source>&quot;Snooze&quot; button</source>
+        <translation>Кнопка «Отложить»</translation>
     </message>
     <message>
-        <source>Integrated</source>
-        <translation>Встроенная</translation>
+        <source>%1 minutes</source>
+        <translation>%1 минут</translation>
     </message>
     <message>
-        <source>Dedicated: %1</source>
-        <translation>Дискретная: %1</translation>
+        <source>1 hour</source>
+        <translation>1 час</translation>
     </message>
     <message>
-        <source>Dedicated (none found)</source>
-        <translation>Дискретная (не найдена)</translation>
+        <source>Remind again until I press &quot;Done&quot;</source>
+        <translation>Напоминать снова, пока я не нажму «Готово»</translation>
     </message>
     <message>
-        <source>Graphics API</source>
-        <translation>Графический API</translation>
+        <source>remind once</source>
+        <translation>напомнить один раз</translation>
     </message>
     <message>
-        <source>Automatic (OpenGL)</source>
-        <translation>Автоматически (OpenGL)</translation>
+        <source>again every %1 min (3 times)</source>
+        <translation>повторять каждые %1 мин (3 раза)</translation>
     </message>
     <message>
-        <source>Renders: measured after the first frame.</source>
-        <translation>Рисует: станет известно после первого кадра.</translation>
+        <source>&quot;In the morning&quot; means</source>
+        <translation>«Утром» — это</translation>
     </message>
     <message>
-        <source>Renders: %1 %2 — SOFTWARE rendering on the CPU (%3). The HUD will be slow; choose Low or the classic chat, or check the graphics driver.</source>
-        <translation>Рисует: %1 %2 — ПРОГРАММНАЯ отрисовка на процессоре (%3). HUD будет медленным: выберите «Лёгкий» или классический чат либо проверьте графический драйвер.</translation>
+        <source>&quot;In the afternoon&quot; means</source>
+        <translation>«Днём» — это</translation>
     </message>
     <message>
-        <source>Renders: %1 %2 on %3 (%4).</source>
-        <translation>Рисует: %1 %2 на %3 (%4).</translation>
+        <source>&quot;In the evening&quot; means</source>
+        <translation>«Вечером» — это</translation>
     </message>
     <message>
-        <source>Restart Jarvis to apply</source>
-        <translation>Перезапустить Jarvis, чтобы применить</translation>
+        <source>Sound with reminders</source>
+        <translation>Звук напоминаний</translation>
     </message>
     <message>
-        <source>Copy graphics diagnostics</source>
-        <translation>Скопировать диагностику графики</translation>
+        <source>The alarm sound of your Plasma sound theme.</source>
+        <translation>Звук будильника из звуковой темы Plasma.</translation>
     </message>
     <message>
-        <source>The API, the renderer, the GPU that draws and every GPU found — also printed by &quot;jarvis --gpu-info&quot;.</source>
-        <translation>API, рендерер, видеокарта, которая рисует, и все найденные видеокарты — то же печатает «jarvis --gpu-info».</translation>
+        <source>Test</source>
+        <translation>Проверка</translation>
+    </message>
+    <message>
+        <source>Shows how reminders will look.</source>
+        <translation>Покажет, как будут выглядеть напоминания.</translation>
+    </message>
+    <message>
+        <source>Send a test notification</source>
+        <translation>Отправить тестовое уведомление</translation>
+    </message>
+    <message>
+        <source>Notifications work. This is how reminders will look.</source>
+        <translation>Уведомления работают. Так будут выглядеть напоминания.</translation>
+    </message>
+    <message>
+        <source>Notifications and Do Not Disturb</source>
+        <translation>Уведомления и «Не беспокоить»</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Notifications. Jarvis follows Plasma&apos;s Do Not Disturb.</source>
+        <translation>Откроет «Параметры системы → Уведомления». Jarvis соблюдает режим «Не беспокоить» Plasma.</translation>
+    </message>
+    <message>
+        <source>A recording of the voice</source>
+        <translation>Запись голоса</translation>
+    </message>
+    <message>
+        <source>Audio (*.wav *.flac *.mp3 *.ogg)</source>
+        <translation>Аудио (*.wav *.flac *.mp3 *.ogg)</translation>
+    </message>
+    <message>
+        <source>Press the new key combination, for example Ctrl+Alt+J.</source>
+        <translation>Нажмите новое сочетание клавиш, например Ctrl+Alt+J.</translation>
+    </message>
+    <message>
+        <source>Press the new key combination</source>
+        <translation>Нажмите новое сочетание клавиш</translation>
+    </message>
+    <message>
+        <source>waiting for a key…</source>
+        <translation>жду нажатия…</translation>
+    </message>
+    <message>
+        <source>Use Ctrl, Alt or Meta together with a key (or an F-key alone).</source>
+        <translation>Используйте Ctrl, Alt или Meta вместе с клавишей (или одну клавишу F1–F12).</translation>
+    </message>
+    <message>
+        <source>%1 is already used by %2. Choose another key, or free it in System Settings → Shortcuts.</source>
+        <translation>%1 уже занято: %2. Выберите другое сочетание или освободите это в «Параметры системы → Комбинации клавиш».</translation>
+    </message>
+    <message>
+        <source>This is already the key of this action.</source>
+        <translation>Это сочетание уже назначено этому действию.</translation>
+    </message>
+    <message>
+        <source>KDE&apos;s shortcut service did not answer; the key cannot be checked.</source>
+        <translation>Служба комбинаций клавиш KDE не ответила: сочетание не проверить.</translation>
+    </message>
+    <message>
+        <source>Free: no other action uses %1.</source>
+        <translation>Свободно: %1 больше ничем не используется.</translation>
+    </message>
+    <message>
+        <source>Default</source>
+        <translation>По умолчанию</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отмена</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>Применить</translation>
     </message>
 </context>
 <context>
@@ -1718,6 +1118,577 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Choose a skill JSON file up to 160 KB.</source>
         <translation>Выберите JSON-файл навыка до 160 КБ.</translation>
+    </message>
+</context>
+<context>
+    <name>DesktopPage</name>
+    <message>
+        <source>How Jarvis looks on your Plasma desktop. Changes apply at once; nothing in Plasma changes without your confirmation, and &quot;Back to standard KDE&quot; takes every Jarvis addition away.</source>
+        <translation>Как Jarvis выглядит на рабочем столе Plasma. Изменения применяются сразу; без вашего подтверждения в Plasma ничего не меняется, а «Вернуть стандартный KDE» убирает всё, что добавил Jarvis.</translation>
+    </message>
+    <message>
+        <source>JARVIS DESKTOP</source>
+        <translation>JARVIS DESKTOP</translation>
+    </message>
+    <message>
+        <source>JARVIS DESKTOP is on</source>
+        <translation>JARVIS DESKTOP включён</translation>
+    </message>
+    <message>
+        <source>Standard KDE desktop</source>
+        <translation>Стандартный рабочий стол KDE</translation>
+    </message>
+    <message>
+        <source>Your Plasma desktop in the Jarvis look: the core on the desktop, the Jarvis Dock with your applications, widgets and workspaces. Jarvis checks Plasma, backs up the layout, shows what will change and changes it only after you confirm.</source>
+        <translation>Рабочий стол Plasma в стиле Jarvis: ядро на рабочем столе, Jarvis Dock с вашими программами, виджеты и пространства. Jarvis проверяет Plasma, сохраняет копию раскладки, показывает изменения и вносит их только после подтверждения.</translation>
+    </message>
+    <message>
+        <source>Checking…</source>
+        <translation>Проверяю…</translation>
+    </message>
+    <message>
+        <source>Check compatibility</source>
+        <translation>Проверить совместимость</translation>
+    </message>
+    <message>
+        <source>Turn on JARVIS DESKTOP…</source>
+        <translation>Включить JARVIS DESKTOP…</translation>
+    </message>
+    <message>
+        <source>Back to standard KDE…</source>
+        <translation>Вернуть стандартный KDE…</translation>
+    </message>
+    <message>
+        <source>What will change:</source>
+        <translation>Что изменится:</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Внешний вид</translation>
+    </message>
+    <message>
+        <source>Shared by the desktop widgets, the dock and the Jarvis window.</source>
+        <translation>Общее для виджетов рабочего стола, дока и окна Jarvis.</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>Тема</translation>
+    </message>
+    <message>
+        <source>Classic JARVIS — blue HUD, restrained</source>
+        <translation>Классический JARVIS — голубой HUD, сдержанно</translation>
+    </message>
+    <message>
+        <source>Mark VII — amber, more rings, expressive</source>
+        <translation>Mark VII — янтарь, больше колец, выразительно</translation>
+    </message>
+    <message>
+        <source>Minimal — calm, few effects</source>
+        <translation>Минимальный — спокойно, мало эффектов</translation>
+    </message>
+    <message>
+        <source>Primary and secondary colour</source>
+        <translation>Основной и вторичный цвет</translation>
+    </message>
+    <message>
+        <source>Your own colours instead of the theme&apos;s.</source>
+        <translation>Свои цвета вместо цветов темы.</translation>
+    </message>
+    <message>
+        <source>Primary colour</source>
+        <translation>Основной цвет</translation>
+    </message>
+    <message>
+        <source>Secondary colour</source>
+        <translation>Дополнительный цвет</translation>
+    </message>
+    <message>
+        <source>Theme colours</source>
+        <translation>Цвета темы</translation>
+    </message>
+    <message>
+        <source>Glow</source>
+        <translation>Свечение</translation>
+    </message>
+    <message>
+        <source>How bright the holographic edges shine.</source>
+        <translation>Насколько ярко светятся голографические края.</translation>
+    </message>
+    <message>
+        <source>Panel transparency</source>
+        <translation>Прозрачность панелей</translation>
+    </message>
+    <message>
+        <source>Left: more solid; right: more of the wallpaper shows through.</source>
+        <translation>Левее — плотнее, правее — сильнее просвечивают обои.</translation>
+    </message>
+    <message>
+        <source>Animation speed</source>
+        <translation>Скорость анимаций</translation>
+    </message>
+    <message>
+        <source>Size of Jarvis elements</source>
+        <translation>Размер элементов Jarvis</translation>
+    </message>
+    <message>
+        <source>Spacing and size in the desktop widgets and the dock.</source>
+        <translation>Отступы и размеры в виджетах рабочего стола и в доке.</translation>
+    </message>
+    <message>
+        <source>Compact</source>
+        <translation>Компактно</translation>
+    </message>
+    <message>
+        <source>Normal</source>
+        <translation>Обычные</translation>
+    </message>
+    <message>
+        <source>Comfortable</source>
+        <translation>Просторно</translation>
+    </message>
+    <message>
+        <source>Effects quality on the desktop</source>
+        <translation>Качество эффектов на рабочем столе</translation>
+    </message>
+    <message>
+        <source>Low — fewest effects, least GPU</source>
+        <translation>Лёгкое — меньше всего эффектов и нагрузки на ГП</translation>
+    </message>
+    <message>
+        <source>Balanced</source>
+        <translation>Баланс</translation>
+    </message>
+    <message>
+        <source>Cinematic — full detail</source>
+        <translation>Кино — полная детализация</translation>
+    </message>
+    <message>
+        <source>Core size and place</source>
+        <translation>Размер и место ядра</translation>
+    </message>
+    <message>
+        <source>The Jarvis core on the desktop.</source>
+        <translation>Ядро Jarvis на рабочем столе.</translation>
+    </message>
+    <message>
+        <source>Small</source>
+        <translation>Маленькое</translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation>Среднее</translation>
+    </message>
+    <message>
+        <source>Large</source>
+        <translation>Большое</translation>
+    </message>
+    <message>
+        <source>Core size</source>
+        <translation>Размер ядра</translation>
+    </message>
+    <message>
+        <source>Centre</source>
+        <translation>В центре</translation>
+    </message>
+    <message>
+        <source>Left</source>
+        <translation>Слева</translation>
+    </message>
+    <message>
+        <source>Right</source>
+        <translation>Справа</translation>
+    </message>
+    <message>
+        <source>Core place</source>
+        <translation>Место ядра</translation>
+    </message>
+    <message>
+        <source>Jarvis window</source>
+        <translation>Окно Jarvis</translation>
+    </message>
+    <message>
+        <source>Look of the Jarvis window</source>
+        <translation>Вид окна Jarvis</translation>
+    </message>
+    <message>
+        <source>The animated HUD uses the graphics card; the classic chat is the lightest.</source>
+        <translation>Анимированный HUD нагружает видеокарту; классический чат — самый лёгкий.</translation>
+    </message>
+    <message>
+        <source>Cinematic HUD: every effect</source>
+        <translation>Кинематографический HUD: все эффекты</translation>
+    </message>
+    <message>
+        <source>Balanced HUD</source>
+        <translation>Сбалансированный HUD</translation>
+    </message>
+    <message>
+        <source>Light HUD: no particles, fewer layers</source>
+        <translation>Лёгкий HUD: без частиц, меньше слоёв</translation>
+    </message>
+    <message>
+        <source>Classic chat without the HUD</source>
+        <translation>Классический чат без HUD</translation>
+    </message>
+    <message>
+        <source>Dock</source>
+        <translation>Док</translation>
+    </message>
+    <message>
+        <source>The same values as in the dock&apos;s own settings (right click on the dock): a change there shows here, and the other way round.</source>
+        <translation>Те же значения, что в настройках самого дока (правый щелчок по доку): изменение там видно здесь, и наоборот.</translation>
+    </message>
+    <message>
+        <source>Reading the dock from Plasma…</source>
+        <translation>Читаю док из Plasma…</translation>
+    </message>
+    <message>
+        <source>The Jarvis dock is not on a panel. Position, height, alignment and hiding are saved and used when JARVIS DESKTOP adds the dock.</source>
+        <translation>Дока Jarvis нет на панели. Положение, высота, выравнивание и скрытие сохраняются и будут применены, когда JARVIS DESKTOP добавит док.</translation>
+    </message>
+    <message>
+        <source>Dock position</source>
+        <translation>Положение дока</translation>
+    </message>
+    <message>
+        <source>Bottom</source>
+        <translation>Снизу</translation>
+    </message>
+    <message>
+        <source>Top</source>
+        <translation>Сверху</translation>
+    </message>
+    <message>
+        <source>Dock height</source>
+        <translation>Высота дока</translation>
+    </message>
+    <message>
+        <source>From 32 to 72 pixels.</source>
+        <translation>От 32 до 72 пикселей.</translation>
+    </message>
+    <message>
+        <source>px</source>
+        <translation>пкс</translation>
+    </message>
+    <message>
+        <source>Dock alignment</source>
+        <translation>Выравнивание дока</translation>
+    </message>
+    <message>
+        <source>Centred</source>
+        <translation>По центру</translation>
+    </message>
+    <message>
+        <source>At the start</source>
+        <translation>В начале</translation>
+    </message>
+    <message>
+        <source>At the end</source>
+        <translation>В конце</translation>
+    </message>
+    <message>
+        <source>Show the dock automatically</source>
+        <translation>Показывать док автоматически</translation>
+    </message>
+    <message>
+        <source>The dock stays hidden and slides in when the pointer touches the screen edge.</source>
+        <translation>Док скрыт и выезжает, когда указатель касается края экрана.</translation>
+    </message>
+    <message>
+        <source>Icon size in the dock</source>
+        <translation>Размер значков в доке</translation>
+    </message>
+    <message>
+        <source>How much of the dock&apos;s height an icon takes.</source>
+        <translation>Какую часть высоты дока занимает значок.</translation>
+    </message>
+    <message>
+        <source>Magnify icons under the pointer</source>
+        <translation>Увеличивать значки под указателем</translation>
+    </message>
+    <message>
+        <source>How much larger</source>
+        <translation>Насколько крупнее</translation>
+    </message>
+    <message>
+        <source>Jarvis glass under the whole panel</source>
+        <translation>Стекло Jarvis под всей панелью</translation>
+    </message>
+    <message>
+        <source>The dock, the system tray and the clock on one dark glass. Off: Plasma&apos;s usual panel background.</source>
+        <translation>Док, системный трей и часы на одном тёмном стекле. Выключено: обычный фон панели Plasma.</translation>
+    </message>
+    <message>
+        <source>Workspace buttons in the dock</source>
+        <translation>Кнопки пространств в доке</translation>
+    </message>
+    <message>
+        <source>GENERAL, STUDY, WORK, DEV; they appear while the Jarvis service runs.</source>
+        <translation>GENERAL, STUDY, WORK, DEV; появляются, пока работает служба Jarvis.</translation>
+    </message>
+    <message>
+        <source>Virtual desktops in the dock</source>
+        <translation>Виртуальные рабочие столы в доке</translation>
+    </message>
+    <message>
+        <source>Jarvis button in the dock</source>
+        <translation>Кнопка Jarvis в доке</translation>
+    </message>
+    <message>
+        <source>One button per application</source>
+        <translation>Одна кнопка на программу</translation>
+    </message>
+    <message>
+        <source>Off: one button per window.</source>
+        <translation>Выключено: кнопка на каждое окно.</translation>
+    </message>
+    <message>
+        <source>Panels and widgets</source>
+        <translation>Панели и виджеты</translation>
+    </message>
+    <message>
+        <source>Replace the standard panels with the dock</source>
+        <translation>Заменить стандартные панели доком</translation>
+    </message>
+    <message>
+        <source>Used when JARVIS DESKTOP is turned on. Off: the dock is added and your panels stay. On: they are removed after the dock is verified to work, and come back with a restore.</source>
+        <translation>Действует при включении JARVIS DESKTOP. Выключено: док добавляется, ваши панели остаются. Включено: они убираются после проверки дока и возвращаются при восстановлении.</translation>
+    </message>
+    <message>
+        <source>Animations in the desktop widgets</source>
+        <translation>Анимация виджетов рабочего стола</translation>
+    </message>
+    <message>
+        <source>Off: the core and the widgets stand still and only update their numbers.</source>
+        <translation>Выключено: ядро и виджеты неподвижны и только обновляют числа.</translation>
+    </message>
+    <message>
+        <source>Desktop widgets</source>
+        <translation>Виджеты рабочего стола</translation>
+    </message>
+    <message>
+        <source>Add a widget, or remove all widgets of that kind. Move and resize them in Plasma&apos;s edit mode.</source>
+        <translation>Добавьте виджет или уберите все виджеты этого вида. Перемещать и менять размер — в режиме правки Plasma.</translation>
+    </message>
+    <message>
+        <source>Plasma is not running here.</source>
+        <translation>Plasma здесь не запущена.</translation>
+    </message>
+    <message>
+        <source>System</source>
+        <translation>Система</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Сеть</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Питание</translation>
+    </message>
+    <message>
+        <source>Media</source>
+        <translation>Медиа</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Add %1</source>
+        <translation>Добавить: %1</translation>
+    </message>
+    <message>
+        <source>Remove %1</source>
+        <translation>Убрать %1</translation>
+    </message>
+    <message>
+        <source>Edit the layout in Plasma</source>
+        <translation>Редактировать раскладку в Plasma</translation>
+    </message>
+    <message>
+        <source>Done editing</source>
+        <translation>Закончить редактирование</translation>
+    </message>
+    <message>
+        <source>Jarvis HUD widget</source>
+        <translation>Виджет «Jarvis HUD»</translation>
+    </message>
+    <message>
+        <source>The widget package is not installed.</source>
+        <translation>Пакет виджета не установлен.</translation>
+    </message>
+    <message>
+        <source>Checking the desktop…</source>
+        <translation>Проверяю рабочий стол…</translation>
+    </message>
+    <message>
+        <source>Not on the desktop.</source>
+        <translation>На рабочем столе его нет.</translation>
+    </message>
+    <message>
+        <source>On the desktop: %1</source>
+        <translation>На рабочем столе: %1</translation>
+    </message>
+    <message>
+        <source>Add…</source>
+        <translation>Добавить…</translation>
+    </message>
+    <message>
+        <source>Remove…</source>
+        <translation>Убрать…</translation>
+    </message>
+    <message>
+        <source>HUD widget animations</source>
+        <translation>Анимация виджета HUD</translation>
+    </message>
+    <message>
+        <source>On battery the widget uses one step less; under maximized or fullscreen windows it stops.</source>
+        <translation>От батареи виджет работает на ступень спокойнее; под развёрнутыми и полноэкранными окнами — замирает.</translation>
+    </message>
+    <message>
+        <source>Off (still)</source>
+        <translation>Выкл. (неподвижно)</translation>
+    </message>
+    <message>
+        <source>Low</source>
+        <translation>Слабые</translation>
+    </message>
+    <message>
+        <source>High</source>
+        <translation>Яркие</translation>
+    </message>
+    <message>
+        <source>Workspaces</source>
+        <translation>Рабочие пространства</translation>
+    </message>
+    <message>
+        <source>Each workspace has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens, the widgets it shows and how active Jarvis is there. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking. Switching never closes an application.</source>
+        <translation>У каждого пространства свой виртуальный рабочий стол KDE, программы, которые оно запускает, файлы, которые открывает «подготовить», виджеты и активность Jarvis в нём. Переключайте здесь, в доке, в KRunner («переключись в dev») или просьбой. Переключение не закрывает программы.</translation>
+    </message>
+    <message>
+        <source>desktop</source>
+        <translation>рабочий стол</translation>
+    </message>
+    <message>
+        <source>Virtual desktop of %1</source>
+        <translation>Виртуальный рабочий стол %1</translation>
+    </message>
+    <message>
+        <source>Switch</source>
+        <translation>Переключить</translation>
+    </message>
+    <message>
+        <source>Prepare</source>
+        <translation>Подготовить</translation>
+    </message>
+    <message>
+        <source>not installed</source>
+        <translation>не установлено</translation>
+    </message>
+    <message>
+        <source>Add an application: type its name</source>
+        <translation>Добавить приложение: начните вводить название</translation>
+    </message>
+    <message>
+        <source>Jarvis here</source>
+        <translation>Jarvis здесь</translation>
+    </message>
+    <message>
+        <source>As in Actions and permissions</source>
+        <translation>Как в «Действиях и разрешениях»</translation>
+    </message>
+    <message>
+        <source>Fewer suggestions (at most assistive)</source>
+        <translation>Меньше подсказок (не выше «помощника»)</translation>
+    </message>
+    <message>
+        <source>Quiet: no suggestions, answers only</source>
+        <translation>Тихо: без подсказок, только ответы</translation>
+    </message>
+    <message>
+        <source>Files, folders or projects that &quot;prepare&quot; opens</source>
+        <translation>Файлы, папки или проекты, которые открывает «Подготовить»</translation>
+    </message>
+    <message>
+        <source>Save the window layout of this workspace</source>
+        <translation>Сохранить расположение окон этого пространства</translation>
+    </message>
+    <message>
+        <source>Create the workspaces&apos; desktops…</source>
+        <translation>Создать рабочие столы для пространств…</translation>
+    </message>
+    <message>
+        <source>Desktop colour</source>
+        <translation>Цвет рабочего стола</translation>
+    </message>
+    <message>
+        <source>Turn on JARVIS DESKTOP?</source>
+        <translation>Включить JARVIS DESKTOP?</translation>
+    </message>
+    <message>
+        <source>Turn on</source>
+        <translation>Включить</translation>
+    </message>
+    <message>
+        <source>Jarvis will make these changes to your Plasma desktop:</source>
+        <translation>Jarvis внесёт в рабочий стол Plasma такие изменения:</translation>
+    </message>
+    <message>
+        <source>If anything does not work, the changes are undone at once. You can always go back with &quot;Back to standard KDE&quot; or jarvis --restore-desktop.</source>
+        <translation>Если что-то не заработает, изменения сразу отменяются. Вернуться можно в любой момент: «Вернуть стандартный KDE» или jarvis --restore-desktop.</translation>
+    </message>
+    <message>
+        <source>Back to the standard KDE desktop?</source>
+        <translation>Вернуть стандартный рабочий стол KDE?</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Вернуть</translation>
+    </message>
+    <message>
+        <source>plasmashell restarts for a moment and Plasma&apos;s layout comes back from the backup made before JARVIS DESKTOP (%1). Changes you made to panels and widgets since then are saved aside, not kept. Your applications keep running.</source>
+        <translation>plasmashell ненадолго перезапустится, и раскладка Plasma вернётся из резервной копии, сделанной до JARVIS DESKTOP (%1). Изменения панелей и виджетов, сделанные с тех пор, сохраняются отдельно, но не остаются. Ваши программы продолжают работать.</translation>
+    </message>
+    <message>
+        <source>There is no backup: every Jarvis widget and panel is removed; nothing else changes.</source>
+        <translation>Резервной копии нет: все виджеты и панели Jarvis убираются, больше ничего не меняется.</translation>
+    </message>
+    <message>
+        <source>Create virtual desktops for the workspaces?</source>
+        <translation>Создать рабочие столы для пространств?</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Создать</translation>
+    </message>
+    <message>
+        <source>KWin gets as many virtual desktops as the workspaces need (named GENERAL, STUDY, WORK, DEV). Existing desktops are not renamed or removed.</source>
+        <translation>KWin получит столько рабочих столов, сколько нужно пространствам (с именами GENERAL, STUDY, WORK, DEV). Существующие рабочие столы не переименовываются и не удаляются.</translation>
+    </message>
+    <message>
+        <source>Add the Jarvis widget to your desktop?</source>
+        <translation>Добавить виджет Jarvis на рабочий стол?</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <source>Jarvis will ask Plasma to place one &quot;Jarvis HUD&quot; widget at the top right of the first screen&apos;s desktop. Nothing else in your layout changes. You can move it, resize it or remove it like any widget, or here.</source>
+        <translation>Jarvis попросит Plasma поставить один виджет «Jarvis HUD» в правый верхний угол рабочего стола первого экрана. Больше ничего в вашей раскладке не изменится. Виджет можно двигать, менять размер и удалять как любой другой — или здесь.</translation>
+    </message>
+    <message>
+        <source>Remove the Jarvis widgets?</source>
+        <translation>Убрать виджеты Jarvis?</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Every &quot;Jarvis HUD&quot; widget leaves your desktops and panels. Other widgets are not touched.</source>
+        <translation>Все виджеты «Jarvis HUD» будут убраны с рабочих столов и панелей. Другие виджеты не затрагиваются.</translation>
     </message>
 </context>
 <context>
@@ -1836,10 +1807,6 @@ A KDE menu entry and a system tray icon</source>
         <translation>Дать Jarvis прочитать окно вместе с вопросом · Ctrl+Shift+S</translation>
     </message>
     <message>
-        <source>Screen awareness is off (Control center → Awareness)</source>
-        <translation>Анализ экрана выключен («Центр управления → Осведомлённость»)</translation>
-    </message>
-    <message>
         <source>Screen</source>
         <translation>Экран</translation>
     </message>
@@ -1876,8 +1843,12 @@ A KDE menu entry and a system tray icon</source>
         <translation>Предыдущее окно приватное или исключено: Jarvis в него не смотрит.</translation>
     </message>
     <message>
-        <source>Jarvis does not know which application you came from (Control center → Awareness → Windows).</source>
-        <translation>Jarvis не знает, из какого приложения вы пришли («Центр управления → Осведомлённость → Окна»).</translation>
+        <source>Screen awareness is off (Settings → Memory and privacy)</source>
+        <translation>Анализ экрана выключен («Настройки → Память и приватность»)</translation>
+    </message>
+    <message>
+        <source>Jarvis does not know which application you came from (Settings → Memory and privacy → Allow Jarvis to see the active window).</source>
+        <translation>Jarvis не знает, из какой программы вы пришли («Настройки → Память и приватность → Разрешить Jarvis видеть активное окно»).</translation>
     </message>
     <message>
         <source>No application context yet.</source>
@@ -2272,6 +2243,125 @@ A KDE menu entry and a system tray icon</source>
     </message>
 </context>
 <context>
+    <name>IntelligencePage</name>
+    <message>
+        <source>Messages that Jarvis does not handle with local commands are sent to Anthropic (api.anthropic.com) together with the facts it remembers about you. Commands like &quot;memory&quot; or &quot;top processes&quot; stay on your computer.</source>
+        <translation>Сообщения, которые Jarvis не обрабатывает локальными командами, отправляются в Anthropic (api.anthropic.com) вместе с фактами, которые он о вас помнит. Команды вроде «память» или «топ процессов» остаются на вашем компьютере.</translation>
+    </message>
+    <message>
+        <source>Claude</source>
+        <translation>Claude</translation>
+    </message>
+    <message>
+        <source>Claude API key</source>
+        <translation>Ключ API Claude</translation>
+    </message>
+    <message>
+        <source>Saved (%1) in the system password store (KWallet). Jarvis never writes it to a file, a log or a report.</source>
+        <translation>Сохранён (%1) в системном хранилище паролей (KWallet). Jarvis не пишет его ни в файлы, ни в журналы, ни в отчёты.</translation>
+    </message>
+    <message>
+        <source>Taken from the ANTHROPIC_API_KEY environment variable; that one wins over a saved key.</source>
+        <translation>Берётся из переменной окружения ANTHROPIC_API_KEY; она важнее сохранённого ключа.</translation>
+    </message>
+    <message>
+        <source>The system password store is locked: unlock it to let Jarvis read the key.</source>
+        <translation>Системное хранилище паролей заблокировано: разблокируйте его, чтобы Jarvis прочитал ключ.</translation>
+    </message>
+    <message>
+        <source>Saved (%1) in a file only you can read. Save it again to move it into the password store.</source>
+        <translation>Сохранён (%1) в файле, доступном только вам. Сохраните его ещё раз, чтобы перенести в хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>Saved (%1) in %2, readable by you alone: there is no system password store in this session.</source>
+        <translation>Сохранён (%1) в %2, доступен только вам: в этом сеансе нет системного хранилища паролей.</translation>
+    </message>
+    <message>
+        <source>No key yet. Create one in the Claude Console (console.anthropic.com → API keys).</source>
+        <translation>Ключа пока нет. Создайте его в Claude Console (console.anthropic.com → API keys).</translation>
+    </message>
+    <message>
+        <source>New key (empty: keep the saved one)</source>
+        <translation>Новый ключ (пусто — оставить сохранённый)</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Показать</translation>
+    </message>
+    <message>
+        <source>Show the key</source>
+        <translation>Показать ключ</translation>
+    </message>
+    <message>
+        <source>Unlock…</source>
+        <translation>Разблокировать…</translation>
+    </message>
+    <message>
+        <source>Remove key</source>
+        <translation>Удалить ключ</translation>
+    </message>
+    <message>
+        <source>Model</source>
+        <translation>Модель</translation>
+    </message>
+    <message>
+        <source>Haiku is fast and inexpensive; Sonnet and Opus answer harder questions and cost more. You can type another model name.</source>
+        <translation>Haiku — быстрая и недорогая; Sonnet и Opus справляются со сложными вопросами и стоят дороже. Можно ввести другое имя модели.</translation>
+    </message>
+    <message>
+        <source>Save and check</source>
+        <translation>Сохранение и проверка</translation>
+    </message>
+    <message>
+        <source>&quot;Save&quot; checks the format and stores the key and the model. &quot;Check the connection&quot; asks Anthropic whether the key works and the model exists (it does not use tokens); it runs only when you press it.</source>
+        <translation>«Сохранить» проверяет формат и сохраняет ключ и модель. «Проверить подключение» спрашивает Anthropic, работает ли ключ и есть ли такая модель (токены не тратятся); проверка запускается только по этой кнопке.</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Saved.</source>
+        <translation>Сохранено.</translation>
+    </message>
+    <message>
+        <source>Checking…</source>
+        <translation>Проверяю…</translation>
+    </message>
+    <message>
+        <source>Check the connection</source>
+        <translation>Проверить подключение</translation>
+    </message>
+    <message>
+        <source>Let Claude search the web for current facts</source>
+        <translation>Разрешить Claude искать актуальные сведения в интернете</translation>
+    </message>
+    <message>
+        <source>Traffic law that changed, racing results, calendars and regulations: Claude may run up to three web searches per answer (Anthropic&apos;s web search tool, billed per search; your organisation must allow it in the Claude Console). Off: answers come from Claude&apos;s knowledge and say when a value should be checked.</source>
+        <translation>Изменившиеся ПДД, результаты гонок, календари и регламенты: до трёх поисков на ответ (инструмент веб-поиска Anthropic, оплачивается за каждый поиск; организация должна разрешить его в Claude Console). Выключено: ответы из знаний Claude с пометкой, что значение стоит проверить.</translation>
+    </message>
+    <message>
+        <source>Without a key or internet</source>
+        <translation>Без ключа и интернета</translation>
+    </message>
+    <message>
+        <source>What works without a key or internet</source>
+        <translation>Что работает без ключа и интернета</translation>
+    </message>
+    <message>
+        <source>Local commands (open applications, system state, memory), calculators and the skills&apos; ready answers, reminders and tasks, dictation and the voices on this computer. Questions that need Claude say that a key or the internet is missing.</source>
+        <translation>Локальные команды (открыть программу, состояние системы, память), калькуляторы и готовые ответы навыков, напоминания и задачи, диктовка и голоса на этом компьютере. Вопросы, которым нужен Claude, честно скажут, что нет ключа или интернета.</translation>
+    </message>
+    <message>
+        <source>Remove the Claude key?</source>
+        <translation>Удалить ключ Claude?</translation>
+    </message>
+    <message>
+        <source>Jarvis forgets the key (from the password store and the settings file). Answers that need Claude stop until a key is saved again. Your memory and settings stay.</source>
+        <translation>Jarvis забудет ключ (в хранилище паролей и в файле настроек). Ответы, которым нужен Claude, недоступны, пока ключ не сохранят снова. Память и настройки остаются.</translation>
+    </message>
+</context>
+<context>
     <name>JarvisCore</name>
     <message>
         <source>STATE</source>
@@ -2383,6 +2473,48 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>memory review</source>
         <translation>обзор памяти</translation>
+    </message>
+</context>
+<context>
+    <name>KdeLink</name>
+    <message>
+        <source>Not installed on this system.</source>
+        <translation>В этой системе не установлено.</translation>
+    </message>
+    <message>
+        <source>Open in KDE</source>
+        <translation>Открыть в KDE</translation>
+    </message>
+    <message>
+        <source>Open %1 in KDE System Settings</source>
+        <translation>Открыть «%1» в Параметрах системы KDE</translation>
+    </message>
+</context>
+<context>
+    <name>KdeSettings</name>
+    <message>
+        <source>This part of System Settings is not installed here.</source>
+        <translation>Этот раздел Параметров системы здесь не установлен.</translation>
+    </message>
+    <message>
+        <source>KDE System Settings could not be started.</source>
+        <translation>Не удалось запустить Параметры системы KDE.</translation>
+    </message>
+    <message>
+        <source>Use Ctrl, Alt or Meta together with a key (or an F-key alone).</source>
+        <translation>Используйте Ctrl, Alt или Meta вместе с клавишей (или одну клавишу F1–F12).</translation>
+    </message>
+    <message>
+        <source>%1 is already used by %2. Choose another key, or free it in System Settings → Shortcuts.</source>
+        <translation>%1 уже занято: %2. Выберите другое сочетание или освободите это в «Параметры системы → Комбинации клавиш».</translation>
+    </message>
+    <message>
+        <source>KDE&apos;s shortcut service is not available.</source>
+        <translation>Служба комбинаций клавиш KDE недоступна.</translation>
+    </message>
+    <message>
+        <source>KDE did not accept the key.</source>
+        <translation>KDE не принял сочетание.</translation>
     </message>
 </context>
 <context>
@@ -2551,6 +2683,10 @@ A KDE menu entry and a system tray icon</source>
         <translation>Французский</translation>
     </message>
     <message>
+        <source>Settings…</source>
+        <translation>Настройки…</translation>
+    </message>
+    <message>
         <source>Resume observation</source>
         <translation>Возобновить наблюдение</translation>
     </message>
@@ -2601,10 +2737,6 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>Jarvis stays in the system tray. Click the icon to open it; &quot;Quit&quot; in its menu ends it.</source>
         <translation>Jarvis остаётся в трее. Нажмите на значок, чтобы открыть окно; «Выход» в его меню завершает работу.</translation>
-    </message>
-    <message>
-        <source>Control center…</source>
-        <translation>Центр управления…</translation>
     </message>
     <message>
         <source>French studies: lessons, translation, flashcards</source>
@@ -3258,6 +3390,293 @@ A KDE menu entry and a system tray icon</source>
     </message>
 </context>
 <context>
+    <name>PrivacyPage</name>
+    <message>
+        <source>Overview</source>
+        <translation>Обзор</translation>
+    </message>
+    <message>
+        <source>What is stored and what is sent</source>
+        <translation>Что хранится и что отправляется</translation>
+    </message>
+    <message>
+        <source>On this computer only (~/.local/share/jarvis, owner-only files): facts and topics Jarvis learned, conversation summaries, tasks and reminders, activity history (14 days), study progress. Screenshots and window titles are never written to disk.</source>
+        <translation>Только на этом компьютере (~/.local/share/jarvis, файлы доступны только вам): изученные факты и темы, краткие содержания разговоров, задачи и напоминания, история активности (14 дней), прогресс учёбы. Снимки экрана и заголовки окон на диск не пишутся.</translation>
+    </message>
+    <message>
+        <source>Sent to Anthropic, only with a question that needs Claude: the question, the facts relevant to it, and — if you allow it below — your current activity, the recognised text of the screen or the screenshot. Sent to ElevenLabs, only with that voice on: the text being spoken.</source>
+        <translation>В Anthropic — только вместе с вопросом, которому нужен Claude: сам вопрос, относящиеся к нему факты и — если вы разрешите ниже — текущая активность, распознанный текст экрана или снимок. В ElevenLabs — только при этом голосе: озвучиваемый текст.</translation>
+    </message>
+    <message>
+        <source>API keys: in a settings file only you can read (there is no system password store here).</source>
+        <translation>Ключи API: в файле настроек, доступном только вам (системного хранилища паролей здесь нет).</translation>
+    </message>
+    <message>
+        <source>API keys: in the system password store.</source>
+        <translation>Ключи API: в системном хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>Memory</source>
+        <translation>Память</translation>
+    </message>
+    <message>
+        <source>Learn from our conversations</source>
+        <translation>Учиться на наших разговорах</translation>
+    </message>
+    <message>
+        <source>Facts like your name, tools and projects, topics you talk about, corrections and the quick actions you use. With a Claude key, Jarvis also keeps a short summary of a finished conversation. Passwords, keys and card numbers are never stored.</source>
+        <translation>Факты вроде вашего имени, инструментов и проектов, темы разговоров, исправления и быстрые действия. С ключом Claude Jarvis также сохраняет краткое содержание завершённого разговора. Пароли, ключи и номера карт не сохраняются никогда.</translation>
+    </message>
+    <message>
+        <source>Jarvis asks questions to get to know me</source>
+        <translation>Jarvis задаёт вопросы, чтобы узнать меня</translation>
+    </message>
+    <message>
+        <source>At most every ten minutes and never in the middle of a task. Ignore a question to skip it.</source>
+        <translation>Не чаще раза в десять минут и никогда посреди задачи. Чтобы пропустить вопрос, просто не отвечайте.</translation>
+    </message>
+    <message>
+        <source>Review my memory every day</source>
+        <translation>Пересматривать память каждый день</translation>
+    </message>
+    <message>
+        <source>Once a day Jarvis sends the facts it keeps about you and short summaries of your conversations to Claude to merge duplicates and drop outdated facts. Facts you added yourself are never deleted.</source>
+        <translation>Раз в день Jarvis отправляет в Claude факты о вас и краткие содержания разговоров, чтобы объединить повторы и убрать устаревшее. Факты, добавленные вами, не удаляются никогда.</translation>
+    </message>
+    <message>
+        <source>Review what Jarvis remembers</source>
+        <translation>Посмотреть, что помнит Jarvis</translation>
+    </message>
+    <message>
+        <source>The memory panel: facts, topics, tasks and conversations; each entry can be deleted there. In chat: &quot;what do you know about me&quot;, &quot;forget …&quot;.</source>
+        <translation>Панель памяти: факты, темы, задачи и разговоры; каждую запись там можно удалить. В чате: «что ты обо мне знаешь», «забудь …».</translation>
+    </message>
+    <message>
+        <source>Open the memory panel</source>
+        <translation>Открыть панель памяти</translation>
+    </message>
+    <message>
+        <source>Activity</source>
+        <translation>Активность</translation>
+    </message>
+    <message>
+        <source>See which application I&apos;m working in</source>
+        <translation>Видеть, в каком приложении я работаю</translation>
+    </message>
+    <message>
+        <source>A small KWin script reports the focused window. Time per application, habits and suggestions are kept for 14 days. Nothing is recorded while the screen is locked.</source>
+        <translation>Небольшой скрипт KWin сообщает активное окно. Время в программах, привычки и предложения хранятся 14 дней. Пока экран заблокирован, ничего не записывается.</translation>
+    </message>
+    <message>
+        <source>Also keep window titles</source>
+        <translation>Сохранять и заголовки окон</translation>
+    </message>
+    <message>
+        <source>Titles show the document or page (for example &quot;main.cpp — jarvis&quot;). Private browsing and password manager windows are always skipped.</source>
+        <translation>Заголовок показывает документ или страницу (например, «main.cpp — jarvis»). Окна приватного просмотра и менеджеров паролей всегда пропускаются.</translation>
+    </message>
+    <message>
+        <source>Tell Claude what I&apos;m doing</source>
+        <translation>Сообщать Claude, чем я занят</translation>
+    </message>
+    <message>
+        <source>Adds the focused application (and title, if kept) and today&apos;s top apps to requests sent to Anthropic.</source>
+        <translation>Добавляет к запросам в Anthropic активную программу (и заголовок, если он сохраняется) и главные программы за сегодня.</translation>
+    </message>
+    <message>
+        <source>Context sources</source>
+        <translation>Источники контекста</translation>
+    </message>
+    <message>
+        <source>What Jarvis may look at to answer with context (Ctrl+J). Turning a source off stops it at once and forgets what was seen through it.</source>
+        <translation>На что Jarvis может смотреть, чтобы отвечать с учётом контекста (Ctrl+J). Отключение источника останавливает его сразу и стирает увиденное через него.</translation>
+    </message>
+    <message>
+        <source>Initiative is Off (Actions and permissions): Jarvis observes nothing, whatever is allowed here.</source>
+        <translation>Инициатива выключена («Действия и разрешения»): Jarvis ничего не наблюдает, что бы здесь ни было разрешено.</translation>
+    </message>
+    <message>
+        <source>Allow Jarvis to see the active window</source>
+        <translation>Разрешить Jarvis видеть активное окно</translation>
+    </message>
+    <message>
+        <source>The application and the title of the window you work in, through a small KWin script. Titles stay in memory only.</source>
+        <translation>Программа и заголовок окна, в котором вы работаете, через небольшой скрипт KWin. Заголовки хранятся только в памяти.</translation>
+    </message>
+    <message>
+        <source>Allow analysis of the screen content</source>
+        <translation>Разрешить анализ содержимого экрана</translation>
+    </message>
+    <message>
+        <source>A screenshot of the window you were in, read by Tesseract on this computer, only when you ask (or, if set below, now and then). &quot;◉ SCREEN&quot; is shown whenever it happens. Screenshots are never saved.</source>
+        <translation>Снимок окна, в котором вы работали, распознаётся Tesseract на этом компьютере — только по вашей просьбе (или, если задано ниже, время от времени). Каждый раз видна метка «◉ ЭКРАН». Снимки не сохраняются.</translation>
+    </message>
+    <message>
+        <source>Send screenshots to Claude</source>
+        <translation>Отправлять снимки экрана в Claude</translation>
+    </message>
+    <message>
+        <source>A question about the screen also carries the picture to Anthropic (scaled down) — better for drawings and schematics. Off: only the recognised text goes.</source>
+        <translation>Вопрос об экране отправляет в Anthropic и сам снимок (уменьшенный) — так лучше с чертежами и схемами. Выключено: уходит только распознанный текст.</translation>
+    </message>
+    <message>
+        <source>Background screen analysis</source>
+        <translation>Фоновый анализ экрана</translation>
+    </message>
+    <message>
+        <source>Only with offers of help on (Actions and permissions).</source>
+        <translation>Только когда включены предложения помощи («Действия и разрешения»).</translation>
+    </message>
+    <message>
+        <source>never (only when I ask)</source>
+        <translation>никогда (только по запросу)</translation>
+    </message>
+    <message>
+        <source>at most every %1 min</source>
+        <translation>не чаще раза в %1 мин</translation>
+    </message>
+    <message>
+        <source>Text recognition</source>
+        <translation>Распознавание текста</translation>
+    </message>
+    <message>
+        <source>Tesseract (%1).</source>
+        <translation>Tesseract (%1).</translation>
+    </message>
+    <message>
+        <source>Needs Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</source>
+        <translation>Нужен Tesseract: sudo apt install tesseract-ocr tesseract-ocr-fra tesseract-ocr-rus</translation>
+    </message>
+    <message>
+        <source>Test: read my screen now</source>
+        <translation>Проверить: прочитать экран сейчас</translation>
+    </message>
+    <message>
+        <source>Never observe these applications</source>
+        <translation>Никогда не наблюдать за этими приложениями</translation>
+    </message>
+    <message>
+        <source>Desktop file names or window classes, separated by commas (for example: org.telegram.desktop, firefox). Password managers, keyrings and authentication prompts are always excluded.</source>
+        <translation>Имена .desktop-файлов или классы окон через запятую (например: org.telegram.desktop, firefox). Менеджеры паролей, связки ключей и окна аутентификации исключены всегда.</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Exclude current</source>
+        <translation>Исключить текущее</translation>
+    </message>
+    <message>
+        <source>Pause observation</source>
+        <translation>Пауза наблюдения</translation>
+    </message>
+    <message>
+        <source>Needs the Jarvis service: it is not running.</source>
+        <translation>Нужна служба Jarvis, а она не запущена.</translation>
+    </message>
+    <message>
+        <source>Paused until %1: no offers, no background screenshots.</source>
+        <translation>Пауза до %1: без предложений и фоновых снимков.</translation>
+    </message>
+    <message>
+        <source>Observation is running at the chosen level.</source>
+        <translation>Наблюдение работает на выбранном уровне.</translation>
+    </message>
+    <message>
+        <source>1 hour</source>
+        <translation>1 час</translation>
+    </message>
+    <message>
+        <source>Until tomorrow</source>
+        <translation>До завтра</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>Возобновить</translation>
+    </message>
+    <message>
+        <source>Saved data</source>
+        <translation>Сохранённые данные</translation>
+    </message>
+    <message>
+        <source>Deleting cannot be undone. Settings and API keys are not touched.</source>
+        <translation>Удаление нельзя отменить. Настройки и ключи API не затрагиваются.</translation>
+    </message>
+    <message>
+        <source>Activity history</source>
+        <translation>История активности</translation>
+    </message>
+    <message>
+        <source>Which applications you used and when (up to 14 days).</source>
+        <translation>Какие программы и когда вы использовали (до 14 дней).</translation>
+    </message>
+    <message>
+        <source>Facts, topics and conversation summaries</source>
+        <translation>Факты, темы и краткие содержания разговоров</translation>
+    </message>
+    <message>
+        <source>Everything Jarvis learned about you. Taught examples, flashcards and activity stay.</source>
+        <translation>Всё, что Jarvis узнал о вас. Обученные примеры, карточки и активность остаются.</translation>
+    </message>
+    <message>
+        <source>Code lessons and answers</source>
+        <translation>Уроки и ответы по коду</translation>
+    </message>
+    <message>
+        <source>What Jarvis learned from your programming questions.</source>
+        <translation>Что Jarvis узнал из ваших вопросов по программированию.</translation>
+    </message>
+    <message>
+        <source>Driving theory progress</source>
+        <translation>Прогресс по ПДД</translation>
+    </message>
+    <message>
+        <source>Answered questions and topics of the driving test.</source>
+        <translation>Отвеченные вопросы и темы экзамена ПДД.</translation>
+    </message>
+    <message>
+        <source>Observed context and offer history</source>
+        <translation>Наблюдённый контекст и история предложений</translation>
+    </message>
+    <message>
+        <source>What Jarvis saw on the screen and in windows, and the offers of the last 30 days.</source>
+        <translation>Что Jarvis видел на экране и в окнах, и предложения за 30 дней.</translation>
+    </message>
+    <message>
+        <source>Delete…</source>
+        <translation>Удалить…</translation>
+    </message>
+    <message>
+        <source>Delete %1</source>
+        <translation>Удалить: %1</translation>
+    </message>
+    <message>
+        <source>Let Jarvis read your screen?</source>
+        <translation>Разрешить Jarvis читать экран?</translation>
+    </message>
+    <message>
+        <source>Allow</source>
+        <translation>Разрешить</translation>
+    </message>
+    <message>
+        <source>Jarvis will take a screenshot of the window you work in when you ask (and, if you set an interval, now and then in the background) and recognise its text on this computer. &quot;◉ SCREEN&quot; is shown every time. Screenshots are not saved, password and private windows are skipped, and nothing goes to Claude unless you ask a question. You can turn this off or pause it at any moment.</source>
+        <translation>Jarvis будет делать снимок окна, в котором вы работаете, когда вы попросите (и, если задан интервал, изредка в фоне), и распознавать текст на этом компьютере. Каждый раз видна метка «◉ ЭКРАН». Снимки не сохраняются, окна паролей и приватные окна пропускаются, в Claude ничего не уходит, пока вы не зададите вопрос. Выключить или поставить на паузу можно в любой момент.</translation>
+    </message>
+    <message>
+        <source>Delete &quot;%1&quot;?</source>
+        <translation>Удалить «%1»?</translation>
+    </message>
+    <message>
+        <source>This cannot be undone. Settings, API keys and other kinds of data stay.</source>
+        <translation>Это нельзя отменить. Настройки, ключи API и другие данные останутся.</translation>
+    </message>
+    <message>
+        <source>Delete</source>
+        <translation>Удалить</translation>
+    </message>
+</context>
+<context>
     <name>QuickBar</name>
     <message>
         <source>Jarvis — quick commands</source>
@@ -3358,8 +3777,8 @@ Esc — скрыть окно.</translation>
 <context>
     <name>ScreenAwareness</name>
     <message>
-        <source>Screen awareness is off. Turn it on in Control center → Awareness.</source>
-        <translation>Анализ экрана выключен. Включите его в «Центр управления → Осведомлённость».</translation>
+        <source>Screen awareness is off. Turn it on in Settings → Memory and privacy.</source>
+        <translation>Анализ экрана выключен. Включите его в «Настройки → Память и приватность».</translation>
     </message>
     <message>
         <source>KWin does not let this build take screenshots; background analysis needs the installed Jarvis.</source>
@@ -3415,46 +3834,1356 @@ Esc — скрыть окно.</translation>
     </message>
 </context>
 <context>
-    <name>SettingsDialog</name>
+    <name>SettingSwitch</name>
     <message>
-        <source>Claude API settings</source>
-        <translation>Настройки Claude API</translation>
+        <source>On</source>
+        <translation>Вкл.</translation>
     </message>
     <message>
-        <source>Messages that Jarvis does not handle with local commands are sent to Anthropic (api.anthropic.com) together with the facts it remembers about you. Commands like &quot;memory&quot; or &quot;top processes&quot; stay on your computer.</source>
-        <translation>Сообщения, которые Jarvis не обрабатывает локальными командами, отправляются в Anthropic (api.anthropic.com) вместе с фактами, которые он о вас помнит. Команды вроде «память» или «топ процессов» остаются на вашем компьютере.</translation>
+        <source>Off</source>
+        <translation>Выкл.</translation>
+    </message>
+</context>
+<context>
+    <name>SettingsCatalog</name>
+    <message>
+        <source>JARVIS DESKTOP</source>
+        <translation>JARVIS DESKTOP</translation>
     </message>
     <message>
-        <source>API key</source>
-        <translation>API-ключ</translation>
+        <source>JARVIS DESKTOP or standard KDE</source>
+        <translation>JARVIS DESKTOP или стандартный KDE</translation>
     </message>
     <message>
-        <source>saved (%1) — leave empty to keep it</source>
-        <translation>сохранён (%1) — оставь пустым, чтобы не менять</translation>
+        <source>Turn the Jarvis desktop on after a check and a backup, or go back to standard KDE.</source>
+        <translation>Включить рабочий стол Jarvis после проверки и резервной копии или вернуться к стандартному KDE.</translation>
+    </message>
+    <message>
+        <source>desktop mode, shell, layout, standard kde, plasma</source>
+        <translation>режим рабочего стола, оболочка, раскладка, стандартный kde, plasma, плазма</translation>
+    </message>
+    <message>
+        <source>Appearance</source>
+        <translation>Внешний вид</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>Тема</translation>
+    </message>
+    <message>
+        <source>Classic JARVIS, Mark VII or Minimal.</source>
+        <translation>Классический JARVIS, Mark VII или Минимализм.</translation>
+    </message>
+    <message>
+        <source>look, style, design, appearance, skin</source>
+        <translation>вид, стиль, дизайн, оформление, тема, внешний вид</translation>
+    </message>
+    <message>
+        <source>Primary and secondary colour</source>
+        <translation>Основной и вторичный цвет</translation>
+    </message>
+    <message>
+        <source>Your own colours instead of the theme&apos;s.</source>
+        <translation>Свои цвета вместо цветов темы.</translation>
+    </message>
+    <message>
+        <source>colour, color, accent, palette</source>
+        <translation>цвет, цвета, акцент, палитра</translation>
+    </message>
+    <message>
+        <source>Glow</source>
+        <translation>Свечение</translation>
+    </message>
+    <message>
+        <source>How bright the holographic edges shine.</source>
+        <translation>Насколько ярко светятся голографические края.</translation>
+    </message>
+    <message>
+        <source>brightness, light, neon</source>
+        <translation>яркость, свет, свечение, неон</translation>
+    </message>
+    <message>
+        <source>Panel transparency</source>
+        <translation>Прозрачность панелей</translation>
+    </message>
+    <message>
+        <source>How much of the wallpaper shows through panels and widgets.</source>
+        <translation>Насколько обои просвечивают сквозь панели и виджеты.</translation>
+    </message>
+    <message>
+        <source>transparent, opacity, glass, see through</source>
+        <translation>прозрачность, непрозрачность, стекло, просвечивает</translation>
+    </message>
+    <message>
+        <source>Animation speed</source>
+        <translation>Скорость анимаций</translation>
+    </message>
+    <message>
+        <source>Slower or faster rings and transitions.</source>
+        <translation>Медленнее или быстрее кольца и переходы.</translation>
+    </message>
+    <message>
+        <source>animations, motion, speed, movement</source>
+        <translation>анимация, движение, скорость</translation>
+    </message>
+    <message>
+        <source>Size of Jarvis elements</source>
+        <translation>Размер элементов Jarvis</translation>
+    </message>
+    <message>
+        <source>Compact, normal or comfortable spacing in the widgets and the dock.</source>
+        <translation>Компактные, обычные или просторные отступы в виджетах и доке.</translation>
+    </message>
+    <message>
+        <source>scale, zoom, size, bigger, smaller, density, spacing</source>
+        <translation>масштаб, размер, крупнее, мельче, плотность, отступы</translation>
+    </message>
+    <message>
+        <source>Effects quality on the desktop</source>
+        <translation>Качество эффектов на рабочем столе</translation>
+    </message>
+    <message>
+        <source>Fewer effects use less of the graphics card.</source>
+        <translation>Меньше эффектов — меньше нагрузка на видеокарту.</translation>
+    </message>
+    <message>
+        <source>performance, gpu, effects, battery, quality</source>
+        <translation>производительность, видеокарта, эффекты, батарея, качество</translation>
+    </message>
+    <message>
+        <source>Core size and place</source>
+        <translation>Размер и место ядра</translation>
+    </message>
+    <message>
+        <source>The Jarvis core on the desktop: small, medium or large; centre, left or right.</source>
+        <translation>Ядро Jarvis на рабочем столе: маленькое, среднее или большое; в центре, слева или справа.</translation>
+    </message>
+    <message>
+        <source>core, reactor, centre, size, position</source>
+        <translation>ядро, реактор, центр, размер, положение</translation>
+    </message>
+    <message>
+        <source>Jarvis window</source>
+        <translation>Окно Jarvis</translation>
+    </message>
+    <message>
+        <source>Look of the Jarvis window</source>
+        <translation>Вид окна Jarvis</translation>
+    </message>
+    <message>
+        <source>The animated HUD with every effect, lighter versions, or the classic chat.</source>
+        <translation>Анимированный HUD со всеми эффектами, облегчённые варианты или классический чат.</translation>
+    </message>
+    <message>
+        <source>hud, cinematic, classic chat, window, interface</source>
+        <translation>hud, кино, классический чат, окно, интерфейс, вид</translation>
+    </message>
+    <message>
+        <source>Dock</source>
+        <translation>Док</translation>
+    </message>
+    <message>
+        <source>Dock position</source>
+        <translation>Положение дока</translation>
+    </message>
+    <message>
+        <source>Bottom, top, left or right edge of the screen.</source>
+        <translation>Нижний, верхний, левый или правый край экрана.</translation>
+    </message>
+    <message>
+        <source>dock, panel, taskbar, edge, place, position</source>
+        <translation>док, панель, панель задач, край, место, положение</translation>
+    </message>
+    <message>
+        <source>Dock height</source>
+        <translation>Высота дока</translation>
+    </message>
+    <message>
+        <source>The thickness of the dock panel in pixels.</source>
+        <translation>Толщина панели дока в пикселях.</translation>
+    </message>
+    <message>
+        <source>dock, panel, taskbar, size, height, thickness, bigger, smaller</source>
+        <translation>док, панель, панель задач, размер, высота, толщина, больше, меньше</translation>
+    </message>
+    <message>
+        <source>Dock alignment</source>
+        <translation>Выравнивание дока</translation>
+    </message>
+    <message>
+        <source>Centred, at the start or at the end of its edge.</source>
+        <translation>По центру, в начале или в конце края.</translation>
+    </message>
+    <message>
+        <source>dock, panel, align, centre</source>
+        <translation>док, панель, выравнивание, центр</translation>
+    </message>
+    <message>
+        <source>Show the dock automatically</source>
+        <translation>Показывать док автоматически</translation>
+    </message>
+    <message>
+        <source>The dock stays hidden and slides in when the pointer touches the screen edge.</source>
+        <translation>Док скрыт и выезжает, когда указатель касается края экрана.</translation>
+    </message>
+    <message>
+        <source>autohide, hide, auto hide, dock, panel</source>
+        <translation>автоскрытие, скрывать, прятать, док, панель</translation>
+    </message>
+    <message>
+        <source>Icon size in the dock</source>
+        <translation>Размер значков в доке</translation>
+    </message>
+    <message>
+        <source>How much of the dock&apos;s height an icon takes.</source>
+        <translation>Какую часть высоты дока занимает значок.</translation>
+    </message>
+    <message>
+        <source>icons, dock, size, bigger</source>
+        <translation>значки, иконки, док, размер, крупнее</translation>
+    </message>
+    <message>
+        <source>Magnify icons under the pointer</source>
+        <translation>Увеличивать значки под указателем</translation>
+    </message>
+    <message>
+        <source>Icons grow when the pointer passes over them.</source>
+        <translation>Значки увеличиваются под указателем.</translation>
+    </message>
+    <message>
+        <source>zoom, magnification, enlarge, hover, dock</source>
+        <translation>увеличение, лупа, увеличивать, наведение, док</translation>
+    </message>
+    <message>
+        <source>Jarvis glass under the whole panel</source>
+        <translation>Стекло Jarvis под всей панелью</translation>
+    </message>
+    <message>
+        <source>The dock, the system tray and the clock on one dark glass.</source>
+        <translation>Док, системный трей и часы на одном тёмном стекле.</translation>
+    </message>
+    <message>
+        <source>glass, background, tray, clock, panel style</source>
+        <translation>стекло, фон, трей, часы, стиль панели</translation>
+    </message>
+    <message>
+        <source>What the dock shows</source>
+        <translation>Что показывает док</translation>
+    </message>
+    <message>
+        <source>Workspace buttons, virtual desktops, the Jarvis button, one button per application.</source>
+        <translation>Кнопки пространств, виртуальные столы, кнопка Jarvis, одна кнопка на программу.</translation>
+    </message>
+    <message>
+        <source>workspaces, desktops, group windows, buttons, dock</source>
+        <translation>пространства, рабочие столы, группировка окон, кнопки, док</translation>
+    </message>
+    <message>
+        <source>Panels and widgets</source>
+        <translation>Панели и виджеты</translation>
+    </message>
+    <message>
+        <source>Replace the standard panels with the dock</source>
+        <translation>Заменить стандартные панели доком</translation>
+    </message>
+    <message>
+        <source>When JARVIS DESKTOP is turned on: remove your panels, or keep them beside the dock.</source>
+        <translation>При включении JARVIS DESKTOP: убрать ваши панели или оставить их рядом с доком.</translation>
+    </message>
+    <message>
+        <source>panel, taskbar, replace, keep panels</source>
+        <translation>панель, панель задач, заменить, оставить панели</translation>
+    </message>
+    <message>
+        <source>Animations in the desktop widgets</source>
+        <translation>Анимация виджетов рабочего стола</translation>
+    </message>
+    <message>
+        <source>Off: the core and the widgets stand still and only update their numbers.</source>
+        <translation>Выключено: ядро и виджеты неподвижны и только обновляют числа.</translation>
+    </message>
+    <message>
+        <source>animations, effects, widgets, still</source>
+        <translation>анимация, эффекты, виджеты, неподвижно</translation>
+    </message>
+    <message>
+        <source>Desktop widgets</source>
+        <translation>Виджеты рабочего стола</translation>
+    </message>
+    <message>
+        <source>Add or remove the System, Network, Power, Media and Status widgets.</source>
+        <translation>Добавить или убрать виджеты «Система», «Сеть», «Питание», «Медиа», «Состояние».</translation>
+    </message>
+    <message>
+        <source>widget, plasmoid, applet, add widget, cpu, battery, media</source>
+        <translation>виджет, плазмоид, апплет, добавить виджет, процессор, батарея, медиа</translation>
+    </message>
+    <message>
+        <source>Jarvis HUD widget</source>
+        <translation>Виджет «Jarvis HUD»</translation>
+    </message>
+    <message>
+        <source>A widget with Jarvis&apos;s state, system activity and the last notification.</source>
+        <translation>Виджет с состоянием Jarvis, нагрузкой системы и последним уведомлением.</translation>
+    </message>
+    <message>
+        <source>hud widget, desktop widget, plasmoid</source>
+        <translation>виджет hud, виджет рабочего стола, плазмоид</translation>
+    </message>
+    <message>
+        <source>HUD widget animations</source>
+        <translation>Анимация виджета HUD</translation>
+    </message>
+    <message>
+        <source>Off, low, normal or high; one step lower on battery.</source>
+        <translation>Выкл., низкая, обычная или высокая; от батареи на ступень ниже.</translation>
+    </message>
+    <message>
+        <source>animations, widget, battery, intensity</source>
+        <translation>анимация, виджет, батарея, интенсивность</translation>
+    </message>
+    <message>
+        <source>Workspaces</source>
+        <translation>Рабочие пространства</translation>
+    </message>
+    <message>
+        <source>GENERAL, STUDY, WORK and DEV: a virtual desktop, applications, files and widgets each.</source>
+        <translation>GENERAL, STUDY, WORK и DEV: у каждого свой виртуальный стол, программы, файлы и виджеты.</translation>
+    </message>
+    <message>
+        <source>profiles, virtual desktops, general, study, work, dev, prepare</source>
+        <translation>профили, пространства, виртуальные рабочие столы, general, study, work, dev, подготовить</translation>
+    </message>
+    <message>
+        <source>Language</source>
+        <translation>Язык</translation>
+    </message>
+    <message>
+        <source>Interface language</source>
+        <translation>Язык интерфейса</translation>
+    </message>
+    <message>
+        <source>The language of Jarvis&apos;s windows and messages.</source>
+        <translation>Язык окон и сообщений Jarvis.</translation>
+    </message>
+    <message>
+        <source>language, russian, english, locale, translation</source>
+        <translation>язык, русский, английский, локаль, перевод</translation>
+    </message>
+    <message>
+        <source>Answer language</source>
+        <translation>Язык ответов</translation>
+    </message>
+    <message>
+        <source>The same as your message, or always one language.</source>
+        <translation>Как в вашем сообщении или всегда один язык.</translation>
+    </message>
+    <message>
+        <source>language, reply, answer, russian, english</source>
+        <translation>язык, ответ, отвечать, русский, английский</translation>
+    </message>
+    <message>
+        <source>Voice</source>
+        <translation>Голос</translation>
+    </message>
+    <message>
+        <source>Speak answers aloud</source>
+        <translation>Озвучивать ответы</translation>
+    </message>
+    <message>
+        <source>Jarvis reads its answers out; code and links are skipped.</source>
+        <translation>Jarvis читает ответы вслух; код и ссылки пропускаются.</translation>
+    </message>
+    <message>
+        <source>voice, speech, read aloud, tts, sound, talk</source>
+        <translation>голос, речь, озвучка, читать вслух, звук, говорить</translation>
+    </message>
+    <message>
+        <source>Voice engine</source>
+        <translation>Голосовой движок</translation>
+    </message>
+    <message>
+        <source>ElevenLabs in the cloud, Chatterbox or Piper on this computer, or the system voice.</source>
+        <translation>ElevenLabs в облаке, Chatterbox или Piper на этом компьютере либо системный голос.</translation>
+    </message>
+    <message>
+        <source>voice, engine, piper, chatterbox, elevenlabs, espeak</source>
+        <translation>голос, движок, синтез, piper, chatterbox, elevenlabs, espeak</translation>
+    </message>
+    <message>
+        <source>ElevenLabs key</source>
+        <translation>ElevenLabs: ключ API</translation>
+    </message>
+    <message>
+        <source>Studio voices in the cloud need an ElevenLabs API key.</source>
+        <translation>Студийным голосам в облаке нужен ключ API ElevenLabs.</translation>
+    </message>
+    <message>
+        <source>api key, elevenlabs, token, key</source>
+        <translation>ключ api, ключ, токен, elevenlabs, элевенлабс</translation>
+    </message>
+    <message>
+        <source>Speaking pace</source>
+        <translation>Темп речи</translation>
+    </message>
+    <message>
+        <source>Slower or faster speech.</source>
+        <translation>Медленнее или быстрее речь.</translation>
+    </message>
+    <message>
+        <source>speed, rate, tempo, pace, voice</source>
+        <translation>скорость, темп, голос, быстрее, медленнее</translation>
+    </message>
+    <message>
+        <source>Microphone</source>
+        <translation>Микрофон</translation>
+    </message>
+    <message>
+        <source>Dictation</source>
+        <translation>Диктовка</translation>
+    </message>
+    <message>
+        <source>Speak instead of typing: recognised on this computer (Vosk).</source>
+        <translation>Говорите вместо набора: распознаётся на этом компьютере (Vosk).</translation>
+    </message>
+    <message>
+        <source>microphone, mic, speech to text, voice input, recognition, headset</source>
+        <translation>микрофон, речь в текст, голосовой ввод, распознавание, гарнитура, наушники</translation>
+    </message>
+    <message>
+        <source>Keyboard shortcuts</source>
+        <translation>Горячие клавиши</translation>
+    </message>
+    <message>
+        <source>Key for the overlay</source>
+        <translation>Клавиша оверлея</translation>
+    </message>
+    <message>
+        <source>Opens Jarvis above any application (Ctrl+J by default).</source>
+        <translation>Открывает Jarvis поверх любой программы (по умолчанию Ctrl+J).</translation>
+    </message>
+    <message>
+        <source>shortcut, hotkey, keys, buttons, combination, keyboard, ctrl j, overlay</source>
+        <translation>горячие клавиши, клавиша, кнопки, сочетание, комбинация, клавиатура, ctrl j, оверлей</translation>
+    </message>
+    <message>
+        <source>Key for quick commands</source>
+        <translation>Клавиша быстрых команд</translation>
+    </message>
+    <message>
+        <source>Opens the quick command bar (Meta+J by default).</source>
+        <translation>Открывает панель быстрых команд (по умолчанию Meta+J).</translation>
+    </message>
+    <message>
+        <source>shortcut, hotkey, keys, buttons, combination, keyboard, meta j, quick</source>
+        <translation>горячие клавиши, клавиша, кнопки, сочетание, комбинация, клавиатура, meta j, быстрые команды</translation>
+    </message>
+    <message>
+        <source>Keys inside the Jarvis window</source>
+        <translation>Клавиши в окне Jarvis</translation>
+    </message>
+    <message>
+        <source>Ctrl+M, Ctrl+Shift+O and the chat keys; these are fixed.</source>
+        <translation>Ctrl+M, Ctrl+Shift+O и клавиши чата; они не меняются.</translation>
+    </message>
+    <message>
+        <source>shortcut, hotkey, keys, buttons, combination, keyboard</source>
+        <translation>горячие клавиши, клавиши, кнопки, сочетания, комбинации, клавиатура</translation>
+    </message>
+    <message>
+        <source>Chat and overlay</source>
+        <translation>Чат и оверлей</translation>
+    </message>
+    <message>
+        <source>Tell me when an answer is ready while Jarvis is hidden</source>
+        <translation>Сообщать о готовом ответе, когда Jarvis скрыт</translation>
+    </message>
+    <message>
+        <source>A notification with the answer you were waiting for.</source>
+        <translation>Уведомление с ответом, которого вы ждали.</translation>
+    </message>
+    <message>
+        <source>notification, notify, answer, hidden, alert</source>
+        <translation>уведомление, оповещение, ответ, скрыт</translation>
+    </message>
+    <message>
+        <source>Compact core above other windows</source>
+        <translation>Компактное ядро поверх других окон</translation>
+    </message>
+    <message>
+        <source>A small always-on-top core that shows what Jarvis is doing.</source>
+        <translation>Маленькое ядро поверх окон показывает, чем занят Jarvis.</translation>
+    </message>
+    <message>
+        <source>overlay, always on top, compact, floating</source>
+        <translation>оверлей, поверх окон, компактный, плавающий</translation>
+    </message>
+    <message>
+        <source>Reminders</source>
+        <translation>Напоминания</translation>
+    </message>
+    <message>
+        <source>&quot;Snooze&quot; button</source>
+        <translation>Кнопка «Отложить»</translation>
+    </message>
+    <message>
+        <source>How long a snoozed reminder waits.</source>
+        <translation>Сколько ждёт отложенное напоминание.</translation>
+    </message>
+    <message>
+        <source>snooze, later, postpone, reminder</source>
+        <translation>отложить, позже, перенести, напоминание</translation>
+    </message>
+    <message>
+        <source>Remind again until I press &quot;Done&quot;</source>
+        <translation>Напоминать снова, пока я не нажму «Готово»</translation>
+    </message>
+    <message>
+        <source>Once, or again every few minutes, up to three times.</source>
+        <translation>Один раз или снова каждые несколько минут, до трёх раз.</translation>
+    </message>
+    <message>
+        <source>nag, repeat, again, reminder</source>
+        <translation>повторять, снова, повтор, напоминание</translation>
+    </message>
+    <message>
+        <source>What &quot;morning&quot;, &quot;afternoon&quot; and &quot;evening&quot; mean</source>
+        <translation>Что значит «утром», «днём» и «вечером»</translation>
+    </message>
+    <message>
+        <source>The hours used for &quot;remind me in the evening&quot;.</source>
+        <translation>Часы для «напомни вечером».</translation>
+    </message>
+    <message>
+        <source>morning, evening, afternoon, hours, time</source>
+        <translation>утро, вечер, день, часы, время</translation>
+    </message>
+    <message>
+        <source>Sound with reminders</source>
+        <translation>Звук напоминаний</translation>
+    </message>
+    <message>
+        <source>The alarm sound of your Plasma sound theme.</source>
+        <translation>Звук будильника из звуковой темы Plasma.</translation>
+    </message>
+    <message>
+        <source>sound, alarm, beep, audio, reminder</source>
+        <translation>звук, сигнал, будильник, аудио, напоминание</translation>
+    </message>
+    <message>
+        <source>Claude</source>
+        <translation>Claude</translation>
+    </message>
+    <message>
+        <source>Claude API key</source>
+        <translation>Ключ API Claude</translation>
+    </message>
+    <message>
+        <source>Needed for answers beyond local commands; stored in the system password store.</source>
+        <translation>Нужен для ответов сверх локальных команд; хранится в системном хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>key, api, token, anthropic, connection, account, password, provider</source>
+        <translation>ключ, api, апи, токен, anthropic, подключение, аккаунт, пароль, провайдер</translation>
     </message>
     <message>
         <source>Model</source>
         <translation>Модель</translation>
     </message>
     <message>
-        <source>For example: claude-haiku-4-5-20251001 (fast and inexpensive), claude-sonnet-5-5, claude-opus-5-5.</source>
-        <translation>Например: claude-haiku-4-5-20251001 (быстрая и недорогая), claude-sonnet-5-5, claude-opus-5-5.</translation>
+        <source>Haiku is fast and inexpensive, Sonnet and Opus are stronger.</source>
+        <translation>Haiku быстрая и недорогая, Sonnet и Opus сильнее.</translation>
     </message>
     <message>
-        <source>File: %1 (owner-only access).</source>
-        <translation>Файл: %1 (доступ только для владельца).</translation>
+        <source>model, haiku, sonnet, opus, llm, ai, provider</source>
+        <translation>модель, нейросеть, ии, haiku, sonnet, opus, провайдер</translation>
     </message>
     <message>
-        <source>Remove key</source>
-        <translation>Удалить ключ</translation>
+        <source>Check the connection</source>
+        <translation>Проверить подключение</translation>
     </message>
     <message>
-        <source>Cancel</source>
-        <translation>Отмена</translation>
+        <source>Checks the key and the model with Anthropic; costs nothing.</source>
+        <translation>Проверяет ключ и модель у Anthropic; бесплатно.</translation>
     </message>
     <message>
-        <source>Save</source>
-        <translation>Сохранить</translation>
+        <source>test, connection, check, internet, network, online, connect</source>
+        <translation>проверка, подключение, проверить, интернет, сеть, соединение</translation>
+    </message>
+    <message>
+        <source>Let Claude search the web for current facts</source>
+        <translation>Разрешить Claude искать актуальные сведения в интернете</translation>
+    </message>
+    <message>
+        <source>Up to three web searches per answer, billed per search by Anthropic.</source>
+        <translation>До трёх веб-поисков на ответ, каждый оплачивается в Anthropic.</translation>
+    </message>
+    <message>
+        <source>web search, internet, google, current, news</source>
+        <translation>веб-поиск, поиск, интернет, гугл, актуальное, новости</translation>
+    </message>
+    <message>
+        <source>Without a key or internet</source>
+        <translation>Без ключа и интернета</translation>
+    </message>
+    <message>
+        <source>What works without a key or internet</source>
+        <translation>Что работает без ключа и интернета</translation>
+    </message>
+    <message>
+        <source>Local commands, calculators, skills&apos; ready answers, reminders and dictation.</source>
+        <translation>Локальные команды, калькуляторы, готовые ответы навыков, напоминания и диктовка.</translation>
+    </message>
+    <message>
+        <source>offline, local, without internet, fallback, no key</source>
+        <translation>офлайн, локально, без интернета, резервный режим, без ключа</translation>
+    </message>
+    <message>
+        <source>Overview</source>
+        <translation>Обзор</translation>
+    </message>
+    <message>
+        <source>What is stored and what is sent</source>
+        <translation>Что хранится и что отправляется</translation>
+    </message>
+    <message>
+        <source>What stays on this computer and what goes to Anthropic and ElevenLabs.</source>
+        <translation>Что остаётся на компьютере, а что уходит в Anthropic и ElevenLabs.</translation>
+    </message>
+    <message>
+        <source>data, privacy, local, cloud, sent, anthropic, gdpr</source>
+        <translation>данные, приватность, конфиденциальность, локально, облако, отправка, anthropic</translation>
+    </message>
+    <message>
+        <source>Memory</source>
+        <translation>Память</translation>
+    </message>
+    <message>
+        <source>Learn from our conversations</source>
+        <translation>Учиться на наших разговорах</translation>
+    </message>
+    <message>
+        <source>Facts, topics and corrections from the chat; passwords and card numbers never.</source>
+        <translation>Факты, темы и исправления из чата; пароли и номера карт — никогда.</translation>
+    </message>
+    <message>
+        <source>remember, memorize, memory, learning, history, facts</source>
+        <translation>запоминать, помнить, память, обучение, история, факты</translation>
+    </message>
+    <message>
+        <source>Jarvis asks questions to get to know me</source>
+        <translation>Jarvis задаёт вопросы, чтобы узнать меня</translation>
+    </message>
+    <message>
+        <source>Now and then, never in the middle of a task.</source>
+        <translation>Время от времени, но не посреди задачи.</translation>
+    </message>
+    <message>
+        <source>curiosity, questions, ask</source>
+        <translation>любопытство, вопросы, спрашивать</translation>
+    </message>
+    <message>
+        <source>Review my memory every day</source>
+        <translation>Пересматривать память каждый день</translation>
+    </message>
+    <message>
+        <source>Once a day Claude tidies the facts: merges duplicates, drops outdated ones.</source>
+        <translation>Раз в день Claude наводит порядок в фактах: объединяет повторы, убирает устаревшее.</translation>
+    </message>
+    <message>
+        <source>reflection, review, tidy, memory, summary</source>
+        <translation>пересмотр, порядок, память, сводка</translation>
+    </message>
+    <message>
+        <source>Review what Jarvis remembers</source>
+        <translation>Посмотреть, что помнит Jarvis</translation>
+    </message>
+    <message>
+        <source>The memory panel: facts, topics, tasks, conversations.</source>
+        <translation>Панель памяти: факты, темы, задачи, разговоры.</translation>
+    </message>
+    <message>
+        <source>memory, facts, view, remembered, know about me</source>
+        <translation>память, факты, посмотреть, запомнил, что знаешь обо мне</translation>
+    </message>
+    <message>
+        <source>Activity</source>
+        <translation>Активность</translation>
+    </message>
+    <message>
+        <source>See which application I&apos;m working in</source>
+        <translation>Видеть, в каком приложении я работаю</translation>
+    </message>
+    <message>
+        <source>Time per application and habits, kept for 14 days.</source>
+        <translation>Время в программах и привычки, хранятся 14 дней.</translation>
+    </message>
+    <message>
+        <source>activity, tracking, applications, time, habits, history</source>
+        <translation>активность, отслеживание, программы, приложения, время, привычки, история</translation>
+    </message>
+    <message>
+        <source>Also keep window titles</source>
+        <translation>Сохранять и заголовки окон</translation>
+    </message>
+    <message>
+        <source>Titles show the document or page; private windows are skipped.</source>
+        <translation>Заголовки показывают документ или страницу; приватные окна пропускаются.</translation>
+    </message>
+    <message>
+        <source>window titles, documents, pages</source>
+        <translation>заголовки окон, документы, страницы</translation>
+    </message>
+    <message>
+        <source>Tell Claude what I&apos;m doing</source>
+        <translation>Сообщать Claude, чем я занят</translation>
+    </message>
+    <message>
+        <source>Adds the current application and today&apos;s top apps to requests.</source>
+        <translation>Добавляет к запросам текущую программу и главные программы за день.</translation>
+    </message>
+    <message>
+        <source>share, context, send activity</source>
+        <translation>делиться, контекст, отправлять активность</translation>
+    </message>
+    <message>
+        <source>Context sources</source>
+        <translation>Источники контекста</translation>
+    </message>
+    <message>
+        <source>Allow Jarvis to see the active window</source>
+        <translation>Разрешить Jarvis видеть активное окно</translation>
+    </message>
+    <message>
+        <source>The application and title of the window you work in, kept in memory only.</source>
+        <translation>Программа и заголовок окна, в котором вы работаете; хранятся только в памяти.</translation>
+    </message>
+    <message>
+        <source>window, application, title, focus, context</source>
+        <translation>окно, программа, приложение, заголовок, фокус, контекст</translation>
+    </message>
+    <message>
+        <source>Allow analysis of the screen content</source>
+        <translation>Разрешить анализ содержимого экрана</translation>
+    </message>
+    <message>
+        <source>A screenshot read on this computer when you ask; never saved.</source>
+        <translation>Снимок экрана читается на этом компьютере по вашей просьбе и не сохраняется.</translation>
+    </message>
+    <message>
+        <source>screen, screenshot, ocr, see, look, read screen, capture</source>
+        <translation>экран, снимок экрана, скриншот, распознавание, видеть, читать экран</translation>
+    </message>
+    <message>
+        <source>Send screenshots to Claude</source>
+        <translation>Отправлять снимки экрана в Claude</translation>
+    </message>
+    <message>
+        <source>A question about the screen also carries the picture to Anthropic.</source>
+        <translation>Вопрос об экране отправляет в Anthropic и снимок.</translation>
+    </message>
+    <message>
+        <source>screenshot, image, picture, cloud, send</source>
+        <translation>снимок, скриншот, изображение, картинка, облако, отправлять</translation>
+    </message>
+    <message>
+        <source>Background screen analysis</source>
+        <translation>Фоновый анализ экрана</translation>
+    </message>
+    <message>
+        <source>Never, or at most every few minutes; only with offers of help on.</source>
+        <translation>Никогда или не чаще раза в несколько минут; только с включёнными предложениями.</translation>
+    </message>
+    <message>
+        <source>background, interval, periodic, screen</source>
+        <translation>фон, фоновый, интервал, периодически, экран</translation>
+    </message>
+    <message>
+        <source>Never observe these applications</source>
+        <translation>Никогда не наблюдать за этими приложениями</translation>
+    </message>
+    <message>
+        <source>Applications Jarvis never looks at.</source>
+        <translation>Программы, на которые Jarvis никогда не смотрит.</translation>
+    </message>
+    <message>
+        <source>exclude, ignore, blacklist, private, applications</source>
+        <translation>исключить, игнорировать, чёрный список, приватные, программы</translation>
+    </message>
+    <message>
+        <source>Pause observation</source>
+        <translation>Пауза наблюдения</translation>
+    </message>
+    <message>
+        <source>For an hour or until tomorrow.</source>
+        <translation>На час или до завтра.</translation>
+    </message>
+    <message>
+        <source>pause, stop, suspend, privacy</source>
+        <translation>пауза, остановить, приостановить, приватность</translation>
+    </message>
+    <message>
+        <source>Saved data</source>
+        <translation>Сохранённые данные</translation>
+    </message>
+    <message>
+        <source>Delete saved data</source>
+        <translation>Удалить сохранённые данные</translation>
+    </message>
+    <message>
+        <source>Activity history, facts and conversations, code lessons, driving progress, observed context.</source>
+        <translation>История активности, факты и разговоры, уроки по коду, прогресс по ПДД, наблюдённый контекст.</translation>
+    </message>
+    <message>
+        <source>delete, erase, forget, clear, history, wipe, remove data</source>
+        <translation>удалить, стереть, забыть, очистить, история, удаление данных</translation>
+    </message>
+    <message>
+        <source>Initiative</source>
+        <translation>Инициатива</translation>
+    </message>
+    <message>
+        <source>How much initiative Jarvis takes</source>
+        <translation>Насколько Jarvis проявляет инициативу</translation>
+    </message>
+    <message>
+        <source>Off, only when asked, rare offers or more offers of help.</source>
+        <translation>Выкл., только по просьбе, редкие или более частые предложения помощи.</translation>
+    </message>
+    <message>
+        <source>autonomy, level, proactive, assistive, initiative, manual</source>
+        <translation>автономность, автономия, уровень, инициатива, самостоятельность, осведомлённость</translation>
+    </message>
+    <message>
+        <source>Offers of help</source>
+        <translation>Предложения помощи</translation>
+    </message>
+    <message>
+        <source>How often Jarvis may offer help</source>
+        <translation>Как часто Jarvis может предлагать помощь</translation>
+    </message>
+    <message>
+        <source>At most one offer every so often, and a limit per day.</source>
+        <translation>Не чаще одного предложения за промежуток и лимит в день.</translation>
+    </message>
+    <message>
+        <source>limit, cooldown, frequency, offers, suggestions</source>
+        <translation>лимит, пауза, частота, предложения, подсказки</translation>
+    </message>
+    <message>
+        <source>Kinds of offers</source>
+        <translation>Виды предложений</translation>
+    </message>
+    <message>
+        <source>Build errors, driving test questions, electronics, documentation, studying.</source>
+        <translation>Ошибки сборки, вопросы ПДД, электроника, документация, учёба.</translation>
+    </message>
+    <message>
+        <source>categories, offers, suggestions, kinds</source>
+        <translation>категории, предложения, подсказки, виды</translation>
+    </message>
+    <message>
+        <source>Also in fullscreen applications</source>
+        <translation>И в полноэкранных приложениях</translation>
+    </message>
+    <message>
+        <source>Off: games, presentations and films are never interrupted.</source>
+        <translation>Выключено: игры, презентации и фильмы не прерываются.</translation>
+    </message>
+    <message>
+        <source>fullscreen, games, films, presentation, interrupt</source>
+        <translation>полноэкранный, игры, фильмы, презентация, прерывать</translation>
+    </message>
+    <message>
+        <source>Offers in the last 30 days</source>
+        <translation>Предложения за 30 дней</translation>
+    </message>
+    <message>
+        <source>How many offers were shown, accepted and declined.</source>
+        <translation>Сколько предложений показано, принято и отклонено.</translation>
+    </message>
+    <message>
+        <source>log, history, journal, statistics, offers</source>
+        <translation>журнал, история, лог, статистика, предложения, действия</translation>
+    </message>
+    <message>
+        <source>Jarvis speaks up</source>
+        <translation>Jarvis пишет сам</translation>
+    </message>
+    <message>
+        <source>Jarvis speaks up by itself</source>
+        <translation>Jarvis сам подаёт голос</translation>
+    </message>
+    <message>
+        <source>Hints in notifications: a break, words to review, a question.</source>
+        <translation>Подсказки в уведомлениях: перерыв, слова на повторение, вопрос.</translation>
+    </message>
+    <message>
+        <source>proactive, hints, notifications, speak up</source>
+        <translation>проактивность, подсказки, уведомления, сам пишет</translation>
+    </message>
+    <message>
+        <source>Suggest a break</source>
+        <translation>Предлагать перерыв</translation>
+    </message>
+    <message>
+        <source>After an hour or two at the computer.</source>
+        <translation>Через час-два за компьютером.</translation>
+    </message>
+    <message>
+        <source>break, rest, pause, health</source>
+        <translation>перерыв, отдых, пауза, здоровье</translation>
+    </message>
+    <message>
+        <source>Morning plan</source>
+        <translation>План на утро</translation>
+    </message>
+    <message>
+        <source>Today&apos;s reminders, tasks and flashcards when you sit down.</source>
+        <translation>Напоминания, задачи и карточки на сегодня, когда вы садитесь за компьютер.</translation>
+    </message>
+    <message>
+        <source>morning, plan, summary, day</source>
+        <translation>утро, план, сводка, день</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Разрешения</translation>
+    </message>
+    <message>
+        <source>Let widgets and KRunner use Jarvis</source>
+        <translation>Разрешить виджетам и KRunner обращаться к Jarvis</translation>
+    </message>
+    <message>
+        <source>They may ask questions and start the actions Jarvis lists; never commands or memory.</source>
+        <translation>Они могут задавать вопросы и запускать перечисленные Jarvis действия; команды и память — нет.</translation>
+    </message>
+    <message>
+        <source>krunner, widgets, integration, plasma, permissions</source>
+        <translation>krunner, виджеты, интеграция, plasma, разрешения</translation>
+    </message>
+    <message>
+        <source>Tell desktop components the active application</source>
+        <translation>Сообщать компонентам рабочего стола активную программу</translation>
+    </message>
+    <message>
+        <source>Its name only, never the title.</source>
+        <translation>Только имя, никогда не заголовок.</translation>
+    </message>
+    <message>
+        <source>active application, share, widgets</source>
+        <translation>активная программа, приложение, передавать, виджеты</translation>
+    </message>
+    <message>
+        <source>What Jarvis always asks before doing</source>
+        <translation>О чём Jarvis всегда спрашивает</translation>
+    </message>
+    <message>
+        <source>Changes to the desktop, deleting data, installing; administrator passwords go to the system.</source>
+        <translation>Изменения рабочего стола, удаление данных, установка; пароль администратора вводится в системном окне.</translation>
+    </message>
+    <message>
+        <source>confirm, ask, permission, approve, admin, password, sudo</source>
+        <translation>подтверждение, спрашивать, разрешение, администратор, пароль, sudo</translation>
+    </message>
+    <message>
+        <source>Skills</source>
+        <translation>Навыки</translation>
+    </message>
+    <message>
+        <source>Topics with calculators, formulas and ready answers that work without the internet.</source>
+        <translation>Темы с калькуляторами, формулами и готовыми ответами, работающими без интернета.</translation>
+    </message>
+    <message>
+        <source>skills, topics, calculators, formulas, knowledge, electronics, physics</source>
+        <translation>навыки, темы, калькуляторы, формулы, знания, электроника, физика</translation>
+    </message>
+    <message>
+        <source>Import a skill</source>
+        <translation>Импорт навыка</translation>
+    </message>
+    <message>
+        <source>From a JSON file or a link.</source>
+        <translation>Из JSON-файла или по ссылке.</translation>
+    </message>
+    <message>
+        <source>import, install skill, json, download</source>
+        <translation>импорт, установить навык, json, скачать, загрузить</translation>
+    </message>
+    <message>
+        <source>Start</source>
+        <translation>Запуск</translation>
+    </message>
+    <message>
+        <source>Start Jarvis when I log in</source>
+        <translation>Запускать Jarvis при входе</translation>
+    </message>
+    <message>
+        <source>Jarvis waits in the system tray and comes back if it crashes.</source>
+        <translation>Jarvis ждёт в трее и перезапускается после сбоя.</translation>
+    </message>
+    <message>
+        <source>autostart, login, startup, boot, tray, start</source>
+        <translation>автозапуск, автозагрузка, вход, запуск, загрузка, трей, старт</translation>
+    </message>
+    <message>
+        <source>Keep reminders working when the window is closed</source>
+        <translation>Напоминания работают, когда окно закрыто</translation>
+    </message>
+    <message>
+        <source>The service keeps reminders, hints, KRunner and widgets running.</source>
+        <translation>Служба поддерживает напоминания, подсказки, KRunner и виджеты.</translation>
+    </message>
+    <message>
+        <source>background, service, daemon, reminders, closed window</source>
+        <translation>фон, фоновая работа, служба, демон, напоминания, закрытое окно</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Versions and services</source>
+        <translation>Версии и службы</translation>
+    </message>
+    <message>
+        <source>Jarvis, Qt and Plasma versions, the background service and the password store.</source>
+        <translation>Версии Jarvis, Qt и Plasma, фоновая служба и хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>version, about, status, service, daemon, jarvisd</source>
+        <translation>версия, о программе, состояние, служба, демон, jarvisd</translation>
+    </message>
+    <message>
+        <source>Diagnostics</source>
+        <translation>Диагностика</translation>
+    </message>
+    <message>
+        <source>Checks the service, its systemd units, Plasma, widgets and KRunner.</source>
+        <translation>Проверяет службу, её юниты systemd, Plasma, виджеты и KRunner.</translation>
+    </message>
+    <message>
+        <source>diagnose, diagnostics, problems, report, log, journal, troubleshoot</source>
+        <translation>диагностика, проблемы, отчёт, журнал, лог, неполадки, ошибки</translation>
+    </message>
+    <message>
+        <source>Graphics card and API</source>
+        <translation>Видеокарта и графический API</translation>
+    </message>
+    <message>
+        <source>Which GPU and API draw Jarvis; applies after a restart of Jarvis.</source>
+        <translation>Какая видеокарта и API рисуют Jarvis; применяется после перезапуска Jarvis.</translation>
+    </message>
+    <message>
+        <source>gpu, video card, nvidia, amd, intel, vulkan, opengl, render</source>
+        <translation>видеокарта, графика, gpu, nvidia, amd, intel, vulkan, opengl, отрисовка</translation>
+    </message>
+    <message>
+        <source>Updates</source>
+        <translation>Обновления</translation>
+    </message>
+    <message>
+        <source>Download a verified package from GitHub Releases.</source>
+        <translation>Скачать проверенный пакет из GitHub Releases.</translation>
+    </message>
+    <message>
+        <source>update, upgrade, new version, release</source>
+        <translation>обновление, обновить, новая версия, выпуск</translation>
+    </message>
+    <message>
+        <source>Background service</source>
+        <translation>Фоновая служба</translation>
+    </message>
+    <message>
+        <source>Restart or stop jarvisd.</source>
+        <translation>Перезапустить или остановить jarvisd.</translation>
+    </message>
+    <message>
+        <source>service, daemon, jarvisd, restart, stop</source>
+        <translation>служба, демон, jarvisd, перезапуск, остановить</translation>
+    </message>
+    <message>
+        <source>KDE System Settings</source>
+        <translation>Параметры системы KDE</translation>
+    </message>
+    <message>
+        <source>Sound: speakers, headphones and microphone</source>
+        <translation>Звук: динамики, наушники и микрофон</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Sound.</source>
+        <translation>Откроет «Параметры системы → Звук».</translation>
+    </message>
+    <message>
+        <source>headphones, sound, volume, audio, speakers, microphone, mic, headset, earphones</source>
+        <translation>наушники, звук, громкость, аудио, динамики, колонки, микрофон, гарнитура</translation>
+    </message>
+    <message>
+        <source>Bluetooth</source>
+        <translation>Bluetooth</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Bluetooth.</source>
+        <translation>Откроет «Параметры системы → Bluetooth».</translation>
+    </message>
+    <message>
+        <source>bluetooth, wireless headphones, pairing, devices</source>
+        <translation>блютуз, bluetooth, беспроводные наушники, сопряжение, устройства</translation>
+    </message>
+    <message>
+        <source>Network and Wi-Fi</source>
+        <translation>Сеть и Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Wi-Fi &amp; Networking.</source>
+        <translation>Откроет «Параметры системы → Wi-Fi и сеть».</translation>
+    </message>
+    <message>
+        <source>wifi, wi-fi, network, internet, vpn, ethernet, connection</source>
+        <translation>вайфай, wi-fi, wifi, сеть, интернет, vpn, ethernet, подключение</translation>
+    </message>
+    <message>
+        <source>Displays and scale</source>
+        <translation>Экраны и масштаб</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Display Configuration.</source>
+        <translation>Откроет «Параметры системы → Настройка экранов».</translation>
+    </message>
+    <message>
+        <source>monitor, screen, display, resolution, scale, scaling, refresh rate</source>
+        <translation>монитор, экран, дисплей, разрешение, масштаб, масштабирование, частота</translation>
+    </message>
+    <message>
+        <source>Notifications and Do Not Disturb</source>
+        <translation>Уведомления и «Не беспокоить»</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Notifications.</source>
+        <translation>Откроет «Параметры системы → Уведомления».</translation>
+    </message>
+    <message>
+        <source>notifications, do not disturb, popups, alerts</source>
+        <translation>уведомления, не беспокоить, всплывающие, оповещения</translation>
+    </message>
+    <message>
+        <source>All keyboard shortcuts</source>
+        <translation>Все комбинации клавиш</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Shortcuts.</source>
+        <translation>Откроет «Параметры системы → Комбинации клавиш».</translation>
+    </message>
+    <message>
+        <source>shortcuts, hotkeys, keys, buttons, combination, keyboard</source>
+        <translation>горячие клавиши, клавиши, кнопки, сочетания, комбинации, клавиатура</translation>
+    </message>
+    <message>
+        <source>Power and battery</source>
+        <translation>Питание и батарея</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Power Management.</source>
+        <translation>Откроет «Параметры системы → Управление питанием».</translation>
+    </message>
+    <message>
+        <source>battery, power, sleep, energy, suspend, laptop</source>
+        <translation>батарея, аккумулятор, питание, сон, энергия, ноутбук</translation>
+    </message>
+    <message>
+        <source>Global theme and colours of KDE</source>
+        <translation>Глобальная тема и цвета KDE</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Global Theme.</source>
+        <translation>Откроет «Параметры системы → Глобальная тема».</translation>
+    </message>
+    <message>
+        <source>global theme, colours, colors, dark, light, appearance, kde look</source>
+        <translation>глобальная тема, цвета, тёмная, светлая, оформление kde, внешний вид</translation>
+    </message>
+    <message>
+        <source>Autostart of other applications</source>
+        <translation>Автозапуск других программ</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Autostart.</source>
+        <translation>Откроет «Параметры системы → Автозапуск».</translation>
+    </message>
+    <message>
+        <source>autostart, startup applications, login</source>
+        <translation>автозапуск, автозагрузка, программы при входе</translation>
+    </message>
+    <message>
+        <source>Region and language of KDE</source>
+        <translation>Регион и язык KDE</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Region &amp; Language.</source>
+        <translation>Откроет «Параметры системы → Регион и язык».</translation>
+    </message>
+    <message>
+        <source>locale, region, date format, time format, language, units</source>
+        <translation>локаль, регион, формат даты, формат времени, язык, единицы</translation>
+    </message>
+    <message>
+        <source>Keyboard layouts</source>
+        <translation>Раскладки клавиатуры</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Keyboard.</source>
+        <translation>Откроет «Параметры системы → Клавиатура».</translation>
+    </message>
+    <message>
+        <source>keyboard, layout, input language, switch layout</source>
+        <translation>клавиатура, раскладка, язык ввода, переключение раскладки</translation>
+    </message>
+    <message>
+        <source>Recovery</source>
+        <translation>Восстановление</translation>
+    </message>
+    <message>
+        <source>Reset Jarvis settings</source>
+        <translation>Сброс настроек Jarvis</translation>
+    </message>
+    <message>
+        <source>One page or all of them; memory, history and keys stay.</source>
+        <translation>Одну страницу или все; память, история и ключи остаются.</translation>
+    </message>
+    <message>
+        <source>reset, defaults, factory settings, restore defaults</source>
+        <translation>сброс, сбросить, по умолчанию, заводские настройки</translation>
+    </message>
+    <message>
+        <source>Back to the standard KDE desktop</source>
+        <translation>Вернуть стандартный рабочий стол KDE</translation>
+    </message>
+    <message>
+        <source>Puts Plasma&apos;s layout back as it was before JARVIS DESKTOP.</source>
+        <translation>Возвращает раскладку Plasma, какой она была до JARVIS DESKTOP.</translation>
+    </message>
+    <message>
+        <source>restore, standard desktop, kde, undo, rollback, plasma</source>
+        <translation>восстановить, стандартный рабочий стол, kde, отменить, откат, plasma</translation>
+    </message>
+    <message>
+        <source>Settings files and going back to an older version</source>
+        <translation>Файлы настроек и возврат к старой версии</translation>
+    </message>
+    <message>
+        <source>Where the settings are, the backup, and what to do before installing an older Jarvis.</source>
+        <translation>Где лежат настройки, резервная копия и что сделать перед установкой старой версии.</translation>
+    </message>
+    <message>
+        <source>files, config, backup, downgrade, rollback, older version</source>
+        <translation>файлы, конфигурация, конфиг, резервная копия, откат, старая версия</translation>
+    </message>
+    <message>
+        <source>Desktop</source>
+        <translation>Рабочий стол</translation>
+    </message>
+    <message>
+        <source>Talking to Jarvis</source>
+        <translation>Общение с Jarvis</translation>
+    </message>
+    <message>
+        <source>Intelligence and connection</source>
+        <translation>Интеллект и подключение</translation>
+    </message>
+    <message>
+        <source>Memory and privacy</source>
+        <translation>Память и приватность</translation>
+    </message>
+    <message>
+        <source>Actions and permissions</source>
+        <translation>Действия и разрешения</translation>
+    </message>
+    <message>
+        <source>System and recovery</source>
+        <translation>Система и восстановление</translation>
+    </message>
+</context>
+<context>
+    <name>SettingsWindow</name>
+    <message>
+        <source>Jarvis settings</source>
+        <translation>Настройки Jarvis</translation>
+    </message>
+    <message>
+        <source>The dock&apos;s icons, magnification, glass and buttons: defaults</source>
+        <translation>Док: значки, увеличение, стекло и кнопки — по умолчанию</translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Настройки</translation>
+    </message>
+    <message>
+        <source>Search settings</source>
+        <translation>Поиск настроек</translation>
+    </message>
+    <message>
+        <source>Settings pages</source>
+        <translation>Разделы настроек</translation>
+    </message>
+    <message>
+        <source>The Jarvis service (jarvisd) is not running. Settings are still saved and apply when it starts; until then reminders, hints, widgets and KRunner wait, and the service&apos;s statistics are not shown.</source>
+        <translation>Служба Jarvis (jarvisd) не запущена. Настройки сохраняются и применятся при её запуске; до тех пор напоминания, подсказки, виджеты и KRunner ждут, а статистика службы не показывается.</translation>
+    </message>
+    <message>
+        <source>Start the service</source>
+        <translation>Запустить службу</translation>
+    </message>
+    <message>
+        <source>Search: %1</source>
+        <translation>Поиск: %1</translation>
+    </message>
+    <message>
+        <source>Reset this page…</source>
+        <translation>Сбросить эту страницу…</translation>
+    </message>
+    <message>
+        <source>opens KDE System Settings</source>
+        <translation>откроет Параметры системы KDE</translation>
+    </message>
+    <message>
+        <source>Nothing found for &quot;%1&quot;. Try other words, for example: sound, keys, key, memory, dock, screen.</source>
+        <translation>По запросу «%1» ничего не найдено. Попробуйте другие слова, например: звук, клавиши, ключ, память, док, экран.</translation>
+    </message>
+    <message>
+        <source>Reset all Jarvis settings?</source>
+        <translation>Сбросить все настройки Jarvis?</translation>
+    </message>
+    <message>
+        <source>Reset &quot;%1&quot;?</source>
+        <translation>Сбросить «%1»?</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>These settings return to their defaults:</source>
+        <translation>Вернутся к значениям по умолчанию:</translation>
+    </message>
+    <message>
+        <source>Everything here already has its default value.</source>
+        <translation>Здесь всё уже по умолчанию.</translation>
+    </message>
+    <message>
+        <source>Not changed: memory and conversation history, API keys, pinned applications, the desktop layout and JARVIS DESKTOP itself. Permissions are never switched on by a reset, and excluded applications stay excluded.</source>
+        <translation>Не меняются: память и история разговоров, ключи API, закреплённые программы, раскладка рабочего стола и сам режим JARVIS DESKTOP. Сброс никогда не включает разрешения, а исключённые программы остаются исключёнными.</translation>
+    </message>
+    <message>
+        <source>Not everything was reset: %1</source>
+        <translation>Сброшено не всё: %1</translation>
+    </message>
+    <message>
+        <source>Done: the settings are back to their defaults.</source>
+        <translation>Готово: настройки возвращены к значениям по умолчанию.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Сброс</translation>
     </message>
 </context>
 <context>
@@ -3638,6 +5367,65 @@ Esc — скрыть окно.</translation>
     <message>
         <source>Check this circuit: what it does, mistakes in the connections, missing pull-ups, decoupling or protection, and what to improve.</source>
         <translation>Проверь эту схему: что она делает, ошибки в соединениях, не хватает ли подтяжек, развязки или защиты, и что улучшить.</translation>
+    </message>
+</context>
+<context>
+    <name>SkillsPage</name>
+    <message>
+        <source>Turn on the topics you need. Open a tile for its calculators, formulas and ready answers — they work without the internet.</source>
+        <translation>Включите нужные темы. Откройте плитку — там калькуляторы, формулы и готовые ответы, они работают без интернета.</translation>
+    </message>
+    <message>
+        <source>%1 calc.</source>
+        <translation>калькуляторов: %1</translation>
+    </message>
+    <message>
+        <source>%1 formulas</source>
+        <translation>формул: %1</translation>
+    </message>
+    <message>
+        <source>%1 answers</source>
+        <translation>ответов: %1</translation>
+    </message>
+    <message>
+        <source>On</source>
+        <translation>Вкл.</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Выкл.</translation>
+    </message>
+    <message>
+        <source>Use %1</source>
+        <translation>Использовать: %1</translation>
+    </message>
+    <message>
+        <source>Import a skill</source>
+        <translation>Импорт навыка</translation>
+    </message>
+    <message>
+        <source>A skill is a JSON file with a topic&apos;s guidance and ready answers. Imported skills start switched off.</source>
+        <translation>Навык — JSON-файл с указаниями по теме и готовыми ответами. Импортированный навык сначала выключен.</translation>
+    </message>
+    <message>
+        <source>Import JSON…</source>
+        <translation>Импорт JSON…</translation>
+    </message>
+    <message>
+        <source>Link to a skill</source>
+        <translation>Ссылка на навык</translation>
+    </message>
+    <message>
+        <source>Fetch</source>
+        <translation>Получить</translation>
+    </message>
+    <message>
+        <source>Import skill</source>
+        <translation>Импорт навыка</translation>
+    </message>
+    <message>
+        <source>Jarvis skills (*.json)</source>
+        <translation>Навыки Jarvis (*.json)</translation>
     </message>
 </context>
 <context>
@@ -4352,6 +6140,325 @@ Chat with me or add a first example</source>
     </message>
 </context>
 <context>
+    <name>SystemPage</name>
+    <message>
+        <source>Start</source>
+        <translation>Запуск</translation>
+    </message>
+    <message>
+        <source>Start Jarvis when I log in</source>
+        <translation>Запускать Jarvis при входе</translation>
+    </message>
+    <message>
+        <source>Jarvis waits in the system tray and comes back by itself if it crashes. Closing the window only hides it; &quot;Quit&quot; in the tray menu ends it.</source>
+        <translation>Jarvis ждёт в системном трее и сам перезапускается после сбоя. Закрытие окна только скрывает его; завершить — «Выход» в меню трея.</translation>
+    </message>
+    <message>
+        <source>Takes effect at the next login.</source>
+        <translation>Подействует при следующем входе.</translation>
+    </message>
+    <message>
+        <source>Keep reminders working when the window is closed</source>
+        <translation>Напоминания работают, когда окно закрыто</translation>
+    </message>
+    <message>
+        <source>The background service keeps reminders, hints, KRunner and the desktop widgets working after the Jarvis window is closed or quit. Off: the service ends a few seconds after the window; reminders wait until Jarvis is open again.</source>
+        <translation>Фоновая служба поддерживает напоминания, подсказки, KRunner и виджеты, когда окно Jarvis закрыто или завершено. Выключено: служба завершается через несколько секунд после окна, напоминания ждут, пока Jarvis снова откроют.</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Versions and services</source>
+        <translation>Версии и службы</translation>
+    </message>
+    <message>
+        <source>Jarvis %1, Qt %2</source>
+        <translation>Jarvis %1, Qt %2</translation>
+    </message>
+    <message>
+        <source>Background service (jarvisd): running</source>
+        <translation>Фоновая служба (jarvisd): работает</translation>
+    </message>
+    <message>
+        <source>Background service (jarvisd): not running</source>
+        <translation>Фоновая служба (jarvisd): не запущена</translation>
+    </message>
+    <message>
+        <source>System password store: available</source>
+        <translation>Системное хранилище паролей: доступно</translation>
+    </message>
+    <message>
+        <source>System password store: not available, keys are kept in owner-only files</source>
+        <translation>Системное хранилище паролей: недоступно, ключи хранятся в файлах, доступных только вам</translation>
+    </message>
+    <message>
+        <source>Plasma: running</source>
+        <translation>Plasma: работает</translation>
+    </message>
+    <message>
+        <source>Plasma: not running here</source>
+        <translation>Plasma: здесь не запущена</translation>
+    </message>
+    <message>
+        <source>Background service</source>
+        <translation>Фоновая служба</translation>
+    </message>
+    <message>
+        <source>Reminders and hints pause while the service is stopped.</source>
+        <translation>Пока служба остановлена, напоминания и подсказки ждут.</translation>
+    </message>
+    <message>
+        <source>Restart</source>
+        <translation>Перезапустить</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <source>Restart Jarvis</source>
+        <translation>Перезапустить Jarvis</translation>
+    </message>
+    <message>
+        <source>Diagnostics</source>
+        <translation>Диагностика</translation>
+    </message>
+    <message>
+        <source>Checking…</source>
+        <translation>Проверяю…</translation>
+    </message>
+    <message>
+        <source>Not checked yet.</source>
+        <translation>Ещё не проверялось.</translation>
+    </message>
+    <message>
+        <source>The same check in a terminal: jarvis --diagnose · the service log: journalctl --user -u jarvis</source>
+        <translation>Та же проверка в терминале: jarvis --diagnose · журнал службы: journalctl --user -u jarvis</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Проверить снова</translation>
+    </message>
+    <message>
+        <source>Copy report</source>
+        <translation>Скопировать отчёт</translation>
+    </message>
+    <message>
+        <source>Graphics card for Jarvis</source>
+        <translation>Видеокарта для Jarvis</translation>
+    </message>
+    <message>
+        <source>System default</source>
+        <translation>Как в системе</translation>
+    </message>
+    <message>
+        <source>Integrated: %1</source>
+        <translation>Встроенная: %1</translation>
+    </message>
+    <message>
+        <source>Integrated</source>
+        <translation>Встроенная</translation>
+    </message>
+    <message>
+        <source>Dedicated: %1</source>
+        <translation>Дискретная: %1</translation>
+    </message>
+    <message>
+        <source>Dedicated (none found)</source>
+        <translation>Дискретная (не найдена)</translation>
+    </message>
+    <message>
+        <source>Applies after Jarvis restarts.</source>
+        <translation>Применится после перезапуска Jarvis.</translation>
+    </message>
+    <message>
+        <source>Graphics API</source>
+        <translation>Графический API</translation>
+    </message>
+    <message>
+        <source>Renders: measured after the first frame.</source>
+        <translation>Рисует: станет известно после первого кадра.</translation>
+    </message>
+    <message>
+        <source>Renders: %1 %2 — SOFTWARE rendering on the CPU (%3). Choose the light HUD or the classic chat, or check the graphics driver.</source>
+        <translation>Отрисовка: %1 %2 — ПРОГРАММНАЯ, на процессоре (%3). Выберите лёгкий HUD или классический чат либо проверьте видеодрайвер.</translation>
+    </message>
+    <message>
+        <source>Renders: %1 %2 on %3 (%4).</source>
+        <translation>Рисует: %1 %2 на %3 (%4).</translation>
+    </message>
+    <message>
+        <source>Automatic (OpenGL)</source>
+        <translation>Автоматически (OpenGL)</translation>
+    </message>
+    <message>
+        <source>Restart Jarvis to apply</source>
+        <translation>Перезапустить Jarvis, чтобы применить</translation>
+    </message>
+    <message>
+        <source>Copy graphics diagnostics</source>
+        <translation>Скопировать диагностику графики</translation>
+    </message>
+    <message>
+        <source>Updates</source>
+        <translation>Обновления</translation>
+    </message>
+    <message>
+        <source>From Bohdan99py/jarvis-kubuntu on GitHub. The button downloads a verified package and opens Discover; the system asks for your confirmation and password there.</source>
+        <translation>Из Bohdan99py/jarvis-kubuntu на GitHub. Кнопка скачивает проверенный пакет и открывает Discover; подтверждение и пароль спрашивает там система.</translation>
+    </message>
+    <message>
+        <source>Checking and downloading…</source>
+        <translation>Проверка и загрузка…</translation>
+    </message>
+    <message>
+        <source>Update Jarvis</source>
+        <translation>Обновить Jarvis</translation>
+    </message>
+    <message>
+        <source>KDE System Settings</source>
+        <translation>Параметры системы KDE</translation>
+    </message>
+    <message>
+        <source>Sound, Bluetooth, networks and screens are KDE&apos;s: these buttons open the right page of System Settings.</source>
+        <translation>Звук, Bluetooth, сети и экраны настраивает KDE: эти кнопки открывают нужную страницу Параметров системы.</translation>
+    </message>
+    <message>
+        <source>Sound: speakers, headphones and microphone</source>
+        <translation>Звук: динамики, наушники и микрофон</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Sound.</source>
+        <translation>Откроет «Параметры системы → Звук».</translation>
+    </message>
+    <message>
+        <source>Bluetooth</source>
+        <translation>Bluetooth</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Bluetooth.</source>
+        <translation>Откроет «Параметры системы → Bluetooth».</translation>
+    </message>
+    <message>
+        <source>Network and Wi-Fi</source>
+        <translation>Сеть и Wi-Fi</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Wi-Fi &amp; Networking.</source>
+        <translation>Откроет «Параметры системы → Wi-Fi и сеть».</translation>
+    </message>
+    <message>
+        <source>Displays and scale</source>
+        <translation>Экраны и масштаб</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Display Configuration.</source>
+        <translation>Откроет «Параметры системы → Настройка экранов».</translation>
+    </message>
+    <message>
+        <source>Power and battery</source>
+        <translation>Питание и батарея</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Power Management.</source>
+        <translation>Откроет «Параметры системы → Управление питанием».</translation>
+    </message>
+    <message>
+        <source>Global theme and colours of KDE</source>
+        <translation>Глобальная тема и цвета KDE</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Global Theme.</source>
+        <translation>Откроет «Параметры системы → Глобальная тема».</translation>
+    </message>
+    <message>
+        <source>Keyboard layouts</source>
+        <translation>Раскладки клавиатуры</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Keyboard.</source>
+        <translation>Откроет «Параметры системы → Клавиатура».</translation>
+    </message>
+    <message>
+        <source>Region and language of KDE</source>
+        <translation>Регион и язык KDE</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Region &amp; Language.</source>
+        <translation>Откроет «Параметры системы → Регион и язык».</translation>
+    </message>
+    <message>
+        <source>Autostart of other applications</source>
+        <translation>Автозапуск других программ</translation>
+    </message>
+    <message>
+        <source>Opens System Settings → Autostart.</source>
+        <translation>Откроет «Параметры системы → Автозапуск».</translation>
+    </message>
+    <message>
+        <source>Recovery</source>
+        <translation>Восстановление</translation>
+    </message>
+    <message>
+        <source>Reset Jarvis settings</source>
+        <translation>Сброс настроек Jarvis</translation>
+    </message>
+    <message>
+        <source>Every page has &quot;Reset this page…&quot;. This button resets all pages at once. Before anything changes you see the list; memory, conversation history, API keys and pinned applications always stay.</source>
+        <translation>На каждой странице есть «Сбросить эту страницу…». Эта кнопка сбрасывает все страницы сразу. Прежде чем что-то изменится, вы увидите список; память, история разговоров, ключи API и закреплённые программы остаются всегда.</translation>
+    </message>
+    <message>
+        <source>Reset all settings…</source>
+        <translation>Сбросить все настройки…</translation>
+    </message>
+    <message>
+        <source>Back to the standard KDE desktop</source>
+        <translation>Вернуть стандартный рабочий стол KDE</translation>
+    </message>
+    <message>
+        <source>Puts Plasma&apos;s layout back exactly as it was before JARVIS DESKTOP (from the backup), or — without a backup — removes every Jarvis widget and panel. Wallpaper, themes and KDE settings are not touched. If Jarvis itself does not start: jarvis --restore-desktop</source>
+        <translation>Возвращает раскладку Plasma ровно такой, какой она была до JARVIS DESKTOP (из резервной копии), а без копии убирает все виджеты и панели Jarvis. Обои, темы и настройки KDE не трогаются. Если сам Jarvis не запускается: jarvis --restore-desktop</translation>
+    </message>
+    <message>
+        <source>Restore…</source>
+        <translation>Вернуть…</translation>
+    </message>
+    <message>
+        <source>Settings files and going back to an older version</source>
+        <translation>Файлы настроек и возврат к старой версии</translation>
+    </message>
+    <message>
+        <source>Settings: %1. Backup made before the 0.21 upgrade: %2 (without keys).</source>
+        <translation>Настройки: %1. Резервная копия перед обновлением до 0.21: %2 (без ключей).</translation>
+    </message>
+    <message>
+        <source>Before installing a Jarvis older than 0.21, run in a terminal: jarvis --prepare-downgrade — it writes the keys back into the files the older version reads. Without it the older version asks for the keys again; nothing else is lost.</source>
+        <translation>Перед установкой Jarvis старше 0.21 выполните в терминале: jarvis --prepare-downgrade — ключи вернутся в файлы, которые читает старая версия. Без этого старая версия попросит ключи заново, остальное не потеряется.</translation>
+    </message>
+    <message>
+        <source>Last upgrade of the settings: %1</source>
+        <translation>Последнее обновление настроек: %1</translation>
+    </message>
+    <message>
+        <source>Back to the standard KDE desktop?</source>
+        <translation>Вернуть стандартный рабочий стол KDE?</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Вернуть</translation>
+    </message>
+    <message>
+        <source>plasmashell restarts for a moment and Plasma&apos;s layout comes back from the backup made before JARVIS DESKTOP (%1). Changes you made to panels and widgets since then are saved aside, not kept. Your applications keep running.</source>
+        <translation>plasmashell ненадолго перезапустится, и раскладка Plasma вернётся из резервной копии, сделанной до JARVIS DESKTOP (%1). Изменения панелей и виджетов, сделанные с тех пор, сохраняются отдельно, но не остаются. Ваши программы продолжают работать.</translation>
+    </message>
+    <message>
+        <source>There is no backup: every Jarvis widget and panel is removed; nothing else changes.</source>
+        <translation>Резервной копии нет: все виджеты и панели Jarvis убираются, больше ничего не меняется.</translation>
+    </message>
+</context>
+<context>
     <name>Texts</name>
     <message>
         <source>Coding</source>
@@ -4605,6 +6712,10 @@ Chat with me or add a first example</source>
         <translation>Это не похоже на ключ API ElevenLabs.</translation>
     </message>
     <message>
+        <source>The key was not saved: %1</source>
+        <translation>Ключ не сохранён: %1</translation>
+    </message>
+    <message>
         <source>The ElevenLabs key was removed.</source>
         <translation>Ключ ElevenLabs удалён.</translation>
     </message>
@@ -4644,6 +6755,30 @@ Chat with me or add a first example</source>
         <source>Chatterbox will now speak like this recording.</source>
         <translation>Теперь Chatterbox говорит голосом с этой записи.</translation>
     </message>
+    <message>
+        <source>Speak answers aloud: off</source>
+        <translation>Озвучивать ответы: выкл.</translation>
+    </message>
+    <message>
+        <source>Voice engine: best available</source>
+        <translation>Голосовой движок: лучший доступный</translation>
+    </message>
+    <message>
+        <source>Speaking pace: 100 %</source>
+        <translation>Темп речи: 100 %</translation>
+    </message>
+    <message>
+        <source>ElevenLabs voice, model and stability: defaults</source>
+        <translation>ElevenLabs: голос, модель и стабильность — по умолчанию</translation>
+    </message>
+    <message>
+        <source>Chatterbox expressiveness and processor: defaults</source>
+        <translation>Chatterbox: выразительность и устройство — по умолчанию</translation>
+    </message>
+    <message>
+        <source>Voice settings reset.</source>
+        <translation>Настройки голоса сброшены.</translation>
+    </message>
 </context>
 <context>
     <name>jarvis</name>
@@ -4682,6 +6817,14 @@ Chat with me or add a first example</source>
     <message>
         <source>Cannot save %1: %2</source>
         <translation>Не удалось сохранить %1: %2</translation>
+    </message>
+    <message>
+        <source>%1 is damaged and could not be moved aside, so it was not overwritten.</source>
+        <translation>Файл %1 повреждён и не удалось отложить его копию, поэтому он не перезаписан.</translation>
+    </message>
+    <message>
+        <source>The password store is locked. Unlock it (open Jarvis&apos;s settings) and try again.</source>
+        <translation>Хранилище паролей заблокировано. Разблокируйте его (откройте настройки Jarvis) и повторите.</translation>
     </message>
     <message>
         <source>A question and an answer are required, up to 4096 characters each.</source>
@@ -4778,6 +6921,38 @@ Chat with me or add a first example</source>
     <message>
         <source>%1 is not UTF-8 text</source>
         <translation>%1 — не текст в UTF-8</translation>
+    </message>
+    <message>
+        <source>The password store did not answer.</source>
+        <translation>Хранилище паролей не ответило.</translation>
+    </message>
+    <message>
+        <source>The password store&apos;s prompt could not be shown.</source>
+        <translation>Не удалось показать запрос хранилища паролей.</translation>
+    </message>
+    <message>
+        <source>The password store was not unlocked.</source>
+        <translation>Хранилище паролей не разблокировано.</translation>
+    </message>
+    <message>
+        <source>The password store could not be unlocked.</source>
+        <translation>Не удалось разблокировать хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>There is no password store in this session.</source>
+        <translation>В этом сеансе нет хранилища паролей.</translation>
+    </message>
+    <message>
+        <source>The password store refused to save the key.</source>
+        <translation>Хранилище паролей отказалось сохранить ключ.</translation>
+    </message>
+    <message>
+        <source>The key was not found in the password store after saving.</source>
+        <translation>После сохранения ключ не нашёлся в хранилище паролей.</translation>
+    </message>
+    <message>
+        <source>The password store refused to delete the key.</source>
+        <translation>Хранилище паролей отказалось удалить ключ.</translation>
     </message>
 </context>
 </TS>

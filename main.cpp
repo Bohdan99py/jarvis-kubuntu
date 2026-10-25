@@ -27,6 +27,7 @@
 #include "plasma_bridge.h"
 #include "desktop_shell.h"
 #include "desktop_integration.h"
+#include "settings_catalog.h"
 #include <cstdio>
 
 // SIGTERM (logout, systemctl stop) ends the event loop normally, so a lesson
@@ -63,13 +64,15 @@ int main(int argc,char *argv[]) {
     parser.addOption({"quick","Open the quick command bar"});
     parser.addOption({"overlay","Open the Jarvis overlay above other windows (bind this to a key: Ctrl+J)"});
     parser.addOption({"tray","Start in the system tray without opening a window (autostart)"});
-    parser.addOption({"open","Open a part of Jarvis: main, tasks, study, curious or memory","target"});
+    parser.addOption({"open","Open a part of Jarvis: main, tasks, study, curious, memory or settings (settings:<page>, e.g. settings:privacy)","target"});
     parser.addOption({"gpu-info","Print which graphics API, renderer and GPU Jarvis draws with, and the GPUs found, then exit"});
     parser.addOption({"gpu","For this start: the graphics card for the interface (auto, integrated or dedicated)","card"});
     parser.addOption({"graphics-api","For this start: Qt's graphics API (auto, opengl or vulkan)","api"});
     parser.addOption({"diagnose","Check the background service, its systemd units, Plasma, the desktop widget and KRunner, then exit"});
     parser.addOption({"restore-desktop","Put back the Plasma desktop as it was before JARVIS DESKTOP (from the backup), then exit"});
     parser.addOption({"desktop-mode","Switch the Plasma desktop: jarvis (check, back up, apply, verify) or standard (restore), then exit","mode"});
+    parser.addOption({"settings-search","Search the settings like the settings window does (offline), print the matches, then exit","words"});
+    parser.addOption({"prepare-downgrade","Before installing a Jarvis older than 0.21: write the API keys from the password store back into the settings files it reads, then exit"});
     parser.addOption({"measure-image","Print the brightness of an image's middle and of the whole (0..1), then exit (used by jarvisd for vector wallpapers)","file"});
     parser.process(app);
     if(parser.isSet("measure-image")) {
@@ -77,6 +80,20 @@ int main(int argc,char *argv[]) {
         // C-locale numbers (jarvisd parses them; a Russian locale would print "0,774").
         std::printf("%s %s\n",QString::number(l.center,'f',3).toLatin1().constData(),QString::number(l.whole,'f',3).toLatin1().constData());
         return l.center<0?1:0;
+    }
+    if(parser.isSet("settings-search")) {
+        for(const QVariant &v:jarvis::settings::search(parser.value("settings-search"))) {
+            const QVariantMap e=v.toMap();
+            std::printf("%s\t%s → %s\n",e["id"].toString().toUtf8().constData(),e["pageTitle"].toString().toUtf8().constData(),e["title"].toString().toUtf8().constData());
+        }
+        return 0;
+    }
+    if(parser.isSet("prepare-downgrade")) {
+        QString error;
+        const QString done=jarvis::Config::prepareDowngrade(&error);
+        if(!error.isEmpty()) {std::fprintf(stderr,"%s\n",error.toUtf8().constData());return 1;}
+        std::printf("%s\n",done.toUtf8().constData());
+        return 0;
     }
     GraphicsInfo::applyApi();
     if(parser.isSet("gpu-info")) return GraphicsInfo::printReport();
@@ -88,7 +105,7 @@ int main(int argc,char *argv[]) {
         if(mode!="jarvis" && mode!="standard") {std::fprintf(stderr,"--desktop-mode: jarvis or standard\n");return 2;}
         return DesktopShell::runFromTerminal(mode);
     }
-    const QString open=parser.value("open").left(20);
+    const QString open=parser.value("open").left(60);
     const bool quick=parser.isSet("quick");
     const bool overlay=parser.isSet("overlay");
     const bool tray=parser.isSet("tray");
@@ -101,6 +118,9 @@ int main(int argc,char *argv[]) {
                   :!open.isEmpty()?existing.call("Open",open,QString()):existing.call(quick?"ShowQuick":"ShowMain");
         return reply.type()==QDBusMessage::ErrorMessage ? 1 : 0;
     }
+    // 0.21: keys into the password store, config_version 2 (idempotent; jarvisd does the same).
+    const QString migrated=jarvis::Config::migrate();
+    if(!migrated.isEmpty()) qInfo().noquote()<<"settings:"<<migrated;
     // This is the Jarvis that draws: a non-default graphics choice is now on trial.
     GraphicsInfo::armProbe();
     // Closing the window keeps Jarvis in the tray; "Quit" ends it.
@@ -130,6 +150,8 @@ int main(int argc,char *argv[]) {
     engine.rootContext()->setContextProperty("startOverlay",overlay);
     engine.rootContext()->setContextProperty("startTray",tray);
     engine.rootContext()->setContextProperty("startOpen",open);
+    // What the settings upgrade of this start did (shown under System and recovery).
+    engine.rootContext()->setContextProperty("settingsMigration",migrated);
     engine.rootContext()->setContextProperty("jarvisGraphics",&graphics);
     // JARVIS_HUD_STATE=<state> pins the HUD to one state (idle, listening, processing, speaking,
     // notification, warning, error) for visual checks; JARVIS_HUD_STATE=demo starts the demo.
@@ -154,11 +176,13 @@ int main(int argc,char *argv[]) {
             // JARVIS_UI_SNAPSHOT_SEND=text sends a real request, to see the HUD follow it.
             if(QObject *chat=window->findChild<QObject*>("chatModel");chat&&qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SEND"))
                 QMetaObject::invokeMethod(chat,"send",Q_ARG(QString,qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SEND")));
-            // JARVIS_UI_SNAPSHOT_CENTER=<tab number> shows a tab of the control center instead.
-            if(const QString tab=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_CENTER");!tab.isEmpty())
+            // JARVIS_UI_SNAPSHOT_SETTINGS=<page>[:<entry>] saves the settings window instead;
+            // JARVIS_UI_SNAPSHOT_SEARCH=<words> with it types a search.
+            if(const QString page=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SETTINGS");!page.isEmpty())
                 if(QObject *center=window->findChild<QObject*>("controlCenter")) {
-                    if(QObject *tabs=center->findChild<QObject*>("controlTabs")) tabs->setProperty("currentIndex",tab.toInt());
-                    QMetaObject::invokeMethod(center,"open");
+                    QMetaObject::invokeMethod(center,"showPage",Q_ARG(QVariant,page));
+                    if(QObject *search=center->findChild<QObject*>("settingsSearch");search&&qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SEARCH"))
+                        search->setProperty("text",qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SEARCH"));
                 }
             // JARVIS_UI_SNAPSHOT_SKILL=<skill id>[:<tab>] shows a skill's page.
             if(const QString skill=qEnvironmentVariable("JARVIS_UI_SNAPSHOT_SKILL");!skill.isEmpty())
@@ -175,6 +199,8 @@ int main(int argc,char *argv[]) {
             QTimer::singleShot(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_DELAY")?delay:1500,window,[window,shot]{
                 // JARVIS_UI_SNAPSHOT_SCREEN=1 grabs the whole screen, with the compact overlay.
                 QQuickWindow *target=window;
+                if(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SETTINGS"))
+                    if(auto *center=window->findChild<QQuickWindow*>("controlCenter")) target=center;
                 if(qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_OVERLAY"))
                     if(auto *o=qobject_cast<QQuickWindow*>(window->property("overlay").value<QObject*>())) target=o;
                 const QImage image=qEnvironmentVariableIsSet("JARVIS_UI_SNAPSHOT_SCREEN")?window->screen()->grabWindow(0).toImage():target->grabWindow();

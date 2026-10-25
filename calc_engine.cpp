@@ -1652,8 +1652,8 @@ QString render(const QString &title, const QJsonObject &result, Lang lang)
     for (const auto &v : result.value(u"lines"_s).toArray())
         out += u"- "_s + v.toObject().value(u"label"_s).toString() + u": **"_s + v.toObject().value(u"value"_s).toString() + u"**\n"_s;
     out += u"\n`"_s + result.value(u"formula"_s).toString() + u"`"_s;
-    out += lang == Lang::Ru ? u"\n\nПосчитано на этом компьютере. Калькуляторы — в «Центр управления → Навыки»."_s
-                            : u"\n\nCalculated on this computer. Calculators: Control center → Skills."_s;
+    out += lang == Lang::Ru ? u"\n\nПосчитано на этом компьютере. Калькуляторы — в «Настройки → Навыки»."_s
+                            : u"\n\nCalculated on this computer. Calculators: Settings → Skills."_s;
     return out;
 }
 
