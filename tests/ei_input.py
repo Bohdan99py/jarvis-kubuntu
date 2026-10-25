@@ -8,6 +8,7 @@ WAYLAND_DISPLAY is the test socket, so it can never click on the real desktop.
 
     ei_input.py click X Y [right|middle]   move to (X, Y) in logical pixels, click
     ei_input.py move X Y
+    ei_input.py scroll X Y STEPS            wheel at (X, Y): STEPS > 0 down / right, < 0 up / left
     ei_input.py key NAME…                   esc, enter, down, up, tab, ctrl+j, super…
     ei_input.py type TEXT                   latin letters, digits, space, - . /
 """
@@ -48,6 +49,7 @@ for name, res, args in (
     ("ei_device_start_emulating", None, [P, ctypes.c_uint32]), ("ei_device_stop_emulating", None, [P]),
     ("ei_device_pointer_motion_absolute", None, [P, ctypes.c_double, ctypes.c_double]),
     ("ei_device_button_button", None, [P, ctypes.c_uint32, ctypes.c_bool]),
+    ("ei_device_scroll_discrete", None, [P, ctypes.c_int32, ctypes.c_int32]),
     ("ei_device_keyboard_key", None, [P, ctypes.c_uint32, ctypes.c_bool]),
     ("ei_device_frame", None, [P, ctypes.c_uint64]), ("ei_now", ctypes.c_uint64, [P]),
 ):
@@ -112,7 +114,15 @@ def main():
         time.sleep(0.03)
 
     cmd = sys.argv[1]
-    if cmd in ("click", "move"):
+    if cmd == "scroll":
+        x, y, steps = float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4])
+        ei.ei_device_pointer_motion_absolute(dev, x, y)
+        frame(dev)
+        wheel = device(devices, CAP_SCROLL) or dev
+        for _ in range(abs(steps)):
+            ei.ei_device_scroll_discrete(wheel, 0, 120 if steps > 0 else -120)
+            frame(wheel)
+    elif cmd in ("click", "move"):
         x, y = float(sys.argv[2]), float(sys.argv[3])
         ei.ei_device_pointer_motion_absolute(dev, x, y)
         frame(dev)

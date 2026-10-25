@@ -10,7 +10,8 @@
 # set): install the widgets into <scratch dir>/data/plasma/plasmoids, export
 # QML_IMPORT_PATH=build/qml before calling, start build/jarvisd, run
 # `build/jarvis --desktop-mode jarvis`, take pictures with `spectacle -b -n -f -o
-# shot.png`. Everything stops when the command ends.
+# shot.png`. Everything stops when the command ends. The virtual screens:
+# JTEST_WIDTH × JTEST_HEIGHT (1600×900), JTEST_SCALE (1), JTEST_OUTPUTS (1).
 set -e
 S=$(realpath -m "$1"); shift
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -21,7 +22,8 @@ export XDG_CONFIG_HOME="$S/config" XDG_DATA_HOME="$S/data" XDG_CACHE_HOME="$S/ca
 export XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 XDG_SESSION_TYPE=wayland
 unset WAYLAND_DISPLAY DISPLAY SESSION_MANAGER
 exec dbus-run-session --config-file="$ROOT/tests/test-bus.conf" -- bash -c '
-kwin_wayland --virtual --width 1600 --height 900 --socket jtest --no-lockscreen > "$XDG_RUNTIME_DIR/kwin.log" 2>&1 &
+kwin_wayland --virtual --width "${JTEST_WIDTH:-1600}" --height "${JTEST_HEIGHT:-900}" --scale "${JTEST_SCALE:-1}" \
+  --output-count "${JTEST_OUTPUTS:-1}" --socket jtest --no-lockscreen > "$XDG_RUNTIME_DIR/kwin.log" 2>&1 &
 for i in $(seq 50); do [ -S "$XDG_RUNTIME_DIR/jtest" ] && break; sleep 0.2; done
 export WAYLAND_DISPLAY=jtest QT_QPA_PLATFORM=wayland
 /usr/lib/x86_64-linux-gnu/libexec/kactivitymanagerd > "$XDG_RUNTIME_DIR/kamd.log" 2>&1 &

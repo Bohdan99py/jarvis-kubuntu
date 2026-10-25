@@ -372,12 +372,16 @@ if(BUILD_TESTING)
         ${CMAKE_CURRENT_BINARY_DIR})
     # 0.19.3: every interactive element has an action; the dock's popups and tool tips are Plasma's.
     add_test(NAME ui_audit COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/ui_audit_test.py)
-    # The dock's Start button in a nested, isolated Plasma session (kwin_wayland, plasmashell):
-    # cmake -DJARVIS_PLASMA_TESTS=ON (off by default: CI machines have no Plasma).
+    # The dock (Start, windows, pins, the tray and the clock beside it, a hung jarvisd, overflow) and
+    # JARVIS DESKTOP on / again / new login / restore, each in a nested, isolated Plasma session
+    # (kwin_wayland, plasmashell): cmake -DJARVIS_PLASMA_TESTS=ON (off by default: CI machines have no
+    # Plasma). Other screens: JTEST_WIDTH, JTEST_HEIGHT, JTEST_SCALE, JTEST_OUTPUTS (tests/plasma-session.sh).
     option(JARVIS_PLASMA_TESTS "Run the tests that start an isolated Plasma session" OFF)
     if(JARVIS_PLASMA_TESTS)
         add_test(NAME dock_session COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_dock_test.sh ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(dock_session PROPERTIES TIMEOUT 240 RUN_SERIAL TRUE LABELS plasma)
+        set_tests_properties(dock_session PROPERTIES TIMEOUT 600 RUN_SERIAL TRUE LABELS plasma)
+        add_test(NAME desktop_shell_session COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_desktop_shell_test.sh ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(desktop_shell_session PROPERTIES TIMEOUT 300 RUN_SERIAL TRUE LABELS plasma)
     endif()
     add_test(NAME translations COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_translations.py
         ${CMAKE_CURRENT_SOURCE_DIR}/i18n/jarvis_ru.ts)
