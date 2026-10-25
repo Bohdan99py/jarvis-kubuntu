@@ -88,6 +88,7 @@ int main(int argc, char **argv)
         QString name;
         QString widget;  // plasmoid id; "" = the visual module only
         QString qml;     // the object to create (its size and properties)
+        bool plasma = false;  // needs Plasma's own QML modules (Kirigami, org.kde.plasma.core)
     };
     const auto view = [&](const QString &type, const QString &props) { return type + QStringLiteral(" { width: 360; height: 520; %1 }").arg(props); };
     const QString live = QStringLiteral("online: true; telemetry: JSON.parse(%1); status: JSON.parse(%2)").arg(QStringLiteral("'") + QString(telemetry).replace(u'\n', u' ') + u'\'', u'\'' + QString(status).replace(u'\n', u' ') + u'\'');
@@ -120,16 +121,27 @@ int main(int argc, char **argv)
          QStringLiteral("Row { spacing: 4; DockTask { size: 44; name: \"Konsole\"; icon: \"utilities-terminal\"; launcher: true }"
                         " DockTask { size: 44; name: \"Dolphin\"; icon: \"system-file-manager\"; active: true; windows: 3; zoom: 1.3 }"
                         " DockTask { size: 44; name: \"Firefox\"; icon: \"firefox\"; attention: true; windows: 1; edge: Qt.TopEdge }"
-                        " DockTask { size: 44; name: \"Kate\"; icon: \"kate\"; minimized: true; windows: 1; edge: Qt.LeftEdge; effects: false } }")},
+                        " DockTask { size: 44; name: \"Kate\"; icon: \"kate\"; minimized: true; windows: 1; edge: Qt.LeftEdge; effects: false } }"),
+         true},
     };
 
     QQmlEngine engine;
     Localized localized;
     engine.rootContext()->setContextObject(&localized);
-    int failures = 0;
+    int failures = 0, skipped = 0;
+    // Plasma's own QML modules: on a machine without Plasma 6 (the CI's Ubuntu images) the views
+    // that use them cannot load at all — they are left out there, and said so; with Plasma they run.
+    QQmlComponent probe(&engine);
+    probe.setData("import QtQuick\nimport org.kde.kirigami\nimport org.kde.plasma.core\nItem {}\n", QUrl());
+    const bool havePlasma = probe.status() == QQmlComponent::Ready;
     // The core is shaders: this checks that it loads and runs without a warning; an offscreen
     // grab may not show the shaders themselves (look at it in a Plasma session for that).
     for (const Case &c : cases) {
+        if (c.plasma && !havePlasma) {
+            std::printf("skip %s: Plasma 6's QML modules (Kirigami, org.kde.plasma.core) are not installed\n", qPrintable(c.name));
+            ++skipped;
+            continue;
+        }
         g_problems.clear();
         const QString dir = c.widget.isEmpty() ? root : root + u'/' + c.widget + QStringLiteral("/contents/ui");
         const QString qml = QStringLiteral("import QtQuick\nimport org.jarvis.visual as JV\nRectangle {\n color: \"#0b1520\"; width: inner.width + 24; height: inner.height + 24\n"
@@ -161,7 +173,8 @@ int main(int argc, char **argv)
         }
     }
     if (failures == 0)
-        std::printf("PASS: %d cases of the desktop widgets' views and the desktop core load without warnings\n", int(cases.size()));
+        std::printf("PASS: %d cases of the desktop widgets' views and the desktop core load without warnings%s\n", int(cases.size()) - skipped,
+                    skipped ? qPrintable(QStringLiteral(" (%1 skipped: no Plasma 6)").arg(skipped)) : "");
     return failures == 0 ? 0 : 1;
 }
 
