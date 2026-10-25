@@ -281,6 +281,12 @@ msgstr "Панель"
 msgid "Panel settings…"
 msgstr "Настройки панели…"
 
+msgid "Jarvis glass under the whole panel (system tray and clock too)"
+msgstr "Стекло Jarvis под всей панелью (и под системным треем с часами)"
+
+msgid "Off: the tray and the clock stand on Plasma's own panel background."
+msgstr "Выключено: трей и часы — на обычном фоне панели Plasma."
+
 msgid "Performance"
 msgstr "Производительность"
 

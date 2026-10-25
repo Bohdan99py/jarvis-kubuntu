@@ -15,6 +15,7 @@ KCM.SimpleKCM {
     property alias cfg_showProfiles: profiles.checked
     property alias cfg_showDesktops: desktops.checked
     property alias cfg_showJarvis: jarvis.checked
+    property alias cfg_panelStyle: panelStyle.checked
     property alias cfg_iconSize: iconSize.value
     property alias cfg_spacing: gapSlider.value
     property alias cfg_padding: paddingSlider.value
@@ -42,15 +43,24 @@ KCM.SimpleKCM {
         ColumnLayout {
             Kirigami.FormData.label: i18nd("jarvis-desktop", "Pinned:")
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            // The applications' names (Plasma's favourites model; without it, the file names).
+            Loader {
+                id: appNames
+                source: "AppNames.qml"
+                onLoaded: item.ids = Qt.binding(() => cfg_launchers.filter(u => u.startsWith("applications:")).map(u => u.substring(13)))
+            }
             Repeater {
                 model: cfg_launchers
                 RowLayout {
                     required property int index
                     required property string modelData
                     QQC2.Label {
-                        text: modelData.replace(/^applications:/, "").replace(/\.desktop$/, "")
-                        elide: Text.ElideMiddle
+                        readonly property string id: modelData.replace(/^applications:/, "")
+                        text: appNames.item && appNames.item.names[id] ? appNames.item.names[id] : id.replace(/\.desktop$/, "")
+                        elide: Text.ElideRight
                         Layout.fillWidth: true
+                        QQC2.ToolTip.text: modelData; QQC2.ToolTip.visible: nameHover.hovered; QQC2.ToolTip.delay: 600
+                        HoverHandler { id: nameHover }
                     }
                     QQC2.ToolButton {
                         icon.name: "go-up"; enabled: index > 0
@@ -86,6 +96,16 @@ KCM.SimpleKCM {
         Percent { id: magnifyAmount; enabled: effects.checked && magnification.checked; from: 5; to: 60; Kirigami.FormData.label: i18nd("jarvis-desktop", "Magnification:") }
 
         Item { Kirigami.FormData.isSection: true; Kirigami.FormData.label: i18nd("jarvis-desktop", "Panel") }
+        QQC2.CheckBox {
+            id: panelStyle
+            text: i18nd("jarvis-desktop", "Jarvis glass under the whole panel (system tray and clock too)")
+        }
+        QQC2.Label {
+            text: i18nd("jarvis-desktop", "Off: the tray and the clock stand on Plasma's own panel background.")
+            wrapMode: Text.Wrap
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            opacity: 0.7
+        }
         QQC2.Button {
             text: i18nd("jarvis-desktop", "Panel settings…")
             icon.name: "configure"

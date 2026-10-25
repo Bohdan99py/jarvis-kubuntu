@@ -86,6 +86,60 @@ PlasmoidItem {
     function pin(url) { if (url && tasks.launcherPosition(url) < 0) tasks.requestAddLauncher(url) }
     function unpin(url) { if (url) tasks.requestRemoveLauncher(url) }
 
+    // ------------------------------------------------------ the whole panel
+    // 0.20: the system tray and the clock beside the dock are Plasma's own widgets,
+    // and under them Plasma drew its own panel background (light in a light theme):
+    // the dock's glass ended where they began, whatever the dock's look. Now one
+    // Jarvis glass lies over Plasma's panel background and under all of the panel's
+    // widgets, and the widgets there take the complementary colours (light on dark) —
+    // Plasma's tray, clock and popups themselves are unchanged. Plasma's background
+    // stays underneath on purpose: the panel's input region follows it, and without
+    // it (NoBackground) a panel that grew kept its old input region — the tray and
+    // the clock past the old end ignored clicks. Off in the settings, or with the
+    // dock gone, the panel is Plasma's again.
+    readonly property bool wantPanelStyle: Plasmoid.configuration.panelStyle && Plasmoid.formFactor !== PlasmaCore.Types.Planar
+    property Item panelItem: null
+    property Item panelGlass: null
+    readonly property bool panelStyled: panelGlass !== null
+    Component { id: panelGlassComponent; PanelGlass {} }
+    function containmentItem() {
+        for (let p = root.parent; p; p = p.parent)
+            if (p.plasmoid !== undefined && p.plasmoid === Plasmoid.containment)
+                return p
+        return null
+    }
+    function stylePanel() {
+        const item = wantPanelStyle ? containmentItem() : null
+        if (item === panelItem && (item === null) === (panelGlass === null))
+            return
+        unstylePanel()
+        if (!item)
+            return
+        panelItem = item
+        panelGlass = panelGlassComponent.createObject(item, {
+            surfaceOpacity: Qt.binding(() => Plasmoid.configuration.surfaceOpacity / 100),
+            glow: Qt.binding(() => root.glow), effects: Qt.binding(() => root.effects),
+            edge: Qt.binding(() => root.edge), vertical: Qt.binding(() => root.vertical) })
+        panelBefore = { inherit: item.Kirigami.Theme.inherit, colorSet: item.Kirigami.Theme.colorSet }
+        item.Kirigami.Theme.inherit = false
+        item.Kirigami.Theme.colorSet = Kirigami.Theme.Complementary
+    }
+    property var panelBefore: null
+    function unstylePanel() {
+        if (panelGlass) panelGlass.destroy()
+        panelGlass = null
+        if (panelItem && panelBefore) {
+            panelItem.Kirigami.Theme.colorSet = panelBefore.colorSet
+            panelItem.Kirigami.Theme.inherit = panelBefore.inherit
+        }
+        panelItem = null
+        panelBefore = null
+    }
+    onWantPanelStyleChanged: Qt.callLater(stylePanel)
+    onParentChanged: Qt.callLater(stylePanel)
+    Component.onCompleted: Qt.callLater(stylePanel)
+    Component.onDestruction: unstylePanel()
+
     // ---------------------------------------------------------------- launcher
     // An applet popup (Wayland role "appletpopup"): KWin places it by the button
     // on the panel's screen, above the panel, and gives it the keyboard.
@@ -243,20 +297,42 @@ PlasmoidItem {
 
     fullRepresentation: Item {
         id: dock
-        readonly property real length: row.implicitWidth + 2 * root.padding + 12
-        Layout.minimumWidth: root.vertical ? -1 : length
-        Layout.preferredWidth: root.vertical ? -1 : length
-        Layout.maximumWidth: root.vertical ? -1 : length
-        Layout.minimumHeight: root.vertical ? row.implicitHeight + 2 * root.padding + 12 : -1
-        Layout.preferredHeight: root.vertical ? row.implicitHeight + 2 * root.padding + 12 : -1
-        Layout.maximumHeight: root.vertical ? row.implicitHeight + 2 * root.padding + 12 : -1
+        // The fixed part (Jarvis, Start, the workspaces and desktops) and the applications.
+        // 0.20: the dock used to insist on its whole length, so with many applications, a small
+        // screen or a vertical panel the panel ran past the screen's edge and Plasma's tray and
+        // clock after the dock were cut off or gone. Now it asks for its whole length but takes
+        // less when the panel has no more room: the applications then scroll (wheel, or the
+        // active one is brought into view), and the tray and clock stay on the screen.
+        readonly property real gap: row.spacing
+        readonly property real frame: 2 * root.padding + 12
+        readonly property real headLength: root.vertical ? head.implicitHeight : head.implicitWidth
+        readonly property real tasksLength: root.vertical ? taskList.contentHeight : taskList.contentWidth
+        readonly property real fullLength: Math.ceil(headLength + gap + tasksLength + frame)
+        readonly property real shortLength: Math.ceil(headLength + gap + Math.min(tasksLength, 2 * root.cell + gap) + frame)
+        readonly property real tasksRoom: Math.max(0, (root.vertical ? height : width) - headLength - gap - frame)
+        Layout.minimumWidth: root.vertical ? -1 : shortLength
+        Layout.preferredWidth: root.vertical ? -1 : fullLength
+        Layout.maximumWidth: root.vertical ? -1 : fullLength
+        Layout.minimumHeight: root.vertical ? shortLength : -1
+        Layout.preferredHeight: root.vertical ? fullLength : -1
+        Layout.maximumHeight: root.vertical ? fullLength : -1
         Layout.fillWidth: false
         Layout.fillHeight: false
 
-        // The dock's surface: dark glass, a thin holographic edge, corner ticks, a light
+        // On a Jarvis panel the panel's glass is the surface; the dock ends with a line before Plasma's widgets.
+        Rectangle {
+            visible: root.panelStyled
+            x: root.vertical ? (parent.width - width) / 2 : parent.width - 1
+            y: root.vertical ? parent.height - 1 : (parent.height - height) / 2
+            width: root.vertical ? parent.width * 0.6 : 1
+            height: root.vertical ? 1 : parent.height * 0.6
+            color: JV.JarvisTheme.edge
+        }
+        // Otherwise the dock's own surface: dark glass, a thin holographic edge, corner ticks, a light
         // outline that keeps it visible on a light wallpaper. It unfolds when the dock starts.
         Rectangle {
             id: surface
+            visible: !root.panelStyled
             anchors.fill: parent
             anchors.margins: 1
             radius: Math.min(JV.JarvisTheme.radius + 2, height / 2)
@@ -303,6 +379,38 @@ PlasmoidItem {
             }
         }
 
+        // Not enough room for every application: the wheel anywhere on the dock scrolls them.
+        // (On the list itself the handler would sit in the ListView's content item and never see the wheel.)
+        WheelHandler {
+            enabled: taskList.overflowing
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad   // a touchpad's two-finger scroll too
+            onWheel: event => {
+                const delta = (event.angleDelta.y || event.angleDelta.x) / 120 * root.cell
+                if (root.vertical) taskList.contentY = Math.max(0, Math.min(taskList.contentHeight - taskList.height, taskList.contentY - delta))
+                else taskList.contentX = Math.max(0, Math.min(taskList.contentWidth - taskList.width, taskList.contentX - delta))
+            }
+        }
+        // More applications past an end: that end fades out.
+        Repeater {
+            model: taskList.overflowing ? 2 : 0
+            Rectangle {
+                required property int index
+                readonly property real scrolled: root.vertical ? taskList.contentY - taskList.originY : taskList.contentX - taskList.originX
+                readonly property real rest: (root.vertical ? taskList.contentHeight - taskList.height : taskList.contentWidth - taskList.width) - scrolled
+                visible: index === 0 ? scrolled > 1 : rest > 1
+                z: 2
+                readonly property real depth: Math.round(root.cell * 0.6)
+                x: row.x + taskList.x + (root.vertical ? 0 : index === 0 ? 0 : taskList.width - width)
+                y: row.y + taskList.y + (root.vertical ? (index === 0 ? 0 : taskList.height - height) : 0)
+                width: root.vertical ? taskList.width : depth
+                height: root.vertical ? depth : taskList.height
+                gradient: Gradient {
+                    orientation: root.vertical ? Gradient.Vertical : Gradient.Horizontal
+                    GradientStop { position: 0; color: index === 0 ? JV.JarvisTheme.surface : "transparent" }
+                    GradientStop { position: 1; color: index === 0 ? "transparent" : JV.JarvisTheme.surface }
+                }
+            }
+        }
         // Files dropped on the dock: .desktop files are pinned.
         DropArea {
             anchors.fill: parent
@@ -318,164 +426,183 @@ PlasmoidItem {
         Grid {
             id: row
             anchors.centerIn: parent
-            rows: root.vertical ? 0 : 1
-            columns: root.vertical ? 1 : 0
+            // One line: a column on a vertical panel (only `columns` changes, so no frame has rows × columns too small).
+            columns: root.vertical ? 1 : 1000
             spacing: Math.round(Plasmoid.configuration.spacing * JV.JarvisTheme.spacing)
             verticalItemAlignment: Grid.AlignVCenter
             horizontalItemAlignment: Grid.AlignHCenter
 
-            // Jarvis: the overlay on a click; its state colour; a flash on notifications.
-            Item {
-                id: jarvisButton
-                visible: Plasmoid.configuration.showJarvis
-                width: root.cell; height: root.cell
-                function flash() { if (root.effects) flashAnim.restart() }
-                JV.DesktopCore {
-                    id: miniCore
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    compact: true
-                    status: link.status
-                    online: link.online
-                    quality: "low"
-                    active: root.effects && (jarvisMouse.containsMouse || miniCore.state !== "idle")
-                }
-                Rectangle {
-                    id: flashRing
-                    anchors.centerIn: parent
-                    width: parent.width; height: width; radius: width / 2
-                    color: "transparent"; border.color: JV.JarvisTheme.amber; border.width: 2
-                    opacity: 0
-                    OpacityAnimator { id: flashAnim; target: flashRing; from: 1; to: 0; duration: 900 }
-                }
-                PlasmaCore.ToolTipArea {
-                    anchors.fill: parent
-                    mainText: "J.A.R.V.I.S."
-                    subText: !link.online ? i18nd("jarvis-desktop", "Start Jarvis")
-                           : link.integrated ? i18nd("jarvis-desktop", "Click: overlay · right click: the window")
-                           : i18nd("jarvis-desktop", "Open the window (the desktop integration is off)")
-                MouseArea {
-                    id: jarvisMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => {
-                        if (!link.online) link.startJarvis()
-                        else if (mouse.button === Qt.RightButton || !link.integrated) link.run("main")
-                        else link.run("overlay")
-                    }
-                }
-                }
-                Accessible.role: Accessible.Button
-                Accessible.name: "Jarvis"
-            }
-            // Start: the launcher. The whole cell is the button (no gaps to miss).
-            Item {
-                id: launcherButton
-                width: root.cell; height: root.cell
-                Component.onCompleted: root.launcherAnchor = launcherButton
-                readonly property bool lit: launcherMouse.containsMouse || launcherDialog.visible
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: Math.round(root.cell * 0.82); height: width; radius: width / 2
-                    color: launcherButton.lit ? JV.JarvisTheme.hoverFill : JV.JarvisTheme.alpha(JV.JarvisTheme.cyan, 0.06)
-                    border.color: launcherDialog.visible ? JV.JarvisTheme.edgeStrong : JV.JarvisTheme.edge
-                    border.width: launcherDialog.visible ? 1.5 : 1
-                    Behavior on color { enabled: root.effects; ColorAnimation { duration: 140 } }
-                    // Four ticks: the "start" mark, turning a little when open.
-                    Item {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.5; height: width
-                        rotation: launcherDialog.visible ? 45 : 0
-                        Behavior on rotation { enabled: root.effects; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-                        Repeater {
-                            model: 4
-                            Rectangle {
-                                required property int index
-                                width: parent.width * 0.38; height: width; radius: 2
-                                x: index % 2 ? parent.width - width : 0
-                                y: index < 2 ? 0 : parent.height - height
-                                color: index === 0 ? JV.JarvisTheme.amber : JV.JarvisTheme.cyan
-                                opacity: launcherButton.lit ? 1 : 0.85
-                            }
-                        }
-                    }
-                }
-                PlasmaCore.ToolTipArea {
-                    anchors.fill: parent
-                    mainText: i18nd("jarvis-desktop", "Applications")
-                    subText: i18nd("jarvis-desktop", "Search, categories, files and the session · Meta")
-                    active: !launcherDialog.visible
-                    MouseArea {
-                        id: launcherMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleLauncher()
-                    }
-                }
-                Accessible.role: Accessible.Button
-                Accessible.name: i18nd("jarvis-desktop", "Applications")
-                Accessible.onPressAction: root.toggleLauncher()
-            }
-            // Workspaces (from jarvisd) and the virtual desktops (from KWin).
-            // A count model: the buttons stay while jarvisd's status changes (an array model
-            // rebuilt them on every status — the panel relaid itself out each time).
-            Repeater {
-                readonly property var profiles: Plasmoid.configuration.showProfiles && link.integrated && link.status.workspace ? link.status.workspace.profiles || [] : []
-                id: profileButtons
-                model: profiles.length
-                PlasmaCore.ToolTipArea {
-                    id: wsTip
-                    required property int index
-                    readonly property var modelData: profileButtons.profiles[index] || ({ id: "", label: "", desktop: 0 })
-                    width: wsButton.width; height: root.cell
-                    mainText: i18nd("jarvis-desktop", "Workspace %1", modelData.label)
-                    subText: i18nd("jarvis-desktop", "Virtual desktop %1 · its applications and widgets", modelData.desktop)
-                    JV.HoloButton {
-                        id: wsButton
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: root.vertical ? root.cell : implicitWidth
-                        height: Math.round(root.cell * 0.62)
-                        text: root.vertical ? wsTip.modelData.label.charAt(0) : wsTip.modelData.label
-                        checked: link.status.workspace.current === wsTip.modelData.id
-                        onClicked: link.workspace(wsTip.modelData.id)
-                    }
-                }
-            }
-            Repeater {
-                model: Plasmoid.configuration.showDesktops && virtualDesktops.numberOfDesktops > 1 ? virtualDesktops.desktopIds : []
+            Grid {
+                id: head
+                // One line: a column on a vertical panel (only `columns` changes, so no frame has rows × columns too small).
+                columns: root.vertical ? 1 : 1000
+                spacing: row.spacing
+                verticalItemAlignment: Grid.AlignVCenter
+                horizontalItemAlignment: Grid.AlignHCenter
+                // Jarvis: the overlay on a click; its state colour; a flash on notifications.
                 Item {
-                    id: desk
-                    required property int index
-                    required property var modelData
-                    readonly property bool current: virtualDesktops.currentDesktop === modelData
-                    width: Math.round(root.cell * 0.42); height: root.cell
+                    id: jarvisButton
+                    visible: Plasmoid.configuration.showJarvis
+                    width: root.cell; height: root.cell
+                    function flash() { if (root.effects) flashAnim.restart() }
+                    JV.DesktopCore {
+                        id: miniCore
+                        anchors.fill: parent
+                        anchors.margins: 2
+                        compact: true
+                        status: link.status
+                        online: link.online
+                        quality: "low"
+                        active: root.effects && (jarvisMouse.containsMouse || miniCore.state !== "idle")
+                    }
                     Rectangle {
+                        id: flashRing
                         anchors.centerIn: parent
-                        width: desk.current ? 11 : 9; height: width; radius: 2
-                        rotation: 45
-                        color: desk.current ? JV.JarvisTheme.cyan : deskMouse.containsMouse ? JV.JarvisTheme.hoverFill : "transparent"
-                        border.color: JV.JarvisTheme.edgeStrong
+                        width: parent.width; height: width; radius: width / 2
+                        color: "transparent"; border.color: JV.JarvisTheme.amber; border.width: 2
+                        opacity: 0
+                        OpacityAnimator { id: flashAnim; target: flashRing; from: 1; to: 0; duration: 900 }
                     }
                     PlasmaCore.ToolTipArea {
                         anchors.fill: parent
-                        mainText: i18nd("jarvis-desktop", "Virtual desktop: %1", virtualDesktops.desktopNames[desk.index] || String(desk.index + 1))
-                        MouseArea { id: deskMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.switchDesktop(desk.index + 1) }
+                        mainText: "J.A.R.V.I.S."
+                        subText: !link.online ? i18nd("jarvis-desktop", "Start Jarvis")
+                               : link.integrated ? i18nd("jarvis-desktop", "Click: overlay · right click: the window")
+                               : i18nd("jarvis-desktop", "Open the window (the desktop integration is off)")
+                    MouseArea {
+                        id: jarvisMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: mouse => {
+                            if (!link.online) link.startJarvis()
+                            else if (mouse.button === Qt.RightButton || !link.integrated) link.run("main")
+                            else link.run("overlay")
+                        }
+                    }
                     }
                     Accessible.role: Accessible.Button
-                    Accessible.name: virtualDesktops.desktopNames[index] || String(index + 1)
+                    Accessible.name: "Jarvis"
                 }
+                // Start: the launcher. The whole cell is the button (no gaps to miss).
+                Item {
+                    id: launcherButton
+                    width: root.cell; height: root.cell
+                    Component.onCompleted: root.launcherAnchor = launcherButton
+                    readonly property bool lit: launcherMouse.containsMouse || launcherDialog.visible
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Math.round(root.cell * 0.82); height: width; radius: width / 2
+                        color: launcherButton.lit ? JV.JarvisTheme.hoverFill : JV.JarvisTheme.alpha(JV.JarvisTheme.cyan, 0.06)
+                        border.color: launcherDialog.visible ? JV.JarvisTheme.edgeStrong : JV.JarvisTheme.edge
+                        border.width: launcherDialog.visible ? 1.5 : 1
+                        Behavior on color { enabled: root.effects; ColorAnimation { duration: 140 } }
+                        // Four ticks: the "start" mark, turning a little when open.
+                        Item {
+                            anchors.centerIn: parent
+                            width: parent.width * 0.5; height: width
+                            rotation: launcherDialog.visible ? 45 : 0
+                            Behavior on rotation { enabled: root.effects; NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                            Repeater {
+                                model: 4
+                                Rectangle {
+                                    required property int index
+                                    width: parent.width * 0.38; height: width; radius: 2
+                                    x: index % 2 ? parent.width - width : 0
+                                    y: index < 2 ? 0 : parent.height - height
+                                    color: index === 0 ? JV.JarvisTheme.amber : JV.JarvisTheme.cyan
+                                    opacity: launcherButton.lit ? 1 : 0.85
+                                }
+                            }
+                        }
+                    }
+                    PlasmaCore.ToolTipArea {
+                        anchors.fill: parent
+                        mainText: i18nd("jarvis-desktop", "Applications")
+                        subText: i18nd("jarvis-desktop", "Search, categories, files and the session · Meta")
+                        active: !launcherDialog.visible
+                        MouseArea {
+                            id: launcherMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleLauncher()
+                        }
+                    }
+                    Accessible.role: Accessible.Button
+                    Accessible.name: i18nd("jarvis-desktop", "Applications")
+                    Accessible.onPressAction: root.toggleLauncher()
+                }
+                // Workspaces (from jarvisd) and the virtual desktops (from KWin).
+                // A count model: the buttons stay while jarvisd's status changes (an array model
+                // rebuilt them on every status — the panel relaid itself out each time).
+                Repeater {
+                    readonly property var profiles: Plasmoid.configuration.showProfiles && link.integrated && link.status.workspace ? link.status.workspace.profiles || [] : []
+                    id: profileButtons
+                    model: profiles.length
+                    PlasmaCore.ToolTipArea {
+                        id: wsTip
+                        required property int index
+                        readonly property var modelData: profileButtons.profiles[index] || ({ id: "", label: "", desktop: 0 })
+                        width: wsButton.width; height: root.cell
+                        mainText: i18nd("jarvis-desktop", "Workspace %1", modelData.label)
+                        subText: i18nd("jarvis-desktop", "Virtual desktop %1 · its applications and widgets", modelData.desktop)
+                        JV.HoloButton {
+                            id: wsButton
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: root.vertical ? root.cell : implicitWidth
+                            height: Math.round(root.cell * 0.62)
+                            text: root.vertical ? wsTip.modelData.label.charAt(0) : wsTip.modelData.label
+                            checked: link.status.workspace.current === wsTip.modelData.id
+                            onClicked: link.workspace(wsTip.modelData.id)
+                        }
+                    }
+                }
+                Repeater {
+                    model: Plasmoid.configuration.showDesktops && virtualDesktops.numberOfDesktops > 1 ? virtualDesktops.desktopIds : []
+                    Item {
+                        id: desk
+                        required property int index
+                        required property var modelData
+                        readonly property bool current: virtualDesktops.currentDesktop === modelData
+                        width: Math.round(root.cell * 0.42); height: root.cell
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: desk.current ? 11 : 9; height: width; radius: 2
+                            rotation: 45
+                            color: desk.current ? JV.JarvisTheme.cyan : deskMouse.containsMouse ? JV.JarvisTheme.hoverFill : "transparent"
+                            border.color: JV.JarvisTheme.edgeStrong
+                        }
+                        PlasmaCore.ToolTipArea {
+                            anchors.fill: parent
+                            mainText: i18nd("jarvis-desktop", "Virtual desktop: %1", virtualDesktops.desktopNames[desk.index] || String(desk.index + 1))
+                            MouseArea { id: deskMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.switchDesktop(desk.index + 1) }
+                        }
+                        Accessible.role: Accessible.Button
+                        Accessible.name: virtualDesktops.desktopNames[index] || String(index + 1)
+                    }
+                }
+                Rectangle { width: root.vertical ? root.cell * 0.6 : 1; height: root.vertical ? 1 : root.cell * 0.6; color: JV.JarvisTheme.edge }
             }
-            Rectangle { width: root.vertical ? root.cell * 0.6 : 1; height: root.vertical ? 1 : root.cell * 0.6; color: JV.JarvisTheme.edge }
             // The applications: pinned launchers and running windows, grouped per application.
             ListView {
                 id: taskList
                 orientation: root.vertical ? ListView.Vertical : ListView.Horizontal
                 interactive: false
-                width: root.vertical ? root.cell : contentWidth
-                height: root.vertical ? contentHeight : root.cell
+                readonly property bool overflowing: (root.vertical ? contentHeight : contentWidth) > dock.tasksRoom + 1
+                width: root.vertical ? root.cell : Math.min(contentWidth, dock.tasksRoom)
+                height: root.vertical ? Math.min(contentHeight, dock.tasksRoom) : root.cell
+                clip: overflowing
+                // Not enough room: the active window's application comes into view (the wheel: see the dock).
+                Connections {
+                    target: tasks
+                    function onActiveTaskChanged() {
+                        const a = tasks.activeTask
+                        if (taskList.overflowing && a.valid) taskList.positionViewAtIndex(a.parent.valid ? a.parent.row : a.row, ListView.Contain)
+                    }
+                }
+                onOverflowingChanged: if (!overflowing) positionViewAtBeginning()
                 spacing: Math.round(Plasmoid.configuration.spacing * JV.JarvisTheme.spacing)
                 model: tasks
                 cacheBuffer: 10000

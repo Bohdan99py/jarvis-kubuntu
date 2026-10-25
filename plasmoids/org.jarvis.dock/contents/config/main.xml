@@ -16,6 +16,8 @@
     <entry name="showProfiles" type="Bool"><default>true</default></entry>
     <entry name="showDesktops" type="Bool"><default>true</default></entry>
     <entry name="showJarvis" type="Bool"><default>true</default></entry>
+    <!-- 0.20: one Jarvis glass under the whole panel (Plasma's tray and clock too). -->
+    <entry name="panelStyle" type="Bool"><default>true</default></entry>
     <!-- Look: the icon at rest (% of the panel's thickness), the gap between icons and
          the padding inside the dock (px), the glass (%) and the glow (%). -->
     <entry name="iconSize" type="Int"><default>62</default><min>40</min><max>85</max></entry>
