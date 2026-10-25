@@ -66,6 +66,7 @@ private:
     QList<workspace::Project> m_projects;
     qint64 m_projectsAt = 0;
     bool m_scanning = false;
+    mutable QString m_appliedActivity; // the workspace activity level the assistant has
 };
 
 } // namespace jarvis

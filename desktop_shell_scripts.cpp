@@ -112,7 +112,9 @@ QJsonObject makePlan(const QJsonObject &inspection, const QJsonObject &desktop, 
 
     QStringList launchers;
     for (const QJsonValue &v : inspection.value(u"launchers"_s).toArray())
-        if (v.toString().startsWith(u"applications:"_s) || v.toString().startsWith(u"file:"_s))
+        // An application's .desktop file only: a pinned executable (an old snap launcher,
+        // file:///snap/…/code) shows a blank icon in the dock and starts nothing (0.19.2).
+        if (v.toString().startsWith(u"applications:"_s) || (v.toString().startsWith(u"file:"_s) && v.toString().endsWith(u".desktop"_s)))
             launchers.append(v.toString());
     const QJsonArray panels = inspection.value(u"panels"_s).toArray();
     const bool haveDock = std::any_of(panels.begin(), panels.end(), [](const QJsonValue &p) { return p.toObject().value(u"jarvis"_s).toBool(); });
@@ -128,6 +130,7 @@ QJsonObject makePlan(const QJsonObject &inspection, const QJsonObject &desktop, 
         {u"workspaceWidgets"_s, QJsonArray::fromStringList(workspaceWidgets)},
         {u"dock"_s, QJsonObject{{u"location"_s, desktop.value(u"dockPosition"_s).toString(u"bottom"_s)},
                                 {u"height"_s, desktop.value(u"dockSize"_s).toInt(44)},
+                                {u"alignment"_s, desktop.value(u"dockAlignment"_s).toString(u"center"_s)},
                                 {u"hiding"_s, desktop.value(u"dockAutohide"_s).toBool() ? u"autohide"_s : u"none"_s},
                                 {u"launchers"_s, QJsonArray::fromStringList(launchers)},
                                 {u"filterByScreen"_s, false}}},
@@ -192,7 +195,7 @@ if (!plan.existing.dock) {
     p.height = plan.dock.height;
     p.floating = true;
     p.lengthMode = "fit";
-    p.alignment = "center";
+    p.alignment = plan.dock.alignment || "center";
     p.hiding = plan.dock.hiding;
     var dock = p.addWidget("org.jarvis.dock");
     if (dock) {
@@ -268,6 +271,7 @@ for (var i = 0; i < (created.panels || []).length; ++i) {
     p.location = plan.dock.location;
     p.height = plan.dock.height;
     p.hiding = plan.dock.hiding;
+    p.alignment = plan.dock.alignment || "center";
     ++changed;
 }
 var core = created.core >= 0 ? jarvisFindWidget(created.core) : null;

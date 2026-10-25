@@ -10,6 +10,6 @@ Row {
     Text {
         text: power.present ? (power.charging ? "⚡" : "▮") + " " + Math.round(power.percent) + "%" : "⏻ AC"
         color: power.powerSaver ? JV.JarvisTheme.amber : JV.JarvisTheme.cyan
-        font.family: JV.JarvisTheme.mono; font.pixelSize: 11
+        font.family: JV.JarvisTheme.mono; font.pixelSize: JV.JarvisTheme.fontSmall
     }
 }

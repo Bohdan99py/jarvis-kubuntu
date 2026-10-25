@@ -12,7 +12,7 @@
         "Id": "org.jarvis.status",
         "Name": "Jarvis Status",
         "Name[ru]": "Jarvis: состояние",
-        "Version": "0.19.2",
+        "Version": "0.20.0",
         "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
     },
     "KPackageStructure": "Plasma/Applet",

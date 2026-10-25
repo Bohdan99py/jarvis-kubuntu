@@ -42,8 +42,15 @@ def report(cards, *args, env=None, config=None, keep=None):
             (Path(tmp) / 'config' / 'Jarvis' / 'jarvis.conf').write_text(config)
         environment = {k: v for k, v in os.environ.items()
                        if k not in ('__NV_PRIME_RENDER_OFFLOAD', '__GLX_VENDOR_LIBRARY_NAME', '__VK_LAYER_NV_optimus', 'DRI_PRIME')}
+        # The probe must not reach the machine's real GPU: offscreen Qt still opens an
+        # OpenGL context, and on a real GPU the report marks the fake card that matches
+        # it as "renders Jarvis" (and a real PRIME setup changes the outcome). Mesa's
+        # software rasterizer keeps the test about the fake /sys alone, on any machine.
         environment.update(JARVIS_SYSFS_ROOT=str(root), XDG_CONFIG_HOME=str(Path(tmp) / 'config'),
-                           QT_QPA_PLATFORM='offscreen', **(env or {}))
+                           QT_QPA_PLATFORM='offscreen', LIBGL_ALWAYS_SOFTWARE='1', GALLIUM_DRIVER='llvmpipe',
+                           __EGL_VENDOR_LIBRARY_FILENAMES='/usr/share/glvnd/egl_vendor.d/50_mesa.json',
+                           # The checks read the English report, whatever the machine's language.
+                           LANG='C.UTF-8', LC_ALL='C.UTF-8', LANGUAGE='en', **(env or {}))
         out = subprocess.run([JARVIS, '--gpu-info', *args], env=environment, capture_output=True, text=True, timeout=60)
         assert out.returncode == 0, out.stderr
         if keep is not None:
@@ -67,8 +74,10 @@ def check(condition, message, text):
 r = report(NVIDIA_HYBRID, '--gpu', 'auto')
 # Names come from the PCI ID database when it is installed ("NVIDIA GeForce RTX 3050
 # Mobile"), else from the ids ("NVIDIA GPU 25a2").
-check(re.search(r'card0 NVIDIA (GeForce RTX 3050 Mobile|GPU 25a2) — nvidia, 0000:01:00\.0\n', r), 'NVIDIA card listed', r)
-check(re.search(r'card1 AMD (Radeon 680M[^—]*|GPU 1681) — amdgpu, 0000:05:00\.0, boot\n', r), 'AMD card listed as boot GPU', r)
+# "  ← renders Jarvis" follows the card the renderer matches, if any (never with llvmpipe,
+# but a driver that ignores the software switch must not fail the listing).
+check(re.search(r'card0 NVIDIA (GeForce RTX 3050 Mobile|GPU 25a2) — nvidia, 0000:01:00\.0( +← [^\n]*)?\n', r), 'NVIDIA card listed', r)
+check(re.search(r'card1 AMD (Radeon 680M[^—]*|GPU 1681) — amdgpu, 0000:05:00\.0, boot( +← [^\n]*)?\n', r), 'AMD card listed as boot GPU', r)
 check('card0-eDP-1' not in r, 'connectors are not cards', r)
 check('Offload variables set by Jarvis: none' in r, 'auto leaves the environment alone', r)
 

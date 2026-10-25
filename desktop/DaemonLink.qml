@@ -18,6 +18,7 @@ Item {
     readonly property bool integrated: online && status.integration === true
     readonly property bool outdated: online && status.version !== undefined && status.workspace === undefined
     readonly property var desktop: status.desktop || {}
+    readonly property var wallpaper: status.wallpaper || {}
     signal event(var e)
 
     visible: false
@@ -51,6 +52,9 @@ Item {
     }
     function applyTheme() {
         const d = link.status ? link.status.desktop || {} : {}
+        // A light wallpaper (jarvisd measures it): darker panels, firmer edges.
+        JarvisTheme.lightBackdrop = !!(link.status && link.status.wallpaper && link.status.wallpaper.light)
+        JarvisTheme.quality = d.quality || "balanced"
         if (!d.theme)
             return
         JarvisTheme.preset = d.theme

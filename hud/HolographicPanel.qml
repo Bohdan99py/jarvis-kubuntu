@@ -32,7 +32,7 @@ Item {
     property real slotY: 0
     property real panelWidth: 260
     property bool dragged: false
-    readonly property real fullHeight: header.height + body.childrenRect.height + 16
+    readonly property real fullHeight: header.height + body.childrenRect.height + 20
                                        + (expanded && extra.children.length > 0 ? extra.childrenRect.height + 8 : 0)
     readonly property real layoutHeight: fullHeight * Math.min(1, reveal * 1.6)
 
@@ -48,6 +48,12 @@ Item {
 
     width: panelWidth
     height: Math.max(2, fullHeight * ease(open))
+    // Only the details unfolding glide; new numbers that change the height do not
+    // start an animation (they arrive every few seconds).
+    property bool unfolding: false
+    onExpandedChanged: { unfolding = true; unfoldEnd.restart() }
+    Timer { id: unfoldEnd; interval: 300 * JarvisTheme.motion; onTriggered: panel.unfolding = false }
+    Behavior on height { enabled: panel.reveal >= 1 && panel.unfolding; NumberAnimation { duration: 240 * JarvisTheme.motion; easing.type: Easing.OutCubic } }
     visible: reveal > 0.001
     function placeX() { return origin.x + (slotX - origin.x) * ease(travel) }
     function placeY() { return origin.y + (slotY - origin.y) * ease(travel) }
@@ -98,30 +104,36 @@ Item {
         Rectangle { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; width: 6; height: 6; radius: 3; color: "white" }
     }
 
-    // Frame.
+    // Frame (0.19.3: rounded, the shared surface tokens — never so thin that text
+    // stops reading on a light wallpaper — and a dark outline for light backgrounds).
     Rectangle {
         id: frame
         anchors.fill: parent
         opacity: panel.ease(panel.open)
-        radius: 3
+        radius: JarvisTheme.radius
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(0.05, 0.12, 0.2, Math.min(1, 0.82 * JarvisTheme.glassOpacity / 0.72)) }
-            GradientStop { position: 1; color: Qt.rgba(0.02, 0.06, 0.11, Math.min(1, 0.7 * JarvisTheme.glassOpacity / 0.72)) }
+            GradientStop { position: 0; color: Qt.rgba(Math.min(1, JarvisTheme.surface.r * 1.5), Math.min(1, JarvisTheme.surface.g * 1.4), Math.min(1, JarvisTheme.surface.b * 1.35), JarvisTheme.surfaceAlpha) }
+            GradientStop { position: 1; color: JarvisTheme.surface }
         }
         border.width: 1
         border.color: panel.hovered ? Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, 0.85)
-                                    : Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, 0.32)
+                                    : Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, JarvisTheme.lightBackdrop ? 0.5 : 0.32)
         Behavior on border.color { ColorAnimation { duration: 160 } }
+        Rectangle {
+            anchors.fill: parent; anchors.margins: -1
+            radius: parent.radius + 1
+            color: "transparent"; border.color: JarvisTheme.outline; z: -1
+        }
         // Outer glow on hover.
         Rectangle {
             anchors.fill: parent; anchors.margins: -4
-            radius: 6
+            radius: parent.radius + 4
             color: "transparent"
             border.width: 3
-            border.color: Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, panel.hovered ? 0.16 : 0)
+            border.color: Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, panel.hovered ? 0.16 * JarvisTheme.glow : 0)
             Behavior on border.color { ColorAnimation { duration: 160 } }
         }
-        // Corner brackets slide in last.
+        // Corner brackets slide in last, inside the rounded corners.
         Repeater {
             model: 4
             delegate: Item {
@@ -129,11 +141,12 @@ Item {
                 id: bracket
                 readonly property bool atRight: index % 2 === 1
                 readonly property bool atBottom: index > 1
-                width: 12; height: 12
-                x: atRight ? frame.width - width + (1 - panel.fade) * 6 : -(1 - panel.fade) * 6
-                y: atBottom ? frame.height - height : 0
-                Rectangle { x: bracket.atRight ? bracket.width - 2 : 0; width: 2; height: bracket.height; color: panel.accent }
-                Rectangle { y: bracket.atBottom ? bracket.height - 2 : 0; width: bracket.width; height: 2; color: panel.accent }
+                width: 10; height: 10
+                opacity: Math.min(1, JarvisTheme.glow)
+                x: atRight ? frame.width - width - 4 + (1 - panel.fade) * 6 : 4 - (1 - panel.fade) * 6
+                y: atBottom ? frame.height - height - 4 : 4
+                Rectangle { x: bracket.atRight ? bracket.width - 2 : 0; width: 2; height: bracket.height; radius: 1; color: panel.accent }
+                Rectangle { y: bracket.atBottom ? bracket.height - 2 : 0; width: bracket.width; height: 2; radius: 1; color: panel.accent }
             }
         }
         // A scan line runs down while the panel's subject is working.
@@ -153,28 +166,30 @@ Item {
     Item {
         id: header
         width: parent.width
-        height: 26
+        height: 30
         opacity: panel.fade
-        Rectangle { anchors.bottom: parent.bottom; x: 8; width: parent.width - 16; height: 1; color: Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, 0.25) }
+        Rectangle { anchors.bottom: parent.bottom; x: 12; width: parent.width - 24; height: 1; color: Qt.rgba(panel.accent.r, panel.accent.g, panel.accent.b, 0.25) }
         Text {
-            x: 10; anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - tagText.width - 30
+            x: 14; anchors.verticalCenter: parent.verticalCenter
+            width: parent.width - tagText.width - 34
             // The title types itself in.
             text: panel.title.substring(0, Math.ceil(panel.title.length * Math.min(1, panel.fade * 1.4)))
             color: panel.accent
             font.family: JarvisTheme.mono
-            font.pixelSize: 11
+            font.pixelSize: JarvisTheme.fontTitle
             font.bold: true
             font.letterSpacing: 2
             elide: Text.ElideRight
         }
         Text {
             id: tagText
-            anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, parent.width * 0.5)
+            elide: Text.ElideRight
             text: (panel.pinned ? "◆ " : "") + panel.tag + (extra.children.length > 0 ? (panel.expanded ? "  ▴" : "  ▾") : "")
-            color: JarvisTheme.textDim
+            color: JarvisTheme.textSoft
             font.family: JarvisTheme.mono
-            font.pixelSize: 10
+            font.pixelSize: JarvisTheme.fontSmall
         }
         TapHandler {
             onTapped: panel.expanded = !panel.expanded
@@ -198,21 +213,23 @@ Item {
 
     Item {
         id: body
-        x: 10
-        y: header.height + 6
-        width: parent.width - 20
+        x: 14
+        y: header.height + 8
+        width: parent.width - 28
         height: childrenRect.height
         opacity: panel.fade
         clip: panel.open < 1
     }
+    // The details unfold: the frame grows (below) and they fade in.
     Item {
         id: extra
-        x: 10
+        x: 14
         y: body.y + body.height + 6
-        width: parent.width - 20
+        width: parent.width - 28
         height: childrenRect.height
-        visible: panel.expanded && panel.fade > 0.5
-        opacity: panel.fade
+        visible: opacity > 0.01
+        opacity: panel.expanded && panel.fade > 0.5 ? panel.fade : 0
+        Behavior on opacity { NumberAnimation { duration: 220 * JarvisTheme.motion; easing.type: Easing.OutCubic } }
     }
     HoverHandler { id: hover }
 }

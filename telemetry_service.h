@@ -73,6 +73,8 @@ private:
 
     QJsonObject m_player{{QStringLiteral("available"), false}}; // the media player shown (none until MPRIS answers)
     QString m_playerName;     // org.mpris.MediaPlayer2.…
+    QString m_pinnedPlayer;   // the one the user switched to (0.19.3): shown first while it exists
+    QStringList m_players;    // every MPRIS player on the bus (up to four)
     QJsonObject m_audio;      // {output, volume, muted}
     QProcess m_pactl;
 };

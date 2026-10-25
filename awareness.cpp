@@ -72,10 +72,20 @@ QString pick(Lang lang, const QString &ru, const QString &en)
 
 Awareness::Awareness() = default;
 
-void Awareness::setWorkspace(const QString &profile, const QStringList &focus)
+void Awareness::setWorkspace(const QString &profile, const QStringList &focus, const QString &activity)
 {
     m_workspace = profile;
     m_workspaceFocus = focus;
+    m_activity = activity;
+}
+
+QString Awareness::suggestionLevel() const
+{
+    if (m_activity == u"quiet" && m_level != u"off")
+        return u"manual"_s;
+    if (m_activity == u"reduced" && m_level == u"proactive")
+        return u"assistive"_s;
+    return m_level;
 }
 
 void Awareness::configure(const ConfigData &config)
@@ -606,8 +616,9 @@ Awareness::Suggestion Awareness::nextSuggestion(const QJsonObject &state, qint64
             *why = reason;
         return Suggestion{};
     };
-    if (m_level != u"assistive" && m_level != u"proactive")
-        return no(u"level"_s);
+    const QString level = suggestionLevel();
+    if (level != u"assistive" && level != u"proactive")
+        return no(m_level != level ? u"workspace"_s : u"level"_s);
     if (pausedUntil(state, nowMs) > nowMs)
         return no(u"paused"_s);
     if (dnd)
@@ -722,7 +733,7 @@ Awareness::Suggestion Awareness::nextSuggestion(const QJsonObject &state, qint64
         candidates.append(s);
     }
 
-    const double threshold = m_level == u"assistive" ? 0.6 : 0.4;
+    const double threshold = level == u"assistive" ? 0.6 : 0.4;
     const QJsonObject categories = state.value(u"categories"_s).toObject();
     Suggestion best;
     QString reason = u"no evidence"_s;

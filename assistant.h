@@ -128,7 +128,7 @@ public:
     // own engine) such requests are answered like any other.
     using DesktopHandler = std::function<QString(const workspace::Command &, Lang)>;
     void setDesktopHandler(DesktopHandler handler) { m_desktopHandler = std::move(handler); }
-    void setWorkspace(const QString &profile, const QStringList &focus) { m_awareness.setWorkspace(profile, focus); }
+    void setWorkspace(const QString &profile, const QStringList &focus, const QString &activity = QString()) { m_awareness.setWorkspace(profile, focus, activity); }
     // The next open reminder or task: {id, text, due (ms, 0 none)}; empty when none.
     QJsonObject nextTask() const;
 

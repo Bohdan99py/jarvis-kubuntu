@@ -26,6 +26,7 @@
 #include "graphics_info.h"
 #include "plasma_bridge.h"
 #include "desktop_shell.h"
+#include "desktop_integration.h"
 #include <cstdio>
 
 // SIGTERM (logout, systemctl stop) ends the event loop normally, so a lesson
@@ -69,7 +70,14 @@ int main(int argc,char *argv[]) {
     parser.addOption({"diagnose","Check the background service, its systemd units, Plasma, the desktop widget and KRunner, then exit"});
     parser.addOption({"restore-desktop","Put back the Plasma desktop as it was before JARVIS DESKTOP (from the backup), then exit"});
     parser.addOption({"desktop-mode","Switch the Plasma desktop: jarvis (check, back up, apply, verify) or standard (restore), then exit","mode"});
+    parser.addOption({"measure-image","Print the brightness of an image's middle and of the whole (0..1), then exit (used by jarvisd for vector wallpapers)","file"});
     parser.process(app);
+    if(parser.isSet("measure-image")) {
+        const auto l=jarvis::integration::imageLuminance(parser.value("measure-image"),true);
+        // C-locale numbers (jarvisd parses them; a Russian locale would print "0,774").
+        std::printf("%s %s\n",QString::number(l.center,'f',3).toLatin1().constData(),QString::number(l.whole,'f',3).toLatin1().constData());
+        return l.center<0?1:0;
+    }
     GraphicsInfo::applyApi();
     if(parser.isSet("gpu-info")) return GraphicsInfo::printReport();
     // Recovery and diagnostics work without the window (and while another Jarvis runs).

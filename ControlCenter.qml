@@ -1148,20 +1148,31 @@ Dialog {
                                 onActivated: index => { center.report(center.settings.setDesktop("corePosition", values[index])); shell.update() }
                             }
                         }
-                        Label { text: qsTr("Dock"); color: Theme.text }
+                        // 0.20: one labelled setting per row (the three used to share one unlabelled row).
+                        Label { text: qsTr("Dock position"); color: Theme.text }
+                        DarkCombo {
+                            Layout.preferredWidth: 160
+                            readonly property var values: ["bottom", "top", "left", "right"]
+                            model: [qsTr("Bottom"), qsTr("Top"), qsTr("Left"), qsTr("Right")]
+                            currentIndex: values.indexOf(center.settings.desktop.dockPosition || "bottom")
+                            onActivated: index => { center.report(center.settings.setDesktop("dockPosition", values[index])); shell.update() }
+                        }
+                        Label { text: qsTr("Dock height"); color: Theme.text }
                         RowLayout {
-                            DarkCombo {
-                                Layout.preferredWidth: 120
-                                readonly property var values: ["bottom", "top", "left", "right"]
-                                model: [qsTr("Bottom"), qsTr("Top"), qsTr("Left"), qsTr("Right")]
-                                currentIndex: values.indexOf(center.settings.desktop.dockPosition || "bottom")
-                                onActivated: index => { center.report(center.settings.setDesktop("dockPosition", values[index])); shell.update() }
-                            }
                             SpinBox {
                                 from: 32; to: 72
                                 value: center.settings.desktop.dockSize || 44
-                                onValueModified: { center.settings.setDesktop("dockSize", value); shell.update() }
+                                onValueModified: { center.report(center.settings.setDesktop("dockSize", value)); shell.update() }
                             }
+                            Label { text: qsTr("px"); color: Theme.textDim }
+                        }
+                        Label { text: qsTr("Dock alignment"); color: Theme.text }
+                        DarkCombo {
+                            Layout.preferredWidth: 160
+                            readonly property var values: ["center", "left", "right"]
+                            model: [qsTr("Centred"), qsTr("At the start"), qsTr("At the end")]
+                            currentIndex: values.indexOf(center.settings.desktop.dockAlignment || "center")
+                            onActivated: index => { center.report(center.settings.setDesktop("dockAlignment", values[index])); shell.update() }
                         }
                     }
                     OptionSwitch {
@@ -1186,7 +1197,7 @@ Dialog {
                     Label { text: qsTr("Workspaces"); color: Theme.text; font.pixelSize: 17; font.bold: true }
                     Label {
                         Layout.fillWidth: true; wrapMode: Text.Wrap; color: Theme.textDim
-                        text: qsTr("Each profile has a KDE virtual desktop, the applications it starts, the files \"prepare\" opens and the widgets it shows. Switch here, in the dock, in KRunner (\"switch to dev\") or by asking: \"Jarvis, prepare the desktop for programming\". Windows are moved with KWin's own scripting; nothing else on the desktop is touched.")
+                        text: qsTr("Each profile has a KDE virtual desktop, the applications it starts, the files \"prepare\" opens, the widgets it shows and how active Jarvis is there. Switch here, in the dock, in KRunner (\"switch to dev\") or by asking: \"Jarvis, prepare the desktop for programming\". Windows are moved with KWin's own scripting; switching never closes an application.")
                     }
                     Repeater {
                         id: profileList
@@ -1217,11 +1228,81 @@ Dialog {
                                     DarkButton { text: qsTr("Switch"); onClicked: center.desktop.switchWorkspace(profileCard.modelData.id) }
                                     DarkButton { text: qsTr("Prepare"); onClicked: center.desktop.switchWorkspace("prepare:" + profileCard.modelData.id) }
                                 }
-                                TextField {
+                                // The applications this workspace starts (0.19.3): chips with their real
+                                // names, × to remove, and a search of the installed ones to add.
+                                Flow {
                                     Layout.fillWidth: true
-                                    text: (profileCard.modelData.apps || []).join(", ")
-                                    placeholderText: qsTr("Applications (desktop ids, a|b = the first installed)")
-                                    onEditingFinished: center.report(shell.setProfile(profileCard.modelData.id, "apps", text.split(",").map(x => x.trim()).filter(x => x.length > 0)))
+                                    spacing: 6
+                                    Repeater {
+                                        model: profileCard.modelData.apps || []
+                                        Rectangle {
+                                            id: appChip
+                                            required property int index
+                                            required property string modelData
+                                            readonly property var info: shell.describeApp(modelData)
+                                            height: 28; radius: 14
+                                            width: chipRow.implicitWidth + 16
+                                            color: Theme.panel
+                                            border.color: info.installed ? Theme.border : Theme.danger
+                                            RowLayout {
+                                                id: chipRow
+                                                anchors.centerIn: parent
+                                                spacing: 6
+                                                Label { text: appChip.info.name + (appChip.info.installed ? "" : " · " + qsTr("not installed")); color: Theme.text }
+                                                Label {
+                                                    text: "×"; color: Theme.textDim; font.pixelSize: 16
+                                                    TapHandler {
+                                                        onTapped: {
+                                                            const list = (profileCard.modelData.apps || []).filter((x, i) => i !== appChip.index)
+                                                            center.report(shell.setProfile(profileCard.modelData.id, "apps", list))
+                                                        }
+                                                    }
+                                                    Accessible.role: Accessible.Button
+                                                    Accessible.name: qsTr("Remove %1").arg(appChip.info.name)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    TextField {
+                                        id: appSearch
+                                        Layout.fillWidth: true
+                                        placeholderText: qsTr("Add an application: type its name")
+                                        property var found: text.trim().length >= 2 ? shell.findApps(text) : []
+                                        onAccepted: if (found.length > 0) addFound(found[0].id)
+                                        function addFound(id) {
+                                            const list = (profileCard.modelData.apps || []).filter(x => x !== id)
+                                            list.push(id)
+                                            center.report(shell.setProfile(profileCard.modelData.id, "apps", list))
+                                            text = ""
+                                        }
+                                    }
+                                }
+                                Flow {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+                                    visible: appSearch.found.length > 0
+                                    Repeater {
+                                        model: appSearch.found
+                                        DarkButton {
+                                            required property var modelData
+                                            text: "+ " + modelData.name
+                                            onClicked: appSearch.addFound(modelData.id)
+                                        }
+                                    }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Label { text: qsTr("Jarvis here"); color: Theme.textDim }
+                                    DarkCombo {
+                                        Layout.preferredWidth: 300
+                                        readonly property var values: ["normal", "reduced", "quiet"]
+                                        model: [qsTr("As in Awareness settings"), qsTr("Fewer suggestions (at most assistive)"), qsTr("Quiet: no suggestions, answers only")]
+                                        currentIndex: Math.max(0, values.indexOf(profileCard.modelData.activity || "normal"))
+                                        onActivated: index => center.report(shell.setProfile(profileCard.modelData.id, "activity", values[index]))
+                                    }
                                 }
                                 TextField {
                                     Layout.fillWidth: true

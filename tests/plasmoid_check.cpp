@@ -27,6 +27,10 @@ QStringList g_problems;
 void collect(QtMsgType type, const QMessageLogContext &, const QString &message)
 {
     std::fprintf(stderr, "%s\n", qPrintable(message));
+    // KWindowSystem (under Plasma's tool tips) has no plugin for the offscreen platform:
+    // a fact of this test's environment, not of the widget.
+    if (message == QLatin1String("Could not find any platform plugin"))
+        return;
     if (type != QtDebugMsg && type != QtInfoMsg)
         g_problems << message;
 }
@@ -63,6 +67,7 @@ int main(int argc, char **argv)
 
     const QString now = QString::number(QDateTime::currentMSecsSinceEpoch() - 4 * 60000);
     // Shapes as jarvisd sends them (taken from a real machine).
+    // (0.19.3: media lists the players; the status carries the wallpaper's brightness.)
     const QString telemetry = QStringLiteral(R"({"cpu":{"cores":12,"history":[6,5.6,14,9,22,18,7],"load":2.56,"mhz":[2395,2394,2392,416],"mhzAverage":2050,"mhzMax":2396,"perCore":[5.6,9.6,7.7,0.8,12,5.3,8.5,1.2,92,3.6,4.8,0.4],"usage":17.2},
         "gpu":{"cards":[{"asleep":false,"boot":false,"clockMhz":210,"driver":"nvidia","load":3,"memory":0.7,"name":"NVIDIA GeForce RTX 3050 6GB Laptop GPU","temperature":35,"vramTotalMb":6144,"vramUsedMb":44},
                         {"asleep":false,"boot":true,"clockMhz":533,"driver":"amdgpu","load":66,"memory":90.9,"name":"AMD Radeon 680M","temperature":38,"vramTotalMb":512,"vramUsedMb":465}]},
@@ -70,7 +75,7 @@ int main(int argc, char **argv)
         "thermal":{"fans":[],"sensors":[{"celsius":43,"chip":"acpitz_0","label":"temp1"},{"celsius":43.1,"chip":"k10temp","label":"Tctl"},{"celsius":38,"chip":"amdgpu","label":"edge"}]},
         "net":{"interface":"wlp3s0","manager":true,"name":"Livebox-8750","rxBytesPerSecond":215500,"rxHistory":[172,2155,90000,215500,30000],"txBytesPerSecond":2816,"txHistory":[172,2816,1200,900,3000],"type":"wifi","vpn":true,"vpnName":"Work VPN"},
         "power":{"charging":false,"minutesLeft":134,"onAc":false,"percent":64,"powerSaver":false,"present":true,"profile":"balanced","status":"Discharging","watts":9.8},
-        "media":{"available":true,"player":"firefox","status":"Playing","title":"Interstellar Main Theme","artist":"Hans Zimmer","album":"Interstellar","artUrl":"","volume":-1,"canNext":true,"canPrevious":true,"canPlay":true,
+        "media":{"available":true,"player":"firefox","status":"Playing","title":"Interstellar Main Theme","artist":"Hans Zimmer","album":"Interstellar","artUrl":"","volume":-1,"canNext":true,"canPrevious":true,"canPlay":true,"players":["firefox","elisa"],
                  "audio":{"output":"Built-in Audio Analog Stereo","volume":42,"muted":false}}})");
     const QString status = QStringLiteral(R"({"version":"0.19.2","state":"processing","integration":true,"claude":true,"model":"claude-haiku-4-5-20251001","webSearch":true,
         "awareness":{"level":"assistive","paused":false,"dnd":false},"voice":{"listening":true,"speaking":false,"engine":"piper","at":1},
@@ -105,6 +110,17 @@ int main(int argc, char **argv)
         {QStringLiteral("core-offline"), QString(), QStringLiteral("JV.DesktopCore { width: 300; height: 300; online: false; quality: \"low\" }")},
         {QStringLiteral("core-mark7"), QString(), QStringLiteral("JV.DesktopCore { width: 420; height: 420; online: true; quality: \"cinematic\"; Component.onCompleted: JV.JarvisTheme.preset = \"mark7\" }")},
         {QStringLiteral("core-minimal"), QString(), QStringLiteral("JV.DesktopCore { width: 300; height: 300; online: true; Component.onCompleted: JV.JarvisTheme.preset = \"minimal\" }")},
+        // 0.19.3: a light wallpaper (darker panels, plates under the core's readouts, the shade).
+        {QStringLiteral("core-light"), QString(), QStringLiteral("Item { width: 420; height: 420; JV.CoreBackdrop { anchors.fill: parent; strength: 0.6 } JV.DesktopCore { anchors.fill: parent; online: true; status: JSON.parse(%1) }"
+                                                               " Component.onCompleted: JV.JarvisTheme.lightBackdrop = true }")
+                                                    .arg(u'\'' + QString(status).replace(u'\n', u' ') + u'\'')},
+        {QStringLiteral("status-light"), QStringLiteral("org.jarvis.status"), view(QStringLiteral("StatusView"), live + QStringLiteral("; Component.onCompleted: JV.JarvisTheme.lightBackdrop = true"))},
+        // The dock's application button in its states (a Plasma panel draws it; here alone).
+        {QStringLiteral("dock-task"), QStringLiteral("org.jarvis.dock"),
+         QStringLiteral("Row { spacing: 4; DockTask { size: 44; name: \"Konsole\"; icon: \"utilities-terminal\"; launcher: true }"
+                        " DockTask { size: 44; name: \"Dolphin\"; icon: \"system-file-manager\"; active: true; windows: 3; zoom: 1.3 }"
+                        " DockTask { size: 44; name: \"Firefox\"; icon: \"firefox\"; attention: true; windows: 1; edge: Qt.TopEdge }"
+                        " DockTask { size: 44; name: \"Kate\"; icon: \"kate\"; minimized: true; windows: 1; edge: Qt.LeftEdge; effects: false } }")},
     };
 
     QQmlEngine engine;
@@ -117,7 +133,7 @@ int main(int argc, char **argv)
         g_problems.clear();
         const QString dir = c.widget.isEmpty() ? root : root + u'/' + c.widget + QStringLiteral("/contents/ui");
         const QString qml = QStringLiteral("import QtQuick\nimport org.jarvis.visual as JV\nRectangle {\n color: \"#0b1520\"; width: inner.width + 24; height: inner.height + 24\n"
-                                           " Component.onDestruction: JV.JarvisTheme.preset = \"classic\"\n %1\n}\n")
+                                           " Component.onDestruction: { JV.JarvisTheme.preset = \"classic\"; JV.JarvisTheme.lightBackdrop = false }\n %1\n}\n")
                                 .arg(QString(c.qml).replace(QRegularExpression(QStringLiteral("^([\\w.]+) \\{")), QStringLiteral("\\1 { id: inner; x: 12; y: 12; ")));
         QQmlComponent component(&engine);
         // The base URL puts the widget's own directory in scope (its views).

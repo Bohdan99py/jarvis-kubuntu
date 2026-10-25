@@ -74,6 +74,10 @@ public:
     QVariantList profiles() const;
     // key: apps, paths, widgets (lists), desktop (number), label. "" or why not.
     Q_INVOKABLE QString setProfile(const QString &id, const QString &key, const QVariant &value);
+    // Installed applications for a profile's list (0.19.3): [{id, name, icon}] matching the words.
+    Q_INVOKABLE QVariantList findApps(const QString &words) const;
+    // The name and icon of a profile entry ("a|b": the first installed); {id, name, icon, installed}.
+    Q_INVOKABLE QVariantMap describeApp(const QString &alternatives) const;
     // Plasma's own edit mode: move and resize widgets on the desktop.
     Q_INVOKABLE void setEditMode(bool on);
 

@@ -539,7 +539,7 @@ QString DesktopShell::setProfile(const QString &id, const QString &key, const QV
     for (const jarvis::workspace::Profile &p : state.profiles)
         if (p.id == id)
             o = jarvis::workspace::toJson(p);
-    if (o.isEmpty() || !QStringList{u"apps"_s, u"paths"_s, u"widgets"_s, u"desktop"_s, u"label"_s}.contains(key))
+    if (o.isEmpty() || !QStringList{u"apps"_s, u"paths"_s, u"widgets"_s, u"desktop"_s, u"label"_s, u"activity"_s}.contains(key))
         return tr("Unknown option.");
     o[key] = QJsonValue::fromVariant(value);
     const jarvis::workspace::Profile edited = jarvis::workspace::fromJson(id, o);
@@ -551,6 +551,28 @@ QString DesktopShell::setProfile(const QString &id, const QString &key, const QV
         return error;
     emit changed();
     return {};
+}
+
+QVariantList DesktopShell::findApps(const QString &words) const
+{
+    QVariantList out;
+    for (const jarvis::workspace::App &a : jarvis::workspace::findApplications(words.left(60), 8))
+        out.append(QVariantMap{{u"id"_s, a.desktopId}, {u"name"_s, a.name}, {u"icon"_s, a.icon}});
+    return out;
+}
+
+QVariantMap DesktopShell::describeApp(const QString &alternatives) const
+{
+    const QString id = jarvis::workspace::resolveApp(alternatives);
+    const QString shown = id.isEmpty() ? alternatives.section(u'|', 0, 0) : id;
+    QString name = shown, icon;
+    for (const jarvis::workspace::App &a : jarvis::workspace::findApplications(shown, 20))
+        if (a.desktopId == shown) {
+            name = a.name;
+            icon = a.icon;
+            break;
+        }
+    return {{u"id"_s, alternatives}, {u"name"_s, name}, {u"icon"_s, icon}, {u"installed"_s, !id.isEmpty()}};
 }
 
 void DesktopShell::setEditMode(bool on)

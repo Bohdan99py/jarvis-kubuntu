@@ -56,12 +56,13 @@ for wid in widgets:
 check('kHudPlugin{"org.jarvis.hud"}' in read('desktop_integration.h'), 'desktop_integration.h names the core widget')
 
 # Inside plasmshell only Qt's and Plasma's modules and org.jarvis.visual (QML files, no compiled code).
+# (QtQml.Models: the DelegateModel of the dock's window list — Qt's own.)
 qml = {}
 for path in list((ROOT / 'plasmoids').glob('*/contents/*/*.qml')) + list((ROOT / 'desktop').glob('*.qml')):
     qml[str(path.relative_to(ROOT))] = path.read_text(encoding='utf-8')
 for name, text in qml.items():
     for module in re.findall(r'^import\s+([A-Za-z][\w.]*)', text, re.M):
-        check(module.startswith(('QtQuick', 'org.kde.')) or module == 'org.jarvis.visual',
+        check(module.startswith(('QtQuick', 'org.kde.')) or module in ('org.jarvis.visual', 'QtQml', 'QtQml.Models'),
               f'{name} imports {module}: only Qt Quick, Plasma and org.jarvis.visual may load in plasmashell')
     check('Canvas' not in text, f'{name}: no Canvas (CPU painted); use Shapes and animators')
     check('writeConfig' not in text and 'evaluateScript' not in text, f'{name}: a widget never changes Plasma settings')

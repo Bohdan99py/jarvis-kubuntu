@@ -78,12 +78,37 @@ QString effectiveAnimation(const QString &wanted, bool onBattery);
 //   glow 0..1.5, opacity 0.3..0.95, motion 0.5..1.5, density compact | normal | comfortable
 //   quality      low | balanced | cinematic (the desktop core and widgets)
 //   coreSize     small | medium | large;  corePosition center | left | right
-//   dockPosition bottom | top | left | right; dockSize 32..72 px; dockAutohide; dockAllScreens
+//   dockPosition bottom | top | left | right; dockSize 32..72 px; dockAlignment center | left | right
+//                (left/right: the panel's start/end); dockAutohide; dockAllScreens
 //   replacePanels  remove the standard panels once the Jarvis dock works (they come back with a restore)
 //   effects      widget animations at all
 QJsonObject normalizeDesktop(const QJsonObject &in);
 // Applies one change from the Control center; "" or why it was refused.
 QString setDesktopValue(QJsonObject &desktop, const QString &key, const QJsonValue &value);
+
+// The wallpaper behind the desktop core (0.19.3), so the widgets can adapt
+// their contrast. Read-only: Plasma's own files are parsed, nothing is written.
+//   appletsrc    plasma-org.kde.plasma.desktop-appletsrc (the image of the first
+//                screen's desktop, org.kde.image), "" when absent
+//   kdeglobals   for the look-and-feel package (its default wallpaper) and
+//                whether the colour scheme is dark (a package's images_dark)
+//   dataDirs     where wallpapers and look-and-feel packages live
+// Returns the image file, or "" (a slideshow, a colour, unknown).
+QString wallpaperImage(const QString &appletsrc, const QString &kdeglobals, const QStringList &dataDirs, int screenWidth = 1920);
+// Mean luminance (0..1, Rec. 709) of the middle third of an image — where the
+// core sits — and of the whole image; -1 when it cannot be read.
+struct Luminance
+{
+    double center = -1;
+    double whole = -1;
+};
+// `vector`: SVG too — only in a process with a QGuiApplication (jarvis --measure-image);
+// the daemon reads raster images itself and hands vector ones to that helper.
+Luminance imageLuminance(const QString &path, bool vector = false);
+bool isRasterImage(const QString &path);
+// {known, light, luminance}: a light wallpaper (≥ 0.55 behind the core) makes the
+// HUD's panels darker and their edges firmer.
+QJsonObject wallpaperInfo(const Luminance &l);
 
 // KRunner: the question after a trigger word ("jarvis what is RC filter",
 // "джарвис …"), or "" when the query is not for Jarvis.

@@ -17,6 +17,19 @@ Row {
     readonly property bool known: !!ctx.available
     readonly property bool paused: (ctx.pausedUntil || 0) > 0
     readonly property bool watching: !!screen && (screen.capturing || screen.background)
+    property bool contextHoverShown: false
+    property bool eyeHoverShown: false
+    // The tips are worded only while shown. ScreenAwareness has one NOTIFY signal
+    // (`changed`) for everything; worded at creation, reading intervalMinutes
+    // made QML apply Main.qml's still-pending binding of it, whose setter emits
+    // `changed` — which this very binding had just subscribed to through
+    // `capturing`: a binding loop (0.18–0.19.2).
+    readonly property string contextTip: !contextHoverShown ? "" : known ? qsTr("What Jarvis infers from the focused window (confidence %1 %):\n%2")
+                                                 .arg(Math.round((ctx.confidence || 0) * 100)).arg((ctx.evidence || []).join("\n"))
+                                           : ""
+    readonly property string eyeTip: !eyeHoverShown ? "" : screen && screen.capturing
+                                     ? qsTr("Jarvis is taking a screenshot of the window and reading its text on this computer.")
+                                     : qsTr("Background screen analysis is on: at most every %1 min. Click to pause.").arg(screen ? screen.intervalMinutes : 0)
 
     spacing: 6
     height: 22
@@ -39,13 +52,15 @@ Row {
             font.family: JarvisTheme.mono
             font.pixelSize: 10
         }
-        HoverHandler { id: contextHover }
+        HoverHandler { id: contextHover; onHoveredChanged: indicator.contextHoverShown = hovered }
         TapHandler { onTapped: indicator.clicked() }
-        ToolTip.visible: contextHover.hovered && indicator.known
-        ToolTip.delay: 400
-        ToolTip.text: indicator.known ? qsTr("What Jarvis infers from the focused window (confidence %1 %):\n%2")
-                                            .arg(Math.round((indicator.ctx.confidence || 0) * 100)).arg((indicator.ctx.evidence || []).join("\n"))
-                                      : ""
+        // Its own tool tip (not the window's shared, attached one: two attachees writing
+        // the shared tip's text re-entered each other's binding — a binding loop).
+        ToolTip {
+            visible: contextHover.hovered && indicator.known
+            delay: 400
+            text: indicator.contextTip
+        }
     }
     // The eye: screen observation, impossible to miss.
     Rectangle {
@@ -71,12 +86,12 @@ Row {
                 NumberAnimation { to: 1; duration: 380 }
             }
         }
-        HoverHandler { id: eyeHover }
+        HoverHandler { id: eyeHover; onHoveredChanged: indicator.eyeHoverShown = hovered }
         TapHandler { onTapped: indicator.clicked() }
-        ToolTip.visible: eyeHover.hovered
-        ToolTip.delay: 300
-        ToolTip.text: indicator.screen && indicator.screen.capturing
-                      ? qsTr("Jarvis is taking a screenshot of the window and reading its text on this computer.")
-                      : qsTr("Background screen analysis is on: at most every %1 min. Click to pause.").arg(indicator.screen ? indicator.screen.intervalMinutes : 0)
+        ToolTip {
+            visible: eyeHover.hovered
+            delay: 300
+            text: indicator.eyeTip
+        }
     }
 }

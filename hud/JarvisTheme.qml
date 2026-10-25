@@ -39,6 +39,36 @@ QtObject {
     readonly property color textDim: "#7fa5bd"
     readonly property string mono: "DejaVu Sans Mono"
 
+    // 0.19.3: one set of surface tokens for the dock, the launcher, the desktop
+    // widgets and the overlay. Surfaces that carry text never drop below a
+    // readable opacity, whatever the glass setting says: on a light wallpaper
+    // the panels stay dark enough for the text (contrast ≥ 4.5 : 1), and
+    // `lightBackdrop` (jarvisd measures the wallpaper) adds a firmer edge.
+    property bool lightBackdrop: false
+    // The desktop's quality (low, balanced, cinematic): decorative motion of live numbers only in cinematic.
+    property string quality: "balanced"
+    readonly property real surfaceAlpha: Math.max(lightBackdrop ? 0.88 : 0.8, glassOpacity)
+    readonly property color surface: minimal ? Qt.rgba(0.06, 0.08, 0.11, surfaceAlpha)
+                                     : mark7 ? Qt.rgba(0.09, 0.05, 0.04, surfaceAlpha) : Qt.rgba(0.03, 0.08, 0.14, surfaceAlpha)
+    readonly property color surfaceRaised: Qt.rgba(primary.r, primary.g, primary.b, minimal ? 0.06 : 0.09)
+    readonly property color hoverFill: Qt.rgba(primary.r, primary.g, primary.b, 0.16)
+    readonly property color selectFill: Qt.rgba(primary.r, primary.g, primary.b, 0.26)
+    readonly property color edge: Qt.rgba(primary.r, primary.g, primary.b, Math.min(1, (lightBackdrop ? 0.55 : 0.32) * Math.max(0.4, glow)))
+    readonly property color edgeStrong: Qt.rgba(primary.r, primary.g, primary.b, Math.min(1, 0.8 * Math.max(0.5, glow)))
+    // A dark outline under the glass: what keeps a panel visible on a white wallpaper.
+    readonly property color outline: Qt.rgba(0, 0, 0, lightBackdrop ? 0.55 : 0.3)
+    readonly property color textSoft: "#a9c8da"         // secondary text on `surface` (6 : 1)
+    readonly property color positive: "#6fe0a8"
+    // Type scale: nothing a person has to read is smaller than `fontSmall`.
+    readonly property int fontSmall: Math.round(11 * spacing)
+    readonly property int fontBody: Math.round(13 * spacing)
+    readonly property int fontTitle: Math.round(12 * spacing)
+    readonly property int fontLarge: Math.round(18 * spacing)
+    readonly property int radius: minimal ? 10 : 12
+    readonly property int radiusSmall: 7
+    // A colour with another alpha (QML has no shorthand).
+    function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
+
     // A state's name for people (the state itself stays a code).
     function stateName(state) {
         switch (state) {

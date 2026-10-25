@@ -105,6 +105,13 @@ PlasmoidItem {
         Layout.minimumWidth: Kirigami.Units.gridUnit * 6
         Layout.minimumHeight: Kirigami.Units.gridUnit * 6
 
+        // The shade under the core: readable on any wallpaper, no visible frame.
+        JV.CoreBackdrop {
+            anchors.centerIn: core
+            width: core.width; height: core.height
+            strength: Plasmoid.configuration.backdrop / 100
+            soft: Plasmoid.configuration.backdropSoft
+        }
         JV.DesktopCore {
             id: core
             anchors.top: parent.top
@@ -119,6 +126,13 @@ PlasmoidItem {
                      ? { cpu: link.telemetry.cpu.usage, memory: link.telemetry.memory ? link.telemetry.memory.percent : -1 } : {}
             onActivated: link.integrated ? link.run("overlay") : link.online ? link.run("main") : link.startJarvis()
             Connections { target: root; function onPulse(strength) { core.pulse(strength) } }
+        }
+        Rectangle {
+            visible: caption.visible && JV.JarvisTheme.lightBackdrop
+            anchors.centerIn: caption
+            width: caption.width + 24; height: caption.height + 10
+            radius: height / 2
+            color: JV.JarvisTheme.alpha(JV.JarvisTheme.surface, 0.8)
         }
         Column {
             id: caption

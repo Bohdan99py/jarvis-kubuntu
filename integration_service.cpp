@@ -6,9 +6,13 @@
 #include <QDBusError>
 #include <QDBusMetaType>
 #include <QDateTime>
+#include <QFile>
 #include <QFileInfo>
+#include <QStandardPaths>
 #include <QDebug>
 #include <QJsonDocument>
+#include <QProcess>
+#include <QProcessEnvironment>
 
 #include "assistant.h"
 #include "build_config.h"
@@ -121,6 +125,15 @@ IntegrationService::IntegrationService(Assistant *assistant, Notifier *notifier,
         qInfo() << "background work is off and the Jarvis window is closed: exiting";
         QCoreApplication::quit();
     });
+
+    // The wallpaper: measured at start and when it changes (checked every two minutes; a
+    // changed file is read once, scaled to 96 px — a few milliseconds).
+    m_wallpaper = integration::wallpaperInfo({});
+    m_wallpaperCheck.setInterval(120000);
+    m_wallpaperCheck.setTimerType(Qt::VeryCoarseTimer);
+    connect(&m_wallpaperCheck, &QTimer::timeout, this, &IntegrationService::checkWallpaper);
+    m_wallpaperCheck.start();
+    QTimer::singleShot(2000, this, &IntegrationService::checkWallpaper);
 
     connect(&m_guiWatcher, &QDBusServiceWatcher::serviceRegistered, this, [this] {
         m_gui = m_guiSeen = true;
@@ -296,6 +309,7 @@ QString IntegrationService::statusJson()
                                    {u"routes"_s, QJsonArray::fromStringList(m_routes)}, {u"latency"_s, m_latency}};
     o[u"voice"_s] = m_voice;
     o[u"desktop"_s] = cfg.desktop;
+    o[u"wallpaper"_s] = m_wallpaper;
     o[u"workspace"_s] = m_workspaces.summary();
     o[u"components"_s] = m_components;
     if (cfg.desktopIntegration) {
@@ -306,6 +320,51 @@ QString IntegrationService::statusJson()
         o[u"events"_s] = m_events;
     }
     return compact(o);
+}
+
+void IntegrationService::checkWallpaper()
+{
+    const auto read = [](const QString &name) {
+        QFile f(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + u'/' + name);
+        return f.open(QIODevice::ReadOnly) ? QString::fromUtf8(f.readAll()) : QString();
+    };
+    const QString image = integration::wallpaperImage(read(u"plasma-org.kde.plasma.desktop-appletsrc"_s), read(u"kdeglobals"_s),
+                                                      QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation));
+    const QString key = image + u'@' + QString::number(QFileInfo(image).lastModified().toMSecsSinceEpoch());
+    if (key == m_wallpaperKey)
+        return;
+    m_wallpaperKey = key;
+    const auto take = [this](const integration::Luminance &l) {
+        const QJsonObject info = integration::wallpaperInfo(l);
+        if (info != m_wallpaper) {
+            m_wallpaper = info;
+            touch();
+        }
+    };
+    if (image.isEmpty() || integration::isRasterImage(image)) {
+        take(image.isEmpty() ? integration::Luminance{} : integration::imageLuminance(image));
+        return;
+    }
+    // A vector wallpaper (Kubuntu's are SVG): measured by the Jarvis binary in a short
+    // offscreen process — the SVG reader needs a GUI application, the daemon has none.
+    const QString helper = QCoreApplication::applicationDirPath() + u"/jarvis"_s;
+    auto *p = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(u"QT_QPA_PLATFORM"_s, u"offscreen"_s);
+    p->setProcessEnvironment(env);
+    connect(p, &QProcess::finished, this, [p, take](int code, QProcess::ExitStatus status) {
+        const QStringList v = QString::fromLatin1(p->readAllStandardOutput()).split(u' ', Qt::SkipEmptyParts);
+        integration::Luminance l;
+        if (status == QProcess::NormalExit && code == 0 && v.size() == 2) {
+            l.center = v[0].toDouble();
+            l.whole = v[1].toDouble();
+        }
+        take(l);
+        p->deleteLater();
+    });
+    connect(p, &QProcess::errorOccurred, p, [p](QProcess::ProcessError) { p->deleteLater(); });
+    QTimer::singleShot(15000, p, [p] { p->kill(); });
+    p->start(QFileInfo::exists(helper) ? helper : u"jarvis"_s, {u"--measure-image"_s, image});
 }
 
 void IntegrationService::emitStatus()

@@ -649,6 +649,16 @@ static void awareness() {
     // A driving test offer needs confidence and a couple of minutes, not just an app.
     QJsonObject state;QString why;
     require(!a.nextSuggestion(state,t0+3000,false,jarvis::Lang::Ru,&why).isValid() && why=="no evidence","not after a glance");
+    // A quiet workspace (0.19.3) silences suggestions; normal and reduced keep the user's assistive level.
+    a.setWorkspace("study",{},"quiet");
+    require(a.suggestionLevel()=="manual" && !a.nextSuggestion(state,t0+4*min,false,jarvis::Lang::Ru,&why).isValid() && why=="workspace","quiet workspace: no suggestions");
+    a.setWorkspace("study",{},"reduced");
+    require(a.suggestionLevel()=="assistive","reduced never raises the user's level");
+    {jarvis::ConfigData off=cfg;off.awarenessLevel="off";Awareness b;b.configure(off);b.setWorkspace("dev",{},"normal");
+     require(b.suggestionLevel()=="off","a workspace never turns awareness on");}
+    {jarvis::ConfigData pro=cfg;pro.awarenessLevel="proactive";Awareness b;b.configure(pro);b.setWorkspace("dev",{},"reduced");
+     require(b.suggestionLevel()=="assistive","reduced caps proactive at assistive");}
+    a.setWorkspace("general",{},"");
     auto s=a.nextSuggestion(state,t0+4*min,false,jarvis::Lang::Ru,&why);
     require(s.isValid() && s.category=="driving" && s.body.contains(QStringLiteral("перевести вопрос")),"driving offer");
     // The importance filter.
@@ -898,14 +908,22 @@ static void desktopShell(const QString &dir) {
     require(!jarvis::integration::setDesktopValue(d,"mode","jarvis").isEmpty() && d["mode"].toString()=="standard","mode only through the shell");
     require(!jarvis::integration::setDesktopValue(d,"wallpaper","x").isEmpty(),"unknown keys refused");
     // The Plasma scripts: what each may and may not do.
+    {namespace W=jarvis::workspace;
+     W::Profile p=W::fromJson("study",QJsonObject{{"activity","quiet"}});
+     require(p.activity=="quiet" && W::toJson(p)["activity"].toString()=="quiet","workspace activity kept");
+     require(W::fromJson("study",QJsonObject{{"activity","hyperactive"}}).activity.isEmpty(),"unknown activity ignored");}
     namespace S=jarvis::shell;
     const QJsonObject inspection{{"version","6.6.6"},{"screen",QJsonObject{{"width",1920},{"height",1080}}},
-                                 {"launchers",QJsonArray{"applications:org.kde.dolphin.desktop","javascript:alert(1)"}},
+                                 {"launchers",QJsonArray{"applications:org.kde.dolphin.desktop","javascript:alert(1)","file:///snap/code/267/usr/share/code/code","file:///home/u/.local/share/applications/my.desktop"}},
                                  {"panels",QJsonArray{QJsonObject{{"id",2},{"jarvis",false}},QJsonObject{{"id",9},{"jarvis",false}}}}};
     QJsonObject desk=jarvis::integration::normalizeDesktop({});
     QJsonObject plan=S::makePlan(inspection,desk,{"org.jarvis.system"});
     require(plan["core"].toObject()["width"].toInt()==460 && plan["core"].toObject()["x"].toInt()==(1920-460)/2,"core centred, medium");
-    require(plan["dock"].toObject()["launchers"].toArray()==QJsonArray{"applications:org.kde.dolphin.desktop"},"only real launchers move over");
+    require(plan["dock"].toObject()["launchers"].toArray()==QJsonArray{"applications:org.kde.dolphin.desktop","file:///home/u/.local/share/applications/my.desktop"},"only real launchers move over (no pinned executables)");
+    require(plan["dock"].toObject()["alignment"].toString()=="center","dock centred by default");
+    {QJsonObject d2=desk;require(jarvis::integration::setDesktopValue(d2,"dockAlignment","right").isEmpty(),"dock alignment set");
+     require(S::makePlan(inspection,d2,{})["dock"].toObject()["alignment"].toString()=="right","the plan carries the alignment");
+     require(!jarvis::integration::setDesktopValue(d2,"dockAlignment","diagonal").isEmpty(),"unknown alignment refused");}
     require(plan["replacePanels"].toArray()==QJsonArray{2,9},"the standard panels are named for replacement");
     require(plan["widgets"].toArray().size()==5,"five holographic widgets placed");
     for(const QJsonValue &w:plan["widgets"].toArray()) {
@@ -931,6 +949,39 @@ static void desktopShell(const QString &dir) {
     require(jarvis::integration::plasmaAddScript("org.jarvis.system").contains("addWidget(\"org.jarvis.system\"") && jarvis::integration::plasmaAddScript("org.kde.plasma.kickoff").isEmpty(),"only Jarvis widgets are added");
     require(jarvis::integration::plasmaRemoveScript("").contains("indexOf(\"org.jarvis.\") === 0") && jarvis::integration::plasmaRemoveScript("org.kde.plasma.panel").isEmpty(),"only Jarvis widgets are removed");
 }
+// 0.19.3: the wallpaper behind the core, found from Plasma's files, and its brightness.
+static void wallpaper(const QString &dir) {
+    using namespace jarvis::integration;
+    QDir().mkpath(dir+"/wp/wallpapers/Pack/contents/images");
+    QDir().mkpath(dir+"/wp/wallpapers/Pack/contents/images_dark");
+    QDir().mkpath(dir+"/wp/plasma/look-and-feel/org.test.desktop/contents");
+    QImage light(64,36,QImage::Format_RGB32);light.fill(QColor(235,235,240));
+    QImage dark(64,36,QImage::Format_RGB32);dark.fill(QColor(10,20,40));
+    // Light at the edges, dark in the middle: the middle (behind the core) decides.
+    QImage framed=light.copy();for(int y=12;y<24;++y)for(int x=21;x<43;++x)framed.setPixel(x,y,qRgb(5,5,10));
+    require(light.save(dir+"/wp/wallpapers/Pack/contents/images/1920x1080.png")&&light.save(dir+"/wp/wallpapers/Pack/contents/images/640x480.png"),"light package image");
+    require(dark.save(dir+"/wp/wallpapers/Pack/contents/images_dark/1920x1080.png"),"dark package image");
+    require(framed.save(dir+"/wp/framed.png"),"framed image");
+    {QFile f(dir+"/wp/plasma/look-and-feel/org.test.desktop/contents/defaults");require(f.open(QIODevice::WriteOnly),"lnf defaults");f.write("[Wallpaper]\nImage=Pack\n");}
+    const QStringList dirs{dir+"/wp"};
+    const QString lightScheme="[Colors:Window]\nBackgroundNormal=239,240,241\n[KDE]\nLookAndFeelPackage=org.test.desktop\n";
+    const QString darkScheme="[Colors:Window]\nBackgroundNormal=32,35,38\n[KDE]\nLookAndFeelPackage=org.test.desktop\n";
+    require(wallpaperImage("",lightScheme,dirs,1920).endsWith("contents/images/1920x1080.png"),"look-and-feel default, light scheme, closest size");
+    require(wallpaperImage("",darkScheme,dirs,1920).endsWith("contents/images_dark/1920x1080.png"),"a dark scheme takes the package's dark image");
+    const QString applets="[Containments][3]\nlastScreen=1\nplugin=org.kde.plasma.folder\n\n[Containments][3][Wallpaper][org.kde.image][General]\nImage=file://"+dir+"/wp/wallpapers/Pack\n\n"
+                          "[Containments][7]\nlastScreen=0\n\n[Containments][7][Wallpaper][org.kde.image][General]\nImage=file://"+dir+"/wp/framed.png\n";
+    require(wallpaperImage(applets,lightScheme,dirs,1920)==dir+"/wp/framed.png","the first screen's own wallpaper");
+    require(wallpaperImage("[Containments][1][Wallpaper][org.kde.image][General]\nImage=/nonexistent.jpg\n",lightScheme,dirs).isEmpty(),"a missing file is unknown");
+    const Luminance l=imageLuminance(dir+"/wp/wallpapers/Pack/contents/images/1920x1080.png");
+    require(l.center>0.9 && wallpaperInfo(l)["light"].toBool(),"a light wallpaper is light");
+    const Luminance f=imageLuminance(dir+"/wp/framed.png");
+    require(f.center<0.3 && f.whole>0.5 && !wallpaperInfo(f)["light"].toBool(),"behind the core counts, not the frame");
+    require(!wallpaperInfo(imageLuminance(dir+"/nothing.png"))["known"].toBool(),"unreadable is unknown");
+    // An SVG wallpaper is never decoded in the daemon (the SVG reader needs a GUI application).
+    {QFile svg(dir+"/wp/w.svg");require(svg.open(QIODevice::WriteOnly),"svg");svg.write("<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><text>x</text></svg>");}
+    require(!wallpaperInfo(imageLuminance(dir+"/wp/w.svg"))["known"].toBool(),"an SVG is unknown, not a crash");
+}
+
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
@@ -957,5 +1008,6 @@ int main(int argc,char **argv) {
     awareness();
     desktopIntegration();
     desktopShell(scratch.path());
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration, desktop shell (commands, workspaces, projects, sampler, settings, Plasma scripts)";
+    wallpaper(scratch.path());
+    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration, desktop shell (commands, workspaces, projects, sampler, settings, Plasma scripts), wallpaper contrast";
 }

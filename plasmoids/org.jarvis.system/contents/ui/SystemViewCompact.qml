@@ -9,10 +9,10 @@ Row {
     spacing: 6
     Text {
         text: "CPU " + (telemetry.cpu && telemetry.cpu.usage >= 0 ? Math.round(telemetry.cpu.usage) + "%" : "—")
-        color: JV.JarvisTheme.cyan; font.family: JV.JarvisTheme.mono; font.pixelSize: 11
+        color: JV.JarvisTheme.cyan; font.family: JV.JarvisTheme.mono; font.pixelSize: JV.JarvisTheme.fontSmall
     }
     Text {
         text: "RAM " + (telemetry.memory && telemetry.memory.percent >= 0 ? Math.round(telemetry.memory.percent) + "%" : "—")
-        color: JV.JarvisTheme.textDim; font.family: JV.JarvisTheme.mono; font.pixelSize: 11
+        color: JV.JarvisTheme.textSoft; font.family: JV.JarvisTheme.mono; font.pixelSize: JV.JarvisTheme.fontSmall
     }
 }

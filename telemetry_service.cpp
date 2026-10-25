@@ -1,5 +1,7 @@
 #include "telemetry_service.h"
 
+#include <QJsonArray>
+
 #include <QDBusArgument>
 #include <QDBusConnection>
 #include <QDBusObjectPath>
@@ -309,12 +311,14 @@ void TelemetryService::refreshMedia()
         for (const QString &n : reply.arguments().value(0).toStringList())
             if (n.startsWith(u"org.mpris.MediaPlayer2."_s))
                 players.append(n);
+        m_players = players.mid(0, 4);
         if (players.isEmpty()) {
             m_player = QJsonObject{{u"available"_s, false}};
             m_playerName.clear();
             return;
         }
-        // The player that plays wins; otherwise the one shown before, otherwise the first.
+        // The player the user chose wins; then the one that plays; then the one shown
+        // before; then the first.
         auto best = std::make_shared<std::pair<int, QJsonObject>>(-1, QJsonObject());
         auto pending = std::make_shared<int>(int(std::min<qsizetype>(players.size(), 4)));
         for (const QString &name : players.mid(0, 4)) {
@@ -324,7 +328,7 @@ void TelemetryService::refreshMedia()
                 const QVariantMap p = propertyMap(r);
                 if (r.type() != QDBusMessage::ErrorMessage) {
                     const QString status = p.value(u"PlaybackStatus"_s).toString();
-                    const int rank = status == u"Playing" ? 3 : name == m_playerName ? 2 : status == u"Paused" ? 1 : 0;
+                    const int rank = name == m_pinnedPlayer ? 4 : status == u"Playing" ? 3 : name == m_playerName ? 2 : status == u"Paused" ? 1 : 0;
                     if (rank > best->first) {
                         QVariantMap meta;
                         const QVariant m = p.value(u"Metadata"_s);
@@ -352,6 +356,10 @@ void TelemetryService::refreshMedia()
                 if (--*pending == 0) {
                     m_player = best->first >= 0 ? best->second : QJsonObject{{u"available"_s, false}};
                     m_playerName = m_player.value(u"service"_s).toString();
+                    QJsonArray names;
+                    for (const QString &n : std::as_const(m_players))
+                        names.append(n.mid(23).section(u'.', 0, 0));
+                    m_player[u"players"_s] = names;
                 }
             });
         }
@@ -406,6 +414,16 @@ QString TelemetryService::mediaControl(const QString &action)
             m_age.remove(u"media"_s);
         });
         p->start(u"pactl"_s, args);
+        return {};
+    }
+    // Another player (0.19.3): the next one on the bus is shown and controlled from now on.
+    if (action == u"next-player") {
+        if (m_players.size() < 2)
+            return u"only one media player"_s;
+        const qsizetype at = m_players.indexOf(m_playerName);
+        m_pinnedPlayer = m_players.at((at + 1) % m_players.size());
+        m_playerName = m_pinnedPlayer;
+        m_age.remove(u"media"_s);
         return {};
     }
     static const QHash<QString, QString> methods{{u"play-pause"_s, u"PlayPause"_s}, {u"next"_s, u"Next"_s}, {u"previous"_s, u"Previous"_s}};

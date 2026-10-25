@@ -23,20 +23,38 @@ msgstr "осталось %1"
 msgid "%1 min"
 msgstr "%1 мин"
 
+msgid "%1 players"
+msgstr "плееров: %1"
+
+msgid "%1 requests, %2 failed"
+msgstr "запросов: %1, с ошибкой: %2"
+
+msgid "%1 windows: click to choose one"
+msgstr "окон: %1 — щелчок, чтобы выбрать"
+
 msgid "AWARENESS"
 msgstr "ОСВЕДОМЛЁННОСТЬ"
 
 msgid "Activity history"
 msgstr "История активности"
 
+msgid "An older Jarvis service is running: restart it"
+msgstr "Работает старая служба Jarvis: перезапустите её"
+
 msgid "Animate the core"
 msgstr "Анимировать ядро"
 
-msgid "Animations"
-msgstr "Анимации"
+msgid "Animations (off: nothing moves)"
+msgstr "Анимации (выкл.: ничего не движется)"
 
 msgid "Animations and effects"
 msgstr "Анимации и эффекты"
+
+msgid "Applications"
+msgstr "Приложения"
+
+msgid "Ask Jarvis"
+msgstr "Спросить Jarvis"
 
 msgid "Balanced"
 msgstr "Баланс"
@@ -53,8 +71,20 @@ msgstr "Дуги ЦП и памяти вокруг ядра"
 msgid "Charging"
 msgstr "Заряжается"
 
+msgid "Choose a window (%1)…"
+msgstr "Выбрать окно (%1)…"
+
 msgid "Claude could not answer"
 msgstr "Claude не смог ответить"
+
+msgid "Click to start · middle click: another window"
+msgstr "Щелчок — запустить · средняя кнопка — ещё одно окно"
+
+msgid "Click: overlay · right click: the window"
+msgstr "Щелчок — оверлей · правая кнопка — окно"
+
+msgid "Click: show or minimize · middle click: new window"
+msgstr "Щелчок — показать или свернуть · средняя кнопка — новое окно"
 
 msgid "Clock %1 MHz · max %2 MHz · load %3"
 msgstr "Частота %1 МГц · макс. %2 МГц · нагрузка %3"
@@ -65,14 +95,41 @@ msgstr "Закрыть"
 msgid "Close all %1 windows"
 msgstr "Закрыть все окна (%1)"
 
+msgid "Download"
+msgstr "Загрузка"
+
+msgid "Edge (bottom, top, left, right), thickness, alignment, auto-hide or always visible: Plasma's panel editor, or Jarvis → Control center → Desktop. Both apply at once."
+msgstr "Край (снизу, сверху, слева, справа), толщина, выравнивание, автоскрытие или постоянная видимость — в редакторе панели Plasma или в Jarvis → Центр управления → Рабочий стол. Изменения применяются сразу."
+
+msgid "Enter start · ↑↓←→ move · Tab sections · Esc close"
+msgstr "Enter — запуск · ↑↓←→ — выбор · Tab — разделы · Esc — закрыть"
+
+msgid "Ethernet"
+msgstr "Проводная"
+
 msgid "Every CPU core"
 msgstr "Каждое ядро ЦП"
 
 msgid "GPU"
 msgstr "ГП"
 
+msgid "Gap between icons:"
+msgstr "Промежуток между значками:"
+
 msgid "General"
 msgstr "Общие"
+
+msgid "Glass opacity:"
+msgstr "Непрозрачность стекла:"
+
+msgid "Glow:"
+msgstr "Свечение:"
+
+msgid "Icon size:"
+msgstr "Размер значков:"
+
+msgid "Inner margin:"
+msgstr "Внутренний отступ:"
 
 msgid "Jarvis is not running."
 msgstr "Jarvis не запущен."
@@ -83,8 +140,11 @@ msgstr "Jarvis не запущен: измерений нет."
 msgid "Jarvis is ready."
 msgstr "Jarvis готов."
 
-msgid "Jarvis — click: overlay, right click: the window"
-msgstr "Jarvis — щелчок: оверлей, правый щелчок: окно"
+msgid "KRunner search is not installed (package milou)."
+msgstr "Поиск KRunner не установлен (пакет milou)."
+
+msgid "Keep above others"
+msgstr "Поверх других окон"
 
 msgid "LAST EVENTS"
 msgstr "ПОСЛЕДНИЕ СОБЫТИЯ"
@@ -95,17 +155,26 @@ msgstr "ЗАПУСК"
 msgid "Last notification: %1"
 msgstr "Последнее уведомление: %1"
 
-msgid "Launcher"
-msgstr "Запуск"
+msgid "Listening to you"
+msgstr "Слушает вас"
+
+msgid "Look"
+msgstr "Внешний вид"
+
+msgid "Louder"
+msgstr "Громче"
 
 msgid "MEDIA"
 msgstr "МЕДИА"
 
-msgid "MIC · VOICE"
-msgstr "МИКРОФОН · ГОЛОС"
-
 msgid "MODEL"
 msgstr "МОДЕЛЬ"
+
+msgid "Magnification:"
+msgstr "Увеличение:"
+
+msgid "Magnify icons under the pointer"
+msgstr "Увеличивать значки под указателем"
 
 msgid "Maximize or restore"
 msgstr "Развернуть или восстановить"
@@ -113,11 +182,29 @@ msgstr "Развернуть или восстановить"
 msgid "Minimize"
 msgstr "Свернуть"
 
+msgid "Motion"
+msgstr "Движение"
+
+msgid "Move to desktop %1"
+msgstr "Переместить на рабочий стол %1"
+
+msgid "Move up"
+msgstr "Выше"
+
+msgid "Mute"
+msgstr "Выключить звук"
+
 msgid "NETWORK"
 msgstr "СЕТЬ"
 
+msgid "Needs your attention"
+msgstr "Требует вашего внимания"
+
 msgid "New window"
 msgstr "Новое окно"
+
+msgid "Next"
+msgstr "Следующий"
 
 msgid "No battery · mains power"
 msgstr "Батареи нет · питание от сети"
@@ -125,14 +212,32 @@ msgstr "Батареи нет · питание от сети"
 msgid "No connection"
 msgstr "Нет соединения"
 
+msgid "Not running"
+msgstr "Не запущен"
+
+msgid "Nothing found. To ask Jarvis, start with “jarvis”: jarvis how much RAM is free"
+msgstr "Ничего не найдено. Чтобы спросить Jarvis, начните с «jarvis»: jarvis сколько свободной памяти"
+
+msgid "Nothing has happened yet."
+msgstr "Пока ничего не происходило."
+
+msgid "Nothing here yet."
+msgstr "Здесь пока пусто."
+
 msgid "Nothing is playing"
 msgstr "Ничего не играет"
+
+msgid "Nothing pinned yet. Right click an application → Pin to the dock."
+msgstr "Пока ничего не закреплено. Правая кнопка на приложении → «Закрепить в доке»."
 
 msgid "OFFLINE"
 msgstr "НЕ В СЕТИ"
 
 msgid "OFFLINE · click to start Jarvis"
 msgstr "НЕ В СЕТИ · щёлкните, чтобы запустить Jarvis"
+
+msgid "Offline"
+msgstr "Не в сети"
 
 msgid "On battery"
 msgstr "От батареи"
@@ -143,17 +248,26 @@ msgstr "От сети"
 msgid "On the desktop: the expanded view"
 msgstr "На рабочем столе: развёрнутый вид"
 
+msgid "One button per application (a click lists its windows)"
+msgstr "Одна кнопка на приложение (щелчок показывает его окна)"
+
+msgid "Online"
+msgstr "В сети"
+
 msgid "Only the windows of this screen"
 msgstr "Только окна этого экрана"
+
+msgid "Open"
+msgstr "Открыть"
 
 msgid "Open Jarvis"
 msgstr "Открыть Jarvis"
 
-msgid "Open an application, a file, a project… or ask Jarvis"
-msgstr "Откройте программу, файл, проект… или спросите Jarvis"
-
 msgid "Open the overlay"
 msgstr "Открыть оверлей"
+
+msgid "Open the window (the desktop integration is off)"
+msgstr "Открыть окно (интеграция с рабочим столом выключена)"
 
 msgid "Overlay"
 msgstr "Оверлей"
@@ -161,14 +275,41 @@ msgstr "Оверлей"
 msgid "POWER"
 msgstr "ПИТАНИЕ"
 
+msgid "Panel"
+msgstr "Панель"
+
+msgid "Panel settings…"
+msgstr "Настройки панели…"
+
+msgid "Jarvis glass under the whole panel (system tray and clock too)"
+msgstr "Стекло Jarvis под всей панелью (и под системным треем с часами)"
+
+msgid "Off: the tray and the clock stand on Plasma's own panel background."
+msgstr "Выключено: трей и часы — на обычном фоне панели Plasma."
+
 msgid "Performance"
 msgstr "Производительность"
 
-msgid "Pin or unpin applications from their menu (right click). Position, size and auto-hide of the dock are the panel's: Jarvis → Control center → Desktop, or the panel's own settings."
-msgstr "Закрепляйте и открепляйте программы из их меню (правый щелчок). Положение, размер и автоскрытие дока — свойства панели: Jarvis → Центр управления → Рабочий стол или настройки самой панели."
+msgid "Pin more from the launcher or a running application's menu (right click), or drop a .desktop file on the dock."
+msgstr "Закрепляйте из меню запуска или из меню запущенного приложения (правая кнопка) либо перетащите .desktop-файл на док."
 
 msgid "Pin to the dock"
 msgstr "Закрепить в доке"
+
+msgid "Pinned"
+msgstr "Закреплённые"
+
+msgid "Pinned:"
+msgstr "Закреплённые:"
+
+msgid "Places and devices"
+msgstr "Места и устройства"
+
+msgid "Plasma's application list is not available here. Type to search applications."
+msgstr "Список приложений Plasma здесь недоступен. Начните вводить название для поиска."
+
+msgid "Play or pause"
+msgstr "Воспроизвести или приостановить"
 
 msgid "Power profile buttons"
 msgstr "Кнопки профилей питания"
@@ -176,11 +317,17 @@ msgstr "Кнопки профилей питания"
 msgid "Power profiles: not available"
 msgstr "Профили питания недоступны"
 
-msgid "Quality, theme and size are set in Jarvis → Control center → Desktop. The core rests while a maximized or fullscreen window covers the desktop."
-msgstr "Качество, тема и размер задаются в Jarvis → Центр управления → Рабочий стол. Ядро замирает, пока развёрнутое или полноэкранное окно закрывает рабочий стол."
+msgid "Previous"
+msgstr "Предыдущий"
+
+msgid "Quieter"
+msgstr "Тише"
 
 msgid "RAM"
 msgstr "ОЗУ"
+
+msgid "Ready, waiting for you"
+msgstr "Готов, ждёт вас"
 
 msgid "Restart the Jarvis service after the update"
 msgstr "Перезапустите службу Jarvis после обновления"
@@ -188,14 +335,23 @@ msgstr "Перезапустите службу Jarvis после обновле
 msgid "Restore"
 msgstr "Восстановить"
 
-msgid "SERVICE"
-msgstr "СЛУЖБА"
-
 msgid "SYSTEM"
 msgstr "СИСТЕМА"
 
 msgid "Saver"
 msgstr "Экономия"
+
+msgid "Search"
+msgstr "Поиск"
+
+msgid "Search applications, files, settings… or type: jarvis <question>"
+msgstr "Поиск приложений, файлов, настроек… или введите: jarvis <вопрос>"
+
+msgid "Search, categories, files and the session · Meta"
+msgstr "Поиск, категории, файлы и сеанс · Meta"
+
+msgid "Shade under the core:"
+msgstr "Подложка под ядром:"
 
 msgid "Show the cover"
 msgstr "Показывать обложку"
@@ -203,26 +359,59 @@ msgstr "Показывать обложку"
 msgid "Show the state and the workspace under the core"
 msgstr "Показывать состояние и рабочее пространство под ядром"
 
+msgid "Showing a notification"
+msgstr "Показывает уведомление"
+
+msgid "Showing: %1"
+msgstr "Показывает: %1"
+
+msgid "Soft, wide falloff"
+msgstr "Мягкое широкое затухание"
+
+msgid "Speaking"
+msgstr "Говорит"
+
+msgid "Start"
+msgstr "Запустить"
+
 msgid "Start Jarvis"
 msgstr "Запустить Jarvis"
+
+msgid "Switch to the next player"
+msgstr "Переключиться на следующий плеер"
 
 msgid "TASK"
 msgstr "ЗАДАЧА"
 
+msgid "The Jarvis core button"
+msgstr "Кнопка ядра Jarvis"
+
 msgid "The last events"
 msgstr "Последние события"
+
+msgid "The last request failed"
+msgstr "Последний запрос не выполнен"
+
+msgid "The shade is denser on a light wallpaper (Jarvis measures it) and fades out before the widget's edge. Quality, theme and size: Jarvis → Control center → Desktop. The core rests while a maximized or fullscreen window covers the desktop."
+msgstr "На светлых обоях подложка плотнее (Jarvis измеряет яркость обоев) и сходит на нет до края виджета. Качество, тема и размер — Jarvis → Центр управления → Рабочий стол. Ядро замирает, пока рабочий стол закрыт развёрнутым или полноэкранным окном."
 
 msgid "Theme, quality and the widgets of each workspace are set in Jarvis → Control center → Desktop."
 msgstr "Тема, качество и виджеты каждого рабочего пространства задаются в Jarvis → Центр управления → Рабочий стол."
 
-msgid "Try: open kicad · switch to study · find project esp32 · show gpu load · open the downloads folder · jarvis <question>"
-msgstr "Например: открой kicad · переключись в study · найди проект esp32 · покажи нагрузку gpu · открой папку загрузок · jarvis <вопрос>"
-
 msgid "Unknown track"
 msgstr "Неизвестная композиция"
 
+msgid "Unpin"
+msgstr "Открепить"
+
 msgid "Unpin from the dock"
 msgstr "Открепить из дока"
+
+msgid "Upload"
+msgstr "Отдача"
+
+msgid "VOICE"
+msgstr "ГОЛОС"
 
 msgid "VPN off"
 msgstr "VPN выключен"
@@ -233,23 +422,35 @@ msgstr "VPN включён: %1"
 msgid "VRAM"
 msgstr "ВП"
 
+msgid "Virtual desktop %1 · its applications and widgets"
+msgstr "Виртуальный рабочий стол %1 · свои приложения и виджеты"
+
+msgid "Virtual desktop: %1"
+msgstr "Виртуальный рабочий стол: %1"
+
+msgid "Virtual desktops"
+msgstr "Виртуальные рабочие столы"
+
 msgid "Volume"
 msgstr "Громкость"
 
 msgid "WORKSPACE"
 msgstr "ПРОСТРАНСТВО"
 
-msgid "Workspace %1 · desktop %2"
-msgstr "Пространство %1 · рабочий стол %2"
+msgid "Wi-Fi"
+msgstr "Беспроводная"
 
-msgid "Workspaces and virtual desktops"
-msgstr "Рабочие пространства и рабочие столы"
+msgid "Working on a request"
+msgstr "Выполняет запрос"
+
+msgid "Workspace %1"
+msgstr "Пространство %1"
+
+msgid "Workspaces (GENERAL, STUDY, WORK, DEV)"
+msgstr "Рабочие пространства (GENERAL, STUDY, WORK, DEV)"
 
 msgid "answered (%1)"
 msgstr "ответ (%1)"
-
-msgid "answering · %1"
-msgstr "отвечает · %1"
 
 msgid "asleep"
 msgstr "спит"
@@ -266,14 +467,14 @@ msgstr "не беспокоить"
 msgid "full in %1"
 msgstr "до полной %1"
 
-msgid "integration off"
-msgstr "интеграция выключена"
-
-msgid "listening"
-msgstr "слушает"
-
 msgid "microphone off"
 msgstr "микрофон выключен"
+
+msgid "microphone on"
+msgstr "микрофон включён"
+
+msgid "minimized"
+msgstr "свёрнуто"
 
 msgid "muted"
 msgstr "без звука"
@@ -281,17 +482,29 @@ msgstr "без звука"
 msgid "no fan sensors"
 msgstr "датчиков вентиляторов нет"
 
-msgid "not running"
-msgstr "не запущена"
-
 msgid "nothing pending"
 msgstr "нет задач"
+
+msgid "notices context, suggests"
+msgstr "замечает контекст, предлагает"
+
+msgid "notices context, suggests rarely"
+msgstr "замечает контекст, предлагает редко"
 
 msgid "notification: %1"
 msgstr "уведомление: %1"
 
+msgid "off"
+msgstr "выкл."
+
+msgid "off — sees nothing"
+msgstr "выключена — ничего не видит"
+
 msgid "offline answers (no Claude key)"
 msgstr "локальные ответы (нет ключа Claude)"
+
+msgid "only when you ask"
+msgstr "только по вашей просьбе"
 
 msgid "opened %1"
 msgstr "открыто: %1"
@@ -299,11 +512,11 @@ msgstr "открыто: %1"
 msgid "paused"
 msgstr "пауза"
 
+msgid "power profile: %1"
+msgstr "профиль питания: %1"
+
 msgid "request → %1"
 msgstr "запрос → %1"
-
-msgid "running an older version: restart it"
-msgstr "работает старая версия: перезапустите её"
 
 msgid "silent"
 msgstr "молчит"

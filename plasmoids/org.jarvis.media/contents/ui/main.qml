@@ -5,7 +5,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
 import org.jarvis.visual as JV
 
-// Jarvis Media (0.19.2): Plasma's side of the widget — the link to jarvisd, the
+// Jarvis Media (0.19.3): Plasma's side of the widget — the link to jarvisd, the
 // compact and expanded views, the workspace that shows or hides it. What it
 // draws is MediaView.qml, plain Qt Quick (checked outside Plasma by the tests).
 PlasmoidItem {
@@ -58,7 +58,12 @@ PlasmoidItem {
         enabled: root.inProfile
         Behavior on opacity { NumberAnimation { duration: 300 } }
         MediaView {
-            anchors.fill: parent
+            // Larger type in a larger widget (never below the base size).
+            readonly property real zoom: Math.max(1, Math.min(1.5, parent.width / (Kirigami.Units.gridUnit * 20)))
+            width: parent.width / zoom
+            height: parent.height / zoom
+            scale: zoom
+            transformOrigin: Item.TopLeft
             telemetry: link.telemetry
             status: link.status
             online: link.online
