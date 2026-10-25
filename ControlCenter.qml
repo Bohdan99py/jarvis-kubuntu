@@ -1148,27 +1148,31 @@ Dialog {
                                 onActivated: index => { center.report(center.settings.setDesktop("corePosition", values[index])); shell.update() }
                             }
                         }
-                        Label { text: qsTr("Dock"); color: Theme.text }
+                        // 0.20: one labelled setting per row (the three used to share one unlabelled row).
+                        Label { text: qsTr("Dock position"); color: Theme.text }
+                        DarkCombo {
+                            Layout.preferredWidth: 160
+                            readonly property var values: ["bottom", "top", "left", "right"]
+                            model: [qsTr("Bottom"), qsTr("Top"), qsTr("Left"), qsTr("Right")]
+                            currentIndex: values.indexOf(center.settings.desktop.dockPosition || "bottom")
+                            onActivated: index => { center.report(center.settings.setDesktop("dockPosition", values[index])); shell.update() }
+                        }
+                        Label { text: qsTr("Dock height"); color: Theme.text }
                         RowLayout {
-                            DarkCombo {
-                                Layout.preferredWidth: 120
-                                readonly property var values: ["bottom", "top", "left", "right"]
-                                model: [qsTr("Bottom"), qsTr("Top"), qsTr("Left"), qsTr("Right")]
-                                currentIndex: values.indexOf(center.settings.desktop.dockPosition || "bottom")
-                                onActivated: index => { center.report(center.settings.setDesktop("dockPosition", values[index])); shell.update() }
-                            }
                             SpinBox {
                                 from: 32; to: 72
                                 value: center.settings.desktop.dockSize || 44
-                                onValueModified: { center.settings.setDesktop("dockSize", value); shell.update() }
+                                onValueModified: { center.report(center.settings.setDesktop("dockSize", value)); shell.update() }
                             }
-                            DarkCombo {
-                                Layout.preferredWidth: 130
-                                readonly property var values: ["center", "left", "right"]
-                                model: [qsTr("Centred"), qsTr("At the start"), qsTr("At the end")]
-                                currentIndex: values.indexOf(center.settings.desktop.dockAlignment || "center")
-                                onActivated: index => { center.report(center.settings.setDesktop("dockAlignment", values[index])); shell.update() }
-                            }
+                            Label { text: qsTr("px"); color: Theme.textDim }
+                        }
+                        Label { text: qsTr("Dock alignment"); color: Theme.text }
+                        DarkCombo {
+                            Layout.preferredWidth: 160
+                            readonly property var values: ["center", "left", "right"]
+                            model: [qsTr("Centred"), qsTr("At the start"), qsTr("At the end")]
+                            currentIndex: values.indexOf(center.settings.desktop.dockAlignment || "center")
+                            onActivated: index => { center.report(center.settings.setDesktop("dockAlignment", values[index])); shell.update() }
                         }
                     }
                     OptionSwitch {

@@ -975,10 +975,6 @@
         <translation>Справа</translation>
     </message>
     <message>
-        <source>Dock</source>
-        <translation>Док</translation>
-    </message>
-    <message>
         <source>Bottom</source>
         <translation>Снизу</translation>
     </message>
@@ -1379,6 +1375,22 @@ A KDE menu entry and a system tray icon</source>
     <message>
         <source>French</source>
         <translation>Французский</translation>
+    </message>
+    <message>
+        <source>Dock position</source>
+        <translation>Положение дока</translation>
+    </message>
+    <message>
+        <source>Dock height</source>
+        <translation>Высота дока</translation>
+    </message>
+    <message>
+        <source>px</source>
+        <translation>пкс</translation>
+    </message>
+    <message>
+        <source>Dock alignment</source>
+        <translation>Выравнивание дока</translation>
     </message>
     <message>
         <source>Each profile has a KDE virtual desktop, the applications it starts, the files &quot;prepare&quot; opens, the widgets it shows and how active Jarvis is there. Switch here, in the dock, in KRunner (&quot;switch to dev&quot;) or by asking: &quot;Jarvis, prepare the desktop for programming&quot;. Windows are moved with KWin&apos;s own scripting; switching never closes an application.</source>
