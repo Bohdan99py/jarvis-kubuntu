@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.20.0
+# Jarvis for Kubuntu · 0.21.0
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,10 +9,28 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.20.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.21.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
+
+## Settings (0.21)
+
+Every setting is in one window, "Jarvis settings": Jarvis menu → "Settings…", the tray → "Settings…", or `jarvis --open settings` (`jarvis --open settings:privacy` opens a page). It works without the main window and while `jarvisd` is stopped (it then says what waits for the service).
+
+Pages: Desktop (JARVIS DESKTOP, appearance, the Jarvis window, the dock, panels and widgets, workspaces), Talking to Jarvis (language, voice, microphone, keyboard shortcuts, chat and overlay, reminders), Intelligence and connection (the Claude key and model, the connection check, web search), Memory and privacy (what is stored and what is sent, memory, activity, context sources, deleting data), Actions and permissions (initiative, offers of help, what widgets may do, what Jarvis always asks), Skills, System and recovery (start, services, diagnostics, graphics, updates, KDE modules, reset, back to standard KDE).
+
+**Search** (Ctrl+F) looks through titles, explanations and synonyms on this computer, offline: "headphones" or "sound" find Sound, "keys" or "hotkeys" the shortcuts, "key", "API", "connection" Claude. Enter or a click opens the page and outlines the row.
+
+**How changes apply.** Switches, lists and sliders save and act at once; fields that need checking (the key, the model, excluded applications) have a Save button; rows that need a restart (graphics) or a new login (autostart) say so. A failed save shows why under the row and the control keeps the saved value. Changes made in the dock's context menu, Plasma's panel editor or the terminal show up in the window.
+
+**API keys** (Claude, ElevenLabs) live in the system password store (KWallet through the Secret Service). The key field is hidden; "Check the connection" asks Anthropic about the model (free) only when pressed. Without a password store the key stays in `~/.config/jarvis/config.json`, readable by you alone, and the window says so.
+
+**KDE modules.** Sound, Bluetooth, network, displays, power, notifications, shortcuts and keyboard layouts open the right page of KDE System Settings; a module that is not installed has no button and says why.
+
+**Reset.** "Reset this page…" on every page and "Reset all settings…" under System and recovery, with the list of changes first. Memory, history, keys and pinned applications are never reset, and a reset never switches a permission on. Deleting data has its own buttons under Memory and privacy, each with its own confirmation.
+
+Upgrade, rollback and checks: [docs/release-0.21.md](docs/release-0.21.md).
 
 ## Chat
 
@@ -31,11 +49,11 @@ The input is multi-line (up to six lines): **Enter** sends, **Shift+Enter** star
 - On KDE Wayland the overlay is a layer-shell surface (`qml6-module-org-kde-layershell`): it opens on the active screen and takes the keyboard. Without the module (Ubuntu 24.04) or on X11 it is an always-on-top window.
 - The 0.17 mini core (Ctrl+Shift+O, ◱) stays; a click on it opens the panel.
 
-**Enabling Ctrl+J.** The global key is registered through the standard portal `org.freedesktop.portal.GlobalShortcuts` (xdg-desktop-portal-kde). On the first start of 0.18 Plasma asks you to confirm the shortcut — accept it. It then appears in System Settings → Keyboard → Shortcuts (Jarvis), where it can be changed: browsers use Ctrl+J for downloads. If you closed the dialog: Control center → Awareness → Bind Ctrl+J. Without the portal (other desktops) bind the "J.A.R.V.I.S. → Overlay" action or the command `jarvis --overlay` by hand. Jarvis never grabs the keyboard and sees no other key presses.
+**Enabling Ctrl+J.** The global key is registered through the standard portal `org.freedesktop.portal.GlobalShortcuts` (xdg-desktop-portal-kde). On the first start of 0.18 Plasma asks you to confirm the shortcut — accept it. It then appears in System Settings → Keyboard → Shortcuts (Jarvis), where it can be changed: browsers use Ctrl+J for downloads. If you closed the dialog: Settings → Awareness → Bind Ctrl+J. Without the portal (other desktops) bind the "J.A.R.V.I.S. → Overlay" action or the command `jarvis --overlay` by hand. Jarvis never grabs the keyboard and sees no other key presses.
 
 ## Cognitive awareness
 
-Jarvis can understand what you are doing, to answer with context and, rarely, offer help. Nothing is observed until you allow it (Control center → Awareness).
+Jarvis can understand what you are doing, to answer with context and, rarely, offer help. Nothing is observed until you allow it (Settings → Memory and privacy, and Settings → Actions and permissions).
 
 **Levels**: Off; Manual (default) — context only when you ask (the overlay, "what's on my screen"); Assistive — also rare offers on strong evidence; Proactive — also offers for electronics, documentation and studying.
 
@@ -62,7 +80,7 @@ The "Driving, traffic rules & motorsport" skill replaced the Games skill (the ap
 - **French traffic rules (Code de la route)**: a test question is always answered in four parts — literal translation of the question and options, analysis under French rules, probable answer, confidence and ambiguities; no invented signs; sources Légifrance / Sécurité routière / Service-public. Progress over the 10 ETG themes (L, C, R, U, D, A, P, M, S, E) builds up when you say which answer you chose; Jarvis knows your weak themes. "My driving test progress" in chat or the Progress tab of the skill page; "Quiz me" to practise.
 - **Motorsport**: F1, WEC, WRC, GT, history, engines and aerodynamics, telemetry (send a CSV), strategy, flags, marshals, regulations. Results and current regulations are never presented as current without checking.
 - Calculators: stopping distance (physics and the exam rules (V/10)×3 and (V/10)²), following distance (2 s, R412-12), lap speed and gap, fuel and pit stops.
-- **Fresh data**: Control center → Skills → "Let Claude search the web for current facts" turns on Anthropic's web search (up to 3 searches per answer, billed separately; your organisation must allow it in the Claude Console).
+- **Fresh data**: Settings → Intelligence and connection → "Let Claude search the web for current facts" turns on Anthropic's web search (up to 3 searches per answer, billed separately; your organisation must allow it in the Claude Console).
 
 ## Cinematic HUD
 
@@ -105,11 +123,11 @@ Checking a hybrid laptop:
 
 ## Autostart and the tray
 
-Start Jarvis once from the menu after installing: from then on it starts in the tray at every login and keeps running. The user unit `jarvis-tray.service` (systemd, with the Plasma graphical session) restarts it after a crash; sessions without systemd use `~/.config/autostart/jarvis-tray.desktop`. Closing the window only hides it (a lesson keeps recording); "Quit" in the tray menu ends it. At logout Jarvis exits cleanly and saves a recording in progress. Turn it off in Control center → Desktop.
+Start Jarvis once from the menu after installing: from then on it starts in the tray at every login and keeps running. The user unit `jarvis-tray.service` (systemd, with the Plasma graphical session) restarts it after a crash; sessions without systemd use `~/.config/autostart/jarvis-tray.desktop`. Closing the window only hides it (a lesson keeps recording); "Quit" in the tray menu ends it. At logout Jarvis exits cleanly and saves a recording in progress. Turn it off in Settings → Desktop.
 
 ## KDE Plasma integration
 
-Since 0.19 Jarvis fits into Plasma 6 through the standard mechanisms: systemd user services, a Plasma widget, a KRunner plugin and the D-Bus interface `org.jarvis.Integration1`. Plasma and KWin are neither replaced nor reconfigured: Jarvis changes nothing in your desktop layout without your confirmation. Everything is in Control center → Desktop.
+Since 0.19 Jarvis fits into Plasma 6 through the standard mechanisms: systemd user services, a Plasma widget, a KRunner plugin and the D-Bus interface `org.jarvis.Integration1`. Plasma and KWin are neither replaced nor reconfigured: Jarvis changes nothing in your desktop layout without your confirmation. Everything is in Settings → Desktop.
 
 **The background service.** `jarvisd` is the user unit `jarvis.service` (systemd `--user`), started at login and separate from the window:
 
@@ -168,13 +186,13 @@ Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWi
 - **Jarvis Dock** — a Plasma panel with a dock widget on Plasma's real task model (`TaskManager.TasksModel`): launching and switching windows, grouping, pinned favourites (from the right-click menu), window counts, the active one lit, a light arc under running applications, a pulse at launch, an amber pulse for attention, the Jarvis button (click: overlay, right click: the window), the launcher, the GENERAL/STUDY/WORK/DEV profiles and the KDE desktops. Beside it Plasma's own system tray and clock (volume, network and notifications are their own applets). Auto-hide, position and size are the panel's.
 - **Holographic widgets** (each in Add Widgets…): System (CPU and every core, clocks, RAM, every GPU — load, VRAM, temperature, clock; a sleeping NVIDIA card is not woken; sensors and fans), Network (speed, history, connection, VPN through NetworkManager), Power (charge, time left only with a sound estimate, the power profile and its switch), Media (MPRIS: cover, controls, volume and the PipeWire output device), Status (the service, the model, the current task, microphone and voice, awareness, workspace, the last events). Each has a compact panel view, an expanded desktop view, its own settings, effects that can be switched off and an honest "—" without data. All data comes from one cache in `jarvisd` (`Telemetry`); no process per widget.
 
-**Turn it on:** Control center → Desktop → JARVIS DESKTOP: Check compatibility (Plasma 6, widgets and module installed, widgets unlocked, the service answers) → review the plan and the theme preview → Turn on JARVIS DESKTOP… → confirm. The order: a backup of Plasma's layout (`~/.local/share/jarvis/desktop-backup/…`: `plasma-org.kde.plasma.desktop-appletsrc`, `plasmashellrc` and the `layout.js` Plasma dumps itself) → the core, widgets and dock are added → a check that everything is there and that the dock and the core really started (they report to `jarvisd`) → only then the standard panels go (optional: "Replace the standard panels with the dock"). Any failure takes the additions away at once; the standard panels are untouched. From a terminal: `jarvis --desktop-mode jarvis`.
+**Turn it on:** Settings → Desktop → JARVIS DESKTOP: Check compatibility (Plasma 6, widgets and module installed, widgets unlocked, the service answers) → review the plan and the theme preview → Turn on JARVIS DESKTOP… → confirm. The order: a backup of Plasma's layout (`~/.local/share/jarvis/desktop-backup/…`: `plasma-org.kde.plasma.desktop-appletsrc`, `plasmashellrc` and the `layout.js` Plasma dumps itself) → the core, widgets and dock are added → a check that everything is there and that the dock and the core really started (they report to `jarvisd`) → only then the standard panels go (optional: "Replace the standard panels with the dock"). Any failure takes the additions away at once; the standard panels are untouched. From a terminal: `jarvis --desktop-mode jarvis`.
 
 **Back to standard KDE:** "Back to standard KDE…" or `jarvis --restore-desktop` — plasmashell stops, the layout files come back from the first backup, plasmashell starts again: the desktop exactly as before JARVIS DESKTOP. The current layout is saved aside first (`before-restore-…`). If Jarvis crashes or is stopped, KDE keeps working: the dock stays a working task bar (the task model is Plasma's), the core and widgets say "not running".
 
 **Themes:** Classic JARVIS (the 0.18 blue HUD), Mark VII (amber and red, two extra rings), Minimal (calm colours, low quality) — shared `JarvisTheme` colour tokens for the window and the desktop; your own primary and secondary colour, glow, transparency, animation speed, density, quality (Low/Balanced/Cinematic), core size and place, dock position and size.
 
-**Workspaces** GENERAL, STUDY, WORK, DEV: each has a KDE desktop, applications, files to "prepare", widgets and the awareness categories that matter (`~/.config/jarvis/workspaces.json`, edited in the Control center). Switch in the dock, in KRunner ("switch to dev"), by voice or chat ("Jarvis, prepare the desktop for programming"). Jarvis loads a one-shot KWin script that moves the profile's windows to its desktop, places them as saved ("Save the window layout") and switches the desktop; the Jarvis window starts the missing applications (outside the service's sandbox). "Previous workspace" goes back.
+**Workspaces** GENERAL, STUDY, WORK, DEV: each has a KDE desktop, applications, files to "prepare", widgets and the awareness categories that matter (`~/.config/jarvis/workspaces.json`, edited in Settings → Desktop). Switch in the dock, in KRunner ("switch to dev"), by voice or chat ("Jarvis, prepare the desktop for programming"). Jarvis loads a one-shot KWin script that moves the profile's windows to its desktop, places them as saved ("Save the window layout") and switches the desktop; the Jarvis window starts the missing applications (outside the service's sandbox). "Previous workspace" goes back.
 
 **Intelligent workspaces:** 0.18's awareness weighs the profile: its categories count more (DEV — a recurring build error → analysis in the overlay; STUDY — a driving-test question → translation and the rule; WORK — KiCad → an offer to open the component calculators), the others less. No new observation: only the context 0.18 was allowed.
 
@@ -192,7 +210,7 @@ Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWi
 
 *Why 0.19.2's Start "did nothing":* its popup was declared a stays-on-top popup menu — libplasma turns that into a second *panel* surface — and hid itself on focus loss at once, while a click on a panel gives the panel the focus, which libplasma reads as "a Plasma view was clicked". Qt Quick tool tips inside the 44 px panel also landed on the buttons and swallowed clicks. Now it is an applet popup (as Kickoff's): KWin places it above the button on the right monitor and gives it the keyboard; it closes only when the focus left and did not come back; tool tips are Plasma's own windows above the panel; the whole cell is the button.
 
-**Dock:** magnification under the pointer with neighbours stepping aside, a light line at the screen edge (long and bright for the active window), window ticks, a pulse for a new window, appear/close animations, drag to reorder the pinned ones, drop a `.desktop` file to pin it or files on a running application to open them in it. A click on an application with several windows lists them (choose, close, keyboard). The context menu is a real Plasma menu (not cut by the panel): new window, pin, choose a window, minimize, maximize, keep above, move to another desktop, close. Dock settings (applied at once): icon size, gaps, inner margin, glass opacity, glow, magnification and its amount, animations, the core button, workspaces, desktops, one button per application, the pinned list and its order; "Panel settings…" opens Plasma's editor (edge, thickness, alignment, auto-hide). The dock's alignment is also in Control center → Desktop. Pinned snap executables (a blank icon) no longer move over.
+**Dock:** magnification under the pointer with neighbours stepping aside, a light line at the screen edge (long and bright for the active window), window ticks, a pulse for a new window, appear/close animations, drag to reorder the pinned ones, drop a `.desktop` file to pin it or files on a running application to open them in it. A click on an application with several windows lists them (choose, close, keyboard). The context menu is a real Plasma menu (not cut by the panel): new window, pin, choose a window, minimize, maximize, keep above, move to another desktop, close. Dock settings (applied at once): icon size, gaps, inner margin, glass opacity, glow, magnification and its amount, animations, the core button, workspaces, desktops, one button per application, the pinned list and its order; "Panel settings…" opens Plasma's editor (edge, thickness, alignment, auto-hide). The dock's alignment is also in Settings → Desktop. Pinned snap executables (a blank icon) no longer move over.
 
 **Adaptive look:** `jarvisd` finds Plasma's current wallpaper (reading Plasma's files only; raster images itself, Kubuntu's SVG packages through a short `jarvis --measure-image` helper) and tells the widgets whether it is light. On a light wallpaper the panels get denser with a dark outline and the core's readouts get dark plates; on a dark one no extra glow. Under the core a soft radial shade without a frame (strength and softness in the core widget's settings). Shared `JarvisTheme` tokens (surfaces, outlines, a type scale no smaller than 11 px, rounding) for the dock, the launcher, the widgets and the overlay.
 
@@ -210,7 +228,7 @@ Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWi
 
 ## Language
 
-Control center → Application:
+Settings → Talking to Jarvis → Language:
 
 - **Interface language**: System, Русский or English. Applies immediately. "System" means Russian for ru/uk/be locales, English otherwise.
 - **Answer language**: same as your message (default), or always Russian/English. Local answers, memory commands and Claude follow it.
@@ -219,7 +237,7 @@ Voice recognition uses the Vosk model for the interface language (`vosk-model-sm
 
 ## Voice
 
-Control center → Voice → **Voice engine**: "Best available" (ElevenLabs → Chatterbox → Piper → system, in that order) or a specific one. If the chosen voice fails (no network, quota used up), the next ready one reads the answer, so Jarvis is never silent; the reason shows in the settings. A new answer interrupts the one still being read. While a local neural voice is in use, a speech server keeps the model loaded instead of loading it for every answer (socket `$XDG_RUNTIME_DIR/jarvis-speech.sock`, owner only).
+Settings → Talking to Jarvis → **Voice engine**: "Best available" (ElevenLabs → Chatterbox → Piper → system, in that order) or a specific one. If the chosen voice fails (no network, quota used up), the next ready one reads the answer, so Jarvis is never silent; the reason shows in the settings. A new answer interrupts the one still being read. While a local neural voice is in use, a speech server keeps the model loaded instead of loading it for every answer (socket `$XDG_RUNTIME_DIR/jarvis-speech.sock`, owner only).
 
 **ElevenLabs** — studio-quality voices that sound like a real person, in Russian, English, French and dozens of other languages. Paste an API key (elevenlabs.io → Developers → API keys), press "Load my voices", pick a voice (George, a British voice, by default), a model (Multilingual v2 — the most natural, Flash v2.5 — faster and half the price, v3 — the most expressive) and the stability. Audio streams and starts at once. The text of every answer goes to ElevenLabs; the key lives in `~/.local/share/jarvis/voice/speech.json` (0600) or comes from `ELEVENLABS_API_KEY`, and the interface shows only its last characters.
 
@@ -237,7 +255,7 @@ Stored in `${XDG_DATA_HOME:-~/.local/share}/jarvis/` (folder 0700, files 0600) a
 - **Conversation summaries** (up to 150) — later questions bring related earlier conversations, and the latest one if recent, into Claude's context. "What did we talk about" answers locally; the last three are in the About me tab.
 - **What matters now** — Claude gets core facts first (name, work, project, goal, studies), then the ones related to the question, then the strongest and freshest, so a long memory still fits.
 - **Contradictions** — the newer statement wins: "I don't like jazz" replaces "likes jazz", "I no longer use Kate" removes it. Activity adds apps you used for more than 3 hours and your active hours.
-- **Curiosity** — now and then (after a few messages, at most every 10 minutes, each question at most monthly) Jarvis asks about what it doesn't know yet: your name, your project, what you do in an app you spend hours in, a topic you keep mentioning, your goal. The next message, unless it is a question or a request, is taken as the answer. "Ask me in chat" in the About me tab asks right away; turn it off in Control center → Memory.
+- **Curiosity** — now and then (after a few messages, at most every 10 minutes, each question at most monthly) Jarvis asks about what it doesn't know yet: your name, your project, what you do in an app you spend hours in, a topic you keep mentioning, your goal. The next message, unless it is a question or a request, is taken as the answer. "Ask me in chat" in the About me tab asks right away; turn it off in Settings → Memory and privacy.
 - **Conversation topics** — counts of meaningful words in your messages (messages themselves are not stored).
 
 The graph shows up to 48 words: teal from examples, orange from facts, violet from topics. Words that come up together form clusters. Each word shows its two strongest links by default; "All links" shows the rest. Click a word to highlight its links and list its neighbours in a card below, each one a step further. The wheel zooms, dragging pans (nodes can be dragged too), a double-click zooms in on a word or shows everything; search and a filter by kind (click the legend) are at the top.
@@ -248,11 +266,11 @@ Write the way you speak — in chat, in the quick bar or in the Tasks tab of the
 
 Reminders arrive as KDE notifications from the background daemon — even with the window closed — with "Snooze 10 min" and "Done" buttons; reminders missed while the computer was off come at the next start. Plasma's "Do not disturb" applies.
 
-**Jarvis speaks up by itself** (Control center → Autonomy), at most every half hour, never 23:00–7:00 or during games and videos: a break after 1–2 hours without a pause (needs activity tracking), French flashcards due for review, a curious question when you have not talked for a while, and a morning plan. **Daily memory review** (with a Claude key): once a day Claude merges duplicate facts, drops outdated ones and notes goals and habits; facts you added yourself are never deleted. While hidden, the app also tells you when an answer, a transcription, a PDF translation or the voice setup is ready, and checks for new releases twice a day.
+**Jarvis speaks up by itself** (Settings → Actions and permissions), at most every half hour, never 23:00–7:00 or during games and videos: a break after 1–2 hours without a pause (needs activity tracking), French flashcards due for review, a curious question when you have not talked for a while, and a morning plan. **Daily memory review** (with a Claude key): once a day Claude merges duplicate facts, drops outdated ones and notes goals and habits; facts you added yourself are never deleted. While hidden, the app also tells you when an answer, a transcription, a PDF translation or the voice setup is ready, and checks for new releases twice a day.
 
 ## Skills, calculators and formulas
 
-Skills are picture tiles in Control center → Skills: Electronics and circuits, Physics, Embedded systems, Programming, Driving, traffic rules & motorsport, plus conversation, philosophy and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". The Programming skill also converts IEEE 754 floats and doubles to bits and back, Q15/Q16.16 fixed point, IPv4 subnets, colours (HEX/RGB/HSL and RGB565 for MCU displays), text to UTF-8 bytes (a C string and array, Base64), and estimates running time from complexity — in chat too: "192.168.1.10/24", "float 0.1", "0.25 to Q15", "#ff8800 to rgb565", "utf-8 \"Hello\"", "O(n log n) n=1e6"; its answer base grew to 70 (OOP, virtual functions, STL, concurrency, Python, Rust, Go, JavaScript, REST, SQL injection, secure coding, password hashing, algorithms, patterns, Docker, CI, profiling, endianness, floating point…). Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas`, per-example `aliases` and `schematics` (ids of bundled example circuits: the skill page then shows them and a KiCad tab).
+Skills are picture tiles in Settings → Skills: Electronics and circuits, Physics, Embedded systems, Programming, Driving, traffic rules & motorsport, plus conversation, philosophy and writing. Open a tile for **calculators** that work offline and update as you type (Ohm's law, LED resistor, voltage divider, series/parallel, Kirchhoff with two sources, RC, reactance and resonance, capacitor energy, resistor colour code, NE555, op-amp, wire, battery, decibels, UART baud, timer PSC/ARR, ADC, I2C pull-ups, number bases, motion, energy, heat, Coulomb, pendulum), about a hundred **formulas**, a base of ready **answers** given instantly without the internet, and the **instructions** Claude receives. Calculations also work in chat: "divider 12V 10k 4.7k", "LED resistor 5V 20mA", "U=5 R=220", "parallel 10k 10k", "colour code 4.7k", "uart 72MHz 115200", "0x3F to binary", "calc 2*pi*50*100n". The Programming skill also converts IEEE 754 floats and doubles to bits and back, Q15/Q16.16 fixed point, IPv4 subnets, colours (HEX/RGB/HSL and RGB565 for MCU displays), text to UTF-8 bytes (a C string and array, Base64), and estimates running time from complexity — in chat too: "192.168.1.10/24", "float 0.1", "0.25 to Q15", "#ff8800 to rgb565", "utf-8 \"Hello\"", "O(n log n) n=1e6"; its answer base grew to 70 (OOP, virtual functions, STL, concurrency, Python, Rust, Go, JavaScript, REST, SQL injection, secure coding, password hashing, algorithms, patterns, Docker, CI, profiling, endianness, floating point…). Skill JSON may add `image`, `color`, `tools` (built-in calculator ids), `formulas`, per-example `aliases` and `schematics` (ids of bundled example circuits: the skill page then shows them and a KiCad tab).
 
 ## Files, code and schematics
 
@@ -287,7 +305,7 @@ Recognition is Whisper (faster-whisper) on this computer; audio is never uploade
 
 ## Activity: Jarvis sees what you do
 
-Off by default. Turn it on in Control center → Memory or in the Activity tab.
+Off by default. Turn it on in Settings → Memory and privacy or in the Activity tab.
 
 - The daemon loads a small KWin script (Plasma 5/6, X11/Wayland) that reports the focused window: application class, desktop file and title. It is unloaded when tracking is turned off or the daemon stops.
 - Jarvis counts time per app and category, hours of the day, app switches and recent windows. Nothing accrues while the screen is locked or after 15 minutes without window or title changes. Daily data is kept for 14 days.
