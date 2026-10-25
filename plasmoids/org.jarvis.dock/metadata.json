@@ -12,7 +12,7 @@
         "Id": "org.jarvis.dock",
         "Name": "Jarvis Dock",
         "Name[ru]": "Док Jarvis",
-        "Version": "0.19.3",
+        "Version": "0.20.0",
         "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
     },
     "KPackageStructure": "Plasma/Applet",

@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.19.3
+# Jarvis for Kubuntu · 0.20.0
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.19.3_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.20.0_ubuntu-26.04_amd64.deb
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
@@ -177,6 +177,14 @@ Since 0.19.2 Jarvis is part of the desktop instead of a window on top of it. KWi
 **Workspaces** GENERAL, STUDY, WORK, DEV: each has a KDE desktop, applications, files to "prepare", widgets and the awareness categories that matter (`~/.config/jarvis/workspaces.json`, edited in the Control center). Switch in the dock, in KRunner ("switch to dev"), by voice or chat ("Jarvis, prepare the desktop for programming"). Jarvis loads a one-shot KWin script that moves the profile's windows to its desktop, places them as saved ("Save the window layout") and switches the desktop; the Jarvis window starts the missing applications (outside the service's sandbox). "Previous workspace" goes back.
 
 **Intelligent workspaces:** 0.18's awareness weighs the profile: its categories count more (DEV — a recurring build error → analysis in the overlay; STUDY — a driving-test question → translation and the rule; WORK — KiCad → an offer to open the component calculators), the others less. No new observation: only the context 0.18 was allowed.
+
+### 0.20: desktop stabilisation
+
+**The right part of the dock** — the system tray and the clock — now stands on the same Jarvis glass as the dock. Before, Plasma's own panel background stayed under them (a light strip in a light theme): they are Plasma's own applets, and only the dock drew the glass. Now one glass lies under every widget of the panel, and the tray and the clock take the complementary (light on dark) colours; the applets and their popups (volume, network, Bluetooth, notifications, calendar) stay Plasma's own. Off: the dock's settings → Panel → "Jarvis glass under the whole panel".
+
+**The tray and the clock no longer leave the screen.** The dock no longer insists on room for every icon: when there is not enough (many applications, 1366 px, a vertical panel) the applications scroll with a mouse wheel or a touchpad, the active one comes into view by itself, and the list's ends fade out.
+
+**Checked in a live Plasma** (an isolated nested session, `-DJARVIS_PLASMA_TESTS=ON`): Start ten times by mouse and by keyboard, a click outside, search and launch, switching and minimizing windows, a group's window list, pinning and the pin surviving a plasmashell restart, the tray's and the clock's popups, 57 pinned applications, a hung and a stopped `jarvisd`, JARVIS DESKTOP turned on twice without duplicates and `--restore-desktop`; screens 1366×768, 1536×864 (1080p at 125 %), 1920×1080, scale 1.25 and 1.5, two monitors. Installing, upgrading and rolling back the package: `tests/package_test.sh`. Details, rollback and limitations (in Russian): [docs/release-0.20.md](docs/release-0.20.md).
 
 ### 0.19.3: Start, the dock, the adaptive look
 
