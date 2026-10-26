@@ -127,14 +127,15 @@ QList<agent::Window> WindowControl::windows(QString *error)
     const QJsonObject o = run(u"list"_s, {}, error);
     for (const QJsonValue &v : o.value(u"windows"_s).toArray()) {
         const QJsonObject w = v.toObject();
-        out.append({w.value(u"id"_s).toString(), w.value(u"app"_s).toString(), w.value(u"caption"_s).toString(), w.value(u"active"_s).toBool()});
+        out.append({w.value(u"id"_s).toString(), w.value(u"app"_s).toString(), w.value(u"caption"_s).toString(), w.value(u"active"_s).toBool(),
+                    w.value(u"maximized"_s).toBool()});
     }
     return out;
 }
 
 QString WindowControl::act(const QString &mode, const QString &id)
 {
-    if (mode != u"activate" && mode != u"close")
+    if (mode != u"activate" && mode != u"close" && mode != u"maximize")
         return u"unknown window action"_s;
     QString error;
     const QJsonObject o = run(mode, id, &error);

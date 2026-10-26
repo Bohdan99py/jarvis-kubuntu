@@ -74,6 +74,13 @@ public:
     QString addEpisode(const QString &summary, qint64 when);
     QJsonArray episodes() const;
     bool forgetEpisode(const QString &id);
+    // Summaries that state what the assistant cannot do ("Ассистент не может управлять
+    // компьютером"): such claims go stale with every version and, fed back into the
+    // prompt, made Claude refuse laptop tasks (0.22.1). They are kept — they are the
+    // user's history — but marked "excluded" and never put into a prompt again.
+    // Returns how many were marked now.
+    int excludeCapabilityClaims();
+    static bool claimsIncapable(const QString &summary);
     // Summaries related to `question` plus the latest one if it is recent;
     // "" when there is nothing worth adding to the prompt.
     QString episodesForPrompt(const QString &question, qint64 now, int maxChars = 900) const;

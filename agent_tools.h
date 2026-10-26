@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QList>
@@ -106,6 +107,28 @@ struct ToolContext
 };
 
 StepResult runTool(const Step &step, ToolContext &ctx);
+
+// The "What Jarvis can do" menu (0.22.1) is this list, next to the tools it
+// describes: every tool has an entry and every entry names a real tool (or the
+// desktop handler, or a conversation feature), so the menu cannot promise what
+// the code does not do. The examples are what people say, not required phrases.
+struct Capability
+{
+    QString id;      // a tool name; desktop:<kind> for the desktop handler; agent:<feature>
+    QString section; // sound, bluetooth, apps, screen, notifications, power, files, state, control
+    QString titleRu, titleEn;
+    QString textRu, textEn;
+    QStringList examplesRu, examplesEn;
+    QString needs;   // the System::capabilities() entry it depends on ("" — none)
+};
+const QList<Capability> &capabilityCatalogue();
+QString sectionTitle(const QString &section, Lang lang);
+// The menu's rows: [{id, section, sectionTitle, title, text, examplesRu, examplesEn,
+// offline, confirm: no|ask|always, available, reason}]. `permission` gives a
+// category's setting; `systemErrors` what System::capabilities() reported
+// (name → "" or why not); `systemKnown` false when nobody could check (no jarvisd).
+QJsonArray capabilityRows(Lang lang, const std::function<QString(const QString &category)> &permission,
+                          const QHash<QString, QString> &systemErrors, bool systemKnown);
 
 // Kinds of application people name by what they do: browser, player, terminal…
 QString genericAppKind(const QString &words);

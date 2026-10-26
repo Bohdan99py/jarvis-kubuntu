@@ -16,6 +16,9 @@ public:
         double score = 0;
     };
     QString teach(const QString &question, const QString &answer);
+    // 👎 on an answer that came from here: the pair is kept (it is the user's) but
+    // marked bad and never recalled again, until it is taught anew (0.22.1).
+    bool markBad(const QString &question);
     QString recall(const QString &question) const;
     // The pair for `question` answered again: count it.
     void touch(const QString &question);

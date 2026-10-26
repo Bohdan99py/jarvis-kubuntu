@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(jarvis VERSION 0.22.0 LANGUAGES C CXX)
+project(jarvis VERSION 0.22.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -195,6 +195,7 @@ qt_add_qml_module(jarvis
         StudyWindow.qml
         SkillPage.qml
         CodeBlock.qml
+        CapabilitiesView.qml
         settings/SettingsState.qml
         settings/SettingRow.qml
         settings/SettingSwitch.qml
@@ -208,6 +209,7 @@ qt_add_qml_module(jarvis
         settings/ConversationPage.qml
         settings/IntelligencePage.qml
         settings/AutonomyPage.qml
+        settings/CapabilitiesPage.qml
         settings/PrivacyPage.qml
         settings/ActionsPage.qml
         settings/SkillsPage.qml
@@ -398,6 +400,7 @@ if(BUILD_TESTING)
     # 0.22: the agent's tools, rules and executor on a fake system; agent_cli drives the real one by hand.
     add_executable(agent_tests tests/agent_tests.cpp)
     target_link_libraries(agent_tests PRIVATE jarvis_core)
+    target_compile_definitions(agent_tests PRIVATE JARVIS_TESTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests")
     add_test(NAME agent COMMAND agent_tests)
     set_tests_properties(agent PROPERTIES ENVIRONMENT "JARVIS_AGENT_FAST=1;QT_QPA_PLATFORM=offscreen")
     add_executable(agent_cli tests/agent_cli.cpp)

@@ -10,7 +10,7 @@ It starts build/jarvisd and the Jarvis window (--tray), then asks the daemon
 over D-Bus, as the chat would:
   1. "открой калькулятор"         → KCalc starts; its window appears (checked by KWin)
   2. "открой калькулятор" again   → no second copy: Jarvis switches to the window
-  3. "открой Kate" + "переключись на калькулятор" → the calculator's window is active
+  3. "открой Kate" + "разверни его" → Kate maximized (0.22.1); "переключись на калькулятор" → the calculator's window is active
   4. "закрой калькулятор"         → asks first (default permission); "нет" keeps it; "да" closes it
   5. "стоп" with nothing running  → says so
 The agent's task file shows the verified result of each step.
@@ -140,6 +140,10 @@ for _ in range(20):
     if has_window('org.kde.kate'):
         break
     time.sleep(0.5)
+# 0.22.1: "его" is the application just opened; KWin maximizes it and Jarvis checks the geometry.
+r = ask('разверни его')
+if 'развёрнут' not in r:
+    fail('«разверни его» after «открой Kate» did not maximize Kate (checked by KWin)')
 r = ask('переключись на калькулятор')
 active = [w['app'] for w in kwin_windows() if w['active']]
 if active != [CALC]:

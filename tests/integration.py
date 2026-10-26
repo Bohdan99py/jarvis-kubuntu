@@ -156,12 +156,36 @@ try:
  ide.close()
  wait_for(lambda: memory()['code']['connected']==0,'IDE client gone')
 
- # 👍/👎 in chat
+ # 👍/👎 in chat (0.22.1): 👎 marks the answer bad, it never asks the user to write the right one
  ask('Как зовут моего кота?')
- assert 'правильно' in unquote(call('Feedback','false'))
- assert 'Спасибо' in ask('Барсик')
+ rated=unquote(call('Feedback','false'))
+ assert 'неудачн' in rated and 'правильно' not in rated,rated
+ ask('Барсик')
+ learned=scratch/'data/jarvis/learning.json'
+ assert not learned.exists() or not any('кота' in i['question'] for i in json.loads(learned.read_text())),'the message after 👎 is not taught as the answer'
+ ask('Как зовут моего кота?')
+ assert 'исправил' in ask('нет, правильно: Барсик')
  assert 'Барсик' in ask('Как зовут моего кота?')
+ assert 'не повторяю' in unquote(call('Feedback','false')),'a recalled answer rated 👎 is marked'
+ assert 'Барсик' not in ask('Как зовут моего кота?'),'a bad taught answer is not repeated'
+ assert any(i.get('bad') for i in json.loads((scratch/'data/jarvis/learning.json').read_text())),'kept, marked bad'
+ assert 'исправил' in ask('нет, правильно: Барсик')
+ assert 'Барсик' in ask('Как зовут моего кота?'),'taught anew'
  assert unquote(call('Feedback','true'))
+
+ # 0.22.1: a laptop task through the real Ask path is carried out by the agent — here,
+ # without a sound server, it fails honestly — and is never answered as chat ("I can't").
+ out=ask('put sound on 20',wait=2.5)
+ assert "can't" not in out and 'wpctl' not in out and 'pactl set' not in out,out
+ assert "'agent'" in out and ('sound output' in out or 'Volume' in out),out
+ out=ask('Если я попрошу поставить громкость 20%, что ты сделаешь?',wait=1.5)
+ assert 'Если попросите' in out and 'ничего не меняю' in out,out
+ out=ask('Не меняй громкость',wait=1.5)
+ assert 'не трогаю' in out,out
+ rated=unquote(call('Feedback','false'))
+ assert 'журнале' in rated,rated
+ taught=unquote(call('Teach','громкость 20','Готово'))
+ assert 'команд' in taught or 'command' in taught,'a command is never taught a stored answer'
  assert 'Алекс' in ask('что ты узнал сегодня')
 
  # Corrections teach the previous question
