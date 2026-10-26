@@ -800,10 +800,13 @@ StepResult appOpen(const Step &s, ToolContext &ctx, bool focusOnly)
     const AppMatch m = resolveApp(ctx, query);
     if (m.id.isEmpty())
         return noApp(l, query, m);
-    const bool canSee = ctx.system->windowsAvailable();
     QString error;
+    // KWin that does not answer (another compositor, a stuck script): no waiting for windows.
+    QList<Window> wins;
+    if (ctx.system->windowsAvailable())
+        wins = ctx.system->windows(&error);
+    const bool canSee = ctx.system->windowsAvailable() && error.isEmpty();
     if (canSee) {
-        const QList<Window> wins = ctx.system->windows(&error);
         for (const Window &w : wins)
             if (windowOf(w, m.id)) {
                 if (w.active)

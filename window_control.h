@@ -22,7 +22,7 @@ class WindowControl : public QObject
 public:
     explicit WindowControl(QObject *parent = nullptr);
 
-    // Worker thread: blocks until KWin answers or 4 s pass.
+    // Worker thread: blocks until KWin answers or 2.5 s pass.
     QList<agent::Window> windows(QString *error);
     QString act(const QString &mode, const QString &id);
 

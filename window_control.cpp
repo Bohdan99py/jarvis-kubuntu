@@ -99,7 +99,7 @@ QJsonObject WindowControl::run(const QString &mode, const QString &id, QString *
     }
     QMutexLocker lock(&m_mutex);
     if (m_answer.isEmpty())
-        m_answered.wait(&m_mutex, 4000);
+        m_answered.wait(&m_mutex, 2500);
     m_token.clear();
     if (m_answer.isEmpty() && error)
         *error = u"KWin did not answer"_s;

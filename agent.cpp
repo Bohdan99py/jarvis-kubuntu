@@ -16,6 +16,7 @@
 
 #include "claude_client.h"
 #include "local_model.h"
+#include "workspace.h"
 
 using namespace Qt::StringLiterals;
 
@@ -294,6 +295,12 @@ bool Agent::handle(quint64 id, const QString &text, Lang lang, bool chatFallback
     if (rules) {
         start(id, text, lang, p.steps, u"rules"_s);
         return true;
+    }
+    // Folders, projects, figures, "prepare the desktop for…": the desktop handler answers those.
+    if (p.steps.isEmpty()) {
+        const QString kind = workspace::parseCommand(text).kind;
+        if (!kind.isEmpty() && kind != u"open-app")
+            return false;
     }
     if (p.systemish || !p.steps.isEmpty()) {
         if (localModelReady()) {
