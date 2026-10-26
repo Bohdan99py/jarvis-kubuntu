@@ -19,7 +19,7 @@ import sys
 import time
 import urllib.request
 
-UA = "Jarvis/0.22.0 (+https://github.com/Bohdan99py/jarvis-kubuntu)"
+UA = "Jarvis/0.22.1 (+https://github.com/Bohdan99py/jarvis-kubuntu)"
 CHUNK = 1 << 20
 
 

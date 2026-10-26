@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.22.0
+# Jarvis for Kubuntu · 0.22.1
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,7 +9,7 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.22.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.22.1_ubuntu-26.04_amd64.deb
 sudo apt install llama.cpp-tools libggml0-backend-vulkan   # for the local model (Ubuntu 26.04), once
 ```
 
@@ -24,7 +24,9 @@ Say what you want: "Jarvis, play the sound through my headphones", "connect the 
 - **Modes:** Automatic (laptop tasks locally, the cloud as the settings allow) and Only local (nothing goes to Claude or ElevenLabs). The mode is shown under the message field.
 - **Permissions** per category (Allow / Ask / Off), confirmation of risky actions (closing an application asks "yes/no"), limits on steps and time per task, stop at any moment. Device names and tool output are data, never commands.
 
-Offline preparation, hardware requirements, measurements, checked commands, limitations, upgrade and rollback: [docs/release-0.22.md](docs/release-0.22.md) (Russian).
+- **"What Jarvis can do"** (0.22.1): the "☰ What I can do" button under the message field, the tray menu and a settings page. The catalogue comes from the tool registry: a name, a description, Russian and English examples, whether it works offline, asks first, is available now and why not. The search is local; clicking an example puts it into the message field and runs nothing.
+
+Offline preparation, hardware requirements, measurements, checked commands, limitations, upgrade and rollback: [docs/release-0.22.md](docs/release-0.22.md) (Russian); the 0.22.1 fixes: [docs/release-0.22.1.md](docs/release-0.22.1.md) (Russian).
 
 ## Settings (0.21)
 
