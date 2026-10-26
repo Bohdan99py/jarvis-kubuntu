@@ -189,6 +189,29 @@
     </message>
 </context>
 <context>
+    <name>AgentPanel</name>
+    <message>
+        <source>Stopped.</source>
+        <translation>Остановлено.</translation>
+    </message>
+    <message>
+        <source>The download was interrupted.</source>
+        <translation>Загрузка прервалась.</translation>
+    </message>
+    <message>
+        <source>Wait for the download or the check to finish.</source>
+        <translation>Дождитесь окончания загрузки или проверки.</translation>
+    </message>
+    <message>
+        <source>Could not remove the model.</source>
+        <translation>Не удалось удалить модель.</translation>
+    </message>
+    <message>
+        <source>the Jarvis service (jarvisd) is not running</source>
+        <translation>служба Jarvis (jarvisd) не запущена</translation>
+    </message>
+</context>
+<context>
     <name>AppSettings</name>
     <message>
         <source>This does not look like a Claude API key: it starts with sk-ant- and has only Latin letters, digits, &quot;-&quot; and &quot;_&quot;, without spaces.</source>
@@ -201,6 +224,10 @@
     <message>
         <source>The key was not saved: %1</source>
         <translation>Ключ не сохранён: %1</translation>
+    </message>
+    <message>
+        <source>&quot;Only local&quot; mode is on (Settings → Autonomy): Jarvis does not contact Anthropic, not even to check the key.</source>
+        <translation>Включён режим «Только локально» (Настройки → Автономность): Jarvis не обращается к Anthropic, даже для проверки ключа.</translation>
     </message>
     <message>
         <source>Enter a key first: there is none to check.</source>
@@ -253,6 +280,413 @@
     <message>
         <source>This value is not allowed.</source>
         <translation>Такое значение недопустимо.</translation>
+    </message>
+</context>
+<context>
+    <name>AutonomyPage</name>
+    <message>
+        <source>installed and verified</source>
+        <translation>установлена и проверена</translation>
+    </message>
+    <message>
+        <source>downloaded, not verified yet</source>
+        <translation>скачана, ещё не проверена</translation>
+    </message>
+    <message>
+        <source>download interrupted — it resumes</source>
+        <translation>загрузка прервалась — продолжится с того же места</translation>
+    </message>
+    <message>
+        <source>damaged (wrong size) — download it again</source>
+        <translation>повреждена (не тот размер) — скачайте заново</translation>
+    </message>
+    <message>
+        <source>not downloaded</source>
+        <translation>не скачана</translation>
+    </message>
+    <message>
+        <source>Say what you want done — &quot;play the sound through my headphones&quot;, &quot;volume 30 and open the player&quot; — and Jarvis works out the steps, checks each is allowed, carries them out on this laptop and reads back what really changed. Everyday tasks work without the internet.</source>
+        <translation>Скажите, что нужно, — «выведи звук в наушники», «громкость 30 и открой проигрыватель», — и Jarvis сам определит шаги, проверит, что каждый разрешён, выполнит их на этом ноутбуке и проверит, что изменилось на самом деле. Повседневные задачи работают без интернета.</translation>
+    </message>
+    <message>
+        <source>Mode</source>
+        <translation>Режим</translation>
+    </message>
+    <message>
+        <source>Where requests are understood</source>
+        <translation>Где разбираются просьбы</translation>
+    </message>
+    <message>
+        <source>Only local: nothing goes to any cloud model — not Claude, not the ElevenLabs voice, not even a key check. Laptop tasks, the local model and the voice on this computer keep working.</source>
+        <translation>Только локально: ничего не уходит облачным моделям — ни Claude, ни голосу ElevenLabs, даже проверка ключа. Задачи на ноутбуке, локальная модель и голос на этом компьютере продолжают работать.</translation>
+    </message>
+    <message>
+        <source>Automatic: laptop tasks are always understood and done on this computer. Free questions go to Claude when a key is saved; without one, to the local model. Having a network never by itself means data may go to the cloud.</source>
+        <translation>Автоматически: задачи на ноутбуке всегда разбираются и выполняются на этом компьютере. Свободные вопросы — Claude, если сохранён ключ; без ключа — локальной модели. Наличие сети само по себе не разрешает отправлять данные в облако.</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Автоматически</translation>
+    </message>
+    <message>
+        <source>Only local</source>
+        <translation>Только локально</translation>
+    </message>
+    <message>
+        <source>Let Claude plan tasks the local model cannot</source>
+        <translation>Разрешить Claude планировать задачи, которые не разобрала локальная модель</translation>
+    </message>
+    <message>
+        <source>Only in automatic mode and only for laptop tasks the rules and the local model do not understand: the request and the names of your sound and Bluetooth devices go to Anthropic. Claude only proposes the steps; Jarvis checks and carries them out exactly as for the local model. No answer in 20 seconds: nothing is done and nothing is sent again.</source>
+        <translation>Только в автоматическом режиме и только для задач на ноутбуке, которые не поняли правила и локальная модель: в Anthropic уходят просьба и имена ваших звуковых и Bluetooth-устройств. Claude лишь предлагает шаги; Jarvis проверяет и выполняет их так же, как для локальной модели. Нет ответа за 20 секунд — ничего не выполняется и повторно не отправляется.</translation>
+    </message>
+    <message>
+        <source>Needs a Claude key (Settings → Intelligence).</source>
+        <translation>Нужен ключ Claude (Настройки → Интеллект).</translation>
+    </message>
+    <message>
+        <source>Local model</source>
+        <translation>Локальная модель</translation>
+    </message>
+    <message>
+        <source>Model for free wording</source>
+        <translation>Модель для свободных формулировок</translation>
+    </message>
+    <message>
+        <source>Simple commands work without any model. The model lets Jarvis understand any wording, several actions at once and plain conversation offline. It is downloaded once (only when you press the button) and checked against its published checksum; it is never part of the Jarvis package.</source>
+        <translation>Простые команды работают и без модели. Модель позволяет понимать любые формулировки, несколько действий сразу и обычный разговор без интернета. Скачивается один раз (только по нажатию кнопки) и проверяется по опубликованной контрольной сумме; в пакет Jarvis не входит.</translation>
+    </message>
+    <message>
+        <source>recommended</source>
+        <translation>рекомендуется</translation>
+    </message>
+    <message>
+        <source>%1 GB · %2 · %3</source>
+        <translation>%1 ГБ · %2 · %3</translation>
+    </message>
+    <message>
+        <source>Resume download</source>
+        <translation>Продолжить загрузку</translation>
+    </message>
+    <message>
+        <source>Download…</source>
+        <translation>Скачать…</translation>
+    </message>
+    <message>
+        <source>Verify</source>
+        <translation>Проверить</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>Удалить</translation>
+    </message>
+    <message>
+        <source>Download progress</source>
+        <translation>Ход загрузки</translation>
+    </message>
+    <message>
+        <source>Checking the checksum… %1 of %2 GB</source>
+        <translation>Проверяю контрольную сумму… %1 из %2 ГБ</translation>
+    </message>
+    <message>
+        <source>Downloading… %1 of %2 GB</source>
+        <translation>Скачиваю… %1 из %2 ГБ</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Остановить</translation>
+    </message>
+    <message>
+        <source>llama.cpp (runs the model)</source>
+        <translation>llama.cpp (запускает модель)</translation>
+    </message>
+    <message>
+        <source>Installed: %1. It starts only when a request needs the model, listens on this computer only (127.0.0.1) and stops after the idle time below.</source>
+        <translation>Установлен: %1. Запускается только когда просьбе нужна модель, слушает только этот компьютер (127.0.0.1) и останавливается после простоя (ниже).</translation>
+    </message>
+    <message>
+        <source>Not installed. In a terminal: sudo apt install llama.cpp-tools libggml0-backend-vulkan (Ubuntu 26.04). Until then simple commands work, free wording does not.</source>
+        <translation>Не установлен. В терминале: sudo apt install llama.cpp-tools libggml0-backend-vulkan (Ubuntu 26.04). До тех пор простые команды работают, свободные формулировки — нет.</translation>
+    </message>
+    <message>
+        <source>State</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>No model chosen.</source>
+        <translation>Модель не выбрана.</translation>
+    </message>
+    <message>
+        <source>Ready to work offline.</source>
+        <translation>Готово к работе без интернета.</translation>
+    </message>
+    <message>
+        <source>Not ready offline yet: %1.</source>
+        <translation>Ещё не готово к работе без интернета: %1.</translation>
+    </message>
+    <message>
+        <source>llama.cpp is missing</source>
+        <translation>нет llama.cpp</translation>
+    </message>
+    <message>
+        <source>The Jarvis service is not running: the model is loaded by it.</source>
+        <translation>Служба Jarvis не запущена, а модель загружает она.</translation>
+    </message>
+    <message>
+        <source>Loaded on %1; last start %2 s, last answer %3 s.</source>
+        <translation>Загружена на %1; последний запуск %2 с, последний ответ %3 с.</translation>
+    </message>
+    <message>
+        <source>the processor</source>
+        <translation>процессор</translation>
+    </message>
+    <message>
+        <source>the graphics card (%1)</source>
+        <translation>видеокарту (%1)</translation>
+    </message>
+    <message>
+        <source>Loading…</source>
+        <translation>Загрузка…</translation>
+    </message>
+    <message>
+        <source>Did not start: %1</source>
+        <translation>Не запустилась: %1</translation>
+    </message>
+    <message>
+        <source>Not loaded (it loads with the first request that needs it).</source>
+        <translation>Не загружена (загрузится с первой просьбой, которой она нужна).</translation>
+    </message>
+    <message>
+        <source>Run the model on</source>
+        <translation>Где запускать модель</translation>
+    </message>
+    <message>
+        <source>Automatic: the discrete graphics card when it has room, otherwise the processor (slower, still offline). The processor only: the graphics card stays asleep, which saves battery.</source>
+        <translation>Автоматически: на дискретной видеокарте, если хватает памяти, иначе на процессоре (медленнее, но тоже без интернета). Только процессор: видеокарта спит, это бережёт батарею.</translation>
+    </message>
+    <message>
+        <source>The processor only</source>
+        <translation>Только процессор</translation>
+    </message>
+    <message>
+        <source>Keep the model loaded after a request</source>
+        <translation>Держать модель загруженной после просьбы</translation>
+    </message>
+    <message>
+        <source>Then it is unloaded and frees the memory; the next request loads it again (a few seconds).</source>
+        <translation>Потом она выгружается и освобождает память; следующая просьба загрузит её снова (несколько секунд).</translation>
+    </message>
+    <message>
+        <source>%1 min</source>
+        <translation>%1 мин</translation>
+    </message>
+    <message>
+        <source>Voice on this computer</source>
+        <translation>Голос на этом компьютере</translation>
+    </message>
+    <message>
+        <source>Dictation and speech without the internet</source>
+        <translation>Диктовка и озвучка без интернета</translation>
+    </message>
+    <message>
+        <source>Dictation (Vosk): %1.</source>
+        <translation>Диктовка (Vosk): %1.</translation>
+    </message>
+    <message>
+        <source>Dictation is not installed: Settings → Talking to Jarvis → Install voice (about 45 MB, once).</source>
+        <translation>Диктовка не установлена: Настройки → Разговор с Jarvis → «Установить голос» (около 45 МБ, один раз).</translation>
+    </message>
+    <message>
+        <source>Natural voice (Piper): %1 voices.</source>
+        <translation>Естественный голос (Piper): голосов — %1.</translation>
+    </message>
+    <message>
+        <source>Natural voice (Piper) is not installed (about 260 MB, once); the system voice speaks meanwhile.</source>
+        <translation>Естественный голос (Piper) не установлен (около 260 МБ, один раз); пока говорит системный голос.</translation>
+    </message>
+    <message>
+        <source>System voice (Speech Dispatcher): works offline.</source>
+        <translation>Системный голос (Speech Dispatcher): работает без интернета.</translation>
+    </message>
+    <message>
+        <source>No system voice (speech-dispatcher).</source>
+        <translation>Нет системного голоса (speech-dispatcher).</translation>
+    </message>
+    <message>
+        <source>The microphone listens only while you hold dictation (button or Ctrl+Shift+M); while Jarvis speaks it does not listen, so it never answers itself. The recognised text can be edited before sending; Esc stops speech.</source>
+        <translation>Микрофон слушает только во время диктовки (кнопка или Ctrl+Shift+M); пока Jarvis говорит, он не слушает, поэтому не отвечает сам себе. Распознанный текст можно исправить перед отправкой; Esc останавливает озвучку.</translation>
+    </message>
+    <message>
+        <source>What Jarvis may do</source>
+        <translation>Что Jarvis может делать</translation>
+    </message>
+    <message>
+        <source>&quot;Allow&quot;: done at once, then checked. &quot;Ask&quot;: Jarvis asks &quot;yes or no&quot; first. &quot;Off&quot;: never. These are Jarvis&apos;s own permissions; the system&apos;s (polkit) still apply, and Jarvis never runs as administrator, never asks for or keeps your password and never runs commands a model wrote. Text from devices, windows and tools never changes these settings.</source>
+        <translation>«Разрешить» — выполняется сразу и проверяется. «Спрашивать» — сначала вопрос «да или нет». «Выкл.» — никогда. Это собственные разрешения Jarvis; системные (polkit) действуют всё равно, а Jarvis никогда не работает от администратора, не спрашивает и не хранит ваш пароль и не выполняет команды, написанные моделью. Текст от устройств, окон и инструментов эти настройки не меняет.</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Звук</translation>
+    </message>
+    <message>
+        <source>Output device, volume, mute, microphone.</source>
+        <translation>Устройство вывода, громкость, выключение звука, микрофон.</translation>
+    </message>
+    <message>
+        <source>Bluetooth</source>
+        <translation>Bluetooth</translation>
+    </message>
+    <message>
+        <source>Switch the adapter on, connect and disconnect known devices. Pairing new ones always needs you.</source>
+        <translation>Включение адаптера, подключение и отключение знакомых устройств. Сопряжение новых всегда с вашим участием.</translation>
+    </message>
+    <message>
+        <source>Starting applications</source>
+        <translation>Запуск приложений</translation>
+    </message>
+    <message>
+        <source>Start an installed application or switch to its window.</source>
+        <translation>Запустить установленное приложение или переключиться на его окно.</translation>
+    </message>
+    <message>
+        <source>Closing applications</source>
+        <translation>Закрытие приложений</translation>
+    </message>
+    <message>
+        <source>Asks the window to close like its close button (the application may ask to save). Never forced. A model&apos;s plan always asks first.</source>
+        <translation>Просит окно закрыться, как его кнопка закрытия (приложение может спросить о сохранении). Никогда принудительно. План модели всегда сначала спрашивает.</translation>
+    </message>
+    <message>
+        <source>Screen and notifications</source>
+        <translation>Экран и уведомления</translation>
+    </message>
+    <message>
+        <source>Brightness, do not disturb.</source>
+        <translation>Яркость, «Не беспокоить».</translation>
+    </message>
+    <message>
+        <source>Desktop</source>
+        <translation>Рабочий стол</translation>
+    </message>
+    <message>
+        <source>Settings pages, Jarvis profiles, the media player.</source>
+        <translation>Страницы настроек, профили Jarvis, проигрыватель.</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Питание</translation>
+    </message>
+    <message>
+        <source>Power profile (the system allows it in your session).</source>
+        <translation>Профиль питания (система разрешает его в вашем сеансе).</translation>
+    </message>
+    <message>
+        <source>System state</source>
+        <translation>Состояние системы</translation>
+    </message>
+    <message>
+        <source>Battery, network, devices, diagnostics — reading only.</source>
+        <translation>Батарея, сеть, устройства, диагностика — только чтение.</translation>
+    </message>
+    <message>
+        <source>Allow</source>
+        <translation>Разрешить</translation>
+    </message>
+    <message>
+        <source>Ask</source>
+        <translation>Спрашивать</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Выкл.</translation>
+    </message>
+    <message>
+        <source>Limits</source>
+        <translation>Ограничения</translation>
+    </message>
+    <message>
+        <source>Steps per task at most</source>
+        <translation>Не больше шагов в задаче</translation>
+    </message>
+    <message>
+        <source>A longer plan is cut here and Jarvis says so.</source>
+        <translation>Более длинный план обрезается, и Jarvis об этом говорит.</translation>
+    </message>
+    <message>
+        <source>Time per task at most</source>
+        <translation>Не дольше на задачу</translation>
+    </message>
+    <message>
+        <source>When it runs out, the current step is stopped where it can be and no other step starts. Each step has its own shorter limit too.</source>
+        <translation>Когда время выходит, текущий шаг прерывается, если это возможно, и следующие не запускаются. У каждого шага есть и свой, более короткий предел.</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 с</translation>
+    </message>
+    <message>
+        <source>Diagnostics</source>
+        <translation>Диагностика</translation>
+    </message>
+    <message>
+        <source>What works on this computer</source>
+        <translation>Что работает на этом компьютере</translation>
+    </message>
+    <message>
+        <source>Checks sound, Bluetooth, brightness, do not disturb, windows (KWin), power, the network and the local model — on this computer, nothing is sent.</source>
+        <translation>Проверяет звук, Bluetooth, яркость, «Не беспокоить», окна (KWin), питание, сеть и локальную модель — на этом компьютере, ничего не отправляется.</translation>
+    </message>
+    <message>
+        <source>Brightness</source>
+        <translation>Яркость</translation>
+    </message>
+    <message>
+        <source>Do not disturb</source>
+        <translation>Не беспокоить</translation>
+    </message>
+    <message>
+        <source>Windows</source>
+        <translation>Окна</translation>
+    </message>
+    <message>
+        <source>Power profiles</source>
+        <translation>Профили питания</translation>
+    </message>
+    <message>
+        <source>Network</source>
+        <translation>Сеть</translation>
+    </message>
+    <message>
+        <source>Voice</source>
+        <translation>Голос</translation>
+    </message>
+    <message>
+        <source>Jarvis service</source>
+        <translation>Служба Jarvis</translation>
+    </message>
+    <message>
+        <source>Check</source>
+        <translation>Проверить</translation>
+    </message>
+    <message>
+        <source>Last task</source>
+        <translation>Последняя задача</translation>
+    </message>
+    <message>
+        <source>«%1» — %2</source>
+        <translation>«%1» — %2</translation>
+    </message>
+    <message>
+        <source>Download %1?</source>
+        <translation>Скачать %1?</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>Скачать</translation>
+    </message>
+    <message>
+        <source>Size: %1 GB, downloaded once from Hugging Face (%2), license %3. It lets Jarvis understand free wording and plain conversation offline. Needs about %4 GB of graphics memory or %5 GB of RAM while loaded. Saved in ~/.local/share/jarvis/models and checked against its sha256; an interrupted download resumes.</source>
+        <translation>Размер: %1 ГБ, скачивается один раз с Hugging Face (%2), лицензия %3. Позволяет понимать свободные формулировки и разговаривать без интернета. Пока загружена, занимает около %4 ГБ видеопамяти или %5 ГБ оперативной памяти. Сохраняется в ~/.local/share/jarvis/models и проверяется по sha256; прерванная загрузка продолжается.</translation>
     </message>
 </context>
 <context>
@@ -341,6 +775,30 @@
     <message>
         <source>Enter — send · Shift+Enter — new line · Esc — stop · ↑ — last message · Ctrl+Shift+M — dictate</source>
         <translation>Enter — отправить · Shift+Enter — новая строка · Esc — стоп · ↑ — прошлое сообщение · Ctrl+Shift+M — диктовка</translation>
+    </message>
+    <message>
+        <source>Only local</source>
+        <translation>Только локально</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Автоматически</translation>
+    </message>
+    <message>
+        <source>Mode: only local, nothing is sent to cloud models</source>
+        <translation>Режим: только локально, облачным моделям ничего не отправляется</translation>
+    </message>
+    <message>
+        <source>Mode: automatic, the cloud as the settings allow</source>
+        <translation>Режим: автоматически, облако — как разрешено в настройках</translation>
+    </message>
+    <message>
+        <source>Only local: nothing is sent to cloud models. Settings → Autonomy.</source>
+        <translation>Только локально: облачным моделям ничего не отправляется. Настройки → Автономность.</translation>
+    </message>
+    <message>
+        <source>Automatic: laptop tasks run locally; Claude answers as the settings allow. Settings → Autonomy.</source>
+        <translation>Автоматически: задачи на ноутбуке выполняются локально; Claude отвечает, как разрешено в настройках. Настройки → Автономность.</translation>
     </message>
 </context>
 <context>
@@ -4439,6 +4897,258 @@ Esc — скрыть окно.</translation>
         <translation>офлайн, локально, без интернета, резервный режим, без ключа</translation>
     </message>
     <message>
+        <source>Mode</source>
+        <translation>Режим</translation>
+    </message>
+    <message>
+        <source>Where requests are understood</source>
+        <translation>Где разбираются просьбы</translation>
+    </message>
+    <message>
+        <source>Only local: nothing goes to cloud models. Automatic: laptop tasks locally, the cloud as the settings allow.</source>
+        <translation>Только локально: облачным моделям ничего не уходит. Автоматически: задачи на ноутбуке — локально, облако — как разрешено в настройках.</translation>
+    </message>
+    <message>
+        <source>offline, local, only local, cloud, mode, autonomy, internet, privacy, agent</source>
+        <translation>офлайн, без интернета, локально, только локально, облако, режим, автономность, интернет, приватность, агент</translation>
+    </message>
+    <message>
+        <source>Let Claude plan tasks the local model cannot</source>
+        <translation>Разрешить Claude планировать задачи, которые не разобрала локальная модель</translation>
+    </message>
+    <message>
+        <source>Automatic mode only; Claude proposes, Jarvis checks and acts.</source>
+        <translation>Только в автоматическом режиме; Claude предлагает, Jarvis проверяет и выполняет.</translation>
+    </message>
+    <message>
+        <source>claude, cloud, plan, complex, agent</source>
+        <translation>claude, облако, план, сложные, агент</translation>
+    </message>
+    <message>
+        <source>Local model</source>
+        <translation>Локальная модель</translation>
+    </message>
+    <message>
+        <source>Model for free wording</source>
+        <translation>Модель для свободных формулировок</translation>
+    </message>
+    <message>
+        <source>Download once, then Jarvis understands any wording offline.</source>
+        <translation>Скачать один раз — и Jarvis понимает любые формулировки без интернета.</translation>
+    </message>
+    <message>
+        <source>model, llm, qwen, download, offline, neural network, ai, local</source>
+        <translation>модель, llm, qwen, скачать, офлайн, нейросеть, ии, локальная</translation>
+    </message>
+    <message>
+        <source>llama.cpp (runs the model)</source>
+        <translation>llama.cpp (запускает модель)</translation>
+    </message>
+    <message>
+        <source>Whether llama.cpp is installed and how to install it.</source>
+        <translation>Установлен ли llama.cpp и как его установить.</translation>
+    </message>
+    <message>
+        <source>llama, llama.cpp, server, gpu, vulkan, install</source>
+        <translation>llama, llama.cpp, сервер, видеокарта, vulkan, установить</translation>
+    </message>
+    <message>
+        <source>State</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <source>Installed, verified, loaded; how long it took.</source>
+        <translation>Установлена, проверена, загружена; сколько это заняло.</translation>
+    </message>
+    <message>
+        <source>ready, loaded, status, offline ready</source>
+        <translation>готово, загружена, состояние, готовность офлайн</translation>
+    </message>
+    <message>
+        <source>Run the model on</source>
+        <translation>Где запускать модель</translation>
+    </message>
+    <message>
+        <source>The graphics card or the processor.</source>
+        <translation>Видеокарта или процессор.</translation>
+    </message>
+    <message>
+        <source>gpu, cpu, graphics card, processor, battery</source>
+        <translation>видеокарта, процессор, gpu, cpu, батарея</translation>
+    </message>
+    <message>
+        <source>Keep the model loaded after a request</source>
+        <translation>Держать модель загруженной после просьбы</translation>
+    </message>
+    <message>
+        <source>Minutes before it is unloaded to free memory.</source>
+        <translation>Через сколько минут выгрузить, чтобы освободить память.</translation>
+    </message>
+    <message>
+        <source>memory, unload, idle, ram, vram</source>
+        <translation>память, выгрузить, простой, озу, видеопамять</translation>
+    </message>
+    <message>
+        <source>Voice on this computer</source>
+        <translation>Голос на этом компьютере</translation>
+    </message>
+    <message>
+        <source>Dictation and speech without the internet</source>
+        <translation>Диктовка и озвучка без интернета</translation>
+    </message>
+    <message>
+        <source>Vosk, Piper and the system voice.</source>
+        <translation>Vosk, Piper и системный голос.</translation>
+    </message>
+    <message>
+        <source>voice, microphone, dictation, speech, offline, vosk, piper</source>
+        <translation>голос, микрофон, диктовка, озвучка, офлайн, vosk, piper</translation>
+    </message>
+    <message>
+        <source>What Jarvis may do</source>
+        <translation>Что Jarvis может делать</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Звук</translation>
+    </message>
+    <message>
+        <source>Output device, volume, mute, microphone.</source>
+        <translation>Устройство вывода, громкость, выключение звука, микрофон.</translation>
+    </message>
+    <message>
+        <source>permission, sound, volume, headphones, speakers</source>
+        <translation>разрешение, звук, громкость, наушники, динамики</translation>
+    </message>
+    <message>
+        <source>Switch on, connect and disconnect known devices.</source>
+        <translation>Включение, подключение и отключение знакомых устройств.</translation>
+    </message>
+    <message>
+        <source>permission, bluetooth, headphones, connect</source>
+        <translation>разрешение, блютуз, bluetooth, наушники, подключить</translation>
+    </message>
+    <message>
+        <source>Starting applications</source>
+        <translation>Запуск приложений</translation>
+    </message>
+    <message>
+        <source>Start an application or switch to its window.</source>
+        <translation>Запустить приложение или переключиться на его окно.</translation>
+    </message>
+    <message>
+        <source>permission, applications, open, start, window</source>
+        <translation>разрешение, приложения, открыть, запустить, окно</translation>
+    </message>
+    <message>
+        <source>Closing applications</source>
+        <translation>Закрытие приложений</translation>
+    </message>
+    <message>
+        <source>Asks first by default; never forced.</source>
+        <translation>По умолчанию сначала спрашивает; никогда принудительно.</translation>
+    </message>
+    <message>
+        <source>permission, close, quit, window</source>
+        <translation>разрешение, закрыть, выйти, окно</translation>
+    </message>
+    <message>
+        <source>Screen and notifications</source>
+        <translation>Экран и уведомления</translation>
+    </message>
+    <message>
+        <source>Brightness and do not disturb.</source>
+        <translation>Яркость и «Не беспокоить».</translation>
+    </message>
+    <message>
+        <source>permission, brightness, do not disturb, notifications</source>
+        <translation>разрешение, яркость, не беспокоить, уведомления</translation>
+    </message>
+    <message>
+        <source>Settings pages, profiles, the media player.</source>
+        <translation>Страницы настроек, профили, проигрыватель.</translation>
+    </message>
+    <message>
+        <source>permission, settings, profile, media, player</source>
+        <translation>разрешение, настройки, профиль, медиа, проигрыватель</translation>
+    </message>
+    <message>
+        <source>Power</source>
+        <translation>Питание</translation>
+    </message>
+    <message>
+        <source>The power profile.</source>
+        <translation>Профиль питания.</translation>
+    </message>
+    <message>
+        <source>permission, power, energy, battery saver, performance</source>
+        <translation>разрешение, питание, энергия, энергосбережение, производительность</translation>
+    </message>
+    <message>
+        <source>System state</source>
+        <translation>Состояние системы</translation>
+    </message>
+    <message>
+        <source>Battery, network, devices — reading only.</source>
+        <translation>Батарея, сеть, устройства — только чтение.</translation>
+    </message>
+    <message>
+        <source>permission, battery, network, status, diagnostics</source>
+        <translation>разрешение, батарея, сеть, состояние, диагностика</translation>
+    </message>
+    <message>
+        <source>Limits</source>
+        <translation>Ограничения</translation>
+    </message>
+    <message>
+        <source>Steps per task at most</source>
+        <translation>Не больше шагов в задаче</translation>
+    </message>
+    <message>
+        <source>A longer plan is cut and Jarvis says so.</source>
+        <translation>Более длинный план обрезается, и Jarvis об этом говорит.</translation>
+    </message>
+    <message>
+        <source>limit, steps, plan</source>
+        <translation>ограничение, шаги, план</translation>
+    </message>
+    <message>
+        <source>Time per task at most</source>
+        <translation>Не дольше на задачу</translation>
+    </message>
+    <message>
+        <source>Then the task stops.</source>
+        <translation>Потом задача останавливается.</translation>
+    </message>
+    <message>
+        <source>limit, time, timeout, seconds</source>
+        <translation>ограничение, время, тайм-аут, секунды</translation>
+    </message>
+    <message>
+        <source>What works on this computer</source>
+        <translation>Что работает на этом компьютере</translation>
+    </message>
+    <message>
+        <source>Sound, Bluetooth, brightness, windows, power, network, the model.</source>
+        <translation>Звук, Bluetooth, яркость, окна, питание, сеть, модель.</translation>
+    </message>
+    <message>
+        <source>diagnostics, check, test, problem, not working</source>
+        <translation>диагностика, проверить, тест, проблема, не работает</translation>
+    </message>
+    <message>
+        <source>Last task</source>
+        <translation>Последняя задача</translation>
+    </message>
+    <message>
+        <source>What Jarvis did last and how it ended.</source>
+        <translation>Что Jarvis делал последним и чем это закончилось.</translation>
+    </message>
+    <message>
+        <source>task, history, last, log</source>
+        <translation>задача, история, последняя, журнал</translation>
+    </message>
+    <message>
         <source>Overview</source>
         <translation>Обзор</translation>
     </message>
@@ -5089,6 +5799,10 @@ Esc — скрыть окно.</translation>
     <message>
         <source>Intelligence and connection</source>
         <translation>Интеллект и подключение</translation>
+    </message>
+    <message>
+        <source>Autonomy</source>
+        <translation>Автономность</translation>
     </message>
     <message>
         <source>Memory and privacy</source>
@@ -6722,6 +7436,10 @@ Chat with me or add a first example</source>
     <message>
         <source>Key saved. Loading your ElevenLabs voices…</source>
         <translation>Ключ сохранён. Загружаю ваши голоса ElevenLabs…</translation>
+    </message>
+    <message>
+        <source>&quot;Only local&quot; mode is on: ElevenLabs is not contacted (Settings → Autonomy).</source>
+        <translation>Включён режим «Только локально»: к ElevenLabs Jarvis не обращается (Настройки → Автономность).</translation>
     </message>
     <message>
         <source>ElevenLabs rejected the API key (401).</source>

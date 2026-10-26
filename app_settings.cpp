@@ -1,4 +1,5 @@
 #include "app_settings.h"
+#include "agent_tools.h"
 #include "desktop_integration.h"
 #include <QJsonValue>
 
@@ -142,6 +143,11 @@ void AppSettings::testConnection(const QString &apiKey, const QString &model)
 {
     if (m_check)
         return;
+    // "Only local": not even a check goes to Anthropic.
+    if (m_data.agentMode == QLatin1String("local")) {
+        setConnection(QStringLiteral("warn"), tr("\"Only local\" mode is on (Settings → Autonomy): Jarvis does not contact Anthropic, not even to check the key."));
+        return;
+    }
     const QString key = apiKey.trimmed().isEmpty() ? jarvis::Config::anthropicKey() : apiKey.trimmed();
     const QString m = model.trimmed().isEmpty() ? m_model : model.trimmed();
     if (key.isEmpty()) {
@@ -295,6 +301,54 @@ QString AppSettings::setOption(const QString &name, bool value)
         d.shareActiveApp = value && d.desktopIntegration;
     else
         return tr("Unknown option.");
+    return store(d);
+}
+
+QVariantMap AppSettings::agentPermissions() const
+{
+    // Every category with its effective value, so the page shows the defaults too.
+    QVariantMap out;
+    for (const QString &c : jarvis::agent::categories()) {
+        const QString v = m_data.agentPermissions.value(c).toString();
+        out.insert(c, v.isEmpty() ? jarvis::agent::defaultPermission(c) : v);
+    }
+    return out;
+}
+
+QString AppSettings::setAgent(const QString &name, const QVariant &value)
+{
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    if (name == QLatin1String("mode")) {
+        if (!jarvis::Config::agentModes().contains(value.toString()))
+            return tr("This value is not allowed.");
+        d.agentMode = value.toString();
+    } else if (name == QLatin1String("cloud")) {
+        d.agentCloud = value.toBool();
+    } else if (name == QLatin1String("model")) {
+        static const QRegularExpression id(QStringLiteral("^[a-z0-9._-]{1,40}$"));
+        if (!id.match(value.toString()).hasMatch())
+            return tr("This value is not allowed.");
+        d.agentModel = value.toString();
+    } else if (name == QLatin1String("device")) {
+        d.agentDevice = value.toString() == QLatin1String("cpu") ? QStringLiteral("cpu") : QStringLiteral("auto");
+    } else if (name == QLatin1String("keepMinutes")) {
+        d.agentKeepMinutes = std::clamp(value.toInt(), 1, 120);
+    } else if (name == QLatin1String("maxSteps")) {
+        d.agentMaxSteps = std::clamp(value.toInt(), 1, 12);
+    } else if (name == QLatin1String("maxSeconds")) {
+        d.agentMaxSeconds = std::clamp(value.toInt(), 10, 300);
+    } else if (name.startsWith(QLatin1String("permission:"))) {
+        const QString category = name.mid(11);
+        const QString v = value.toString();
+        if (!jarvis::agent::categories().contains(category) || (v != u"allow" && v != u"ask" && v != u"off"))
+            return tr("This value is not allowed.");
+        if (v == jarvis::agent::defaultPermission(category))
+            d.agentPermissions.remove(category);
+        else
+            d.agentPermissions.insert(category, v);
+    } else {
+        return tr("Unknown option.");
+    }
     return store(d);
 }
 

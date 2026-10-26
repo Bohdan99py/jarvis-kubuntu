@@ -164,9 +164,19 @@ def chatterbox_python(root):
     return root / "chatterbox" / "venv" / "bin" / "python"
 
 
+def local_only():
+    """Jarvis 0.22 "Only local" mode: no text goes to a cloud voice."""
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    try:
+        with open(os.path.join(base, "jarvis", "config.json"), encoding="utf-8") as f:
+            return json.load(f).get("agent_mode") == "local"
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def ready(engine, settings, root):
     if engine == "elevenlabs":
-        return bool(eleven_key(settings))
+        return bool(eleven_key(settings)) and not local_only()
     if engine == "chatterbox":
         return (root / "chatterbox" / "ready").exists() and chatterbox_python(root).exists()
     if engine == "piper":
@@ -361,6 +371,8 @@ def play(chunks, job, rate, channels=1):
 
 def speak_elevenlabs(text, lang, settings, root, job):
     """Streams PCM from the ElevenLabs API: the first words sound while the rest arrives."""
+    if local_only():
+        raise SpeechError("\"Only local\" mode: the ElevenLabs cloud voice is not used")
     import urllib.error
     import urllib.request
     cfg = settings["elevenlabs"]

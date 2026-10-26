@@ -74,6 +74,16 @@ class AppSettings : public QObject
     Q_PROPERTY(QString hudAnimation READ hudAnimation NOTIFY changed FINAL)
     // JARVIS DESKTOP (0.19.2): theme, layout and quality of the desktop shell (see integration::normalizeDesktop).
     Q_PROPERTY(QVariantMap desktop READ desktop NOTIFY changed FINAL)
+    // Autonomy (0.22), see ConfigData: mode (auto, local), cloud planning, the local
+    // model and where it runs, permissions per tool category, limits.
+    Q_PROPERTY(QString agentMode READ agentMode NOTIFY changed FINAL)
+    Q_PROPERTY(bool agentCloud READ agentCloud NOTIFY changed FINAL)
+    Q_PROPERTY(QString agentModel READ agentModel NOTIFY changed FINAL)
+    Q_PROPERTY(QString agentDevice READ agentDevice NOTIFY changed FINAL)
+    Q_PROPERTY(int agentKeepMinutes READ agentKeepMinutes NOTIFY changed FINAL)
+    Q_PROPERTY(QVariantMap agentPermissions READ agentPermissions NOTIFY changed FINAL)
+    Q_PROPERTY(int agentMaxSteps READ agentMaxSteps NOTIFY changed FINAL)
+    Q_PROPERTY(int agentMaxSeconds READ agentMaxSeconds NOTIFY changed FINAL)
     // The cinematic HUD, kept per user in Jarvis.conf (not in config.json: the
     // daemon has nothing to do with it). Quality: off (classic window), low,
     // balanced, cinematic. memoryOpen: the memory panel beside the HUD.
@@ -130,6 +140,14 @@ public:
     bool shareActiveApp() const { return m_data.shareActiveApp; }
     QString hudAnimation() const { return m_data.hudAnimation; }
     QVariantMap desktop() const { return m_data.desktop.toVariantMap(); }
+    QString agentMode() const { return m_data.agentMode; }
+    bool agentCloud() const { return m_data.agentCloud; }
+    QString agentModel() const { return m_data.agentModel; }
+    QString agentDevice() const { return m_data.agentDevice; }
+    int agentKeepMinutes() const { return m_data.agentKeepMinutes; }
+    QVariantMap agentPermissions() const;
+    int agentMaxSteps() const { return m_data.agentMaxSteps; }
+    int agentMaxSeconds() const { return m_data.agentMaxSeconds; }
     QString hudQuality() const;
     void setHudQuality(const QString &quality);
     bool memoryOpen() const;
@@ -177,6 +195,10 @@ public:
     Q_INVOKABLE QString setAwarenessLevel(const QString &level);
     // name: awarenessMuted (suggestion categories) or awarenessExcluded (application ids).
     Q_INVOKABLE QString setList(const QString &name, const QStringList &values);
+    // Autonomy (0.22). name: mode (auto, local), cloud (bool), model (catalogue id),
+    // device (auto, cpu), keepMinutes, maxSteps, maxSeconds, or "permission:<category>"
+    // with allow, ask or off.
+    Q_INVOKABLE QString setAgent(const QString &name, const QVariant &value);
 
 signals:
     void changed();

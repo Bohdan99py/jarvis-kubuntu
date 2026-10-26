@@ -23,6 +23,8 @@ FocusScope {
     property bool withContext: false
     property bool withScreen: false
     property string placeholder: qsTr("Write a message…")
+    // 0.22: "auto" or "local" (Settings → Autonomy), always visible under the field.
+    property string agentMode: ""
     property string lastSent: ""
     readonly property alias text: input.text
     signal attachRequested()
@@ -278,16 +280,36 @@ FocusScope {
             }
         }
 
-        // Status under the field: dictation, the voice engine, keys.
-        Text {
+        // Status under the field: dictation, the voice engine, keys — and the mode.
+        RowLayout {
             Layout.fillWidth: true
-            visible: composer.voice.busy || composer.voice.recording || (input.activeFocus && input.length === 0 && composer.showHints)
-            text: composer.voice.busy || composer.voice.recording ? composer.voice.status
-                : qsTr("Enter — send · Shift+Enter — new line · Esc — stop · ↑ — last message · Ctrl+Shift+M — dictate")
-            color: composer.voice.busy || composer.voice.recording ? JarvisTheme.cyan : JarvisTheme.textDim
-            font.family: JarvisTheme.mono
-            font.pixelSize: 10
-            elide: Text.ElideRight
+            spacing: 8
+            Text {
+                Layout.fillWidth: true
+                visible: composer.voice.busy || composer.voice.recording || (input.activeFocus && input.length === 0 && composer.showHints)
+                text: composer.voice.busy || composer.voice.recording ? composer.voice.status
+                    : qsTr("Enter — send · Shift+Enter — new line · Esc — stop · ↑ — last message · Ctrl+Shift+M — dictate")
+                color: composer.voice.busy || composer.voice.recording ? JarvisTheme.cyan : JarvisTheme.textDim
+                font.family: JarvisTheme.mono
+                font.pixelSize: 10
+                elide: Text.ElideRight
+            }
+            Item { Layout.fillWidth: true; visible: !(composer.voice.busy || composer.voice.recording || (input.activeFocus && input.length === 0 && composer.showHints)) }
+            // Which way requests go: nothing to the cloud, or as the settings allow.
+            Text {
+                objectName: "agentModeLabel"
+                visible: composer.agentMode.length > 0
+                text: composer.agentMode === "local" ? "⛨ " + qsTr("Only local") : "◐ " + qsTr("Automatic")
+                color: composer.agentMode === "local" ? JarvisTheme.cyan : JarvisTheme.textDim
+                font.family: JarvisTheme.mono
+                font.pixelSize: 10
+                Accessible.name: composer.agentMode === "local" ? qsTr("Mode: only local, nothing is sent to cloud models")
+                                                                : qsTr("Mode: automatic, the cloud as the settings allow")
+                ToolTip.visible: modeHover.hovered
+                ToolTip.text: composer.agentMode === "local" ? qsTr("Only local: nothing is sent to cloud models. Settings → Autonomy.")
+                                                            : qsTr("Automatic: laptop tasks run locally; Claude answers as the settings allow. Settings → Autonomy.")
+                HoverHandler { id: modeHover }
+            }
         }
     }
 }

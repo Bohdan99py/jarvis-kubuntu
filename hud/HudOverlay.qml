@@ -374,6 +374,7 @@ Window {
                 effects: overlay.effects
                 withContext: true
                 withScreen: overlay.useScreen
+                agentMode: overlay.settings ? overlay.settings.agentMode : ""
                 placeholder: overlay.windowKnown ? qsTr("Ask about %1…").arg(overlay.ctx.app) : qsTr("Ask Jarvis…")
                 onVoiceSetupRequested: overlay.voiceSetupRequested()
                 onSent: overlay.useScreen = false

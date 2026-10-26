@@ -9,6 +9,8 @@
 #include <QTimer>
 
 #include "activity_store.h"
+#include "agent.h"
+#include "agent_system.h"
 #include "awareness.h"
 #include "chat_engine.h"
 #include "claude_client.h"
@@ -19,6 +21,7 @@
 #include "knowledge_store.h"
 #include "language.h"
 #include "learning_store.h"
+#include "local_model.h"
 #include "skill_store.h"
 #include "task_store.h"
 #include "reminder_parser.h"
@@ -26,6 +29,7 @@
 #include "workspace.h"
 
 #include <functional>
+#include <memory>
 
 namespace jarvis {
 
@@ -56,6 +60,16 @@ public:
     QString teach(const QString &q, const QString &a);
     QString graph() const { return m_knowledge.graph(m_memory.items()); }
     bool claudeEnabled() const noexcept { return m_claude.isConfigured(); }
+
+    // ---- Autonomy (0.22) ----
+    // The agent that carries out system tasks (agent.h). jarvisd gives it the
+    // hooks for what its sandbox does not do itself: starting applications,
+    // windows (KWin), settings pages, workspaces.
+    Agent &agent() { return *m_agent; }
+    LocalModel &localModel() { return m_localModel; }
+    void setAgentHooks(agent::LinuxSystem::Hooks hooks) { m_system->setHooks(std::move(hooks)); }
+    // {mode, cloud, task, model, …} for the settings window and the HUD.
+    QJsonObject agentStatus() const;
 
     // JSON for the memory panels: facts, topics, activity, settings.
     QString memoryJson();
@@ -179,6 +193,8 @@ private:
     static constexpr int kSmallTalkMaxWords = 4;
 
     void startNext();
+    // The usual chain after the agent let a request pass: desktop commands, schematics, calculators, chat.
+    void continueRequest(const Request &r, Lang lang);
     void answer(const Request &r, Lang lang);
     // A question with attached files: straight to Claude (or a local summary of schematics).
     void answerWithFiles(const Request &r, Lang lang);
@@ -272,6 +288,12 @@ private:
     int m_newTurns = 0;
     QString m_trackingStatus;
     DesktopHandler m_desktopHandler;
+    std::shared_ptr<agent::LinuxSystem> m_system;
+    LocalModel m_localModel;
+    ClaudeClient m_agentCloud; // plans system tasks when the settings allow the cloud
+    std::unique_ptr<Agent> m_agent;
+    Request m_agentRequest;    // the request the agent is working on
+    Lang m_agentLang = Lang::Ru;
     QHash<QString, QString> m_assistTargets; // notice key -> part of Jarvis to open
     QString m_currentText;
     QString m_lastQuestion;

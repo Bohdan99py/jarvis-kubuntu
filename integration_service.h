@@ -20,6 +20,7 @@
 #include "jv_sys.h"
 #include "systemd_notify.h"
 #include "telemetry_service.h"
+#include "window_control.h"
 #include "workspace_service.h"
 
 class Notifier;
@@ -91,6 +92,9 @@ public:
     void reportVoice(bool listening, bool speaking, const QString &engine);
     void componentAlive(const QString &component);
     QString eventsJson() const;
+    // 0.22: the agent for the settings window (the Jarvis window only).
+    QString agentStatus();
+    QString agentDiagnostics();
 
     // KRunner.
     RunnerMatches match(const QString &query);
@@ -121,6 +125,7 @@ private:
     GuiCall m_callGui;
     TelemetryService m_telemetry;
     WorkspaceService m_workspaces;
+    WindowControl m_windows;
     QDBusServiceWatcher m_guiWatcher;
     systemd::Watchdog m_watchdog;
     integration::RateLimiter m_actionLimit{4, 2000};
@@ -174,6 +179,8 @@ private:
 //   method ReportVoice(b, b, s)     listening, speaking, voice engine (the Jarvis window only)
 //   method ComponentAlive(s)        a heartbeat of the desktop shell's parts: core, dock, … (observe)
 //   method Events() -> s            the last events: [{at, kind, text}] (observe)
+//   method AgentStatus() -> s       the agent: mode, model, the current task (the Jarvis window only)
+//   method AgentDiagnostics() -> s  what works on this computer: sound, Bluetooth, KWin, the model… (the Jarvis window only)
 //   signal StatusChanged(s)         Status() changed
 //   signal NoticePosted(s)          a notification was shown: {kind, title, at}
 //   signal EventPosted(s)           something happened: {at, kind, text} (requests, answers, workspaces…)
@@ -203,6 +210,8 @@ public slots:
     void ReportVoice(bool listening, bool speaking, const QString &engine);
     void ComponentAlive(const QString &component);
     QString Events();
+    QString AgentStatus();
+    QString AgentDiagnostics();
 
 signals:
     void StatusChanged(const QString &json);

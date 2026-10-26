@@ -32,7 +32,7 @@ ApplicationWindow {
     readonly property var host: win
     readonly property bool daemonUp: chat.daemonConnected
     readonly property bool english: settings.uiLanguage === "en"
-    readonly property var pages: ["desktop", "conversation", "intelligence", "privacy", "actions", "skills", "system"]
+    readonly property var pages: ["desktop", "conversation", "intelligence", "autonomy", "privacy", "actions", "skills", "system"]
 
     title: qsTr("Jarvis settings")
     color: Theme.bg
@@ -386,7 +386,8 @@ ApplicationWindow {
                     width: pageScroll.availableWidth
                     // One page at a time: diagnostics and Plasma reads run only on their page.
                     sourceComponent: ({ desktop: desktopPage, conversation: conversationPage, intelligence: intelligencePage,
-                                        privacy: privacyPage, actions: actionsPage, skills: skillsPage, system: systemPage })[win.page]
+                                        autonomy: autonomyPage, privacy: privacyPage, actions: actionsPage, skills: skillsPage,
+                                        system: systemPage })[win.page]
                     onLoaded: pageScroll.contentItem.contentY = 0
                 }
             }
@@ -396,6 +397,7 @@ ApplicationWindow {
     Component { id: desktopPage; DesktopPage { win: host; shell: desktopShell; plasma: plasmaBridge } }
     Component { id: conversationPage; ConversationPage { win: host; kde: kdeSettings } }
     Component { id: intelligencePage; IntelligencePage { win: host } }
+    Component { id: autonomyPage; AutonomyPage { win: host } }
     Component { id: privacyPage; PrivacyPage { win: host } }
     Component { id: actionsPage; ActionsPage { win: host } }
     Component { id: skillsPage; SkillsPage { win: host; skillPage: skillDetails } }
