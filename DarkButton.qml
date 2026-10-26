@@ -23,6 +23,9 @@ Button {
     background: Rectangle {
         implicitWidth: 96
         radius: height / 2
+        // Keyboard focus is visible (0.21).
+        border.width: control.visualFocus ? 2 : 0
+        border.color: Theme.accent
         color: {
             if (!control.enabled)
                 return Theme.border

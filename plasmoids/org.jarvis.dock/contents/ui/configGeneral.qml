@@ -113,7 +113,7 @@ KCM.SimpleKCM {
             onClicked: Plasmoid.containment.internalAction("configure").trigger()
         }
         QQC2.Label {
-            text: i18nd("jarvis-desktop", "Edge (bottom, top, left, right), thickness, alignment, auto-hide or always visible: Plasma's panel editor, or Jarvis → Control center → Desktop. Both apply at once.")
+            text: i18nd("jarvis-desktop", "Edge (bottom, top, left, right), thickness, alignment, auto-hide or always visible: Plasma's panel editor, or Jarvis → Settings → Desktop. Both apply at once.")
             wrapMode: Text.Wrap
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             opacity: 0.7

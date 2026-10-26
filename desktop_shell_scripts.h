@@ -37,6 +37,14 @@ QString verifyScript(const QJsonObject &created);
 QString finalizeScript(const QJsonArray &panelIds);
 QString removeScript(const QJsonObject &created);
 QString updateScript(const QJsonObject &created, const QJsonObject &plan);
+// 0.21: the Jarvis dock as Plasma has it — the panel that holds org.jarvis.dock
+// (location, height, alignment, hiding) and the dock's own settings (the keys of
+// dockConfigKeys()). `changes` {panel: {…}, config: {…}} is written first, to
+// that panel and dock only; then everything is read back. Prints {found, …}.
+QString dockScript(const QJsonObject &changes);
+// The dock settings (main.xml) the settings window shows, with their defaults
+// and ranges: {key: {default, min, max}} (min/max only for numbers).
+QJsonObject dockConfigKeys();
 
 // The first {…} JSON object Plasma printed ("" output, errors: empty object).
 QJsonObject parsePrinted(const QString &output);

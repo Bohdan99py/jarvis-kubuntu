@@ -12,7 +12,7 @@ Terminal=false
 Categories=Utility;Qt;KDE;
 StartupNotify=true
 StartupWMClass=jarvis
-Actions=Overlay;Quick;
+Actions=Overlay;Quick;Settings;
 # Screen awareness: KWin lets the installed Jarvis take a screenshot of the window
 # the user works in (only when the user turned it on; Jarvis shows when it does).
 X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
@@ -29,3 +29,9 @@ Name[ru]=Быстрые команды
 Exec=/usr/bin/jarvis --quick
 Icon=system-search
 X-KDE-Shortcuts=Meta+J
+
+[Desktop Action Settings]
+Name=Settings
+Name[ru]=Настройки
+Exec=/usr/bin/jarvis --open settings
+Icon=configure

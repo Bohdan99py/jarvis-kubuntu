@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "daemon_service.h"
 #include "dbus_names.h"
 
@@ -70,6 +71,11 @@ int main(int argc, char *argv[])
         qInfo().noquote() << "jarvisd: already running as" << jarvis::dbus::daemonService();
         return kAlreadyRunning;
     }
+
+    // 0.21: keys into the password store, config_version 2 (idempotent). Under jarvis.service
+    // ~/.config is read-only for the service: the lock fails at once and the window upgrades.
+    if (const QString migrated = jarvis::Config::migrate(); !migrated.isEmpty())
+        qInfo().noquote() << "settings:" << migrated;
 
     jarvis::DaemonService service;
     QObject::connect(&app, &QCoreApplication::aboutToQuit, &service, &jarvis::DaemonService::stopping);

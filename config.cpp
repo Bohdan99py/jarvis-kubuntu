@@ -1,5 +1,6 @@
 #include "config.h"
 #include "desktop_integration.h"
+#include "secret_store.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -8,6 +9,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QDateTime>
+#include <QLockFile>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QtGlobal>
@@ -34,6 +37,106 @@ QStringList cleanList(const QJsonArray &values, int max)
             out.append(item);
     }
     return out;
+}
+
+
+// The file as an object; `damaged`: it exists, is not empty and is not a JSON object.
+QJsonObject readObject(const QString &path, bool *damaged = nullptr)
+{
+    if (damaged)
+        *damaged = false;
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+        return {};
+    const QByteArray bytes = f.readAll();
+    if (bytes.trimmed().isEmpty())
+        return {};
+    QJsonParseError err{};
+    const QJsonDocument doc = QJsonDocument::fromJson(bytes, &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
+        if (damaged)
+            *damaged = true;
+        return {};
+    }
+    return doc.object();
+}
+
+bool writeObject(const QString &path, const QJsonObject &o, QString *error)
+{
+    const QDir dir = QFileInfo(path).absoluteDir();
+    if (!dir.mkpath(QStringLiteral("."))) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "Cannot create folder %1").arg(dir.absolutePath());
+        return false;
+    }
+    QSaveFile f(path);
+    if (!f.open(QIODevice::WriteOnly)) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "Cannot open %1: %2").arg(path, f.errorString());
+        return false;
+    }
+    f.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
+    if (f.write(bytes) != bytes.size() || !f.commit()) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString());
+        return false;
+    }
+    return true;
+}
+
+// A damaged file is kept for the user, never written over.
+QString moveAside(const QString &path)
+{
+    const QString target = path + u".damaged-"_s + QDateTime::currentDateTime().toString(u"yyyyMMdd-HHmmss"_s);
+    return QFile::rename(path, target) ? target : QString();
+}
+
+QJsonObject toJson(const ConfigData &data)
+{
+    QJsonObject o;
+    o.insert(u"api_key"_s, data.apiKey);
+    o.insert(u"model"_s, data.model);
+    o.insert(u"language"_s, data.language);
+    o.insert(u"reply_language"_s, data.replyLanguage);
+    o.insert(u"learn_dialog"_s, data.learnDialog);
+    o.insert(u"curiosity"_s, data.curiosity);
+    o.insert(u"track_activity"_s, data.trackActivity);
+    o.insert(u"track_titles"_s, data.trackTitles);
+    o.insert(u"share_activity"_s, data.shareActivity);
+    o.insert(u"proactive"_s, data.proactive);
+    o.insert(u"break_minutes"_s, data.breakMinutes);
+    o.insert(u"morning_summary"_s, data.morningSummary);
+    o.insert(u"deep_reflection"_s, data.deepReflection);
+    o.insert(u"notify_replies"_s, data.notifyReplies);
+    o.insert(u"snooze_minutes"_s, data.snoozeMinutes);
+    o.insert(u"morning_hour"_s, data.morningHour);
+    o.insert(u"afternoon_hour"_s, data.afternoonHour);
+    o.insert(u"evening_hour"_s, data.eveningHour);
+    o.insert(u"reminder_sound"_s, data.reminderSound);
+    o.insert(u"nag_minutes"_s, data.nagMinutes);
+    o.insert(u"awareness_level"_s, data.awarenessLevel);
+    o.insert(u"awareness_window"_s, data.awarenessWindow);
+    o.insert(u"awareness_screen"_s, data.awarenessScreen);
+    o.insert(u"awareness_cloud_images"_s, data.awarenessCloudImages);
+    o.insert(u"screen_interval_minutes"_s, data.screenIntervalMinutes);
+    o.insert(u"awareness_muted"_s, QJsonArray::fromStringList(data.awarenessMuted));
+    o.insert(u"awareness_excluded"_s, QJsonArray::fromStringList(data.awarenessExcluded));
+    o.insert(u"suggestion_cooldown_minutes"_s, data.suggestionCooldownMinutes);
+    o.insert(u"suggestions_per_day"_s, data.suggestionsPerDay);
+    o.insert(u"awareness_fullscreen"_s, data.awarenessFullscreen);
+    o.insert(u"web_search"_s, data.webSearch);
+    o.insert(u"background"_s, data.background);
+    o.insert(u"desktop_integration"_s, data.desktopIntegration);
+    o.insert(u"share_active_app"_s, data.shareActiveApp);
+    o.insert(u"hud_animation"_s, data.hudAnimation);
+    o.insert(u"desktop"_s, integration::normalizeDesktop(data.desktop));
+    return o;
+}
+
+QString keyLabel(const QString &account)
+{
+    return account == QLatin1String(SecretStore::kElevenLabs) ? u"Jarvis: ElevenLabs API key"_s : u"Jarvis: Anthropic API key"_s;
 }
 
 } // namespace
@@ -64,9 +167,8 @@ ConfigData Config::loadFileOnly()
     ConfigData d;
     d.model = defaultModel();
 
-    QFile f(filePath());
-    if (f.open(QIODevice::ReadOnly)) {
-        const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+    if (QFileInfo::exists(filePath())) {
+        const QJsonObject o = readObject(filePath());
         d.apiKey = o.value(u"api_key"_s).toString().trimmed();
         const QString m = o.value(u"model"_s).toString().trimmed();
         if (!m.isEmpty())
@@ -116,74 +218,299 @@ ConfigData Config::loadFileOnly()
 ConfigData Config::load()
 {
     ConfigData d = loadFileOnly();
-    const QString env = qEnvironmentVariable("ANTHROPIC_API_KEY").trimmed();
-    if (!env.isEmpty())
-        d.apiKey = env;
+    d.apiKey = anthropicKey();
     return d;
+}
+
+QString Config::anthropicKey(KeyStore *where)
+{
+    auto at = [where](KeyStore s) {
+        if (where)
+            *where = s;
+    };
+    const QString env = qEnvironmentVariable("ANTHROPIC_API_KEY").trimmed();
+    if (!env.isEmpty()) {
+        at(KeyStore::Environment);
+        return env;
+    }
+    SecretStore::State state = SecretStore::State::Unavailable;
+    const QString stored = SecretStore::read(QLatin1String(SecretStore::kAnthropic), &state);
+    if (state == SecretStore::State::Found) {
+        at(KeyStore::Keyring);
+        return stored;
+    }
+    const QString file = readObject(filePath()).value(u"api_key"_s).toString().trimmed();
+    if (!file.isEmpty()) {
+        at(KeyStore::File);
+        return file;
+    }
+    at(state == SecretStore::State::Locked ? KeyStore::Locked : KeyStore::None);
+    return {};
+}
+
+QString Config::setAnthropicKey(const QString &key, KeyStore *where)
+{
+    const QString value = key.trimmed();
+    QString error;
+    ConfigData d = loadFileOnly();
+    if (SecretStore::available()) {
+        if (value.isEmpty() ? !SecretStore::remove(QLatin1String(SecretStore::kAnthropic), &error)
+                            : !SecretStore::write(QLatin1String(SecretStore::kAnthropic), keyLabel(QLatin1String(SecretStore::kAnthropic)), value, &error))
+            return error;
+        if (where)
+            *where = value.isEmpty() ? KeyStore::None : KeyStore::Keyring;
+        // The key is safe in the store: the file no longer needs it.
+        if (!d.apiKey.isEmpty()) {
+            d.apiKey.clear();
+            if (!save(d, &error))
+                return error;
+        }
+        return {};
+    }
+    d.apiKey = value;
+    if (!save(d, &error))
+        return error;
+    if (where)
+        *where = value.isEmpty() ? KeyStore::None : KeyStore::File;
+    return {};
 }
 
 bool Config::save(const ConfigData &data, QString *error)
 {
-    auto fail = [error](const QString &msg) {
-        if (error)
-            *error = msg;
-        return false;
-    };
-
     const QString path = filePath();
     const QDir dir = QFileInfo(path).absoluteDir();
-    if (!dir.mkpath(QStringLiteral(".")))
-        return fail(QCoreApplication::translate("jarvis", "Cannot create folder %1").arg(dir.absolutePath()));
+    if (!dir.mkpath(QStringLiteral("."))) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "Cannot create folder %1").arg(dir.absolutePath());
+        return false;
+    }
     QFile::setPermissions(dir.absolutePath(),
                           QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
 
+    bool damaged = false;
+    QJsonObject o = readObject(path, &damaged);
+    if (damaged && moveAside(path).isEmpty()) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "%1 is damaged and could not be moved aside, so it was not overwritten.").arg(path);
+        return false;
+    }
+    // Known fields are replaced; fields of another version stay as they were.
+    const QJsonObject known = toJson(data);
+    for (auto it = known.begin(); it != known.end(); ++it)
+        o.insert(it.key(), it.value());
+    o.insert(u"config_version"_s, std::max(kVersion, o.value(u"config_version"_s).toInt(0)));
     // QSaveFile writes to a temp file and renames: no half-written config.
-    QSaveFile f(path);
-    if (!f.open(QIODevice::WriteOnly))
-        return fail(QCoreApplication::translate("jarvis", "Cannot open %1: %2").arg(path, f.errorString()));
-    f.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    return writeObject(path, o, error);
+}
 
-    QJsonObject o;
-    o.insert(u"api_key"_s, data.apiKey);
-    o.insert(u"model"_s, data.model);
-    o.insert(u"language"_s, data.language);
-    o.insert(u"reply_language"_s, data.replyLanguage);
-    o.insert(u"learn_dialog"_s, data.learnDialog);
-    o.insert(u"curiosity"_s, data.curiosity);
-    o.insert(u"track_activity"_s, data.trackActivity);
-    o.insert(u"track_titles"_s, data.trackTitles);
-    o.insert(u"share_activity"_s, data.shareActivity);
-    o.insert(u"proactive"_s, data.proactive);
-    o.insert(u"break_minutes"_s, data.breakMinutes);
-    o.insert(u"morning_summary"_s, data.morningSummary);
-    o.insert(u"deep_reflection"_s, data.deepReflection);
-    o.insert(u"notify_replies"_s, data.notifyReplies);
-    o.insert(u"snooze_minutes"_s, data.snoozeMinutes);
-    o.insert(u"morning_hour"_s, data.morningHour);
-    o.insert(u"afternoon_hour"_s, data.afternoonHour);
-    o.insert(u"evening_hour"_s, data.eveningHour);
-    o.insert(u"reminder_sound"_s, data.reminderSound);
-    o.insert(u"nag_minutes"_s, data.nagMinutes);
-    o.insert(u"awareness_level"_s, data.awarenessLevel);
-    o.insert(u"awareness_window"_s, data.awarenessWindow);
-    o.insert(u"awareness_screen"_s, data.awarenessScreen);
-    o.insert(u"awareness_cloud_images"_s, data.awarenessCloudImages);
-    o.insert(u"screen_interval_minutes"_s, data.screenIntervalMinutes);
-    o.insert(u"awareness_muted"_s, QJsonArray::fromStringList(data.awarenessMuted));
-    o.insert(u"awareness_excluded"_s, QJsonArray::fromStringList(data.awarenessExcluded));
-    o.insert(u"suggestion_cooldown_minutes"_s, data.suggestionCooldownMinutes);
-    o.insert(u"suggestions_per_day"_s, data.suggestionsPerDay);
-    o.insert(u"awareness_fullscreen"_s, data.awarenessFullscreen);
-    o.insert(u"web_search"_s, data.webSearch);
-    o.insert(u"background"_s, data.background);
-    o.insert(u"desktop_integration"_s, data.desktopIntegration);
-    o.insert(u"share_active_app"_s, data.shareActiveApp);
-    o.insert(u"hud_animation"_s, data.hudAnimation);
-    o.insert(u"desktop"_s, integration::normalizeDesktop(data.desktop));
-    const QByteArray bytes = QJsonDocument(o).toJson(QJsonDocument::Indented);
-    if (f.write(bytes) != bytes.size() || !f.commit())
-        return fail(QCoreApplication::translate("jarvis", "Cannot save %1: %2").arg(path, f.errorString()));
-    return true;
+QString Config::backupPath()
+{
+    return filePath() + u".backup-v1"_s;
+}
+
+QString Config::speechPath()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + u"/jarvis/voice/speech.json"_s;
+}
+
+QString Config::migrate()
+{
+    const QString path = filePath();
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    // The window and the service may start together: one migrates, the other waits.
+    QLockFile lock(path + u".lock"_s);
+    lock.setStaleLockTime(30000);
+    if (!lock.tryLock(10000))
+        return {};
+    QStringList done;
+    bool damaged = false;
+    QJsonObject o = readObject(path, &damaged);
+    if (damaged) {
+        const QString aside = moveAside(path);
+        done << (aside.isEmpty() ? u"config.json is damaged and could not be moved aside"_s
+                                 : u"damaged config.json moved to "_s + aside);
+        o = {};
+    }
+    const bool exists = QFileInfo::exists(path);
+    const int version = o.value(u"config_version"_s).toInt(exists ? 1 : 0);
+    const bool keyring = SecretStore::available();
+    QString error;
+
+    // A copy of the 0.20 file before anything changes, without its secrets
+    // (they move to the password store; prepareDowngrade writes them back).
+    if (exists && version < kVersion && !QFileInfo::exists(backupPath())) {
+        QJsonObject copy = o;
+        if (keyring && !copy.value(u"api_key"_s).toString().isEmpty())
+            copy[u"api_key"_s] = u""_s;
+        if (writeObject(backupPath(), copy, &error))
+            done << u"backup "_s + backupPath();
+    }
+
+    // Keys into the password store: only removed from a file after they read back.
+    if (keyring) {
+        const QString key = o.value(u"api_key"_s).toString().trimmed();
+        if (!key.isEmpty()) {
+            if (SecretStore::write(QLatin1String(SecretStore::kAnthropic), keyLabel(QLatin1String(SecretStore::kAnthropic)), key, &error)) {
+                o[u"api_key"_s] = u""_s;
+                done << u"Claude key moved to the password store"_s;
+            } else {
+                done << u"Claude key stays in config.json: "_s + error;
+            }
+        }
+        QJsonObject speech = readObject(speechPath());
+        QJsonObject eleven = speech.value(u"elevenlabs"_s).toObject();
+        const QString voiceKey = eleven.value(u"api_key"_s).toString().trimmed();
+        if (!voiceKey.isEmpty()) {
+            if (SecretStore::write(QLatin1String(SecretStore::kElevenLabs), keyLabel(QLatin1String(SecretStore::kElevenLabs)), voiceKey, &error)) {
+                eleven.remove(u"api_key"_s);
+                speech[u"elevenlabs"_s] = eleven;
+                if (writeObject(speechPath(), speech, &error))
+                    done << u"ElevenLabs key moved to the password store"_s;
+            } else {
+                done << u"ElevenLabs key stays in speech.json: "_s + error;
+            }
+        }
+    }
+
+    if (exists && (version < kVersion || !done.isEmpty())) {
+        o[u"config_version"_s] = std::max(kVersion, version);
+        if (!writeObject(path, o, &error))
+            done << u"could not write config.json: "_s + error;
+    }
+    return done.join(u"; "_s);
+}
+
+QString Config::prepareDowngrade(QString *error)
+{
+    QStringList done;
+    QString why;
+    QJsonObject o = readObject(filePath());
+    SecretStore::State state, voiceState;
+    const QString key = SecretStore::read(QLatin1String(SecretStore::kAnthropic), &state);
+    const QString voiceKey = SecretStore::read(QLatin1String(SecretStore::kElevenLabs), &voiceState);
+    if (state == SecretStore::State::Locked || voiceState == SecretStore::State::Locked) {
+        if (error)
+            *error = QCoreApplication::translate("jarvis", "The password store is locked. Unlock it (open Jarvis's settings) and try again.");
+        return {};
+    }
+    if (!key.isEmpty() && o.value(u"api_key"_s).toString().isEmpty()) {
+        o[u"api_key"_s] = key;
+        done << u"Claude key written to config.json"_s;
+    }
+    o[u"config_version"_s] = 1;
+    if (!writeObject(filePath(), o, &why)) {
+        if (error)
+            *error = why;
+        return {};
+    }
+    if (!voiceKey.isEmpty()) {
+        QJsonObject speech = readObject(speechPath());
+        QJsonObject eleven = speech.value(u"elevenlabs"_s).toObject();
+        if (eleven.value(u"api_key"_s).toString().isEmpty()) {
+            eleven[u"api_key"_s] = voiceKey;
+            speech[u"elevenlabs"_s] = eleven;
+            if (!writeObject(speechPath(), speech, &why)) {
+                if (error)
+                    *error = why;
+                return {};
+            }
+            done << u"ElevenLabs key written to speech.json"_s;
+        }
+    }
+    done << u"config.json marked as version 1"_s;
+    return done.join(u"; "_s);
+}
+
+ConfigData Config::defaults()
+{
+    ConfigData d;
+    d.model = defaultModel();
+    d.desktop = integration::normalizeDesktop({});
+    return d;
+}
+
+QStringList Config::sections()
+{
+    return {u"desktop"_s, u"conversation"_s, u"intelligence"_s, u"privacy"_s, u"actions"_s, u"system"_s, u"all"_s};
+}
+
+ConfigData Config::resetSection(const ConfigData &current, const QString &section)
+{
+    ConfigData d = current;
+    const ConfigData def = defaults();
+    const bool all = section == u"all";
+    // A permission or an opt-in may only go off.
+    const auto lower = [](bool now, bool byDefault) { return now && byDefault; };
+    if (all || section == u"desktop") {
+        QJsonObject desktop = def.desktop;
+        desktop[u"mode"_s] = integration::normalizeDesktop(current.desktop).value(u"mode"_s); // the real state of Plasma, not a preference
+        d.desktop = desktop;
+        d.hudAnimation = def.hudAnimation;
+    }
+    if (all || section == u"conversation") {
+        d.language = def.language;
+        d.replyLanguage = def.replyLanguage;
+        d.notifyReplies = def.notifyReplies;
+        d.snoozeMinutes = def.snoozeMinutes;
+        d.morningHour = def.morningHour;
+        d.afternoonHour = def.afternoonHour;
+        d.eveningHour = def.eveningHour;
+        d.reminderSound = def.reminderSound;
+        d.nagMinutes = def.nagMinutes;
+    }
+    if (all || section == u"intelligence") {
+        d.model = def.model;
+        d.webSearch = lower(current.webSearch, def.webSearch);
+    }
+    if (all || section == u"privacy") {
+        d.learnDialog = lower(current.learnDialog, def.learnDialog);
+        d.curiosity = lower(current.curiosity, def.curiosity);
+        d.deepReflection = lower(current.deepReflection, def.deepReflection);
+        d.trackActivity = lower(current.trackActivity, def.trackActivity);
+        d.trackTitles = lower(current.trackTitles, def.trackTitles);
+        d.shareActivity = lower(current.shareActivity, def.shareActivity);
+        d.awarenessWindow = lower(current.awarenessWindow, def.awarenessWindow);
+        d.awarenessScreen = lower(current.awarenessScreen, def.awarenessScreen);
+        d.awarenessCloudImages = lower(current.awarenessCloudImages, def.awarenessCloudImages);
+        d.screenIntervalMinutes = current.screenIntervalMinutes == 0 ? 0 : def.screenIntervalMinutes;
+        // awarenessExcluded stays: removing an exclusion would widen observation.
+    }
+    if (all || section == u"actions") {
+        const QStringList levels = awarenessLevels();
+        d.awarenessLevel = levels.at(std::min(levels.indexOf(current.awarenessLevel), levels.indexOf(def.awarenessLevel)));
+        d.suggestionCooldownMinutes = std::max(current.suggestionCooldownMinutes, def.suggestionCooldownMinutes);
+        d.suggestionsPerDay = std::min(current.suggestionsPerDay, def.suggestionsPerDay);
+        d.awarenessFullscreen = lower(current.awarenessFullscreen, def.awarenessFullscreen);
+        d.proactive = lower(current.proactive, def.proactive);
+        d.breakMinutes = current.breakMinutes == 0 ? 0 : def.breakMinutes;
+        d.morningSummary = lower(current.morningSummary, def.morningSummary);
+        // awarenessMuted stays: unmuting would bring back offers the user turned off.
+    }
+    if (all || section == u"system") {
+        d.background = def.background;
+        d.desktopIntegration = lower(current.desktopIntegration, def.desktopIntegration);
+        d.shareActiveApp = lower(current.shareActiveApp, def.shareActiveApp);
+    }
+    return d;
+}
+
+QStringList Config::changedKeys(const ConfigData &a, const ConfigData &b)
+{
+    QStringList out;
+    const QJsonObject x = toJson(a), y = toJson(b);
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        if (it.key() == u"api_key")
+            continue;
+        if (it.key() == u"desktop") {
+            const QJsonObject dx = it.value().toObject(), dy = y.value(it.key()).toObject();
+            for (auto d = dx.begin(); d != dx.end(); ++d)
+                if (d.value() != dy.value(d.key()))
+                    out << u"desktop."_s + d.key();
+        } else if (it.value() != y.value(it.key())) {
+            out << it.key();
+        }
+    }
+    return out;
 }
 
 QString Config::keyHint(const QString &key)

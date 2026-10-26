@@ -18,11 +18,13 @@
 #include <QStandardPaths>
 #include <QTimer>
 
+#include <algorithm>
 #include <cstdio>
 #include <memory>
 
 #include "config.h"
 #include "dbus_names.h"
+#include "desktop_integration.h"
 #include "desktop_shell_scripts.h"
 #include "language.h"
 #include "workspace.h"
@@ -618,4 +620,171 @@ int DesktopShell::runFromTerminal(const QString &what)
         std::fprintf(stdout, "  • %s\n", line.toUtf8().constData());
     run([&] { shell.apply(); });
     return ok ? 0 : 1;
+}
+
+// ---- The dock as Plasma has it (0.21) ---------------------------------------
+
+namespace {
+
+// Plasma keeps the widgets' settings in appletsrc and the panels' size and
+// hiding in plasmashellrc; either changing may mean the dock changed.
+QStringList layoutFiles()
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    return {dir + u"/plasma-org.kde.plasma.desktop-appletsrc"_s, dir + u"/plasmashellrc"_s};
+}
+
+QDateTime layoutStamp()
+{
+    QDateTime newest;
+    for (const QString &f : layoutFiles())
+        newest = std::max(newest, QFileInfo(f).lastModified());
+    return newest;
+}
+
+const QStringList kPanelKeys{u"dockPosition"_s, u"dockSize"_s, u"dockAlignment"_s, u"dockAutohide"_s};
+
+} // namespace
+
+void DesktopShell::setWatchDock(bool on)
+{
+    if (on == m_watchDock)
+        return;
+    m_watchDock = on;
+    if (on) {
+        if (!m_layoutChanged.isSingleShot()) {
+            m_layoutChanged.setSingleShot(true);
+            m_layoutChanged.setInterval(700);
+            connect(&m_layoutChanged, &QTimer::timeout, this, [this] {
+                // Plasma saves a file by renaming a new one over it: watch again.
+                for (const QString &f : layoutFiles())
+                    if (QFileInfo::exists(f) && !m_layoutWatcher.files().contains(f))
+                        m_layoutWatcher.addPath(f);
+                const QDateTime stamp = layoutStamp();
+                if (stamp != m_layoutStamp) {
+                    m_layoutStamp = stamp;
+                    readDock();
+                }
+            });
+            connect(&m_layoutWatcher, &QFileSystemWatcher::fileChanged, &m_layoutChanged, qOverload<>(&QTimer::start));
+            connect(&m_layoutWatcher, &QFileSystemWatcher::directoryChanged, &m_layoutChanged, qOverload<>(&QTimer::start));
+        }
+        m_layoutWatcher.addPath(QFileInfo(layoutFiles().first()).absolutePath());
+        for (const QString &f : layoutFiles())
+            if (QFileInfo::exists(f))
+                m_layoutWatcher.addPath(f);
+        m_layoutStamp = layoutStamp();
+        readDock();
+    } else {
+        const QStringList watched = m_layoutWatcher.files() + m_layoutWatcher.directories();
+        if (!watched.isEmpty())
+            m_layoutWatcher.removePaths(watched);
+    }
+    emit dockChanged();
+}
+
+void DesktopShell::readDock()
+{
+    runDock({});
+}
+
+void DesktopShell::runDock(const QJsonObject &changes)
+{
+    m_dock[u"reading"_s] = true;
+    emit dockChanged();
+    script(jarvis::shell::dockScript(changes), [this](bool ok, const QJsonObject &printed, const QString &error) {
+        const QJsonObject keys = jarvis::shell::dockConfigKeys();
+        QVariantMap next{{u"reading"_s, false}, {u"found"_s, ok && printed.value(u"found"_s).toBool()}};
+        if (!ok) {
+            next[u"error"_s] = russian() ? u"Plasma не отвечает: %1"_s.arg(error) : u"Plasma does not answer: %1"_s.arg(error);
+        } else if (printed.value(u"found"_s).toBool()) {
+            next[u"dockPosition"_s] = printed.value(u"location"_s).toString();
+            next[u"dockSize"_s] = printed.value(u"height"_s).toInt();
+            next[u"dockAlignment"_s] = printed.value(u"alignment"_s).toString();
+            next[u"dockAutohide"_s] = printed.value(u"hiding"_s).toString() != u"none";
+            const QJsonObject config = printed.value(u"config"_s).toObject();
+            for (auto it = keys.begin(); it != keys.end(); ++it) {
+                const QJsonValue def = it.value().toObject().value(u"default"_s);
+                const QString raw = config.value(it.key()).toString();
+                if (def.isBool())
+                    next[it.key()] = raw.isEmpty() ? def.toBool() : raw == u"true";
+                else
+                    next[it.key()] = raw.isEmpty() ? def.toInt() : std::clamp(raw.toInt(), it.value().toObject().value(u"min"_s).toInt(),
+                                                                               it.value().toObject().value(u"max"_s).toInt());
+            }
+            // Plasma is where the panel really is: config.json follows it.
+            jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+            bool differs = false;
+            for (const QString &k : kPanelKeys) {
+                const QJsonValue v = QJsonValue::fromVariant(next.value(k));
+                if (d.desktop.value(k) != v && jarvis::integration::setDesktopValue(d.desktop, k, v).isEmpty())
+                    differs = true;
+            }
+            if (differs)
+                jarvis::Config::save(d, nullptr);
+        }
+        m_dock = next;
+        emit dockChanged();
+    });
+}
+
+QString DesktopShell::setDock(const QString &key, const QVariant &value)
+{
+    const bool ru = russian();
+    if (kPanelKeys.contains(key)) {
+        jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+        if (!jarvis::integration::setDesktopValue(d.desktop, key, QJsonValue::fromVariant(value)).isEmpty())
+            return ru ? u"Такое значение недопустимо."_s : u"This value is not allowed."_s;
+        QString error;
+        if (!jarvis::Config::save(d, &error))
+            return error;
+        if (!m_dock.value(u"found"_s).toBool())
+            return {}; // saved: JARVIS DESKTOP uses it when it adds the dock
+        const QJsonObject n = d.desktop;
+        QJsonObject panel;
+        if (key == u"dockPosition")
+            panel[u"location"_s] = n.value(key);
+        else if (key == u"dockSize")
+            panel[u"height"_s] = n.value(key);
+        else if (key == u"dockAlignment")
+            panel[u"alignment"_s] = n.value(key);
+        else
+            panel[u"hiding"_s] = n.value(key).toBool() ? u"autohide"_s : u"none"_s;
+        // Shown at once (the slider or spin box does not jump back); Plasma's answer corrects it.
+        m_dock[key] = n.value(key).toVariant();
+        emit dockChanged();
+        runDock({{u"panel"_s, panel}});
+        return {};
+    }
+    const QJsonObject spec = jarvis::shell::dockConfigKeys().value(key).toObject();
+    if (spec.isEmpty())
+        return ru ? u"Неизвестная настройка."_s : u"Unknown option."_s;
+    if (!m_dock.value(u"found"_s).toBool())
+        return ru ? u"Дока Jarvis нет на панели: эта настройка появится вместе с ним."_s
+                  : u"The Jarvis dock is not on a panel: this setting comes with it."_s;
+    QJsonValue v;
+    if (spec.value(u"default"_s).isBool()) {
+        v = value.toBool();
+    } else {
+        bool ok = false;
+        const int n = value.toInt(&ok);
+        if (!ok || n < spec.value(u"min"_s).toInt() || n > spec.value(u"max"_s).toInt())
+            return (ru ? u"Допустимо от %1 до %2."_s : u"Allowed: %1 to %2."_s).arg(spec.value(u"min"_s).toInt()).arg(spec.value(u"max"_s).toInt());
+        v = n;
+    }
+    m_dock[key] = v.toVariant();
+    emit dockChanged();
+    runDock({{u"config"_s, QJsonObject{{key, v}}}});
+    return {};
+}
+
+void DesktopShell::resetDockLook()
+{
+    if (!m_dock.value(u"found"_s).toBool())
+        return;
+    QJsonObject config;
+    const QJsonObject keys = jarvis::shell::dockConfigKeys();
+    for (auto it = keys.begin(); it != keys.end(); ++it)
+        config[it.key()] = it.value().toObject().value(u"default"_s);
+    runDock({{u"config"_s, config}});
 }

@@ -1,7 +1,10 @@
 #pragma once
 
 #include <QDBusMessage>
+#include <QDateTime>
+#include <QFileSystemWatcher>
 #include <QJsonObject>
+#include <QTimer>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -31,6 +34,11 @@
 //            and starts it again: the desktop exactly as it was. Without a
 //            backup it removes the Jarvis parts only.
 //  update()  applies new dock and core settings to Jarvis's own panel and core.
+//  dock      (0.21) the dock as Plasma has it: its panel and its own settings,
+//            read from Plasma and written to Plasma (setDock), so the settings
+//            window and the dock's context menu show one value. Changes made in
+//            Plasma (edit mode, the dock's settings) are noticed (watchDock) and
+//            the panel's values go back into config.json.
 // The same from a terminal: `jarvis --desktop-mode jarvis|standard`,
 // `jarvis --restore-desktop`. The state lives in ~/.local/share/jarvis/desktop-state.json.
 class DesktopShell : public QObject
@@ -50,6 +58,12 @@ class DesktopShell : public QObject
     Q_PROPERTY(QString backupPath READ backupPath NOTIFY changed)
     // Workspaces for the Control center: [{id, label, desktop, apps, paths, widgets, focus}].
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY changed)
+    // {found, reading, error, dockPosition, dockSize, dockAlignment, dockAutohide,
+    //  iconSize, magnification, magnifyAmount, panelStyle, showProfiles,
+    //  showDesktops, showJarvis, groupWindows}
+    Q_PROPERTY(QVariantMap dock READ dock NOTIFY dockChanged)
+    // While true, Plasma's layout file is watched and the dock read again on change.
+    Q_PROPERTY(bool watchDock READ watchDock WRITE setWatchDock NOTIFY dockChanged)
 
 public:
     explicit DesktopShell(QObject *parent = nullptr);
@@ -81,6 +95,17 @@ public:
     // Plasma's own edit mode: move and resize widgets on the desktop.
     Q_INVOKABLE void setEditMode(bool on);
 
+    QVariantMap dock() const { return m_dock; }
+    bool watchDock() const { return m_watchDock; }
+    void setWatchDock(bool on);
+    Q_INVOKABLE void readDock();
+    // A panel setting (dockPosition, dockSize, dockAlignment, dockAutohide: saved
+    // in config.json and written to the dock's panel) or one of the dock's own
+    // settings (shell::dockConfigKeys). "" or why not; Plasma's answer arrives in `dock`.
+    Q_INVOKABLE QString setDock(const QString &key, const QVariant &value);
+    // The dock's own look back to its defaults (pinned applications stay).
+    Q_INVOKABLE void resetDockLook();
+
     static QString statePath();
     static QJsonObject loadState();
     static bool saveState(const QJsonObject &state);
@@ -89,6 +114,7 @@ public:
 
 signals:
     void changed();
+    void dockChanged();
     // apply/restore/check finished.
     void finished(bool ok, const QString &message);
 
@@ -106,6 +132,7 @@ private:
     void startPlasma(bool viaSystemd);
     void waitForPlasma(bool wanted, int attempts, const std::function<void(bool)> &done);
     bool russian() const;
+    void runDock(const QJsonObject &changes);
 
     QString m_step;
     QString m_status;
@@ -115,4 +142,9 @@ private:
     QStringList m_planText;
     QJsonObject m_inspection;
     QJsonObject m_plan;
+    QVariantMap m_dock;
+    bool m_watchDock = false;
+    QFileSystemWatcher m_layoutWatcher;
+    QTimer m_layoutChanged;
+    QDateTime m_layoutStamp;
 };

@@ -1,14 +1,22 @@
 #pragma once
 
+#include <QFileSystemWatcher>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QObject>
+#include <QPointer>
 #include <QString>
+#include <QTimer>
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
 #include "config.h"
 
-// What the settings dialog sees: whether a key is stored, a masked hint of it,
-// and the model name. Reads and writes ~/.config/jarvis/config.json.
+// What the settings window sees: whether a key is stored (and where), a masked
+// hint of it, the model and every config.json setting. Reads and writes
+// ~/.config/jarvis/config.json and follows changes made to it by others (the
+// service, the terminal, the dock), so every view shows the saved value.
+// Every setter returns "" on success, otherwise a message for the user.
 class AppSettings : public QObject
 {
     Q_OBJECT
@@ -17,6 +25,14 @@ class AppSettings : public QObject
     Q_PROPERTY(QString keyHint READ keyHint NOTIFY changed FINAL)
     Q_PROPERTY(QString model READ model NOTIFY changed FINAL)
     Q_PROPERTY(QString configPath READ configPath CONSTANT FINAL)
+    // 0.21: none, environment, keyring, locked, file.
+    Q_PROPERTY(QString keyStore READ keyStore NOTIFY changed FINAL)
+    Q_PROPERTY(bool keyringAvailable READ keyringAvailable NOTIFY changed FINAL)
+    // The connection check: idle, checking, ok, error; and what it found, for people.
+    Q_PROPERTY(QString connectionState READ connectionState NOTIFY connectionChanged FINAL)
+    Q_PROPERTY(QString connectionMessage READ connectionMessage NOTIFY connectionChanged FINAL)
+    Q_PROPERTY(QString backupPath READ backupPath CONSTANT FINAL)
+    Q_PROPERTY(QString qtVersion READ qtVersion CONSTANT FINAL)
     // "auto", "ru" or "en".
     Q_PROPERTY(QString language READ language NOTIFY changed FINAL)
     // The language actually in effect for the interface: "ru" or "en".
@@ -73,6 +89,12 @@ public:
     QString keyHint() const { return m_keyHint; }
     QString model() const { return m_model; }
     QString configPath() const;
+    QString keyStore() const { return m_keyStore; }
+    bool keyringAvailable() const { return m_keyringAvailable; }
+    QString connectionState() const { return m_connectionState; }
+    QString connectionMessage() const { return m_connectionMessage; }
+    QString backupPath() const;
+    QString qtVersion() const { return QString::fromLatin1(qVersion()); }
     QString language() const { return m_data.language; }
     QString uiLanguage() const;
     QString replyLanguage() const { return m_data.replyLanguage; }
@@ -116,9 +138,23 @@ public:
     void setOverlay(bool on);
 
     // An empty `apiKey` keeps the stored key. Both return "" on success,
-    // otherwise a message for the user.
+    // otherwise a message for the user. Nothing is saved when either is invalid.
     Q_INVOKABLE QString save(const QString &apiKey, const QString &model);
     Q_INVOKABLE QString removeKey();
+    // The password store's own prompt for a locked key.
+    Q_INVOKABLE QString unlockKeyring();
+    // Asks Anthropic about the model with the typed key (or the stored one, if
+    // empty): GET /v1/models/<model>, which bills nothing. Only on request.
+    Q_INVOKABLE void testConnection(const QString &apiKey, const QString &model);
+    // Reset (0.21). section: desktop, conversation, intelligence, privacy,
+    // actions, system or all. The preview lists what would change, for people;
+    // keys, memory and history are never part of a reset.
+    Q_INVOKABLE QStringList resetPreview(const QString &section) const;
+    Q_INVOKABLE QString resetSection(const QString &section);
+    // The settings catalog (settings_catalog.h) in the interface language.
+    Q_INVOKABLE QVariantList searchSettings(const QString &query) const;
+    Q_INVOKABLE QVariantMap settingEntry(const QString &id) const;
+    Q_INVOKABLE QString pageTitle(const QString &page) const;
     // Applies the interface language immediately (retranslates QML).
     Q_INVOKABLE QString setLanguage(const QString &language);
     Q_INVOKABLE QString setReplyLanguage(const QString &language);
@@ -145,14 +181,26 @@ public:
 signals:
     void changed();
     void saved();
+    void connectionChanged();
     // The interface language was switched (after QML retranslation).
     void languageApplied();
     void hudChanged();
 
 private:
     void refresh(bool notify);
+    void refreshKey();
+    void watch();
+    void setConnection(const QString &state, const QString &message);
     QString store(const jarvis::ConfigData &data);
 
+    QString m_keyStore;
+    bool m_keyringAvailable = false;
+    QString m_connectionState = QStringLiteral("idle");
+    QString m_connectionMessage;
+    QNetworkAccessManager *m_network = nullptr;
+    QPointer<QNetworkReply> m_check;
+    QFileSystemWatcher m_watcher;
+    QTimer m_reread;
     bool m_hasKey = false;
     QString m_keyHint;
     QString m_model;

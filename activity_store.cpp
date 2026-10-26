@@ -599,7 +599,7 @@ QString ActivityStore::currentText(Lang lang, qint64 nowMs, bool tracking) const
 {
     const bool ru = lang == Lang::Ru;
     if (!tracking)
-        return ru ? u"Отслеживание активности выключено. Включите его в «Центр управления → Память», "
+        return ru ? u"Отслеживание активности выключено. Включите его в «Настройки → Память и приватность», "
                     u"и я буду видеть, в каком приложении вы работаете."_s
                   : u"Activity tracking is off. Turn it on in Control Center → Memory and I will see "
                     u"which application you are working in."_s;

@@ -3,7 +3,7 @@
 
 1. Every message in i18n/jarvis_ru.ts is translated and keeps the %N placeholders.
 2. If lupdate is available, the sources contain no strings missing from the file
-   (run: lupdate -locations none -no-obsolete *.cpp *.h *.qml hud/*.qml -ts i18n/jarvis_ru.ts).
+   (run: lupdate -locations none -no-obsolete *.cpp *.h *.qml hud/*.qml settings/*.qml -ts i18n/jarvis_ru.ts).
 """
 import re
 import shutil
@@ -39,7 +39,7 @@ def main():
         with tempfile.TemporaryDirectory() as tmp:
             copy = Path(tmp) / 'jarvis_ru.ts'
             shutil.copy(ts, copy)
-            sources = sorted(str(p) for pattern in ('*.cpp', '*.h', '*.qml', 'hud/*.qml') for p in ROOT.glob(pattern))
+            sources = sorted(str(p) for pattern in ('*.cpp', '*.h', '*.qml', 'hud/*.qml', 'settings/*.qml') for p in ROOT.glob(pattern))
             result = subprocess.run([lupdate, '-silent', '-locations', 'none', '-no-obsolete', *sources, '-ts', str(copy)],
                                     stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
             if result.returncode != 0:

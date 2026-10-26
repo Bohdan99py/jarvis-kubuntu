@@ -13,7 +13,7 @@ ApplicationWindow {
     height: 880
     minimumWidth: 1000
     minimumHeight: 700
-    visible: !startQuick && !startTray && !startOverlay && startOpen !== "study"
+    visible: !startQuick && !startTray && !startOverlay && startOpen !== "study" && !startOpen.startsWith("settings")
     title: qsTr("J.A.R.V.I.S.")
     color: hudOn ? JarvisTheme.void_ : Theme.bg
 
@@ -92,7 +92,7 @@ ApplicationWindow {
         o.wanted = Qt.binding(() => appSettings.overlay)
         o.openRequested.connect(root.showMain)
         o.closeRequested.connect(() => appSettings.overlay = false)
-        o.voiceSetupRequested.connect(() => { root.showMain(); controlCenter.showVoice() })
+        o.voiceSetupRequested.connect(() => controlCenter.showVoice())
         root.overlay = o
     }
     function showOverlay(token, prompt) { if (root.overlay) root.overlay.showOverlay(token, prompt || "") }
@@ -192,9 +192,15 @@ ApplicationWindow {
 
     VoiceController { id: voiceEngine; language: appSettings.uiLanguage }
     StudyController { id: study; language: appSettings.uiLanguage; onMemoryLearned: chatModel.refreshMemory() }
-    StudyWindow { id: studyWindow; objectName: "studyWindow"; study: study; onApiSettingsRequested: { root.show(); root.raise(); settingsDialog.open() } }
-    QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; settings: appSettings; onVoiceSetupRequested: { quickBar.hide(); root.show(); controlCenter.showVoice() } }
-    ControlCenter { id: controlCenter; objectName: "controlCenter"; desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings; screen: screenAware; shortcut: globalShortcut; onApiSettingsRequested: settingsDialog.open() }
+    StudyWindow { id: studyWindow; objectName: "studyWindow"; study: study; onApiSettingsRequested: controlCenter.reveal("ai.key") }
+    QuickBar { id: quickBar; objectName: "quickBar"; chat: chatModel; voice: voiceEngine; desktop: desktopBridge; settings: appSettings; onVoiceSetupRequested: { quickBar.hide(); controlCenter.showVoice() } }
+    // Settings (0.21): a window of its own, opened from the menu, the tray, notifications or `jarvis --open settings[:page]`.
+    SettingsWindow {
+        id: controlCenter
+        desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings
+        screenAware: screenAware; shortcut: globalShortcut
+        onMemoryRequested: { root.showMain(); appSettings.memoryOpen = true; memoryPanel.showTab(2) }
+    }
     Platform.SystemTrayIcon {
         id: tray
         Component.onCompleted: visible = true
@@ -206,6 +212,7 @@ ApplicationWindow {
             Platform.MenuItem { text: qsTr("Quick commands"); onTriggered: quickBar.reveal() }
             Platform.MenuItem { text: qsTr("Open Jarvis"); onTriggered: { root.show(); root.raise(); root.requestActivate() } }
             Platform.MenuItem { text: qsTr("French studies"); onTriggered: studyWindow.showTab(0) }
+            Platform.MenuItem { text: qsTr("Settings…"); onTriggered: controlCenter.open() }
             Platform.MenuItem { text: qsTr("Compact overlay"); checkable: true; checked: appSettings.overlay; onTriggered: appSettings.overlay = !appSettings.overlay }
             Platform.MenuItem {
                 visible: appSettings.awarenessLevel !== "off"
@@ -248,8 +255,12 @@ ApplicationWindow {
     // ---------- Notifications ----------
     readonly property bool userSeesChat: (root.visible && root.active) || quickBar.visible || (!!root.overlay && root.overlay.open)
     function showMain() { root.show(); root.raise(); root.requestActivate() }
-    // Where a notification leads: "main", "tasks", "study", "curious" or "memory".
+    // Where a notification leads: "main", "tasks", "study", "curious", "memory" or "settings[:page]".
     function openTarget(target, payload) {
+        if (target === "settings" || target.startsWith("settings:")) {
+            controlCenter.showPage(target.indexOf(":") > 0 ? target.slice(target.indexOf(":") + 1) : payload)
+            return
+        }
         if (target === "study") {
             studyWindow.showTab(2)
             return
@@ -358,11 +369,6 @@ ApplicationWindow {
         onLanguageApplied: chatModel.retranslate()
     }
 
-    SettingsDialog {
-        id: settingsDialog
-        settings: appSettings
-    }
-
     Shortcut {
         sequences: [StandardKey.Quit]
         onActivated: Qt.quit()
@@ -424,7 +430,7 @@ ApplicationWindow {
         }
 
         // French studies and quick commands have their own buttons in the header.
-        DarkMenuItem { text: qsTr("Control center…"); onTriggered: controlCenter.open() }
+        DarkMenuItem { text: qsTr("Settings…"); onTriggered: controlCenter.open() }
         DarkMenuItem {
             text: qsTr("Clear chat")
             onTriggered: chatModel.clear()

@@ -2,19 +2,52 @@
 #include "desktop_integration.h"
 #include <QJsonValue>
 
+#include <QDir>
+#include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkRequest>
 #include <QQmlEngine>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QUrl>
 
 #include <algorithm>
 
 #include "config.h"
 #include "language.h"
+#include "secret_store.h"
+#include "settings_catalog.h"
 
 AppSettings::AppSettings(QObject *parent)
     : QObject(parent)
 {
     refresh(false);
+    refreshKey();
+    // Someone else wrote the file (the service, `jarvis --desktop-mode`, the
+    // dock's settings through DesktopShell): show what is saved now.
+    m_reread.setSingleShot(true);
+    m_reread.setInterval(250);
+    connect(&m_reread, &QTimer::timeout, this, [this] {
+        watch();
+        refresh(true);
+    });
+    connect(&m_watcher, &QFileSystemWatcher::fileChanged, &m_reread, qOverload<>(&QTimer::start));
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, &m_reread, qOverload<>(&QTimer::start));
+    watch();
+}
+
+void AppSettings::watch()
+{
+    // The file is replaced on every save (QSaveFile renames): watch the folder
+    // too, and the file again once it is back.
+    const QString path = jarvis::Config::filePath();
+    const QString dir = QFileInfo(path).absolutePath();
+    QDir().mkpath(dir);
+    if (!m_watcher.directories().contains(dir))
+        m_watcher.addPath(dir);
+    if (QFileInfo::exists(path) && !m_watcher.files().contains(path))
+        m_watcher.addPath(path);
 }
 
 QString AppSettings::configPath() const
@@ -22,36 +55,55 @@ QString AppSettings::configPath() const
     return jarvis::Config::filePath();
 }
 
+QString AppSettings::backupPath() const
+{
+    return jarvis::Config::backupPath();
+}
+
 void AppSettings::refresh(bool notify)
 {
     const jarvis::ConfigData d = jarvis::Config::loadFileOnly();
-    m_hasKey = !d.apiKey.isEmpty();
-    m_keyHint = jarvis::Config::keyHint(d.apiKey);
     m_model = d.model;
     m_data = d;
     if (notify)
         emit changed();
 }
 
+void AppSettings::refreshKey()
+{
+    jarvis::Config::KeyStore where = jarvis::Config::KeyStore::None;
+    const QString key = jarvis::Config::anthropicKey(&where);
+    m_hasKey = !key.isEmpty();
+    m_keyHint = jarvis::Config::keyHint(key);
+    static const char *names[] = {"none", "environment", "keyring", "locked", "file"};
+    m_keyStore = QString::fromLatin1(names[int(where)]);
+    m_keyringAvailable = jarvis::SecretStore::available();
+}
+
 QString AppSettings::save(const QString &apiKey, const QString &model)
 {
-    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
-
+    // Both are checked before anything is saved: an invalid value keeps the old one.
     const QString key = apiKey.trimmed();
+    static const QRegularExpression keyShape(QStringLiteral("^[A-Za-z0-9_-]{20,400}$"));
+    if (!key.isEmpty() && !keyShape.match(key).hasMatch())
+        return tr("This does not look like a Claude API key: it starts with sk-ant- and has only Latin letters, digits, \"-\" and \"_\", without spaces.");
+    const QString m = model.trimmed().isEmpty() ? jarvis::Config::defaultModel() : model.trimmed();
+    static const QRegularExpression modelShape(QStringLiteral("^[A-Za-z0-9][A-Za-z0-9._:@-]{1,99}$"));
+    if (!modelShape.match(m).hasMatch())
+        return tr("The model name has letters, digits, dots and dashes only, for example claude-haiku-4-5-20251001.");
+
     if (!key.isEmpty()) {
-        static const QRegularExpression whitespace(QStringLiteral("\\s"));
-        if (key.contains(whitespace))
-            return tr("The key must not contain spaces or line breaks.");
-        d.apiKey = key;
+        const QString error = jarvis::Config::setAnthropicKey(key);
+        if (!error.isEmpty())
+            return tr("The key was not saved: %1").arg(error);
     }
-
-    const QString m = model.trimmed();
-    d.model = m.isEmpty() ? jarvis::Config::defaultModel() : m;
-
+    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
+    d.model = m;
     QString error;
     if (!jarvis::Config::save(d, &error))
         return error;
 
+    refreshKey();
     refresh(true);
     emit saved();
     return {};
@@ -59,16 +111,107 @@ QString AppSettings::save(const QString &apiKey, const QString &model)
 
 QString AppSettings::removeKey()
 {
-    jarvis::ConfigData d = jarvis::Config::loadFileOnly();
-    d.apiKey.clear();
-
-    QString error;
-    if (!jarvis::Config::save(d, &error))
-        return error;
-
+    const QString error = jarvis::Config::setAnthropicKey({});
+    refreshKey();
     refresh(true);
+    if (!error.isEmpty())
+        return error;
     emit saved();
     return {};
+}
+
+QString AppSettings::unlockKeyring()
+{
+    QString error;
+    jarvis::SecretStore::unlock(QLatin1String(jarvis::SecretStore::kAnthropic), &error);
+    refreshKey();
+    emit changed();
+    if (error.isEmpty() && m_hasKey)
+        emit saved(); // the service can read the key now
+    return error;
+}
+
+void AppSettings::setConnection(const QString &state, const QString &message)
+{
+    m_connectionState = state;
+    m_connectionMessage = message;
+    emit connectionChanged();
+}
+
+void AppSettings::testConnection(const QString &apiKey, const QString &model)
+{
+    if (m_check)
+        return;
+    const QString key = apiKey.trimmed().isEmpty() ? jarvis::Config::anthropicKey() : apiKey.trimmed();
+    const QString m = model.trimmed().isEmpty() ? m_model : model.trimmed();
+    if (key.isEmpty()) {
+        setConnection(QStringLiteral("error"), tr("Enter a key first: there is none to check."));
+        return;
+    }
+    if (!m_network)
+        m_network = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl(QStringLiteral("https://api.anthropic.com/v1/models/") + QString::fromLatin1(QUrl::toPercentEncoding(m))));
+    request.setRawHeader("x-api-key", key.toUtf8());
+    request.setRawHeader("anthropic-version", "2023-06-01");
+    request.setTransferTimeout(15000);
+    setConnection(QStringLiteral("checking"), tr("Asking Anthropic…"));
+    m_check = m_network->get(request);
+    connect(m_check, &QNetworkReply::finished, this, [this, reply = m_check.data(), m] {
+        reply->deleteLater();
+        const int code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        // Never the reply's own text: it may quote the request.
+        if (code == 200)
+            setConnection(QStringLiteral("ok"), tr("Connected: the key works and the model %1 is available.").arg(m));
+        else if (code == 401)
+            setConnection(QStringLiteral("error"), tr("Anthropic rejected the key (401). Check that it was copied completely, or create a new one in the Claude Console."));
+        else if (code == 403)
+            setConnection(QStringLiteral("error"), tr("The key has no access to the API or to this model (403)."));
+        else if (code == 404)
+            setConnection(QStringLiteral("error"), tr("The model %1 was not found (404). Check its name.").arg(m));
+        else if (code == 429)
+            setConnection(QStringLiteral("warn"), tr("The key works, but there are too many requests right now (429). Try again in a minute."));
+        else if (code >= 500)
+            setConnection(QStringLiteral("warn"), tr("Anthropic is overloaded or unavailable (%1). Try again later.").arg(code));
+        else if (reply->error() == QNetworkReply::OperationCanceledError || reply->error() == QNetworkReply::TimeoutError)
+            setConnection(QStringLiteral("error"), tr("Anthropic did not answer within 15 seconds. Check the internet connection."));
+        else if (code == 0)
+            setConnection(QStringLiteral("error"), tr("api.anthropic.com cannot be reached: no internet connection, a proxy or a firewall."));
+        else
+            setConnection(QStringLiteral("error"), tr("Unexpected answer from Anthropic (%1).").arg(code));
+    });
+}
+
+QStringList AppSettings::resetPreview(const QString &section) const
+{
+    const jarvis::ConfigData now = jarvis::Config::loadFileOnly();
+    QStringList out = jarvis::settings::titlesForKeys(jarvis::Config::changedKeys(now, jarvis::Config::resetSection(now, section)));
+    if (section == QLatin1String("desktop") || section == QLatin1String("all")) {
+        if (hudQuality() != QLatin1String("balanced"))
+            out << jarvis::settings::entry(QStringLiteral("window.hud")).value(QStringLiteral("title")).toString();
+        if (overlay())
+            out << jarvis::settings::entry(QStringLiteral("chat.overlay")).value(QStringLiteral("title")).toString();
+    }
+    return out;
+}
+
+QString AppSettings::resetSection(const QString &section)
+{
+    if (!jarvis::Config::sections().contains(section))
+        return tr("Unknown option.");
+    if (section == QLatin1String("desktop") || section == QLatin1String("all")) {
+        setHudQuality(QStringLiteral("balanced"));
+        setOverlay(false);
+    }
+    const jarvis::ConfigData now = jarvis::Config::loadFileOnly();
+    const jarvis::ConfigData next = jarvis::Config::resetSection(now, section);
+    const QString error = store(next);
+    if (error.isEmpty() && next.language != now.language) {
+        jarvis::applyUiLanguage(next.language);
+        if (QQmlEngine *engine = qmlEngine(this))
+            engine->retranslate();
+        emit languageApplied();
+    }
+    return error;
 }
 
 QString AppSettings::uiLanguage() const
@@ -271,4 +414,19 @@ void AppSettings::setOverlay(bool on)
         return;
     QSettings().setValue(QStringLiteral("hud/overlay"), on);
     emit hudChanged();
+}
+
+QVariantList AppSettings::searchSettings(const QString &query) const
+{
+    return jarvis::settings::search(query);
+}
+
+QVariantMap AppSettings::settingEntry(const QString &id) const
+{
+    return jarvis::settings::entry(id);
+}
+
+QString AppSettings::pageTitle(const QString &page) const
+{
+    return jarvis::settings::pageTitle(page);
 }

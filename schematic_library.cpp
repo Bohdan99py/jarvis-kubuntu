@@ -202,8 +202,8 @@ bool SchematicLibrary::answer(const QString &input, Lang lang, QString *reply)
             best = e;
         }
     }
-    const QString where = ru ? u"Рисунок, SPICE-модель и нетлист для KiCad — «Центр управления → Навыки → Электроника → Схемы»."_s
-                             : u"The drawing, a SPICE deck and a KiCad netlist: Control center → Skills → Electronics → Schematics."_s;
+    const QString where = ru ? u"Рисунок, SPICE-модель и нетлист для KiCad — «Настройки → Навыки → Электроника → Схемы»."_s
+                             : u"The drawing, a SPICE deck and a KiCad netlist: Settings → Skills → Electronics → Schematics."_s;
     if (bestScore == 0) {
         // "пример схемы подключения DHT22": nothing like it here — Claude answers that.
         if (text.split(u' ', Qt::SkipEmptyParts).size() > 5)

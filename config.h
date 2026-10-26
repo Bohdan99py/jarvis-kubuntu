@@ -91,11 +91,17 @@ struct ConfigData
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.
-// The key never travels over D-Bus: the GUI writes the file, then tells the
-// daemon to reload it.
+// The key never travels over D-Bus: the GUI stores it, then tells the daemon to
+// reload. Since 0.21 the key lives in the desktop's password store
+// (SecretStore); the file keeps it only where there is none.
 class Config
 {
 public:
+    // 2: 0.21 — keys in the password store, `config_version` written.
+    static constexpr int kVersion = 2;
+    // Where the Claude key came from.
+    enum class KeyStore { None, Environment, Keyring, Locked, File };
+
     static QString defaultModel();
     static QString filePath();
     // off, manual, assistive, proactive.
@@ -109,7 +115,38 @@ public:
     // File contents, with ANTHROPIC_API_KEY from the environment taking priority.
     static ConfigData load();
 
+    // Keeps fields it does not know (from another version) and never writes
+    // over a damaged file: that is moved aside first (config.json.damaged-…).
     static bool save(const ConfigData &data, QString *error);
+
+    // ANTHROPIC_API_KEY, then the password store, then the file.
+    static QString anthropicKey(KeyStore *where = nullptr);
+    // Stores (or, empty, removes) the key: in the password store when there is
+    // one (then the file no longer holds it), otherwise in the file. "" or why not.
+    static QString setAnthropicKey(const QString &key, KeyStore *where = nullptr);
+
+    // Upgrades the file once (idempotent, safe to run from the window and the
+    // service at the same time): a backup (config.json.backup-v1, secrets left
+    // out), damaged files moved aside, keys moved into the password store,
+    // config_version written. Returns what changed, for the log; "" if nothing.
+    static QString migrate();
+    // Before installing an older Jarvis: writes the keys back into the files it
+    // reads (config.json, speech.json) and marks the file version 1.
+    static QString prepareDowngrade(QString *error);
+    static QString backupPath();
+    // speech.json of the voice settings (ElevenLabs key before 0.21).
+    static QString speechPath();
+
+    // ---- Reset (0.21) ----
+    static ConfigData defaults();
+    // desktop, conversation, intelligence, privacy, actions, system, all.
+    static QStringList sections();
+    // `current` with one section back to its defaults. A reset never switches a
+    // permission on, never widens observation and never removes an exclusion:
+    // where the default allows more than the current value, the value stays.
+    static ConfigData resetSection(const ConfigData &current, const QString &section);
+    // The config.json keys whose values differ ("desktop.theme" for the desktop object).
+    static QStringList changedKeys(const ConfigData &a, const ConfigData &b);
 
     // "…abcd" — enough to recognise a key without revealing it.
     static QString keyHint(const QString &key);

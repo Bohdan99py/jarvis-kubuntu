@@ -1,4 +1,6 @@
 #include <QCoreApplication>
+#include <QDBusConnection>
+#include <QDBusMessage>
 #include <QDateTime>
 #include <QTemporaryDir>
 #include <QJsonDocument>
@@ -23,6 +25,8 @@
 #include "awareness.h"
 #include "driving_store.h"
 #include "config.h"
+#include "secret_store.h"
+#include "settings_catalog.h"
 #include "desktop_integration.h"
 #include "desktop_shell_scripts.h"
 #include "system_sampler.h"
@@ -640,6 +644,15 @@ static void awareness() {
     a.screenObserved("firefox",QStringLiteral("Question 12/40\nVous circulez sur une route prioritaire. Je peux :\nA - dépasser\nB - céder le passage"),t0+2000);
     c=a.context(t0+2000,jarvis::Lang::En);
     require(c["confidence"].toDouble()>0.9 && c["evidence"].toArray().size()>=2,"screen evidence raises confidence");
+    // 0.21: the screen permission taken back in the settings — what was seen goes at once,
+    // and nothing new is taken while it is off (no stale state keeps being used).
+    jarvis::ConfigData noScreen=cfg;noScreen.awarenessScreen=false;a.configure(noScreen);
+    c=a.context(t0+2100,jarvis::Lang::En);
+    require(!c["screen"].toObject()["seen"].toBool() && c["confidence"].toDouble()<0.9,"revoked screen permission forgets the screen at once");
+    a.screenObserved("firefox",QStringLiteral("Question 13/40\nVous circulez"),t0+2200);
+    require(!a.context(t0+2200,jarvis::Lang::En)["screen"].toObject()["seen"].toBool(),"no screen text is taken while not allowed");
+    a.configure(cfg);
+    a.screenObserved("firefox",QStringLiteral("Question 12/40\nVous circulez sur une route prioritaire. Je peux :\nA - dépasser\nB - céder le passage"),t0+2500);
     // Jarvis's own overlay never replaces the context.
     a.windowFocused({"Jarvis — overlay","jarvis","org.jarvis.Jarvis","{own}","DP-1",false},t0+3000);
     require(a.context(t0+3000,jarvis::Lang::En)["handle"].toString()=="{w1}","own windows ignored");
@@ -982,11 +995,157 @@ static void wallpaper(const QString &dir) {
     require(!wallpaperInfo(imageLuminance(dir+"/wp/w.svg"))["known"].toBool(),"an SVG is unknown, not a crash");
 }
 
+static QJsonObject readJsonFile(const QString &path) {
+    QFile f(path);require(f.open(QIODevice::ReadOnly),"json file readable");
+    return QJsonDocument::fromJson(f.readAll()).object();
+}
+// 0.21: the settings file survives versions and damage, the upgrade is idempotent,
+// a reset never widens permissions, and keys go to the password store only when
+// there is one (here there is none: JARVIS_SECRET_SERVICE=off).
+static void settingsStorage() {
+    using jarvis::Config;
+    require(!jarvis::SecretStore::available(),"no password store in the tests");
+    const QString path=Config::filePath();
+    QFile::remove(path);QFile::remove(Config::backupPath());
+    // A 0.20 file: no config_version, a key, a field of a future version.
+    writeFile(path,R"({"api_key":"sk-ant-api03-test-key-0123456789","model":"claude-sonnet-5-5","learn_dialog":false,"future_option":{"a":1},"desktop":{"theme":"mark7","dockSize":60}})");
+    const QString report=Config::migrate();
+    QJsonObject o=readJsonFile(path);
+    require(o["config_version"].toInt()==Config::kVersion,"upgraded file has config_version 2");
+    require(o["api_key"].toString()=="sk-ant-api03-test-key-0123456789","without a password store the key stays in the owner-only file");
+    require(o["future_option"].toObject()["a"].toInt()==1,"unknown field kept by the upgrade");
+    require(QFileInfo::exists(Config::backupPath()) && report.contains("backup"),"backup of the 0.20 file");
+    require(readJsonFile(Config::backupPath())["learn_dialog"].toBool(true)==false,"backup holds the old values");
+    require((QFileInfo(path).permissions() & (QFileDevice::ReadGroup|QFileDevice::ReadOther))==0,"settings file stays owner-only");
+    // Run again (the window and the service both run it): nothing more to do.
+    const QByteArray before=[&]{QFile f(path);f.open(QIODevice::ReadOnly);return f.readAll();}();
+    require(Config::migrate().isEmpty(),"second upgrade does nothing");
+    require([&]{QFile f(path);f.open(QIODevice::ReadOnly);return f.readAll();}()==before,"second upgrade leaves the file as it is");
+    // The values a 0.20 user had are there.
+    jarvis::ConfigData d=Config::loadFileOnly();
+    require(!d.learnDialog && d.model=="claude-sonnet-5-5" && d.desktop["theme"].toString()=="mark7" && d.desktop["dockSize"].toInt()==60,"0.20 values survive the upgrade");
+    jarvis::Config::KeyStore where;
+    require(Config::anthropicKey(&where)=="sk-ant-api03-test-key-0123456789" && where==jarvis::Config::KeyStore::File,"key read from the file");
+    // Saving keeps fields this version does not know.
+    d.curiosity=false;QString error;require(Config::save(d,&error),"save");
+    require(readJsonFile(path)["future_option"].isObject(),"save keeps unknown fields");
+    // A damaged file is moved aside, never overwritten.
+    writeFile(path,"{\"learn_dialog\": fal");
+    require(Config::loadFileOnly().learnDialog,"damaged file reads as defaults");
+    require(Config::save(Config::loadFileOnly(),&error),"save over a damaged file");
+    const QStringList aside=QDir(QFileInfo(path).absolutePath()).entryList({"config.json.damaged-*"});
+    require(aside.size()==1,"damaged file moved aside");
+    {QFile f(QFileInfo(path).absolutePath()+"/"+aside.first());f.open(QIODevice::ReadOnly);require(f.readAll()=="{\"learn_dialog\": fal","damaged file kept as it was");}
+    // Ranges: out-of-range numbers are clamped, unknown choices fall back.
+    writeFile(path,R"({"break_minutes":100000,"suggestions_per_day":-3,"awareness_level":"godmode","desktop":{"dockSize":500,"theme":"neon"}})");
+    d=Config::loadFileOnly();
+    require(d.breakMinutes==600 && d.suggestionsPerDay==1 && d.awarenessLevel=="manual","numbers clamped, unknown level falls back");
+    require(d.desktop["dockSize"].toInt()==72 && d.desktop["theme"].toString()=="classic","desktop values clamped");
+    // The key without a password store: in the file; removing clears it.
+    require(Config::setAnthropicKey("sk-ant-api03-another-key-987654321",&where).isEmpty() && where==jarvis::Config::KeyStore::File,"key saved to the file without a store");
+    require(Config::setAnthropicKey({},&where).isEmpty() && Config::anthropicKey().isEmpty(),"key removed");
+    // Reset: never switches a permission on, never widens observation.
+    jarvis::ConfigData now=Config::defaults();
+    now.learnDialog=false;now.trackActivity=true;now.awarenessScreen=true;now.awarenessLevel="off";now.proactive=false;
+    now.awarenessExcluded={"telegram"};now.awarenessMuted={"build"};now.language="en";now.desktop["theme"]="mark7";now.desktop["mode"]="jarvis";
+    now.suggestionCooldownMinutes=180;now.webSearch=true;now.apiKey="secret";
+    const jarvis::ConfigData privacy=Config::resetSection(now,"privacy");
+    require(!privacy.learnDialog && !privacy.trackActivity && !privacy.awarenessScreen,"privacy reset turns nothing on and takes opt-ins back");
+    require(privacy.awarenessExcluded==QStringList{"telegram"},"exclusions survive a reset");
+    const jarvis::ConfigData actions=Config::resetSection(now,"actions");
+    require(actions.awarenessLevel=="off" && !actions.proactive && actions.suggestionCooldownMinutes==180 && actions.awarenessMuted==QStringList{"build"},"actions reset never adds initiative");
+    const jarvis::ConfigData desktop=Config::resetSection(now,"desktop");
+    require(desktop.desktop["theme"].toString()=="classic" && desktop.desktop["mode"].toString()=="jarvis" && desktop.language=="en" && !desktop.learnDialog,"desktop reset: look only, the mode stays");
+    const jarvis::ConfigData all=Config::resetSection(now,"all");
+    require(all.apiKey=="secret" && all.language=="auto" && !all.webSearch && all.desktop["mode"].toString()=="jarvis","reset all keeps the key and the mode");
+    const QStringList changed=Config::changedKeys(now,desktop);
+    require(changed.contains("desktop.theme") && !changed.contains("desktop.mode") && !changed.contains("api_key"),"changed keys");
+    require(jarvis::settings::titlesForKeys(Config::changedKeys(now,Config::resetSection(now,"conversation"))).contains("Interface language"),"reset preview names the setting");
+    require(Config::changedKeys(Config::defaults(),Config::resetSection(Config::defaults(),"all")).isEmpty(),"defaults reset to themselves");
+    // Before a downgrade: the key (none here) and version 1.
+    writeFile(path,R"({"api_key":"","config_version":2,"model":"claude-haiku-4-5-20251001"})");
+    require(!Config::prepareDowngrade(&error).isEmpty() && error.isEmpty() && readJsonFile(path)["config_version"].toInt()==1,"prepare downgrade marks version 1");
+    QFile::remove(path);QFile::remove(Config::backupPath());
+    for(const QString &f:QDir(QFileInfo(path).absolutePath()).entryList({"config.json.damaged-*"})) QFile::remove(QFileInfo(path).absolutePath()+"/"+f);
+}
+// The settings search: local, by title, description or synonym, in both languages.
+static void settingsSearch() {
+    namespace S=jarvis::settings;
+    const auto first=[](const QString &q){ const QVariantList r=S::search(q); return r.isEmpty()?QString():r.first().toMap()["id"].toString(); };
+    const auto finds=[](const QString &q,const QString &id){ for(const QVariant &v:S::search(q)) if(v.toMap()["id"].toString()==id) return true; return false; };
+    QSet<QString> ids;
+    for(const QVariant &v:S::entries()) {
+        const QVariantMap e=v.toMap();
+        require(!ids.contains(e["id"].toString()),"catalog ids are unique");
+        ids.insert(e["id"].toString());
+        require(S::pages().contains(e["page"].toString()) && !e["title"].toString().isEmpty() && !e["description"].toString().isEmpty(),"every entry has a page, a title and a description");
+    }
+    require(first("headphones")=="kde.sound","English synonym: headphones → sound");
+    require(first("API key")=="ai.key" && finds("connection","ai.test"),"key and connection");
+    require(finds("shortcut","shortcuts.overlay") && finds("hotkeys","kde.shortcuts"),"shortcuts");
+    require(S::search("xyzzy plugh").isEmpty() && S::search("   ").isEmpty(),"nothing found for nonsense");
+    // In Russian (the translation is built into the library).
+    jarvis::applyUiLanguage("ru");
+    require(S::pageTitle("privacy")==QString::fromUtf8("Память и приватность"),"Russian page title");
+    require(first(QString::fromUtf8("наушники"))=="kde.sound" && finds(QString::fromUtf8("звук"),"kde.sound"),"наушники, звук → sound");
+    require(finds(QString::fromUtf8("наушниках"),"kde.sound"),"another ending still finds it");
+    require(finds(QString::fromUtf8("кнопки"),"shortcuts.overlay") && finds(QString::fromUtf8("сочетания"),"shortcuts.quick"),"кнопки, сочетания → shortcuts");
+    require(first(QString::fromUtf8("ключ"))=="ai.key" && finds("API","ai.key") && finds(QString::fromUtf8("подключение"),"ai.test"),"ключ, API, подключение → the provider");
+    require(finds(QString::fromUtf8("запоминать"),"memory.learn") && finds(QString::fromUtf8("история"),"memory.learn") && finds(QString::fromUtf8("история"),"data.delete"),"запоминать, история → memory");
+    require(finds(QString::fromUtf8("размер дока"),"dock.size") && finds(QString::fromUtf8("ЭКРАН"),"awareness.screen"),"several words, any case");
+    require(finds("headphones","kde.sound"),"English words work in the Russian interface");
+    jarvis::applyUiLanguage("en");
+}
+// With a password store (tests/secrets_test.py runs a fake one on a private bus):
+// keys move out of the files on upgrade and come back before a downgrade.
+static int secretsScenario() {
+    using jarvis::Config;
+    using jarvis::SecretStore;
+    require(SecretStore::available(),"the fake password store is there");
+    const QString path=Config::filePath();
+    writeFile(path,R"({"api_key":"sk-ant-api03-moved-key-0123456789","learn_dialog":false})");
+    writeFile(Config::speechPath(),R"({"engine":"elevenlabs","elevenlabs":{"api_key":"eleven0123456789abcdef","model":"eleven_v3"}})");
+    const QString report=Config::migrate();
+    require(report.contains("Claude key moved") && report.contains("ElevenLabs key moved"),"both keys moved");
+    require(readJsonFile(path)["api_key"].toString().isEmpty(),"no key left in config.json");
+    require(!readJsonFile(Config::speechPath())["elevenlabs"].toObject().contains("api_key"),"no key left in speech.json");
+    require(readJsonFile(Config::speechPath())["elevenlabs"].toObject()["model"].toString()=="eleven_v3","other voice settings kept");
+    require(readJsonFile(Config::backupPath())["api_key"].toString().isEmpty() && !readJsonFile(Config::backupPath())["learn_dialog"].toBool(true),"the backup holds the settings, not the key");
+    Config::KeyStore where;
+    require(Config::anthropicKey(&where)=="sk-ant-api03-moved-key-0123456789" && where==Config::KeyStore::Keyring,"the key is read from the store");
+    require(Config::load().apiKey=="sk-ant-api03-moved-key-0123456789","the service gets the key");
+    require(SecretStore::read(QLatin1String(SecretStore::kElevenLabs))=="eleven0123456789abcdef","the ElevenLabs key is in the store");
+    require(Config::migrate().isEmpty(),"second upgrade does nothing");
+    require(Config::setAnthropicKey("sk-ant-api03-replaced-key-9876543210",&where).isEmpty() && where==Config::KeyStore::Keyring,"new key into the store");
+    require(Config::anthropicKey()=="sk-ant-api03-replaced-key-9876543210" && readJsonFile(path)["api_key"].toString().isEmpty(),"the file never holds it");
+    // Locked: nothing is shown or read until the user unlocks.
+    QDBusMessage lock=QDBusMessage::createMethodCall("org.freedesktop.secrets","/org/freedesktop/secrets","org.jarvis.test.FakeSecrets","Lock");
+    require(QDBusConnection::sessionBus().call(lock).type()==QDBusMessage::ReplyMessage,"lock the fake store");
+    require(Config::anthropicKey(&where).isEmpty() && where==Config::KeyStore::Locked,"a locked store reports Locked and gives no key");
+    QString error;
+    require(SecretStore::unlock(QLatin1String(SecretStore::kAnthropic),&error) && error.isEmpty(),"unlock through the store's prompt");
+    require(Config::anthropicKey(&where)=="sk-ant-api03-replaced-key-9876543210" && where==Config::KeyStore::Keyring,"readable after unlocking");
+    // Back to an older Jarvis: the keys go back into its files.
+    require(!Config::prepareDowngrade(&error).isEmpty() && error.isEmpty(),"prepare downgrade");
+    require(readJsonFile(path)["api_key"].toString()=="sk-ant-api03-replaced-key-9876543210" && readJsonFile(path)["config_version"].toInt()==1,"0.20 finds its key");
+    require(readJsonFile(Config::speechPath())["elevenlabs"].toObject()["api_key"].toString()=="eleven0123456789abcdef","0.20 finds its voice key");
+    // …and the next upgrade moves them again.
+    require(Config::migrate().contains("Claude key moved") && readJsonFile(path)["api_key"].toString().isEmpty(),"upgrade after a downgrade");
+    require(Config::setAnthropicKey({},&where).isEmpty() && Config::anthropicKey().isEmpty(),"key removed from the store");
+    qInfo()<<"PASS: password store: upgrade, locked store, unlock, downgrade, removal";
+    return 0;
+}
 int main(int argc,char **argv) {
     QCoreApplication app(argc,argv);
     QTemporaryDir scratch;require(scratch.isValid(),"temporary directory");
     qputenv("XDG_CONFIG_HOME",(scratch.path()+"/config").toUtf8());
     qputenv("XDG_DATA_HOME",(scratch.path()+"/data").toUtf8());
+    if(argc>1 && QByteArray(argv[1])=="secrets") return secretsScenario();
+    // Never the user's real keyring (tests/secrets_test.py checks the store on a fake one).
+    qputenv("JARVIS_SECRET_SERVICE","off");
+    qputenv("ANTHROPIC_API_KEY","");
+    settingsStorage();
+    settingsSearch();
     skills();
     examples();
     language();
@@ -1009,5 +1168,5 @@ int main(int argc,char **argv) {
     desktopIntegration();
     desktopShell(scratch.path());
     wallpaper(scratch.path());
-    qInfo()<<"PASS: skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration, desktop shell (commands, workspaces, projects, sampler, settings, Plasma scripts), wallpaper contrast";
+    qInfo()<<"PASS: settings storage and upgrade, settings search, skills, examples, language, knowledge, memory ranking, vocabulary, activity, safety, curiosity, reminders, calculators, attachments, markdown, schematics, visual state, driving calculators and progress, awareness, desktop integration, desktop shell (commands, workspaces, projects, sampler, settings, Plasma scripts), wallpaper contrast";
 }
