@@ -13,6 +13,8 @@
 #include <QStandardPaths>
 
 #include "agent_system.h"
+#include "agent_tools.h"
+#include "config.h"
 #include "dbus_names.h"
 #include "language.h"
 #include "local_model.h"
@@ -182,5 +184,38 @@ void AgentPanel::runDiagnostics()
             m_diagnostics.append(QVariantMap{{u"name"_s, it.key()}, {u"ok"_s, c.value(u"ok"_s).toBool()}, {u"detail"_s, c.value(u"detail"_s).toString()}});
         }
         emit daemonChanged();
+    });
+}
+
+void AgentPanel::loadCapabilities()
+{
+    // The catalogue at once (nothing checked yet), then what jarvisd says is available.
+    if (m_capabilities.isEmpty()) {
+        const jarvis::ConfigData config = jarvis::Config::load();
+        const jarvis::Lang lang = jarvis::resolveLanguage(config.language);
+        const QJsonObject permissions = config.agentPermissions;
+        m_capabilities = jarvis::agent::capabilityRows(
+                             lang,
+                             [permissions](const QString &c) {
+                                 const QString p = permissions.value(c).toString();
+                                 return p == u"allow" || p == u"ask" || p == u"off" ? p : jarvis::agent::defaultPermission(c);
+                             },
+                             {}, false)
+                             .toVariantList();
+        emit capabilitiesChanged();
+    }
+    QDBusMessage m = QDBusMessage::createMethodCall(QString(jarvis::dbus::kService), u"/org/jarvis/Integration1"_s,
+                                                    u"org.jarvis.Integration1"_s, u"AgentCapabilities"_s);
+    auto *w = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(m, 15000), this);
+    connect(w, &QDBusPendingCallWatcher::finished, this, [this, w] {
+        w->deleteLater();
+        const QDBusPendingReply<QString> r = *w;
+        if (r.isError())
+            return;
+        const QJsonDocument doc = QJsonDocument::fromJson(r.value().toUtf8());
+        if (!doc.isArray())
+            return;
+        m_capabilities = doc.array().toVariantList();
+        emit capabilitiesChanged();
     });
 }

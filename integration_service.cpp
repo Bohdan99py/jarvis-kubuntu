@@ -648,6 +648,13 @@ QString IntegrationService::agentDiagnostics()
     return compact(m_assistant->agent().diagnostics(resolveLanguage(m_assistant->config().language)));
 }
 
+QString IntegrationService::agentCapabilities()
+{
+    if (!callerIsGui())
+        return denied(u"the capabilities menu is for the Jarvis window only"_s);
+    return QString::fromUtf8(QJsonDocument(m_assistant->agent().capabilities(resolveLanguage(m_assistant->config().language))).toJson(QJsonDocument::Compact));
+}
+
 void IntegrationService::reportVoice(bool listening, bool speaking, const QString &engine)
 {
     if (!callerIsGui()) {
@@ -813,6 +820,7 @@ void IntegrationAdaptor::ComponentAlive(const QString &component) { m_service->c
 QString IntegrationAdaptor::Events() { return m_service->eventsJson(); }
 QString IntegrationAdaptor::AgentStatus() { return m_service->agentStatus(); }
 QString IntegrationAdaptor::AgentDiagnostics() { return m_service->agentDiagnostics(); }
+QString IntegrationAdaptor::AgentCapabilities() { return m_service->agentCapabilities(); }
 
 RunnerAdaptor::RunnerAdaptor(QObject *object, IntegrationService *service)
     : QDBusAbstractAdaptor(object)

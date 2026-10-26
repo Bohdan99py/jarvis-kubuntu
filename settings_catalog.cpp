@@ -125,6 +125,8 @@ const Entry kEntries[] = {
      QT_TRANSLATE_NOOP("SettingsCatalog", "offline, local, without internet, fallback, no key"), "", ""},
 
     // ---- Autonomy (0.22) ----
+    {"capabilities.menu", "capabilities", QT_TRANSLATE_NOOP("SettingsCatalog", "What Jarvis can do"), QT_TRANSLATE_NOOP("SettingsCatalog", "Actions on this laptop"), QT_TRANSLATE_NOOP("SettingsCatalog", "Every action Jarvis carries out, with examples, whether it works offline, asks first or is available now."),
+     QT_TRANSLATE_NOOP("SettingsCatalog", "capabilities, commands, what can you do, help, examples, abilities"), "", ""},
     {"autonomy.mode", "autonomy", QT_TRANSLATE_NOOP("SettingsCatalog", "Mode"), QT_TRANSLATE_NOOP("SettingsCatalog", "Where requests are understood"), QT_TRANSLATE_NOOP("SettingsCatalog", "Only local: nothing goes to cloud models. Automatic: laptop tasks locally, the cloud as the settings allow."),
      QT_TRANSLATE_NOOP("SettingsCatalog", "offline, local, only local, cloud, mode, autonomy, internet, privacy, agent"), "agent_mode", ""},
     {"autonomy.cloud", "autonomy", QT_TRANSLATE_NOOP("SettingsCatalog", "Mode"), QT_TRANSLATE_NOOP("SettingsCatalog", "Let Claude plan tasks the local model cannot"), QT_TRANSLATE_NOOP("SettingsCatalog", "Automatic mode only; Claude proposes, Jarvis checks and acts."),
@@ -282,6 +284,7 @@ const struct
     {"conversation", QT_TRANSLATE_NOOP("SettingsCatalog", "Talking to Jarvis")},
     {"intelligence", QT_TRANSLATE_NOOP("SettingsCatalog", "Intelligence and connection")},
     {"autonomy", QT_TRANSLATE_NOOP("SettingsCatalog", "Autonomy")},
+    {"capabilities", QT_TRANSLATE_NOOP("SettingsCatalog", "What Jarvis can do")},
     {"privacy", QT_TRANSLATE_NOOP("SettingsCatalog", "Memory and privacy")},
     {"actions", QT_TRANSLATE_NOOP("SettingsCatalog", "Actions and permissions")},
     {"skills", QT_TRANSLATE_NOOP("SettingsCatalog", "Skills")},

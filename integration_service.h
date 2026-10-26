@@ -95,6 +95,7 @@ public:
     // 0.22: the agent for the settings window (the Jarvis window only).
     QString agentStatus();
     QString agentDiagnostics();
+    QString agentCapabilities();
 
     // KRunner.
     RunnerMatches match(const QString &query);
@@ -181,6 +182,7 @@ private:
 //   method Events() -> s            the last events: [{at, kind, text}] (observe)
 //   method AgentStatus() -> s       the agent: mode, model, the current task (the Jarvis window only)
 //   method AgentDiagnostics() -> s  what works on this computer: sound, Bluetooth, KWin, the model… (the Jarvis window only)
+//   method AgentCapabilities() -> s the "What Jarvis can do" menu with availability here (the Jarvis window only)
 //   signal StatusChanged(s)         Status() changed
 //   signal NoticePosted(s)          a notification was shown: {kind, title, at}
 //   signal EventPosted(s)           something happened: {at, kind, text} (requests, answers, workspaces…)
@@ -212,6 +214,7 @@ public slots:
     QString Events();
     QString AgentStatus();
     QString AgentDiagnostics();
+    QString AgentCapabilities();
 
 signals:
     void StatusChanged(const QString &json);

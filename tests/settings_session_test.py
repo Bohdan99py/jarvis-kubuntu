@@ -329,6 +329,29 @@ if c.get('desktop', {}).get('theme') != 'classic' or c.get('awareness_screen') i
     fail(f'values lost after a restart: {c}')
 shot('14-after-restart')
 
+# 7b. "What Jarvis can do" (0.22.1): found by the search, the catalogue with what is
+# available here; its own search filters it; an example goes into the main window's
+# message field and changes nothing.
+before = config()
+reveal('what can you do')
+time.sleep(4)  # the service checks sound, Bluetooth, KWin… for the availability
+shot('14b-capabilities')
+win = settings_window()[0]
+# The page's search field sits under the heading (offsets in the window at scale 1).
+ei('click', win['x'] + 684, win['y'] + 153)
+ei('type', 'mute')
+time.sleep(0.8)
+shot('14c-capabilities-search')
+ei('key', 'tab', 'space')
+if not wait(lambda: [w for w in windows() if w['caption'] == 'J.A.R.V.I.S.' and w['active']], 8):
+    fail('an example did not bring up the main window')
+time.sleep(1.0)
+shot('14d-example-in-field')
+if config() != before:
+    fail('browsing the capabilities changed a setting')
+stop_gui()  # the main window took the focus: back to the settings window alone for step 8
+start_gui()
+
 # 8. jarvisd stopped: the window says so and still saves.
 daemon.send_signal(signal.SIGTERM)
 daemon.wait(timeout=10)
