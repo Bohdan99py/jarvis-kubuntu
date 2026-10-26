@@ -88,6 +88,24 @@ struct ConfigData
     // Mode, theme and layout of the desktop shell; normalised by
     // integration::normalizeDesktop (see there for the keys and limits).
     QJsonObject desktop;
+
+    // ---- Autonomy (0.22) ----
+    // "auto": everyday system tasks run locally, the cloud as the other
+    // settings allow; "local": nothing is sent to any cloud model (Claude,
+    // ElevenLabs), whether or not there is a network.
+    QString agentMode = QStringLiteral("auto");
+    // auto mode: Claude may plan a system task the local model cannot (needs a key).
+    bool agentCloud = false;
+    // The local model (models.json id), where it runs (auto, cpu) and how long it
+    // stays loaded after the last request.
+    QString agentModel = QStringLiteral("qwen3.5-4b");
+    QString agentDevice = QStringLiteral("auto");
+    int agentKeepMinutes = 10;
+    // Tool category -> allow, ask, off (agent_tools.h: categories()).
+    QJsonObject agentPermissions;
+    // At most this many steps and seconds per task.
+    int agentMaxSteps = 6;
+    int agentMaxSeconds = 60;
 };
 
 // ~/.config/jarvis/config.json, directory 0700, file 0600.
@@ -108,6 +126,8 @@ public:
     static QStringList awarenessLevels();
     // off, low, normal, high.
     static QStringList hudAnimationLevels();
+    // auto, local.
+    static QStringList agentModes();
 
     // File contents only (used by the settings UI so an environment key is
     // never copied into the file).
@@ -139,7 +159,7 @@ public:
 
     // ---- Reset (0.21) ----
     static ConfigData defaults();
-    // desktop, conversation, intelligence, privacy, actions, system, all.
+    // desktop, conversation, intelligence, autonomy, privacy, actions, system, all.
     static QStringList sections();
     // `current` with one section back to its defaults. A reset never switches a
     // permission on, never widens observation and never removes an exclusion:

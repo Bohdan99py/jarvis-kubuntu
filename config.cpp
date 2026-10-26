@@ -11,6 +11,7 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <QLockFile>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QtGlobal>
@@ -131,6 +132,14 @@ QJsonObject toJson(const ConfigData &data)
     o.insert(u"share_active_app"_s, data.shareActiveApp);
     o.insert(u"hud_animation"_s, data.hudAnimation);
     o.insert(u"desktop"_s, integration::normalizeDesktop(data.desktop));
+    o.insert(u"agent_mode"_s, data.agentMode);
+    o.insert(u"agent_cloud"_s, data.agentCloud);
+    o.insert(u"agent_model"_s, data.agentModel);
+    o.insert(u"agent_device"_s, data.agentDevice);
+    o.insert(u"agent_keep_minutes"_s, data.agentKeepMinutes);
+    o.insert(u"agent_permissions"_s, data.agentPermissions);
+    o.insert(u"agent_max_steps"_s, data.agentMaxSteps);
+    o.insert(u"agent_max_seconds"_s, data.agentMaxSeconds);
     return o;
 }
 
@@ -144,6 +153,11 @@ QString keyLabel(const QString &account)
 QStringList Config::awarenessLevels()
 {
     return {u"off"_s, u"manual"_s, u"assistive"_s, u"proactive"_s};
+}
+
+QStringList Config::agentModes()
+{
+    return {u"auto"_s, u"local"_s};
 }
 
 QStringList Config::hudAnimationLevels()
@@ -209,6 +223,21 @@ ConfigData Config::loadFileOnly()
         const QString animation = o.value(u"hud_animation"_s).toString();
         d.hudAnimation = hudAnimationLevels().contains(animation) ? animation : u"normal"_s;
         d.desktop = integration::normalizeDesktop(o.value(u"desktop"_s).toObject());
+        const QString mode = o.value(u"agent_mode"_s).toString();
+        d.agentMode = agentModes().contains(mode) ? mode : u"auto"_s;
+        d.agentCloud = o.value(u"agent_cloud"_s).toBool(false);
+        static const QRegularExpression modelId(u"^[a-z0-9._-]{0,40}$"_s);
+        const QString model = o.value(u"agent_model"_s).toString(d.agentModel);
+        d.agentModel = modelId.match(model).hasMatch() ? model : d.agentModel;
+        const QString device = o.value(u"agent_device"_s).toString();
+        d.agentDevice = device == u"cpu" ? device : u"auto"_s;
+        d.agentKeepMinutes = std::clamp(o.value(u"agent_keep_minutes"_s).toInt(10), 1, 120);
+        const QJsonObject permissions = o.value(u"agent_permissions"_s).toObject();
+        for (auto it = permissions.begin(); it != permissions.end(); ++it)
+            if (const QString v = it.value().toString(); it.key().size() <= 20 && (v == u"allow" || v == u"ask" || v == u"off"))
+                d.agentPermissions.insert(it.key(), v);
+        d.agentMaxSteps = std::clamp(o.value(u"agent_max_steps"_s).toInt(6), 1, 12);
+        d.agentMaxSeconds = std::clamp(o.value(u"agent_max_seconds"_s).toInt(60), 10, 300);
     } else {
         d.desktop = integration::normalizeDesktop({});
     }
@@ -431,7 +460,7 @@ ConfigData Config::defaults()
 
 QStringList Config::sections()
 {
-    return {u"desktop"_s, u"conversation"_s, u"intelligence"_s, u"privacy"_s, u"actions"_s, u"system"_s, u"all"_s};
+    return {u"desktop"_s, u"conversation"_s, u"intelligence"_s, u"autonomy"_s, u"privacy"_s, u"actions"_s, u"system"_s, u"all"_s};
 }
 
 ConfigData Config::resetSection(const ConfigData &current, const QString &section)
@@ -485,6 +514,24 @@ ConfigData Config::resetSection(const ConfigData &current, const QString &sectio
         d.breakMinutes = current.breakMinutes == 0 ? 0 : def.breakMinutes;
         d.morningSummary = lower(current.morningSummary, def.morningSummary);
         // awarenessMuted stays: unmuting would bring back offers the user turned off.
+    }
+    if (all || section == u"autonomy") {
+        // "Only local" sends less: a reset keeps it. Permissions only get stricter.
+        d.agentMode = current.agentMode == u"local" ? current.agentMode : def.agentMode;
+        d.agentCloud = lower(current.agentCloud, def.agentCloud);
+        d.agentDevice = def.agentDevice;
+        d.agentKeepMinutes = def.agentKeepMinutes;
+        static const QStringList strictness{u"off"_s, u"ask"_s, u"allow"_s};
+        QJsonObject permissions;
+        for (auto it = current.agentPermissions.begin(); it != current.agentPermissions.end(); ++it) {
+            const QString byDefault = it.key() == u"apps.close" ? u"ask"_s : u"allow"_s;
+            const QString kept = strictness.at(std::min(int(strictness.indexOf(it.value().toString())), int(strictness.indexOf(byDefault))));
+            if (kept != byDefault)
+                permissions.insert(it.key(), kept);
+        }
+        d.agentPermissions = permissions;
+        d.agentMaxSteps = std::min(current.agentMaxSteps, def.agentMaxSteps);
+        d.agentMaxSeconds = std::min(current.agentMaxSeconds, def.agentMaxSeconds);
     }
     if (all || section == u"system") {
         d.background = def.background;

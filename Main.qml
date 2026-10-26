@@ -608,6 +608,7 @@ ApplicationWindow {
                 chat: chatModel
                 voice: voiceEngine
                 effects: root.chatEffects
+                agentMode: appSettings.agentMode
                 onAttachRequested: attachDialog.open()
                 onVoiceSetupRequested: controlCenter.showVoice()
                 onSent: text => root.lastAsked = text

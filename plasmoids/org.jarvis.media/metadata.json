@@ -12,7 +12,7 @@
         "Id": "org.jarvis.media",
         "Name": "Jarvis Media",
         "Name[ru]": "Jarvis: медиа",
-        "Version": "0.21.0",
+        "Version": "0.22.0",
         "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
     },
     "KPackageStructure": "Plasma/Applet",

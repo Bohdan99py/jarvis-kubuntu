@@ -1,4 +1,5 @@
 #include "chat_model.h"
+#include "agent.h"
 
 #include <QByteArray>
 #include <QClipboard>
@@ -224,6 +225,11 @@ void ChatModel::sendWithFiles(const QString &text, const QVariantList &files)
 void ChatModel::sendWithContext(const QString &text, const QVariantList &files, bool useWindow, bool useScreen)
 {
     const QString trimmed = text.trimmed();
+    // "Остановись" typed or said while a task runs stops it instead of waiting behind it (0.22).
+    if (m_busy && files.isEmpty() && jarvis::Agent::isStop(trimmed)) {
+        stop();
+        return;
+    }
     // One request at a time keeps replies in order.
     if ((trimmed.isEmpty() && files.isEmpty() && !useScreen) || trimmed.size() > 4096 || m_busy || files.size() > 8)
         return;

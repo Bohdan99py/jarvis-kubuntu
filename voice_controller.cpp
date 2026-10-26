@@ -1,4 +1,5 @@
 #include "voice_controller.h"
+#include "claude_client.h"
 #include "runtime_paths.h"
 #include "secret_store.h"
 #include <QJsonArray>
@@ -357,6 +358,7 @@ void VoiceController::loadElevenVoices() {
     if(m_elevenLoading) return;
     const QString key=elevenKey();
     if(key.isEmpty()) {m_status=tr("Enter an ElevenLabs API key to use its voices.");emit changed();return;}
+    if(jarvis::ClaudeClient::cloudBlocked()) {m_status=tr("\"Only local\" mode is on: ElevenLabs is not contacted (Settings → Autonomy).");emit changed();return;}
     QNetworkRequest request(QUrl(QStringLiteral("https://api.elevenlabs.io/v1/voices")));
     request.setRawHeader("xi-api-key",key.toUtf8());
     request.setRawHeader("Accept","application/json");

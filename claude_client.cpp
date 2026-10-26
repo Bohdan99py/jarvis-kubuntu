@@ -1,4 +1,5 @@
 #include "claude_client.h"
+#include "config.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -6,6 +7,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QDateTime>
+#include <QTimer>
 #include <QRegularExpression>
 #include <QUrl>
 
@@ -125,10 +127,34 @@ QJsonValue content(const QString &text, const QJsonArray &blocks)
 
 } // namespace
 
+bool ClaudeClient::cloudBlocked()
+{
+    // Read from the file every few seconds: the window, the daemon and the study
+    // window all obey a switch made in the settings at once.
+    static qint64 checkedAt = 0;
+    static bool blocked = false;
+    const qint64 t = QDateTime::currentMSecsSinceEpoch();
+    if (t - checkedAt > 2000) {
+        checkedAt = t;
+        blocked = Config::loadFileOnly().agentMode == u"local";
+    }
+    return blocked;
+}
+
+QString ClaudeClient::blockedMessage(bool ru)
+{
+    return ru ? u"Включён режим «Только локально»: облачные модели не используются (Настройки → Автономность)."_s
+              : u"\"Only local\" mode is on: no cloud models are used (Settings → Autonomy)."_s;
+}
+
 void ClaudeClient::ask(const QString &userText, Lang lang, bool forcedLanguage, const QString &context,
                        const QJsonArray &attachments, const QString &attachmentNote)
 {
     const bool ru = lang == Lang::Ru;
+    if (cloudBlocked()) {
+        QTimer::singleShot(0, this, [this, ru] { emit finished(false, blockedMessage(ru)); });
+        return;
+    }
     QJsonArray messages;
     for (const Turn &t : std::as_const(m_history)) {
         if (!m_keepHistory)
@@ -240,6 +266,10 @@ void ClaudeClient::extract(const QString &system, const QString &userText, int m
 {
     if (m_extracting || !isConfigured())
         return;
+    if (cloudBlocked()) {
+        QTimer::singleShot(0, this, [this] { emit extracted(false, blockedMessage(false)); });
+        return;
+    }
     m_extracting = true;
     QJsonObject body;
     body.insert(u"model"_s, m_model);

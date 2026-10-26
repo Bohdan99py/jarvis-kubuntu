@@ -33,6 +33,10 @@ public:
     // Off for clients whose system prompt sets the output language itself (translation).
     void setLanguageHint(bool on) { m_languageHint = on; }
     bool isConfigured() const noexcept { return !m_apiKey.isEmpty(); }
+    // 0.22: "Only local" mode (config agent_mode = local) — every request is refused
+    // before anything leaves the computer.
+    static bool cloudBlocked();
+    static QString blockedMessage(bool ru);
     // Chat answers may use Anthropic's server-side web search (current law,
     // results, calendars). Off by default: every search is billed.
     void setWebSearch(bool on) { m_webSearch = on; }

@@ -1,4 +1,4 @@
-# Jarvis for Kubuntu · 0.21.0
+# Jarvis for Kubuntu · 0.22.0
 
 A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in skills and a memory that learns from your conversations and what you do. Qt Quick interface in English and Russian, a systemd user daemon on D-Bus.
 
@@ -9,10 +9,22 @@ A desktop assistant for KDE Plasma with chat, voice, quick commands, plug-in ski
 Download the `.deb` for your Kubuntu/Ubuntu release (24.04 or 26.04, amd64) and open it in Discover, or:
 
 ```sh
-sudo apt install ./jarvis_0.21.0_ubuntu-26.04_amd64.deb
+sudo apt install ./jarvis_0.22.0_ubuntu-26.04_amd64.deb
+sudo apt install llama.cpp-tools libggml0-backend-vulkan   # for the local model (Ubuntu 26.04), once
 ```
 
 **Meta+J** opens the quick command bar; the tray icon and the KDE menu entry open the main window.
+
+## Autonomy and working offline (0.22)
+
+Say what you want: "Jarvis, play the sound through my headphones", "connect the headphones, set the volume to 30 percent and open the player", "quieter", "put it back", "stop". Jarvis works out the steps, checks each is allowed, carries them out on the laptop and reads back what really changed. Headphones switched off or never paired: it says what you need to do. Two pairs that fit: it asks which.
+
+- **What it does:** sound (headphones, speakers, volume, microphone), Bluetooth (switch on, connect and disconnect known devices, help with pairing), applications (find, start, switch to an open one, close like the window's close button), brightness, do not disturb, System Settings pages, Jarvis and power profiles, the media player, battery, network, "why doesn't … work" diagnostics.
+- **Offline:** everyday commands are read by rules (instantly, Russian and English). Free wording, several actions at once and plain conversation use a local model, Qwen3.5 4B through llama.cpp on this computer, downloaded once in Settings → Autonomy (2.74 GB, size shown first, sha256 checked). Voice: Vosk and the system voice or Piper.
+- **Modes:** Automatic (laptop tasks locally, the cloud as the settings allow) and Only local (nothing goes to Claude or ElevenLabs). The mode is shown under the message field.
+- **Permissions** per category (Allow / Ask / Off), confirmation of risky actions (closing an application asks "yes/no"), limits on steps and time per task, stop at any moment. Device names and tool output are data, never commands.
+
+Offline preparation, hardware requirements, measurements, checked commands, limitations, upgrade and rollback: [docs/release-0.22.md](docs/release-0.22.md) (Russian).
 
 ## Settings (0.21)
 

@@ -96,6 +96,34 @@ Assistant::Assistant(QObject *parent)
     };
     connect(&m_claude, &ClaudeClient::progress, this, progress);
     connect(&m_coder, &ClaudeClient::progress, this, progress);
+    // ---- The agent (0.22) ----
+    m_system = std::make_shared<agent::LinuxSystem>();
+    m_agentCloud.setKeepHistory(false);
+    m_agent = std::make_unique<Agent>(m_system, &m_localModel, &m_agentCloud, this);
+    m_agent->cloudAvailable = [this] { return m_agentCloud.isConfigured() && !ClaudeClient::cloudBlocked(); };
+    connect(m_agent.get(), &Agent::progress, this, [this](quint64 id, const QString &text) {
+        if (id == m_current && m_busy)
+            emit replyProgress(id, text);
+    });
+    connect(m_agent.get(), &Agent::finished, this, [this](quint64 id, const QString &reply, const QString &route) {
+        if (id == 0)
+            return; // a stop from the window's Stop button: the task's own request gets the report
+        const bool current = m_busy && id == m_current;
+        if (route == u"pass") {
+            // Not a system task after all: the usual chain answers it.
+            if (current && m_agentRequest.id == id)
+                continueRequest(m_agentRequest, m_agentLang);
+            return;
+        }
+        if (route != u"agent")
+            emit routed(id, route);
+        if (current)
+            finish(id, reply, route == u"local-llm");
+        else
+            emit replyReady(id, reply); // "стоп" answered out of the queue
+    });
+    connect(m_agent.get(), &Agent::changed, this, &Assistant::contextChanged);
+
     m_coder.setKeepHistory(false);
     m_coder.setMaxTokens(16000);
     m_coder.setSystemPrompt(
@@ -120,10 +148,23 @@ Assistant::~Assistant()
 void Assistant::reloadConfig()
 {
     m_config = Config::load();
-    m_claude.configure(m_config.apiKey, m_config.model);
-    m_coder.configure(m_config.apiKey, m_config.model);
-    m_planner.configure(m_config.apiKey, m_config.model);
-    if (m_claude.isConfigured())
+    // "Only local": the Claude clients have no key at all, so every path takes its local branch.
+    const QString cloudKey = m_config.agentMode == u"local" ? QString() : m_config.apiKey;
+    m_claude.configure(cloudKey, m_config.model);
+    m_coder.configure(cloudKey, m_config.model);
+    m_planner.configure(cloudKey, m_config.model);
+    m_agentCloud.configure(m_config.agentCloud ? cloudKey : QString(), m_config.model);
+    m_localModel.configure(m_config.agentModel, m_config.agentDevice, m_config.agentKeepMinutes);
+    Agent::Settings agentSettings;
+    agentSettings.mode = m_config.agentMode;
+    agentSettings.cloudPlanning = m_config.agentCloud;
+    agentSettings.permissions = m_config.agentPermissions;
+    agentSettings.maxSteps = m_config.agentMaxSteps;
+    agentSettings.maxSeconds = m_config.agentMaxSeconds;
+    m_agent->configure(agentSettings);
+    if (m_config.agentMode == u"local")
+        qInfo() << "Only local: Claude disabled";
+    else if (m_claude.isConfigured())
         qInfo().noquote() << "Claude enabled, model" << m_config.model; // never log the key
     else
         qInfo() << "Claude disabled (no API key)";
@@ -137,6 +178,14 @@ void Assistant::reloadConfig()
         m_activityTick.stop();
     }
     emit configReloaded();
+}
+
+QJsonObject Assistant::agentStatus() const
+{
+    QJsonObject o = m_agent->status();
+    o[u"cloud"_s] = m_config.agentMode != u"local" && !m_config.apiKey.isEmpty();
+    o[u"cloudPlanning"_s] = m_config.agentMode != u"local" && m_config.agentCloud && !m_config.apiKey.isEmpty();
+    return o;
 }
 
 QString Assistant::teach(const QString &q, const QString &a)
@@ -154,6 +203,12 @@ quint64 Assistant::ask(const QString &input, const QStringList &files, const QJs
         return 0;
     const quint64 id = ++m_nextId;
     m_awareness.userInteracted(now());
+    // "Остановись" never waits behind the task it is meant to stop.
+    if (files.isEmpty() && m_agent->busy() && Agent::isStop(input)) {
+        emit routed(id, u"agent"_s);
+        m_agent->stop(id, replyLanguage(input));
+        return id;
+    }
     m_queue.enqueue({id, input, {}, {}, files, desktop});
     if (!m_busy)
         startNext();
@@ -218,6 +273,19 @@ void Assistant::startNext()
         emit routed(r.id, u"tasks"_s);
         return;
     }
+    // The agent: system tasks — sound, Bluetooth, applications, the screen, power.
+    // With no cloud for chat, the local model answers free conversation too.
+    m_agentRequest = r;
+    m_agentLang = lang;
+    if (m_agent->handle(r.id, r.text, lang, !m_claude.isConfigured())) {
+        emit routed(r.id, u"agent"_s);
+        return;
+    }
+    continueRequest(r, lang);
+}
+
+void Assistant::continueRequest(const Request &r, Lang lang)
+{
     // Desktop commands: workspaces, applications, folders, projects, live figures.
     if (m_desktopHandler) {
         const workspace::Command command = workspace::parseCommand(r.text);
@@ -371,6 +439,11 @@ void Assistant::answer(const Request &r, Lang lang)
         finishLater(r.id, localDesktopReply(lang), false, 200);
         return;
     }
+    // No cloud for chat: the local model answers free conversation (0.22).
+    if (match == ChatEngine::Match::None && !claude && m_agent->converse(r.id, r.text, lang)) {
+        saveCuriosity();
+        return; // the reply comes through the agent
+    }
     if (match == ChatEngine::Match::None) {
         // Offline: a close taught example is better than "I can't".
         const auto similar = m_memory.similar(r.text, 0.6, 1);
@@ -384,11 +457,15 @@ void Assistant::answer(const Request &r, Lang lang)
             localReply = (ru ? u"Из навыка «%1» — «%2»:\n\n%3"_s : u"From the \"%1\" skill — \"%2\":\n\n%3"_s)
                              .arg(known.value(u"skill"_s).toString(), quoteShort(known.value(u"question"_s).toString()),
                                   known.value(u"answer"_s).toString());
+        } else if (m_config.agentMode == u"local") {
+            localReply += (ru ? u"\n\nСвободный диалог сейчас недоступен: %1. Команды для ноутбука (звук, Bluetooth, приложения, яркость) работают."_s
+                              : u"\n\nFree conversation is unavailable right now: %1. Laptop commands (sound, Bluetooth, applications, brightness) work."_s)
+                              .arg(m_agent->unavailableReason(lang));
         } else {
-            localReply += ru ? u"\n\nЧтобы я отвечал на любые вопросы, добавь ключ Claude API: "
-                               u"меню → Настройки Claude API."_s
-                             : u"\n\nTo let me answer anything, add a Claude API key: "
-                               u"menu → Claude API settings."_s;
+            localReply += ru ? u"\n\nЧтобы я отвечал на любые вопросы, добавь ключ Claude API или скачай локальную модель: "
+                               u"Настройки → Интеллект / Автономность."_s
+                             : u"\n\nTo let me answer anything, add a Claude API key or download the local model: "
+                               u"Settings → Intelligence / Autonomy."_s;
         }
     }
     if (askNow) {
@@ -1389,6 +1466,11 @@ void Assistant::answerWithDesktop(const Request &r, Lang lang)
 
 void Assistant::cancel()
 {
+    // A task of the agent: no further step starts, the running one is aborted where it can be.
+    if (m_agent->busy()) {
+        m_agent->stop(0, m_agentLang);
+        return;
+    }
     if (!m_busy || m_cancelled)
         return;
     if (m_claude.busy()) {

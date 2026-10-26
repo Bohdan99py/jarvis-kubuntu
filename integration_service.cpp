@@ -189,6 +189,40 @@ IntegrationService::IntegrationService(Assistant *assistant, Notifier *notifier,
     m_assistant->setDesktopHandler([this](const workspace::Command &command, Lang lang) {
         return enabled() ? m_workspaces.handle(command, lang) : QString();
     });
+    // The agent (0.22) runs its steps in a worker thread; what needs the daemon's
+    // own thread — the window, KWin, the workspaces — is called over to it.
+    agent::LinuxSystem::Hooks hooks;
+    auto onMain = [this](std::function<QString()> f) {
+        QString out;
+        QMetaObject::invokeMethod(this, [&] { out = f(); }, Qt::BlockingQueuedConnection);
+        return out;
+    };
+    hooks.launch = [this, onMain](const QString &id) {
+        if (workspace::resolveApp(id).isEmpty())
+            return u"not installed: "_s + id;
+        return onMain([this, id] {
+            m_callGui(u"Launch"_s, {id}); // the window starts it (jarvisd's sandbox starts nothing)
+            pushEvent(u"launch"_s, id);
+            return QString();
+        });
+    };
+    hooks.openSettings = [this, onMain](const QString &key) {
+        if (workspace::settingsModule(key).isEmpty())
+            return u"unknown settings page"_s;
+        return onMain([this, key] {
+            m_callGui(u"OpenSettings"_s, {key});
+            return QString();
+        });
+    };
+    hooks.switchProfile = [this, onMain](const QString &id) {
+        return onMain([this, id] { return m_workspaces.switchTo(id, false, resolveLanguage(m_assistant->config().language)); });
+    };
+    hooks.currentProfile = [this, onMain] {
+        return onMain([this] { return workspace::load().current; });
+    };
+    hooks.windows = [this](QString *error) { return m_windows.windows(error); };
+    hooks.window = [this](const QString &mode, const QString &id) { return m_windows.act(mode, id); };
+    m_assistant->setAgentHooks(std::move(hooks));
     // The first CPU and network figures need an earlier reading to compare with.
     m_telemetry.json({u"cpu"_s, u"net"_s});
     connect(m_assistant, &Assistant::configReloaded, this, &IntegrationService::applyConfig);
@@ -312,6 +346,11 @@ QString IntegrationService::statusJson()
     o[u"wallpaper"_s] = m_wallpaper;
     o[u"workspace"_s] = m_workspaces.summary();
     o[u"components"_s] = m_components;
+    // 0.22: the agent's mode and whether it works, for the core and the dock (no task text here).
+    const QJsonObject agent = m_assistant->agentStatus();
+    o[u"agent"_s] = QJsonObject{{u"mode"_s, agent.value(u"mode"_s)},
+                                {u"busy"_s, agent.value(u"running"_s).toBool() || agent.value(u"planning"_s).toBool()},
+                                {u"model"_s, agent.value(u"model"_s).toObject().value(u"server"_s)}};
     if (cfg.desktopIntegration) {
         // The next reminder is personal: only with the integration on (as the notice).
         const QJsonObject task = m_assistant->nextTask();
@@ -589,7 +628,24 @@ void IntegrationService::workspaceReport(const QString &json)
         denied(u"workspace reports are accepted from KWin only"_s);
         return;
     }
+    if (m_windows.report(QJsonDocument::fromJson(json.left(262144).toUtf8()).object()))
+        return; // the agent's window script
     m_workspaces.report(json);
+}
+
+QString IntegrationService::agentStatus()
+{
+    // The task holds what the user asked: the Jarvis window only.
+    if (!callerIsGui())
+        return denied(u"the agent's state is for the Jarvis window only"_s);
+    return compact(m_assistant->agentStatus());
+}
+
+QString IntegrationService::agentDiagnostics()
+{
+    if (!callerIsGui())
+        return denied(u"diagnostics are for the Jarvis window only"_s);
+    return compact(m_assistant->agent().diagnostics(resolveLanguage(m_assistant->config().language)));
 }
 
 void IntegrationService::reportVoice(bool listening, bool speaking, const QString &engine)
@@ -755,6 +811,8 @@ void IntegrationAdaptor::WorkspaceReport(const QString &json) { m_service->works
 void IntegrationAdaptor::ReportVoice(bool listening, bool speaking, const QString &engine) { m_service->reportVoice(listening, speaking, engine); }
 void IntegrationAdaptor::ComponentAlive(const QString &component) { m_service->componentAlive(component.left(20)); }
 QString IntegrationAdaptor::Events() { return m_service->eventsJson(); }
+QString IntegrationAdaptor::AgentStatus() { return m_service->agentStatus(); }
+QString IntegrationAdaptor::AgentDiagnostics() { return m_service->agentDiagnostics(); }
 
 RunnerAdaptor::RunnerAdaptor(QObject *object, IntegrationService *service)
     : QDBusAbstractAdaptor(object)

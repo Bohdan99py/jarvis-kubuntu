@@ -181,7 +181,11 @@ CONFIG.write_text(json.dumps({'api_key': KEY, 'language': 'en', 'learn_dialog': 
                               'awareness_screen': True, 'desktop': {'theme': 'mark7', 'dockSize': 44}}))
 DATA.mkdir(parents=True, exist_ok=True)
 (DATA / 'knowledge.json').write_text('{"facts": [{"slot": "name", "value": "Test"}]}')
-memory_before = (DATA / 'knowledge.json').read_bytes()
+# What the user taught: the facts. (Between 8 and 12 the service also notes the morning
+# plan in the same file — that is not memory being touched.)
+def memory():
+    return json.loads((DATA / 'knowledge.json').read_text()).get('facts')
+memory_before = memory()
 daemon = subprocess.Popen([str(BUILD / 'jarvisd')], stdout=open(RUNTIME / 'jarvisd.log', 'w'), stderr=subprocess.STDOUT)
 time.sleep(1.5)
 if subprocess.run([str(BUILD / 'jarvis'), '--desktop-mode', 'jarvis'], capture_output=True, text=True, timeout=120).returncode != 0:
@@ -310,7 +314,7 @@ if not wait(lambda: config().get('desktop', {}).get('theme') == 'classic', 8):
 time.sleep(1.0)
 shot('13-reset-done')
 c = config()
-if c.get('api_key') != KEY or c.get('learn_dialog') is not False or (DATA / 'knowledge.json').read_bytes() != memory_before:
+if c.get('api_key') != KEY or c.get('learn_dialog') is not False or memory() != memory_before:
     fail(f'the Desktop reset touched more than the look: {c}')
 # The dialog listed the dock height too: back to 44 px, in Plasma as well.
 if not wait(lambda: dock_panel()['height'] == 44 and config().get('desktop', {}).get('dockSize') == 44, 10):
