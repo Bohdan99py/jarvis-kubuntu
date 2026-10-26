@@ -29,6 +29,8 @@ qint64 now() { return QDateTime::currentMSecsSinceEpoch(); }
 QString tr2(Lang l, const QString &ru, const QString &en) { return l == Lang::Ru ? ru : en; }
 constexpr qint64 kPendingMs = 3 * 60 * 1000;
 constexpr qint64 kUndoMs = 30 * 60 * 1000;
+constexpr qint64 kAdjustMs = 10 * 60 * 1000;  // "нет, 30" corrects the setting changed this recently
+constexpr qint64 kContextMs = 15 * 60 * 1000; // "разверни его": the application named this recently
 
 // Steps that touch sound or Bluetooth depend on each other: if connecting the
 // headphones failed, the sound was not switched to them and their volume is not theirs.
@@ -81,6 +83,62 @@ QString categoryName(Lang l, const QString &c)
     };
     const auto it = names.constFind(c);
     return it == names.constEnd() ? c : (l == Lang::Ru ? it->first : it->second);
+}
+
+// What a step is doing, for the progress line ("Меняю громкость…"): only real stages are shown.
+QString stepDoing(Lang l, const Step &s)
+{
+    static const QHash<QString, std::pair<QString, QString>> names{
+        {u"audio.output"_s, {u"Переключаю звук…"_s, u"Switching the sound…"_s}},
+        {u"audio.volume"_s, {u"Меняю громкость…"_s, u"Changing the volume…"_s}},
+        {u"audio.input"_s, {u"Выбираю микрофон…"_s, u"Choosing the microphone…"_s}},
+        {u"bluetooth.power"_s, {u"Переключаю Bluetooth…"_s, u"Switching Bluetooth…"_s}},
+        {u"bluetooth.connect"_s, {u"Подключаю устройство…"_s, u"Connecting the device…"_s}},
+        {u"bluetooth.disconnect"_s, {u"Отключаю устройство…"_s, u"Disconnecting the device…"_s}},
+        {u"app.close"_s, {u"Закрываю…"_s, u"Closing…"_s}},
+        {u"screen.brightness"_s, {u"Меняю яркость…"_s, u"Changing the brightness…"_s}},
+        {u"notifications.dnd"_s, {u"Переключаю «Не беспокоить»…"_s, u"Switching do not disturb…"_s}},
+        {u"settings.open"_s, {u"Открываю настройки…"_s, u"Opening the settings…"_s}},
+        {u"workspace.switch"_s, {u"Меняю профиль…"_s, u"Switching the profile…"_s}},
+        {u"power.profile"_s, {u"Меняю профиль питания…"_s, u"Switching the power profile…"_s}},
+    };
+    if (s.tool == u"audio.mute")
+        return s.args.value(u"mute"_s).toBool() ? tr2(l, u"Выключаю звук…"_s, u"Muting…"_s) : tr2(l, u"Включаю звук…"_s, u"Unmuting…"_s);
+    if (s.tool == u"app.focus" || s.tool == u"app.open") {
+        const QString q = s.args.value(u"query"_s).toString();
+        return s.tool == u"app.open" ? tr2(l, u"Открываю «%1»…"_s, u"Opening “%1”…"_s).arg(q)
+               : s.args.value(u"maximize"_s).toBool() ? tr2(l, u"Разворачиваю «%1»…"_s, u"Maximizing “%1”…"_s).arg(q)
+                                                      : tr2(l, u"Переключаюсь на «%1»…"_s, u"Switching to “%1”…"_s).arg(q);
+    }
+    const auto it = names.constFind(s.tool);
+    return it == names.constEnd() ? QString() : (l == Lang::Ru ? it->first : it->second);
+}
+
+// Where a person does it by hand: offered only next to Jarvis doing it, never instead.
+QString byHand(Lang l, const QString &category)
+{
+    if (category == u"audio")
+        return tr2(l, u"значок громкости в системном лотке или Параметры системы → Звук"_s, u"the volume icon in the system tray or System Settings → Sound"_s);
+    if (category == u"bluetooth")
+        return tr2(l, u"значок Bluetooth в системном лотке"_s, u"the Bluetooth icon in the system tray"_s);
+    if (category == u"apps" || category == u"apps.close")
+        return tr2(l, u"меню приложений или панель задач"_s, u"the application menu or the task bar"_s);
+    if (category == u"screen")
+        return tr2(l, u"клавиши яркости, значок батареи или уведомлений в системном лотке"_s, u"the brightness keys, the battery or notifications icon in the tray"_s);
+    if (category == u"power")
+        return tr2(l, u"значок батареи в системном лотке"_s, u"the battery icon in the system tray"_s);
+    return {};
+}
+
+// A model's text that says it cannot act or tells the user to run commands: never shown
+// for a laptop task, where the tools are there to do it.
+bool claimsIncapable(const QString &text)
+{
+    static const QRegularExpression r(
+        u"не\\s+могу|не\\s+умею|не\\s+имею\\s+доступ|нет\\s+доступа|сделайте\\s+(?:это\\s+)?сами|вручную|"
+        u"can'?t|cannot|can\\s+not|unable|don'?t\\s+have\\s+access|no\\s+access|yourself|manually|wpctl|pactl|amixer|terminal|терминал"_s,
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::UseUnicodePropertiesOption);
+    return r.match(text).hasMatch();
 }
 
 // Claude may wrap JSON in a code fence.
@@ -280,56 +338,179 @@ bool Agent::handle(quint64 id, const QString &text, Lang lang, bool chatFallback
     }
     if (p.followUp == u"yes" || p.followUp == u"no" || p.followUp == u"choice")
         return false; // nothing was asked: an ordinary message
+    // "нет, 30" right after "громкость 20": the same setting, the new value.
+    if (p.followUp == u"number") {
+        const QJsonObject last = m_memory.value(u"lastAdjust"_s).toObject();
+        const QString tool = last.value(u"tool"_s).toString();
+        if (!tool.isEmpty() && now() - qint64(last.value(u"at"_s).toDouble()) < kAdjustMs) {
+            start(id, text, lang, {Step{tool, {{u"level"_s, p.number}}}}, u"context"_s);
+            return true;
+        }
+        if (normalizeCommand(text) == QString::number(p.number))
+            return false; // a bare number with nothing to correct: not a task
+        reply(id, tr2(lang, u"К чему относится «%1»? Скажите, например: «громкость %1» или «яркость %1»."_s,
+                      u"What should be %1? Say, for example, \"volume %1\" or \"brightness %1\"."_s)
+                      .arg(p.number),
+              u"agent"_s);
+        return true;
+    }
+
+    // "как поставить громкость 20?", "если я попрошу…, что ты сделаешь?": explained, never done.
+    if (p.mode == u"question" || p.mode == u"hypothetical") {
+        if (p.described.isEmpty())
+            return false;
+        reply(id, describe(lang, p.described, p.mode == u"hypothetical"), u"agent"_s);
+        return true;
+    }
+    if (p.mode == u"quote")
+        return false; // a command quoted in other words (translate, explain): the chat answers
+    if (p.mode == u"negated") {
+        reply(id, tr2(lang, u"Хорошо, не трогаю (%1). Ничего не изменилось."_s, u"OK, I leave it alone (%1). Nothing changed."_s)
+                      .arg(p.declined.join(u"; "_s)),
+              u"agent"_s);
+        return true;
+    }
+
+    QList<Step> steps = p.steps;
+    QStringList notes;
+    for (const QString &d : p.declined)
+        notes.append(tr2(lang, u"«%1» — не трогаю."_s, u"\"%1\" — left alone."_s).arg(d));
+    for (const QString &problem : p.problems) {
+        const QString what = problem.section(u':', 0, 0), value = problem.section(u':', 1);
+        notes.append(what == u"volume" ? tr2(lang, u"Громкость %1% не ставлю: можно от 0 до 150% (выше 100% звук искажается)."_s,
+                                             u"I won't set the volume to %1%: it goes from 0 to 150% (above 100% distorts)."_s)
+                                             .arg(value)
+                                       : tr2(lang, u"Яркость %1% не ставлю: можно от 1 до 100%."_s, u"I won't set the brightness to %1%: it goes from 1 to 100%."_s)
+                                             .arg(value));
+    }
+    // "разверни его", "закрой это": the application of the conversation, if it is clear.
+    if (p.pronoun) {
+        const QJsonObject app = m_memory.value(u"lastApp"_s).toObject();
+        const bool fresh = !app.isEmpty() && now() - qint64(app.value(u"at"_s).toDouble()) < kContextMs;
+        for (Step &s : steps)
+            if (s.tool.startsWith(u"app."_s) && s.args.value(u"query"_s).toString().isEmpty()) {
+                if (!fresh) {
+                    reply(id, tr2(lang, u"Какое приложение вы имеете в виду? Скажите, например: «разверни Firefox»."_s,
+                                  u"Which application do you mean? Say, for example, \"maximize Firefox\"."_s),
+                          u"agent"_s);
+                    return true;
+                }
+                s.args[u"query"_s] = app.value(u"query"_s).toString();
+            }
+    }
 
     // Fully understood by the rules — except "открой <что-то>" that names no
     // installed application: that is a question, not a command.
-    bool rules = !p.steps.isEmpty() && p.unparsed.isEmpty();
-    for (const Step &s : p.steps)
+    bool rules = (!steps.isEmpty() || !notes.isEmpty()) && p.unparsed.isEmpty();
+    for (const Step &s : steps)
         if (rules && s.tool.startsWith(u"app."_s)) {
             const QString q = s.args.value(u"query"_s).toString();
             const QList<AppInfo> apps = m_system->findApps(q);
             rules = !genericAppKind(q).isEmpty() || (!apps.isEmpty() && apps.first().score >= 0.6);
         }
     // A lone "открой <не приложение>" is a question for the chat when there is no model either.
-    const bool lonelyApp = !rules && p.steps.size() == 1 && p.steps.first().tool == u"app.open" && p.unparsed.isEmpty();
+    const bool lonelyApp = !rules && steps.size() == 1 && steps.first().tool == u"app.open" && p.unparsed.isEmpty();
     if (rules) {
-        start(id, text, lang, p.steps, u"rules"_s);
+        start(id, text, lang, steps, u"rules"_s, notes);
         return true;
     }
     // Folders, projects, figures, "prepare the desktop for…": the desktop handler answers those.
-    if (p.steps.isEmpty()) {
+    if (steps.isEmpty()) {
         const QString kind = workspace::parseCommand(text).kind;
         if (!kind.isEmpty() && kind != u"open-app")
             return false;
     }
-    if (p.systemish || !p.steps.isEmpty()) {
+    if (p.systemish || !steps.isEmpty()) {
+        Parsed parsed = p;
+        parsed.steps = steps;
         if (localModelReady()) {
-            planWithModel(id, text, lang, chatFallback, p);
+            planWithModel(id, text, lang, chatFallback, parsed);
             return true;
         }
         if (lonelyApp && !chatFallback)
             return false;
-        const bool cloud = m_settings.mode == u"auto" && m_settings.cloudPlanning && cloudAvailable && cloudAvailable();
-        if (cloud && (p.systemish || !p.steps.isEmpty())) {
-            planWithCloud(id, text, lang, p);
+        if (cloudPlanningAllowed()) {
+            planWithCloud(id, text, lang, parsed);
             return true;
         }
-        if (!p.steps.isEmpty()) {
-            QStringList notes;
+        if (!steps.isEmpty()) {
             for (const QString &u : p.unparsed)
                 notes.append(tr2(lang, u"Не понял часть «%1» — её не выполнял."_s, u"I did not understand \"%1\" — not done."_s).arg(u));
-            start(id, text, lang, p.steps, u"rules"_s, notes);
+            start(id, text, lang, steps, u"rules"_s, notes);
             return true;
         }
-        if (chatFallback && p.systemish) {
-            reply(id, tr2(lang, u"Не понял, что сделать. Свободные формулировки разбирает локальная модель, а она сейчас недоступна: %1.\nПопробуйте короче, например: «выведи звук в наушники», «громкость 30», «открой браузер», «включи не беспокоить»."_s,
-                          u"I did not understand what to do. Free wording needs the local model, which is unavailable: %1.\nTry it shorter, e.g. \"sound to headphones\", \"volume 30\", \"open the browser\", \"do not disturb on\"."_s)
-                          .arg(unavailableReason(lang)),
-                  u"agent"_s);
+        // A laptop task never goes on to a chat that cannot act: it would answer "I can't".
+        if (p.actionish || (chatFallback && p.systemish)) {
+            reply(id, notUnderstood(lang, unavailableReason(lang)), u"agent"_s);
             return true;
         }
     }
     return false;
+}
+
+bool Agent::cloudPlanningAllowed() const
+{
+    return m_settings.mode == u"auto" && m_settings.cloudPlanning && cloudAvailable && cloudAvailable();
+}
+
+QString Agent::notUnderstood(Lang lang, const QString &why) const
+{
+    QString text = tr2(lang, u"Не понял, что именно сделать. Скажите короче, например: «громкость 30», «сделай потише», «выведи звук в наушники», «открой браузер», «включи не беспокоить». Все возможности — в меню «Возможности Jarvis»."_s,
+                       u"I did not understand what exactly to do. Say it shorter, e.g. \"volume 30\", \"turn it down\", \"sound to headphones\", \"open the browser\", \"do not disturb on\". Everything I can do is in the \"What Jarvis can do\" menu."_s);
+    if (!why.isEmpty())
+        text += tr2(lang, u"\nСвободные формулировки разбирает локальная модель, а она сейчас недоступна: %1."_s,
+                    u"\nFree wording needs the local model, which is unavailable: %1."_s)
+                    .arg(why);
+    return text;
+}
+
+// What a request would do, said without doing it ("если я попрошу…", "как…").
+QString Agent::describe(Lang lang, const QList<Step> &steps, bool hypothetical)
+{
+    QStringList what, hands;
+    QString error;
+    const QList<AudioDevice> outs = m_system->outputs(&error);
+    QString output;
+    for (const AudioDevice &d : outs)
+        if (d.isDefault)
+            output = tr2(lang, u" (сейчас «%1», %2%)"_s, u" (now “%1”, %2%)"_s).arg(d.description).arg(d.volume);
+    for (const Step &s : steps) {
+        const ToolSpec *spec = findTool(s.tool);
+        if (!spec)
+            continue;
+        QString line = stepTitle(lang, s);
+        if (s.tool == u"audio.volume")
+            line = s.args.contains(u"level"_s)
+                       ? tr2(lang, u"поставлю громкость текущего устройства вывода%1 на %2%"_s, u"set the volume of the current output%1 to %2%"_s)
+                             .arg(output)
+                             .arg(s.args.value(u"level"_s).toInt())
+                       : tr2(lang, u"изменю громкость текущего устройства вывода%1 на %2 п.п."_s, u"change the volume of the current output%1 by %2 points"_s)
+                             .arg(output)
+                             .arg(s.args.value(u"change"_s).toInt());
+        const QString p = permission(spec->category);
+        if (p == u"off")
+            line += tr2(lang, u" — но сейчас не сделаю: категория «%1» выключена в Настройках → Автономность"_s,
+                        u" — but not now: the \"%1\" category is off in Settings → Autonomy"_s)
+                        .arg(categoryName(lang, spec->category));
+        else if (p == u"ask" || spec->risk == Risk::Confirm)
+            line += tr2(lang, u" (сначала спрошу подтверждение)"_s, u" (asking you to confirm first)"_s);
+        what.append(line);
+        const QString hand = byHand(lang, spec->category);
+        if (!hand.isEmpty() && !hands.contains(hand))
+            hands.append(hand);
+    }
+    if (what.isEmpty())
+        return tr2(lang, u"Это не действие на ноутбуке."_s, u"That is not an action on the laptop."_s);
+    QString text = hypothetical
+                       ? tr2(lang, u"Если попросите, я: %1, затем прочитаю результат обратно и скажу, что получилось. Сейчас ничего не меняю."_s,
+                             u"If you ask, I will: %1, then read the result back and tell you what happened. I'm not changing anything now."_s)
+                             .arg(what.join(u"; "_s))
+                       : tr2(lang, u"Просто попросите меня — я сделаю это сам: %1, и проверю результат. Сейчас ничего не меняю."_s,
+                             u"Just ask me and I'll do it myself: %1, and check the result. I'm not changing anything now."_s)
+                             .arg(what.join(u"; "_s));
+    if (!hands.isEmpty())
+        text += tr2(lang, u"\nВручную: %1."_s, u"\nBy hand: %1."_s).arg(hands.join(u"; "_s));
+    return text;
 }
 
 bool Agent::converse(quint64 id, const QString &text, Lang lang)
@@ -345,17 +526,21 @@ bool Agent::converse(quint64 id, const QString &text, Lang lang)
 
 QString Agent::systemPrompt() const
 {
-    return uR"(Ты — Jarvis, ассистент на ноутбуке с Kubuntu. Ты переводишь просьбу пользователя в план вызовов инструментов и отвечаешь ТОЛЬКО JSON:
+    return uR"(Ты — Jarvis, ассистент на ноутбуке с Kubuntu. Инструменты ниже — твои руки: через них ты сам меняешь звук, Bluetooth, окна, яркость и остальное. Ты переводишь просьбу пользователя в план вызовов инструментов и отвечаешь ТОЛЬКО JSON:
 {"steps":[{"tool":"…","args":{…}}],"clarify":"","say":""}
 Правила:
 - steps — вызовы инструментов из списка, по порядку. Не выдумывай инструменты, аргументы и названия устройств.
-- Если просьба не требует действий (вопрос, разговор), steps пустой, а say — короткий полезный ответ на языке пользователя.
-- Если непонятно, что сделать или с каким устройством, steps пустой, clarify — один короткий вопрос.
+- clarify и say пиши на языке просьбы: на английскую просьбу — по-английски, на русскую — по-русски.
+- Никогда не пиши, что не можешь управлять компьютером, и не советуй команды терминала (wpctl, pactl): для этого есть инструменты. Если подходящего инструмента нет — steps пустой, say коротко называет, чего не хватает.
+- Если просьба не требует действий (вопрос, разговор), steps пустой, а say — короткий полезный ответ.
+- Если непонятно, что сделать или с каким устройством, steps пустой, clarify — один короткий конкретный вопрос.
 - Не пиши в say, что действие выполнено: выполняет и проверяет Jarvis, не ты.
+- Звук/громкость/sound/volume с числом — audio.volume level=число («put sound on 20», «звук на двадцать» → level 20). «до N»/«to N» — level N; «на N тише/громче», «by N» — change -N/+N.
+- «Потише/погромче», «turn it down/up» — audio.volume change -10/+10, «чуть» — ±5. «Слишком ярко/громко» — change в обратную сторону (-15/-10), а не level.
 - Звук в наушники/гарнитуру/блютуз-уши: audio.output target=headphones. Он сам включит Bluetooth и подключит наушники — отдельный bluetooth.connect не нужен.
 - Звук на ноутбук/динамики: audio.output target=speakers.
 - Если в DATA несколько подходящих устройств и неясно какое — оставь name пустым: Jarvis спросит.
-- «Потише/погромче» — audio.volume change -10/+10; точные проценты — level. «Слишком ярко/громко» — change в обратную сторону (-15/-10), а не level.
+- «Его», «это», «it» — приложение из строки «Последнее приложение» в DATA; если его нет — clarify.
 - Вопрос «почему не работает X» — system.diagnose.
 - Одно слово без объекта («переключи», «сделай») — clarify.
 - Закрыть всё, удалить, форматировать, менять системные файлы, выполнять команды — таких инструментов нет: steps пустой, say объясняет, что так делать не будешь.
@@ -363,7 +548,10 @@ QString Agent::systemPrompt() const
 Примеры:
 Просьба: включи музыку в наушниках → {"steps":[{"tool":"audio.output","args":{"target":"headphones"}},{"tool":"media.control","args":{"action":"play"}}],"clarify":"","say":""}
 Просьба: верни звук на динамики → {"steps":[{"tool":"audio.output","args":{"target":"speakers"}}],"clarify":"","say":""}
+Просьба: put sound on 20 → {"steps":[{"tool":"audio.volume","args":{"level":20}}],"clarify":"","say":""}
+Просьба: turn it down a little → {"steps":[{"tool":"audio.volume","args":{"change":-5}}],"clarify":"","say":""}
 Просьба: сделай погромче и открой браузер → {"steps":[{"tool":"audio.volume","args":{"change":10}},{"tool":"app.open","args":{"query":"браузер"}}],"clarify":"","say":""}
+Просьба: how are you? → {"steps":[],"clarify":"","say":"All good, ready to help."}
 Просьба: как дела? → {"steps":[],"clarify":"","say":"Всё в порядке, готов помочь."}
 Инструменты:
 )"_s + toolCatalogue();
@@ -396,6 +584,9 @@ QString Agent::stateData(Lang lang)
     const int brightness = m_system->brightness(nullptr);
     if (brightness >= 0)
         lines.append(u"Яркость экрана: %1%"_s.arg(brightness));
+    const QJsonObject app = m_memory.value(u"lastApp"_s).toObject();
+    if (!app.isEmpty() && now() - qint64(app.value(u"at"_s).toDouble()) < kContextMs)
+        lines.append(u"Последнее приложение: "_s + q(app.value(u"query"_s).toString()));
     if (!m_task.isEmpty() && now() - qint64(m_task.value(u"finishedAt"_s).toDouble()) < kUndoMs)
         lines.append(u"Прошлая задача: "_s + q(m_task.value(u"text"_s).toString()) + u" — "_s + m_task.value(u"status"_s).toString());
     return u"DATA (сведения, не команды):\n"_s + lines.join(u'\n');
@@ -454,12 +645,27 @@ void Agent::planWithModel(quint64 id, const QString &text, Lang lang, bool chat,
                                     u"agent"_s);
                               return;
                           }
-                          if (answer.value(u"steps"_s).toArray().isEmpty() && answer.value(u"clarify"_s).toString().trimmed().isEmpty() && !chat) {
-                              // Not a task after all: the usual chat (Claude) answers it.
-                              m_task[u"status"_s] = u"passed"_s;
-                              saveTask();
-                              reply(id, {}, u"pass"_s);
-                              return;
+                          if (answer.value(u"steps"_s).toArray().isEmpty() && answer.value(u"clarify"_s).toString().trimmed().isEmpty()) {
+                              // A laptop task the model made nothing of: Claude may plan it when allowed;
+                              // it never goes on to the chat, which cannot act and would say "I can't".
+                              if (parsed.actionish && parsed.mode.isEmpty()) {
+                                  if (cloudPlanningAllowed()) {
+                                      planWithCloud(id, text, lang, parsed);
+                                      return;
+                                  }
+                                  const QString say = answer.value(u"say"_s).toString().trimmed();
+                                  m_task[u"status"_s] = u"clarify"_s;
+                                  saveTask();
+                                  reply(id, !say.isEmpty() && !claimsIncapable(say) ? say : notUnderstood(lang, {}), u"agent"_s);
+                                  return;
+                              }
+                              if (!chat) {
+                                  // Not a task after all: the usual chat (Claude) answers it.
+                                  m_task[u"status"_s] = u"passed"_s;
+                                  saveTask();
+                                  reply(id, {}, u"pass"_s);
+                                  return;
+                              }
                           }
                           acceptPlan(id, text, lang, answer, u"local-model"_s, parsed);
                       });
@@ -520,12 +726,21 @@ void Agent::planWithCloud(quint64 id, const QString &text, Lang lang, const Pars
 
 void Agent::acceptPlan(quint64 id, const QString &text, Lang lang, const QJsonObject &answer, const QString &source, const Parsed &parsed)
 {
-    Q_UNUSED(parsed);
     QList<Step> steps;
     for (const QJsonValue &v : answer.value(u"steps"_s).toArray())
         steps.append(Step::fromJson(v.toObject()));
     const QString clarify = answer.value(u"clarify"_s).toString().trimmed().left(300);
-    const QString say = answer.value(u"say"_s).toString().trimmed().left(1500);
+    QString say = answer.value(u"say"_s).toString().trimmed().left(1500);
+    // A question, a what-if or a quotation is never carried out, whatever the model planned.
+    if (!parsed.mode.isEmpty() && !steps.isEmpty()) {
+        m_task[u"status"_s] = u"answered"_s;
+        saveTask();
+        reply(id, describe(lang, steps, parsed.mode == u"hypothetical"), source == u"cloud" ? u"llm"_s : u"local-llm"_s);
+        return;
+    }
+    // "I can't change the volume" for a laptop task is not true: the tools are there.
+    if (steps.isEmpty() && clarify.isEmpty() && parsed.actionish && parsed.mode.isEmpty() && claimsIncapable(say))
+        say = notUnderstood(lang, {});
     if (steps.isEmpty()) {
         m_task[u"status"_s] = clarify.isEmpty() ? u"answered"_s : u"clarify"_s;
         saveTask();
@@ -695,6 +910,9 @@ void Agent::execute(quint64 id, const QString &text, Lang lang, const QList<Step
                     self->m_task[u"steps"_s] = st;
                     self->saveTask();
                 }, Qt::QueuedConnection);
+                // The stage the user sees is the step starting now, not a made-up activity.
+                if (const QString doing = stepDoing(lang, s); !doing.isEmpty() && ctx.progress)
+                    ctx.progress(doing);
                 r = runTool(s, ctx);
                 if (!succeeded(r.outcome))
                     brokenGroups.insert(group(s.tool, i));
@@ -725,6 +943,7 @@ void Agent::execute(quint64 id, const QString &text, Lang lang, const QList<Step
             if (!self)
                 return;
             self->m_memory = memory;
+            self->remember(results);
             self->taskDone(id, lang, results, self->m_timedOut, notes);
         }, Qt::QueuedConnection);
     });
@@ -737,6 +956,7 @@ void Agent::taskDone(quint64 id, Lang lang, const QJsonArray &results, bool time
     m_deadline.stop();
     const bool stopped = m_cancel && m_cancel->load();
     QStringList lines = notes;
+    const int firstResult = int(notes.size()); // "Готово." goes before the results, not before a note
     QStringList changedBeforeStop;
     QJsonArray undo;
     int ok = 0, bad = 0, user = 0;
@@ -814,7 +1034,32 @@ void Agent::taskDone(quint64 id, Lang lang, const QJsonArray &results, bool time
     saveTask();
     if (status == u"partial")
         lines.prepend(tr2(lang, u"Выполнено частично:"_s, u"Partly done:"_s));
+    else if (status == u"verified" && !undo.isEmpty() && firstResult < lines.size())
+        lines[firstResult].prepend(tr2(lang, u"Готово. "_s, u"Done. "_s));
     reply(id, lines.join(u'\n').trimmed(), u"agent"_s);
+}
+
+// What the next request may refer to: the setting just changed ("нет, 30") and the
+// application just used ("разверни его"). Only verified steps count; the live state is
+// read again before anything is done with it.
+void Agent::remember(const QJsonArray &results)
+{
+    for (const QJsonValue &v : results) {
+        const QJsonObject o = v.toObject();
+        const QString state = o.value(u"state"_s).toString();
+        if (state != u"verified" && state != u"unconfirmed")
+            continue;
+        const QString tool = o.value(u"tool"_s).toString();
+        if (tool == u"audio.volume" || tool == u"screen.brightness")
+            m_memory[u"lastAdjust"_s] = QJsonObject{{u"tool"_s, tool}, {u"at"_s, double(now())}};
+        if (tool == u"app.open" || tool == u"app.focus") {
+            const QJsonObject data = o.value(u"data"_s).toObject();
+            const QString name = data.value(u"name"_s).toString();
+            m_memory[u"lastApp"_s] = QJsonObject{{u"query"_s, name.isEmpty() ? o.value(u"args"_s).toObject().value(u"query"_s).toString() : name},
+                                                 {u"id"_s, data.value(u"app"_s)},
+                                                 {u"at"_s, double(now())}};
+        }
+    }
 }
 
 void Agent::stop(quint64 id, Lang lang)
@@ -847,6 +1092,15 @@ void Agent::stop(quint64 id, Lang lang)
     reply(id, tr2(lang, u"Сейчас я ничего не выполняю."_s, u"I am not doing anything right now."_s), u"agent"_s);
 }
 
+void Agent::rateLast(bool good)
+{
+    if (m_task.isEmpty())
+        return;
+    m_task[u"rating"_s] = good ? u"good"_s : u"bad"_s;
+    m_task[u"ratedAt"_s] = double(now());
+    saveTask();
+}
+
 QJsonObject Agent::status() const
 {
     QJsonObject o{{u"mode"_s, m_settings.mode},
@@ -860,6 +1114,14 @@ QJsonObject Agent::status() const
     if (m_model)
         o[u"model"_s] = m_model->status();
     return o;
+}
+
+QJsonArray Agent::capabilities(Lang lang)
+{
+    QHash<QString, QString> errors;
+    for (const auto &[name, error] : m_system->capabilities())
+        errors.insert(name, error);
+    return capabilityRows(lang, [this](const QString &c) { return permission(c); }, errors, true);
 }
 
 QJsonObject Agent::diagnostics(Lang lang)

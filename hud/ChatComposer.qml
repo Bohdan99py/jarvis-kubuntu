@@ -29,6 +29,7 @@ FocusScope {
     readonly property alias text: input.text
     signal attachRequested()
     signal voiceSetupRequested()
+    signal capabilitiesRequested()
     signal sent(string text)
 
     function focusInput() { input.forceActiveFocus() }
@@ -295,6 +296,20 @@ FocusScope {
                 elide: Text.ElideRight
             }
             Item { Layout.fillWidth: true; visible: !(composer.voice.busy || composer.voice.recording || (input.activeFocus && input.length === 0 && composer.showHints)) }
+            // "What Jarvis can do" (0.22.1): the catalogue of actions, with examples to put into the field.
+            Text {
+                objectName: "capabilitiesButton"
+                visible: !composer.compact
+                text: "☰ " + qsTr("What I can do")
+                color: capsHover.hovered ? JarvisTheme.cyan : JarvisTheme.textDim
+                font.family: JarvisTheme.mono
+                font.pixelSize: 10
+                Accessible.role: Accessible.Button
+                Accessible.name: qsTr("What Jarvis can do")
+                Accessible.onPressAction: composer.capabilitiesRequested()
+                HoverHandler { id: capsHover; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: composer.capabilitiesRequested() }
+            }
             // Which way requests go: nothing to the cloud, or as the settings allow.
             Text {
                 objectName: "agentModeLabel"

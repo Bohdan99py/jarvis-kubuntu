@@ -1,6 +1,7 @@
 #include "agent_tools.h"
 
 #include <QElapsedTimer>
+#include <QHash>
 #include <QJsonDocument>
 #include <QRegularExpression>
 #include <QThread>
@@ -426,7 +427,7 @@ StepResult audioVolume(const Step &s, ToolContext &ctx)
     if (std::abs(wanted - before) <= 1 && !unmute)
         return result(Outcome::Verified, tr2(l, u"Громкость уже %1% (%2)."_s, u"The volume is already %1% (%2)."_s)
                                              .arg(before)
-                                             .arg(d->description));
+                                             .arg(deviceLabel(l, *d)));
     if (QString e = ctx.system->setVolume(d->name, wanted); !e.isEmpty())
         return result(Outcome::Failed, tr2(l, u"Не удалось изменить громкость: %1"_s, u"Could not change the volume: %1"_s).arg(e));
     if (unmute)
@@ -446,8 +447,9 @@ StepResult audioVolume(const Step &s, ToolContext &ctx)
         return result(Outcome::Unconfirmed, tr2(l, u"Громкость %1% отправлена, но сейчас %2%."_s, u"Volume %1% was sent, but it reads %2% now."_s)
                                                 .arg(wanted)
                                                 .arg(now));
-    StepResult r = result(Outcome::Verified, tr2(l, u"Громкость %1% (было %2%)%3."_s, u"Volume %1% (was %2%)%3."_s)
+    StepResult r = result(Outcome::Verified, tr2(l, u"Громкость %1% — %2 (было %3%)%4."_s, u"Volume %1% — %2 (was %3%)%4."_s)
                                                  .arg(now)
+                                                 .arg(deviceLabel(l, *d))
                                                  .arg(before)
                                                  .arg(unmute ? tr2(l, u", звук включён"_s, u", unmuted"_s) : QString()));
     Q_UNUSED(mutedNow);
@@ -797,20 +799,44 @@ StepResult appOpen(const Step &s, ToolContext &ctx, bool focusOnly)
 {
     const Lang l = ctx.lang;
     const QString query = s.args.value(u"query"_s).toString();
+    const bool maximize = s.args.value(u"maximize"_s).toBool();
     const AppMatch m = resolveApp(ctx, query);
     if (m.id.isEmpty())
         return noApp(l, query, m);
+    // The application found: what "его"/"it" means in the next request.
+    auto found = [&](StepResult r) {
+        r.data = {{u"app"_s, m.id}, {u"name"_s, m.name}};
+        return r;
+    };
     QString error;
     // KWin that does not answer (another compositor, a stuck script): no waiting for windows.
     QList<Window> wins;
     if (ctx.system->windowsAvailable())
         wins = ctx.system->windows(&error);
     const bool canSee = ctx.system->windowsAvailable() && error.isEmpty();
+    // "Разверни": the window fills the screen; KWin reports whether it does.
+    auto maximized = [&](const Window &w, const QString &done) {
+        if (w.maximized)
+            return found(result(Outcome::Verified, done + u' ' + tr2(l, u"Окно уже развёрнуто."_s, u"The window is already maximized."_s)));
+        if (QString e = ctx.system->maximizeWindow(w.id); !e.isEmpty())
+            return found(result(Outcome::Partial, done + u' ' + tr2(l, u"Развернуть не удалось: %1"_s, u"Could not maximize it: %1"_s).arg(e)));
+        const bool ok = waitFor(ctx, 3000, [&] {
+            for (const Window &x : ctx.system->windows(nullptr))
+                if (x.id == w.id)
+                    return x.maximized;
+            return false;
+        });
+        return ok ? found(result(Outcome::Verified, tr2(l, u"%1: окно развёрнуто на весь экран."_s, u"%1: the window is maximized."_s).arg(m.name)))
+                  : found(result(Outcome::Unconfirmed, done + u' ' + tr2(l, u"Попросил KWin развернуть окно, но он не подтвердил."_s,
+                                                                          u"Asked KWin to maximize it, but it did not confirm."_s)));
+    };
     if (canSee) {
         for (const Window &w : wins)
             if (windowOf(w, m.id)) {
-                if (w.active)
-                    return result(Outcome::Verified, tr2(l, u"%1 уже открыт и активен."_s, u"%1 is already open and active."_s).arg(m.name));
+                if (w.active) {
+                    const QString done = tr2(l, u"%1 уже открыт и активен."_s, u"%1 is already open and active."_s).arg(m.name);
+                    return maximize ? maximized(w, done) : found(result(Outcome::Verified, done));
+                }
                 if (QString e = ctx.system->activateWindow(w.id); !e.isEmpty())
                     return result(Outcome::Failed, e);
                 const bool ok = waitFor(ctx, 3000, [&] {
@@ -819,8 +845,12 @@ StepResult appOpen(const Step &s, ToolContext &ctx, bool focusOnly)
                             return x.active;
                     return false;
                 });
-                return ok ? result(Outcome::Verified, tr2(l, u"%1 уже был открыт — переключился на его окно."_s, u"%1 was already open — switched to its window."_s).arg(m.name))
-                          : result(Outcome::Unconfirmed, tr2(l, u"Попросил KWin показать окно %1, но оно не стало активным."_s, u"Asked KWin to show %1, but it did not become active."_s).arg(m.name));
+                if (!ok)
+                    return found(result(Outcome::Unconfirmed, tr2(l, u"Попросил KWin показать окно %1, но оно не стало активным."_s,
+                                                                  u"Asked KWin to show %1, but it did not become active."_s)
+                                                                  .arg(m.name)));
+                const QString done = tr2(l, u"%1 уже был открыт — переключился на его окно."_s, u"%1 was already open — switched to its window."_s).arg(m.name);
+                return maximize ? maximized(w, done) : found(result(Outcome::Verified, done));
             }
     }
     if (focusOnly)
@@ -831,9 +861,9 @@ StepResult appOpen(const Step &s, ToolContext &ctx, bool focusOnly)
     if (QString e = ctx.system->launch(m.id); !e.isEmpty())
         return result(Outcome::Failed, tr2(l, u"Не удалось запустить %1: %2"_s, u"Could not start %1: %2"_s).arg(m.name, e));
     if (!canSee)
-        return result(Outcome::Unconfirmed, tr2(l, u"Запускаю %1. Проверить, что окно открылось, не могу: окна видит только служба Jarvis с KWin."_s,
-                                                u"Starting %1. I cannot check that its window opened: only the Jarvis service with KWin sees windows."_s)
-                                                .arg(m.name));
+        return found(result(Outcome::Unconfirmed, tr2(l, u"Запускаю %1. Проверить, что окно открылось, не могу: окна видит только служба Jarvis с KWin."_s,
+                                                      u"Starting %1. I cannot check that its window opened: only the Jarvis service with KWin sees windows."_s)
+                                                      .arg(m.name)));
     const bool ok = waitFor(ctx, 15000, [&] {
         for (const Window &x : ctx.system->windows(nullptr))
             if (windowOf(x, m.id))
@@ -842,10 +872,10 @@ StepResult appOpen(const Step &s, ToolContext &ctx, bool focusOnly)
     });
     if (ctx.cancelled())
         return cancelled(l, tr2(l, u"Остановлено. %1 уже запускается — закрыть его можно обычным способом."_s, u"Stopped. %1 is already starting — close it the usual way."_s).arg(m.name));
-    return ok ? result(Outcome::Verified, tr2(l, u"%1 открыт."_s, u"%1 is open."_s).arg(m.name))
-              : result(Outcome::Unconfirmed, tr2(l, u"%1 запущен, но его окно за 15 секунд не появилось — возможно, оно ещё загружается."_s,
-                                                 u"%1 was started, but no window appeared in 15 seconds — it may still be loading."_s)
-                                                 .arg(m.name));
+    return ok ? found(result(Outcome::Verified, tr2(l, u"%1 открыт."_s, u"%1 is open."_s).arg(m.name)))
+              : found(result(Outcome::Unconfirmed, tr2(l, u"%1 запущен, но его окно за 15 секунд не появилось — возможно, оно ещё загружается."_s,
+                                                       u"%1 was started, but no window appeared in 15 seconds — it may still be loading."_s)
+                                                       .arg(m.name)));
 }
 
 StepResult appClose(const Step &s, ToolContext &ctx)
@@ -1206,8 +1236,8 @@ const QList<ToolSpec> &tools()
         {u"app.open"_s, u"apps"_s, Risk::Reversible, u"Open an installed application, or switch to its window if it is already open"_s,
          {{u"query"_s, str()}}, {u"query"_s}, {}, 20000, u"its window appears or becomes active (KWin)"_s,
          u"stops waiting; an application already starting keeps starting"_s},
-        {u"app.focus"_s, u"apps"_s, Risk::Reversible, u"Switch to the window of an open application"_s, {{u"query"_s, str()}}, {u"query"_s}, {}, 6000,
-         u"the window becomes active"_s, u"instant"_s},
+        {u"app.focus"_s, u"apps"_s, Risk::Reversible, u"Switch to the window of an open application; maximize=true also makes it fill the screen"_s,
+         {{u"query"_s, str()}, {u"maximize"_s, boolean()}}, {u"query"_s}, {}, 8000, u"the window becomes active (and maximized)"_s, u"instant"_s},
         {u"app.close"_s, u"apps.close"_s, Risk::Confirm, u"Ask an application's windows to close, as their close button does (it may ask to save)"_s,
          {{u"query"_s, str()}}, {u"query"_s}, {}, 8000, u"its windows are gone"_s, u"cannot be undone once the application closed"_s},
         {u"screen.brightness"_s, u"screen"_s, Risk::Reversible, u"Screen brightness: a level in percent or a change"_s,
@@ -1373,6 +1403,168 @@ QString genericAppKind(const QString &words)
     if (any({u"просмотр картинок", u"просмотр фото", u"фотографи", u"картинк", u"image viewer", u"photos"}))
         return u"images"_s;
     return {};
+}
+
+const QList<Capability> &capabilityCatalogue()
+{
+    static const QList<Capability> list{
+        // ---- Sound and microphone ----
+        {u"audio.volume"_s, u"sound"_s, u"Громкость"_s, u"Volume"_s,
+         u"Точное значение или шаг: «до 20%» — поставить 20, «на 20» — изменить на 20, «чуть тише» — на 5."_s,
+         u"An exact level or a step: \"to 20%\" sets 20, \"by 20\" moves by 20, \"a bit quieter\" moves by 5."_s,
+         {u"Поставь громкость 20%"_s, u"Сделай потише"_s, u"Громче на 10"_s}, {u"Put sound on 20"_s, u"Turn it down"_s, u"Volume up by 10"_s}, u"audio"_s},
+        {u"audio.mute"_s, u"sound"_s, u"Выключить и включить звук"_s, u"Mute and unmute"_s,
+         u"Без звука и обратно, на текущем устройстве вывода."_s, u"Silence the current output and bring it back."_s,
+         {u"Выключи звук"_s, u"Включи звук обратно"_s}, {u"Mute the sound"_s, u"Unmute"_s}, u"audio"_s},
+        {u"audio.output"_s, u"sound"_s, u"Куда идёт звук"_s, u"Where sound plays"_s,
+         u"Наушники (сам включит Bluetooth и подключит знакомые), динамики ноутбука или устройство по имени."_s,
+         u"Headphones (switches Bluetooth on and connects known ones itself), the laptop speakers or a device by name."_s,
+         {u"Переключи звук на наушники"_s, u"Верни звук на ноутбук"_s}, {u"Switch audio to my headphones"_s, u"Play through the laptop speakers"_s},
+         u"audio"_s},
+        {u"audio.input"_s, u"sound"_s, u"Микрофон"_s, u"Microphone"_s, u"Встроенный, гарнитуры или по имени."_s,
+         u"Built-in, the headset's or by name."_s, {u"Включи встроенный микрофон"_s, u"Микрофон гарнитуры"_s},
+         {u"Use the built-in microphone"_s, u"Switch the microphone to the headset"_s}, u"audio"_s},
+        {u"audio.list"_s, u"sound"_s, u"Список устройств"_s, u"Sound devices"_s, u"Какие есть выходы и микрофоны, что выбрано сейчас."_s,
+         u"Which outputs and microphones there are and which is in use."_s, {u"Какие есть микрофоны?"_s, u"Какая громкость?"_s},
+         {u"Which microphones are there?"_s, u"What's the volume?"_s}, u"audio"_s},
+        {u"media.control"_s, u"sound"_s, u"Проигрыватель"_s, u"Media player"_s, u"Пауза, дальше, назад — в любом проигрывателе с MPRIS."_s,
+         u"Pause, next, previous — in any player with MPRIS."_s, {u"Поставь музыку на паузу"_s, u"Следующий трек"_s},
+         {u"Pause the music"_s, u"Next track"_s}, QString()},
+        // ---- Bluetooth ----
+        {u"bluetooth.connect"_s, u"bluetooth"_s, u"Подключить устройство"_s, u"Connect a device"_s,
+         u"Знакомое (сопряжённое) устройство по имени. Если подходит несколько — спрошу, какое."_s,
+         u"A known (paired) device by name. If several fit, I ask which."_s, {u"Подключи JBL"_s, u"Подключи колонку Marshall"_s},
+         {u"Connect the JBL speaker"_s, u"Connect my Marshall"_s}, u"bluetooth"_s},
+        {u"bluetooth.disconnect"_s, u"bluetooth"_s, u"Отключить устройство"_s, u"Disconnect a device"_s, u"Отключить подключённое устройство."_s,
+         u"Disconnect a connected device."_s, {u"Отключи наушники"_s}, {u"Disconnect the headphones"_s}, u"bluetooth"_s},
+        {u"bluetooth.power"_s, u"bluetooth"_s, u"Bluetooth вкл./выкл."_s, u"Bluetooth on/off"_s,
+         u"Включить или выключить адаптер (при программной блокировке — тоже)."_s, u"Switch the adapter on or off (also when it is soft-blocked)."_s,
+         {u"Включи блютуз"_s, u"Выключи Bluetooth"_s}, {u"Turn Bluetooth on"_s, u"Turn off Bluetooth"_s}, u"bluetooth"_s},
+        {u"bluetooth.status"_s, u"bluetooth"_s, u"Что подключено"_s, u"What is connected"_s, u"Состояние адаптера и знакомые устройства."_s,
+         u"The adapter's state and the known devices."_s, {u"Что подключено по блютузу?"_s}, {u"Bluetooth status"_s}, u"bluetooth"_s},
+        {u"bluetooth.pair"_s, u"bluetooth"_s, u"Новые наушники"_s, u"New headphones"_s,
+         u"Открою мастер Bluetooth KDE и объясню шаги: первое сопряжение подтверждаете вы."_s,
+         u"Opens KDE's Bluetooth wizard and explains the steps: you confirm the first pairing."_s, {u"Помоги подключить новые наушники"_s},
+         {u"Help me pair new headphones"_s}, u"bluetooth"_s},
+        // ---- Applications and windows ----
+        {u"app.open"_s, u"apps"_s, u"Открыть приложение"_s, u"Open an application"_s,
+         u"Установленное приложение или приложение по умолчанию («браузер», «терминал»). Если уже открыто — переключусь на окно."_s,
+         u"An installed application or the default one (\"browser\", \"terminal\"). If it is open, I switch to its window."_s,
+         {u"Открой Firefox"_s, u"Запусти терминал"_s}, {u"Open Firefox"_s, u"Launch the terminal"_s}, QString()},
+        {u"app.focus"_s, u"apps"_s, u"Переключиться и развернуть"_s, u"Switch to and maximize"_s,
+         u"Показать окно открытого приложения или развернуть его на весь экран; «его» — приложение из разговора."_s,
+         u"Bring an open application's window forward or maximize it; \"it\" is the application we were talking about."_s,
+         {u"Переключись на Kate"_s, u"Разверни его"_s}, {u"Switch to Kate"_s, u"Maximize Firefox"_s}, u"windows"_s},
+        {u"app.close"_s, u"apps"_s, u"Закрыть приложение"_s, u"Close an application"_s,
+         u"Как кнопкой окна: приложение может спросить о сохранении. Принудительно не закрываю."_s,
+         u"Like its close button: the application may ask to save. Never forced."_s, {u"Закрой Telegram"_s}, {u"Close Telegram"_s}, u"windows"_s},
+        {u"workspace.switch"_s, u"apps"_s, u"Профиль Jarvis"_s, u"Jarvis profile"_s, u"Общий, учёба, работа или разработка."_s,
+         u"General, study, work or development."_s, {u"Включи режим учёбы"_s}, {u"Switch to the work profile"_s}, QString()},
+        {u"settings.open"_s, u"apps"_s, u"Параметры системы"_s, u"System Settings"_s,
+         u"Открыть страницу: звук, сеть, экран, питание, Bluetooth, клавиатура, комбинации клавиш, уведомления."_s,
+         u"Open a page: sound, network, display, power, Bluetooth, keyboard, shortcuts, notifications."_s, {u"Открой настройки звука"_s},
+         {u"Open the display settings"_s}, QString()},
+        // ---- Screen ----
+        {u"screen.brightness"_s, u"screen"_s, u"Яркость"_s, u"Brightness"_s, u"Точное значение или шаг; «слишком ярко» — темнее."_s,
+         u"An exact level or a step; \"too bright\" makes it darker."_s, {u"Яркость 40"_s, u"Сделай экран потемнее"_s},
+         {u"Set the brightness to 40"_s, u"Screen brighter"_s}, u"brightness"_s},
+        // ---- Notifications ----
+        {u"notifications.dnd"_s, u"notifications"_s, u"Не беспокоить"_s, u"Do not disturb"_s,
+         u"Скрыть всплывающие уведомления, пока работает служба Jarvis."_s, u"Hide notification pop-ups while the Jarvis service runs."_s,
+         {u"Включи не беспокоить"_s, u"Мне мешают уведомления"_s}, {u"Do not disturb on"_s, u"Silence notifications"_s}, u"dnd"_s},
+        // ---- Power ----
+        {u"power.profile"_s, u"power"_s, u"Профиль питания"_s, u"Power profile"_s, u"Энергосбережение, сбалансированный или производительность."_s,
+         u"Power saver, balanced or performance."_s, {u"Включи энергосбережение"_s}, {u"Switch to performance mode"_s}, u"power"_s},
+        {u"system.status"_s, u"power"_s, u"Батарея и сеть"_s, u"Battery and network"_s, u"Заряд и время работы, профиль питания, есть ли интернет."_s,
+         u"Charge and time left, the power profile, whether there is internet."_s, {u"Сколько осталось заряда?"_s, u"Есть ли интернет?"_s},
+         {u"How much battery is left?"_s, u"Am I online?"_s}, QString()},
+        // ---- Files and folders: the desktop handler, as far as it goes ----
+        {u"desktop:open-folder"_s, u"files"_s, u"Открыть папку"_s, u"Open a folder"_s,
+         u"Домашняя, Загрузки, Документы, Изображения, Музыка, Видео, Рабочий стол — в файловом менеджере. Файлы я не удаляю и не перемещаю."_s,
+         u"Home, Downloads, Documents, Pictures, Music, Videos, Desktop — in the file manager. I don't delete or move files."_s,
+         {u"Открой папку загрузки"_s}, {u"Open the downloads folder"_s}, QString()},
+        {u"desktop:find-project"_s, u"files"_s, u"Найти проект"_s, u"Find a project"_s, u"Папка проекта по названию — открыть в редакторе или файловом менеджере."_s,
+         u"A project folder by name — opened in the editor or the file manager."_s, {u"Открой проект jarvis"_s}, {u"Open the jarvis project"_s},
+         QString()},
+        // ---- System state ----
+        {u"system.diagnose"_s, u"state"_s, u"Почему не работает"_s, u"Why it doesn't work"_s,
+         u"Звук, Bluetooth, яркость, окна, сеть, локальная модель, голос: причина и что сделать."_s,
+         u"Sound, Bluetooth, brightness, windows, network, the local model, the voice: the cause and what to do."_s,
+         {u"Почему не работает звук?"_s, u"Почему блютуз не подключается?"_s}, {u"Why doesn't the sound work?"_s, u"Why is Bluetooth not working?"_s},
+         QString()},
+        // ---- The task itself ----
+        {u"agent:undo"_s, u"control"_s, u"Вернуть как было"_s, u"Put it back"_s,
+         u"Откат последней задачи, которая что-то меняла, по сохранённым прежним значениям (один раз, 30 минут)."_s,
+         u"Undoes the last task that changed something, from the values saved before it (once, within 30 minutes)."_s, {u"Верни как было"_s},
+         {u"Put it back"_s}, QString()},
+        {u"agent:correct"_s, u"control"_s, u"Поправить значение"_s, u"Correct the value"_s,
+         u"Сразу после громкости или яркости: другое число для того же."_s, u"Right after the volume or brightness: another number for the same."_s,
+         {u"Нет, 30"_s}, {u"Make it 30"_s}, QString()},
+        {u"agent:stop"_s, u"control"_s, u"Остановить"_s, u"Stop"_s,
+         u"Прерывает задачу; скажу, что уже успело измениться."_s, u"Interrupts the task and says what already changed."_s, {u"Стоп"_s},
+         {u"Stop"_s}, QString()},
+    };
+    return list;
+}
+
+QString sectionTitle(const QString &section, Lang lang)
+{
+    static const QHash<QString, std::pair<QString, QString>> names{
+        {u"sound"_s, {u"Звук и микрофон"_s, u"Sound and microphone"_s}},
+        {u"bluetooth"_s, {u"Bluetooth"_s, u"Bluetooth"_s}},
+        {u"apps"_s, {u"Приложения и окна"_s, u"Applications and windows"_s}},
+        {u"screen"_s, {u"Экран"_s, u"Screen"_s}},
+        {u"notifications"_s, {u"Уведомления"_s, u"Notifications"_s}},
+        {u"power"_s, {u"Питание"_s, u"Power"_s}},
+        {u"files"_s, {u"Файлы и папки"_s, u"Files and folders"_s}},
+        {u"state"_s, {u"Состояние системы"_s, u"System state"_s}},
+        {u"control"_s, {u"Управление задачей"_s, u"The task itself"_s}},
+    };
+    const auto it = names.constFind(section);
+    return it == names.constEnd() ? section : (lang == Lang::Ru ? it->first : it->second);
+}
+
+QJsonArray capabilityRows(Lang lang, const std::function<QString(const QString &category)> &permission,
+                          const QHash<QString, QString> &systemErrors, bool systemKnown)
+{
+    QJsonArray rows;
+    for (const Capability &c : capabilityCatalogue()) {
+        const ToolSpec *spec = findTool(c.id);
+        QString confirm = u"no"_s, reason;
+        bool available = true;
+        if (spec) {
+            const QString p = permission(spec->category);
+            if (p == u"off") {
+                available = false;
+                reason = tr2(lang, u"выключено в Настройках → Автономность"_s, u"turned off in Settings → Autonomy"_s);
+            } else if (p == u"ask") {
+                confirm = u"ask"_s;
+            } else if (spec->risk == Risk::Confirm) {
+                confirm = u"model"_s; // asked when a model planned it
+            }
+        }
+        if (available && !c.needs.isEmpty()) {
+            if (!systemKnown) {
+                reason = tr2(lang, u"не проверено: служба Jarvis не отвечает"_s, u"not checked: the Jarvis service does not answer"_s);
+            } else if (const QString e = systemErrors.value(c.needs); !e.isEmpty()) {
+                available = false;
+                reason = e;
+            }
+        }
+        rows.append(QJsonObject{{u"id"_s, c.id},
+                                {u"section"_s, c.section},
+                                {u"sectionTitle"_s, sectionTitle(c.section, lang)},
+                                {u"title"_s, lang == Lang::Ru ? c.titleRu : c.titleEn},
+                                {u"text"_s, lang == Lang::Ru ? c.textRu : c.textEn},
+                                {u"examplesRu"_s, QJsonArray::fromStringList(c.examplesRu)},
+                                {u"examplesEn"_s, QJsonArray::fromStringList(c.examplesEn)},
+                                {u"offline"_s, true}, // every tool runs on this computer
+                                {u"confirm"_s, confirm},
+                                {u"available"_s, available},
+                                {u"checked"_s, systemKnown || c.needs.isEmpty()},
+                                {u"reason"_s, reason}});
+    }
+    return rows;
 }
 
 StepResult runTool(const Step &s, ToolContext &ctx)

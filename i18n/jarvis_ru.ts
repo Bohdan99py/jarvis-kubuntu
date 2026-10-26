@@ -719,6 +719,61 @@
     </message>
 </context>
 <context>
+    <name>CapabilitiesView</name>
+    <message>
+        <source>Say what you want in your own words — these are examples, not commands to learn. Everything here runs on this computer, without the internet. Click an example to put it into the message field.</source>
+        <translation>Говорите своими словами — это примеры, а не команды для заучивания. Всё здесь выполняется на этом компьютере, без интернета. Нажмите на пример, чтобы вставить его в поле ввода.</translation>
+    </message>
+    <message>
+        <source>Search: volume, headphones, window, яркость…</source>
+        <translation>Поиск: громкость, наушники, окно, brightness…</translation>
+    </message>
+    <message>
+        <source>Search the capabilities</source>
+        <translation>Поиск по возможностям</translation>
+    </message>
+    <message>
+        <source>Nothing found. Ask in your own words anyway — Jarvis tells you honestly if it cannot do it.</source>
+        <translation>Ничего не найдено. Всё равно попросите своими словами — Jarvis честно скажет, если не сможет.</translation>
+    </message>
+    <message>
+        <source>available</source>
+        <translation>доступно</translation>
+    </message>
+    <message>
+        <source>not checked</source>
+        <translation>не проверено</translation>
+    </message>
+    <message>
+        <source>unavailable</source>
+        <translation>недоступно</translation>
+    </message>
+    <message>
+        <source>Why: </source>
+        <translation>Почему: </translation>
+    </message>
+    <message>
+        <source>works offline</source>
+        <translation>работает без интернета</translation>
+    </message>
+    <message>
+        <source>asks you first</source>
+        <translation>сначала спросит</translation>
+    </message>
+    <message>
+        <source>asks first when the wording was free</source>
+        <translation>спросит, если просьбу разбирала модель</translation>
+    </message>
+    <message>
+        <source>no confirmation needed</source>
+        <translation>без подтверждения</translation>
+    </message>
+    <message>
+        <source>Put into the message field: %1</source>
+        <translation>Вставить в поле ввода: %1</translation>
+    </message>
+</context>
+<context>
     <name>ChatComposer</name>
     <message>
         <source>Write a message…</source>
@@ -775,6 +830,14 @@
     <message>
         <source>Enter — send · Shift+Enter — new line · Esc — stop · ↑ — last message · Ctrl+Shift+M — dictate</source>
         <translation>Enter — отправить · Shift+Enter — новая строка · Esc — стоп · ↑ — прошлое сообщение · Ctrl+Shift+M — диктовка</translation>
+    </message>
+    <message>
+        <source>What I can do</source>
+        <translation>Что я умею</translation>
+    </message>
+    <message>
+        <source>What Jarvis can do</source>
+        <translation>Возможности Jarvis</translation>
     </message>
     <message>
         <source>Only local</source>
@@ -3141,6 +3204,10 @@
         <translation>Французский</translation>
     </message>
     <message>
+        <source>What Jarvis can do</source>
+        <translation>Возможности Jarvis</translation>
+    </message>
+    <message>
         <source>Settings…</source>
         <translation>Настройки…</translation>
     </message>
@@ -3203,6 +3270,10 @@
     <message>
         <source>Quick commands · Meta+J</source>
         <translation>Быстрые команды · Meta+J</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
     </message>
     <message>
         <source>Clear chat</source>
@@ -4895,6 +4966,22 @@ Esc — скрыть окно.</translation>
     <message>
         <source>offline, local, without internet, fallback, no key</source>
         <translation>офлайн, локально, без интернета, резервный режим, без ключа</translation>
+    </message>
+    <message>
+        <source>What Jarvis can do</source>
+        <translation>Возможности Jarvis</translation>
+    </message>
+    <message>
+        <source>Actions on this laptop</source>
+        <translation>Действия на этом ноутбуке</translation>
+    </message>
+    <message>
+        <source>Every action Jarvis carries out, with examples, whether it works offline, asks first or is available now.</source>
+        <translation>Все действия Jarvis с примерами: работает ли без интернета, спрашивает ли подтверждение, доступно ли сейчас.</translation>
+    </message>
+    <message>
+        <source>capabilities, commands, what can you do, help, examples, abilities</source>
+        <translation>возможности, команды, что умеешь, помощь, примеры, справка, capabilities, commands, help</translation>
     </message>
     <message>
         <source>Mode</source>

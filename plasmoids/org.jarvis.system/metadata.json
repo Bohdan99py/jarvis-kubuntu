@@ -12,7 +12,7 @@
         "Id": "org.jarvis.system",
         "Name": "Jarvis System",
         "Name[ru]": "Jarvis: система",
-        "Version": "0.22.0",
+        "Version": "0.22.1",
         "Website": "https://github.com/Bohdan99py/jarvis-kubuntu"
     },
     "KPackageStructure": "Plasma/Applet",

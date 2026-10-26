@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMutex>
+#include <QSet>
 #include <QTemporaryDir>
 #include <QThread>
 #include <QTimer>
@@ -21,6 +22,7 @@
 #include "agent_intents.h"
 #include "agent_system.h"
 #include "agent_tools.h"
+#include "assistant.h"
 #include "claude_client.h"
 #include "local_model.h"
 
@@ -276,6 +278,17 @@ public:
                 wins.removeAt(i);
         return {};
     }
+    QString maximizeWindow(const QString &id) override
+    {
+        log(u"maximize "_s + id);
+        QMutexLocker l(&m);
+        for (Window &w : wins) {
+            w.active = w.id == id;
+            if (w.id == id)
+                w.maximized = true;
+        }
+        return {};
+    }
     QString openSettings(const QString &key) override
     {
         log(u"openSettings "_s + key);
@@ -363,13 +376,15 @@ struct Harness
         agent->cloudAvailable = [] { return false; };
         QObject::connect(agent.get(), &Agent::finished, [this](quint64 id, const QString &r, const QString &route) {
             replies.insert(id, r);
+            routes.insert(id, route);
             lastRoute = route;
         });
     }
-    quint64 send(const QString &text)
+    QHash<quint64, QString> routes;
+    quint64 send(const QString &text, Lang lang = Lang::Ru, bool chatFallback = true)
     {
         const quint64 id = next++;
-        if (!agent->handle(id, text, Lang::Ru, true))
+        if (!agent->handle(id, text, lang, chatFallback))
             replies.insert(id, u"<not handled>"_s);
         return id;
     }
@@ -385,6 +400,7 @@ struct Harness
         return replies.value(id, u"<timeout>"_s);
     }
     QString ask(const QString &text) { return wait(send(text)); }
+    QString askIn(Lang lang, const QString &text) { return wait(send(text, lang)); }
     QString status() const { return agent->status().value(u"task"_s).toObject().value(u"status"_s).toString(); }
 };
 
@@ -771,6 +787,340 @@ static void crashingModel(const QString &dir)
     std::puts("ok crashing model");
 }
 
+
+// ---------------------------------------------------------------------------
+// 0.22.1: the phrasings people really use, each carried out on the fake laptop.
+// For the report: was the intent right, the tool and its arguments, was it done,
+// was the result read back.
+
+struct Scenario
+{
+    QString text;
+    Lang lang;
+    QString tool;
+    QJsonObject args;                           // expected subset of the first step's arguments
+    std::function<void(FakeSystem &)> setup;
+    std::function<bool(FakeSystem &)> done;    // the system really changed (or was read)
+};
+
+static int volumeOf(FakeSystem &s)
+{
+    for (const AudioDevice &d : s.outputs(nullptr))
+        if (d.isDefault)
+            return d.volume;
+    return -1;
+}
+static bool mutedNow(FakeSystem &s)
+{
+    for (const AudioDevice &d : s.outputs(nullptr))
+        if (d.isDefault)
+            return d.muted;
+    return false;
+}
+
+static void phrasings()
+{
+    auto vol = [](int v) { return [v](FakeSystem &s) { return volumeOf(s) == v; }; };
+    auto muted = [](bool m) { return [m](FakeSystem &s) { return mutedNow(s) == m; }; };
+    auto bright = [](int v) { return [v](FakeSystem &s) { return s.brightnessValue == v; }; };
+    auto withHeadphones = [](FakeSystem &s) { s.bt = {headphones(u"Sony WH-1000XM4"_s, u"AA:BB:CC:DD:EE:01"_s)}; };
+    auto silenced = [](FakeSystem &s) { s.sinks.first().muted = true; };
+    auto onHeadphones = [](FakeSystem &s) { return s.defaultSink().startsWith(u"bluez_output"_s); };
+    const Lang ru = Lang::Ru, en = Lang::En;
+    const QList<Scenario> scenarios{
+        // Russian
+        {u"Поставь громкость 20%."_s, ru, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"Сделай звук на двадцать"_s, ru, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"Громкость двадцать процентов"_s, ru, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"Сделай потише"_s, ru, u"audio.volume"_s, {{u"change"_s, -10}}, {}, vol(36)},
+        {u"Выключи звук."_s, ru, u"audio.mute"_s, {{u"mute"_s, true}}, {}, muted(true)},
+        {u"Включи звук обратно"_s, ru, u"audio.mute"_s, {{u"mute"_s, false}}, silenced, muted(false)},
+        {u"Переключи звук на наушники"_s, ru, u"audio.output"_s, {{u"target"_s, u"headphones"_s}}, withHeadphones, onHeadphones},
+        {u"убавь громкость на 20 процентных пунктов"_s, ru, u"audio.volume"_s, {{u"change"_s, -20}}, {}, vol(26)},
+        {u"убавь до 15"_s, ru, u"audio.volume"_s, {{u"level"_s, 15}}, {}, vol(15)},
+        {u"чуть громче"_s, ru, u"audio.volume"_s, {{u"change"_s, 5}}, {}, vol(51)},
+        {u"Джарвис, громкасть тридцать восемь"_s, ru, u"audio.volume"_s, {{u"level"_s, 38}}, {}, vol(38)},
+        {u"звук на максимум"_s, ru, u"audio.volume"_s, {{u"level"_s, 100}}, {}, vol(100)},
+        {u"можешь сделать громкость 30?"_s, ru, u"audio.volume"_s, {{u"level"_s, 30}}, {}, vol(30)},
+        {u"давай звук на тридцать пять"_s, ru, u"audio.volume"_s, {{u"level"_s, 35}}, {}, vol(35)},
+        {u"звук потише пожалуйста"_s, ru, u"audio.volume"_s, {{u"change"_s, -10}}, {}, vol(36)},
+        {u"яркость на 70"_s, ru, u"screen.brightness"_s, {{u"level"_s, 70}}, {}, bright(70)},
+        {u"сделай экран чуть темнее"_s, ru, u"screen.brightness"_s, {{u"change"_s, -7}}, {}, bright(33)},
+        {u"включи режим не беспокоить"_s, ru, u"notifications.dnd"_s, {{u"on"_s, true}}, {}, [](FakeSystem &s) { return s.dndValue == 1; }},
+        {u"открой firefox"_s, ru, u"app.open"_s, {{u"query"_s, u"firefox"_s}}, {}, [](FakeSystem &s) { return s.count(u"launch"_s) == 1; }},
+        {u"отключи блютуз"_s, ru, u"bluetooth.power"_s, {{u"on"_s, false}}, {}, [](FakeSystem &s) { return !s.adapterState.powered; }},
+        {u"громкость 25 и яркость 60"_s, ru, u"audio.volume"_s, {{u"level"_s, 25}}, {}, [](FakeSystem &s) { return volumeOf(s) == 25 && s.brightnessValue == 60; }},
+        // English
+        {u"put sound on 20"_s, en, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"PUT SOUND ON 20!!!"_s, en, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"Set volume to 20%."_s, en, u"audio.volume"_s, {{u"level"_s, 20}}, {}, vol(20)},
+        {u"Turn it down"_s, en, u"audio.volume"_s, {{u"change"_s, -10}}, {}, vol(36)},
+        {u"Mute the sound."_s, en, u"audio.mute"_s, {{u"mute"_s, true}}, {}, muted(true)},
+        {u"Unmute"_s, en, u"audio.mute"_s, {{u"mute"_s, false}}, silenced, muted(false)},
+        {u"Switch audio to my headphones"_s, en, u"audio.output"_s, {{u"target"_s, u"headphones"_s}}, withHeadphones, onHeadphones},
+        {u"turn the volume up by 15"_s, en, u"audio.volume"_s, {{u"change"_s, 15}}, {}, vol(61)},
+        {u"Volume to twenty five percent please"_s, en, u"audio.volume"_s, {{u"level"_s, 25}}, {}, vol(25)},
+        {u"make it a bit louder"_s, en, u"audio.volume"_s, {{u"change"_s, 5}}, {}, vol(51)},
+        {u"crank the volume up"_s, en, u"audio.volume"_s, {{u"change"_s, 10}}, {}, vol(56)},
+        {u"bring the volume down to ten"_s, en, u"audio.volume"_s, {{u"level"_s, 10}}, {}, vol(10)},
+        {u"please lower the volume a little"_s, en, u"audio.volume"_s, {{u"change"_s, -5}}, {}, vol(41)},
+        {u"jarvis, could you turn the sound off"_s, en, u"audio.mute"_s, {{u"mute"_s, true}}, {}, muted(true)},
+        {u"lower the brightness to 30"_s, en, u"screen.brightness"_s, {{u"level"_s, 30}}, {}, bright(30)},
+        {u"turn on do not disturb"_s, en, u"notifications.dnd"_s, {{u"on"_s, true}}, {}, [](FakeSystem &s) { return s.dndValue == 1; }},
+        {u"sound to 35 and open firefox"_s, en, u"audio.volume"_s, {{u"level"_s, 35}}, {}, [](FakeSystem &s) { return volumeOf(s) == 35 && s.count(u"launch"_s) == 1; }},
+    };
+    int n = 0;
+    std::puts("  #  intent tool+args done verified  phrase");
+    for (const Scenario &c : scenarios) {
+        auto sys = laptop();
+        if (c.setup)
+            c.setup(*sys);
+        const Parsed p = parse(c.text);
+        const bool intent = p.mode.isEmpty() && !p.steps.isEmpty() && p.steps.first().tool == c.tool;
+        bool args = intent;
+        for (auto it = c.args.begin(); args && it != c.args.end(); ++it)
+            args = p.steps.first().args.value(it.key()) == it.value();
+        Harness h(sys);
+        const QString r = h.askIn(c.lang, c.text);
+        const bool done = c.done(*sys);
+        const bool verified = h.status() == u"verified";
+        std::printf("%3d  %-6s %-9s %-4s %-8s  %s\n", ++n, intent ? "ok" : "NO", args ? "ok" : "NO", done ? "ok" : "NO", verified ? "ok" : "NO",
+                    qPrintable(c.text));
+        requireText(intent && args && done && verified, qPrintable(u"phrasing: "_s + c.text), r);
+        // Never "I can't" for what the tools do.
+        requireText(!r.contains(u"can't"_s) && !r.contains(u"не могу"_s), "no false refusal", r);
+    }
+    require(n >= 30, "at least 30 phrasings");
+    std::puts("ok phrasings");
+}
+
+// Asking how, asking what-if, saying "don't", quoting: explained or left alone, never done.
+static void modes()
+{
+    auto sys = laptop();
+    Harness h(sys);
+    const int before = sys->count(u"set"_s);
+    QString r = h.ask(u"Как поставить громкость 20%?"_s);
+    requireText(r.contains(u"Просто попросите"_s) && r.contains(u"на 20%"_s) && r.contains(u"Вручную"_s), "how-to explained", r);
+    r = h.ask(u"Если я попрошу поставить громкость 20%, что ты сделаешь?"_s);
+    requireText(r.contains(u"Если попросите"_s) && r.contains(u"Built-in Speaker"_s) && r.contains(u"ничего не меняю"_s), "what-if explained", r);
+    r = h.ask(u"Не меняй громкость"_s);
+    requireText(r.contains(u"не трогаю"_s), "a negation is heard", r);
+    r = h.askIn(Lang::En, u"how do I mute the sound?"_s);
+    requireText(r.contains(u"Just ask me"_s), "English how-to", r);
+    r = h.askIn(Lang::En, u"don't touch the volume"_s);
+    requireText(r.contains(u"leave it alone"_s), "English negation", r);
+    r = h.ask(u"Переведи \"выключи звук\" на английский"_s);
+    requireText(r == u"<not handled>"_s, "a quoted command goes to the chat, not to the tools", r);
+    require(sys->count(u"set"_s) == before, "nothing was changed by questions, what-ifs, negations, quotes");
+    r = h.ask(u"сделай потише, но не выключай звук"_s);
+    requireText(volumeOf(*sys) == 36 && !mutedNow(*sys) && r.contains(u"не трогаю"_s), "the action done, the negated part left", r);
+    r = h.ask(u"громкость 300"_s);
+    requireText(r.contains(u"не ставлю"_s) && volumeOf(*sys) == 36, "out of range is said, not clamped silently", r);
+    std::puts("ok modes");
+}
+
+// The conversation: the device and application of the moment, corrections, undo,
+// and what the user changed by hand in between.
+static void conversation()
+{
+    // A: the headphones, then "потише" is about them.
+    auto sys = laptop();
+    sys->bt = {headphones(u"Sony"_s, u"AA:BB:CC:DD:EE:01"_s)};
+    Harness h(sys);
+    h.ask(u"Переключи звук на наушники"_s);
+    QString r = h.ask(u"Сделай потише"_s);
+    requireText(volumeOf(*sys) == 40 && r.contains(u"Sony"_s) && sys->sinks.first().volume == 46, "A: quieter on the headphones", r);
+    // The user switched to the speakers by hand: the old context does not win.
+    sys->setDefaultOutput(u"alsa_output.pci.Speaker"_s);
+    r = h.ask(u"сделай потише"_s);
+    requireText(sys->sinks.first().volume == 36 && r.contains(u"Built-in Speaker"_s), "stale context: the live output", r);
+
+    // B: "открой Firefox" → "разверни его".
+    auto sys2 = laptop();
+    Harness b(sys2);
+    b.ask(u"Открой Firefox"_s);
+    r = b.ask(u"Разверни его"_s);
+    requireText(sys2->count(u"maximize"_s) == 1 && r.contains(u"развёрнуто"_s), "B: it is Firefox", r);
+    // Closed by hand meanwhile: said, not guessed.
+    sys2->wins.clear();
+    r = b.ask(u"разверни его"_s);
+    requireText(r.contains(u"не открыт"_s) && sys2->count(u"maximize"_s) == 1, "B: gone since", r);
+    QFile::remove(Agent::taskPath()); // a new start with nothing remembered
+    Harness none(laptop());
+    r = none.ask(u"разверни его"_s);
+    requireText(r.contains(u"Какое приложение"_s), "B: nothing to refer to — one question", r);
+
+    // C: which headphones → "вторые" → the original task goes on with JBL.
+    auto sys3 = laptop();
+    sys3->bt = {headphones(u"Sony"_s, u"AA:BB:CC:DD:EE:01"_s), headphones(u"JBL"_s, u"AA:BB:CC:DD:EE:02"_s)};
+    Harness c(sys3);
+    r = c.ask(u"Подключи наушники"_s);
+    requireText(r.contains(u"1) Sony"_s) && r.contains(u"2) JBL"_s), "C: asks which", r);
+    r = c.ask(u"Вторые"_s);
+    requireText(r.contains(u"JBL"_s) && sys3->defaultSink().contains(u"EE_02"_s), "C: JBL", r);
+
+    // D: "нет, 30" corrects; E: "верни как было" puts back the last change.
+    auto sys4 = laptop();
+    Harness d(sys4);
+    d.ask(u"Поставь громкость 20"_s);
+    r = d.ask(u"Нет, 30"_s);
+    requireText(volumeOf(*sys4) == 30 && r.contains(u"30%"_s), "D: corrected", r);
+    r = d.ask(u"Верни как было"_s);
+    requireText(volumeOf(*sys4) == 20, "E: back to the known earlier value", r);
+    QFile::remove(Agent::taskPath());
+    Harness fresh(laptop());
+    r = fresh.ask(u"нет, 30"_s);
+    requireText(r.contains(u"К чему относится"_s) && fresh.sys->count(u"setVolume"_s) == 0, "D: nothing to correct — one question", r);
+
+    // Permission refused, tool unavailable: said honestly, never "done".
+    Harness off(laptop(), {{u"audio"_s, u"off"_s}});
+    r = off.askIn(Lang::En, u"put sound on 20"_s);
+    requireText(r.contains(u"off in Settings"_s) && !r.contains(u"Done"_s) && off.sys->count(u"setVolume"_s) == 0, "refused by permission", r);
+    auto silent = laptop();
+    silent->sinks.clear();
+    Harness noSound(silent);
+    r = noSound.askIn(Lang::En, u"put sound on 20"_s);
+    requireText(r.contains(u"no sound output"_s) && !r.contains(u"Done"_s) && noSound.status() == u"failed", "no output: failed, not done", r);
+    std::puts("ok conversation");
+}
+
+// The menu is the registry: every tool is in it, every entry is real, and its
+// examples are understood as that tool.
+static void capabilities()
+{
+    QSet<QString> listed;
+    for (const Capability &c : capabilityCatalogue()) {
+        listed.insert(c.id);
+        require(findTool(c.id) || c.id.startsWith(u"desktop:"_s) || c.id.startsWith(u"agent:"_s), "an entry names a real tool");
+        require(!c.titleRu.isEmpty() && !c.titleEn.isEmpty() && !c.textRu.isEmpty() && !c.textEn.isEmpty() && !c.examplesRu.isEmpty()
+                    && !c.examplesEn.isEmpty(),
+                "every entry has titles, text and examples in both languages");
+        if (!findTool(c.id))
+            continue;
+        for (const QString &e : c.examplesRu + c.examplesEn) {
+            const Parsed p = parse(e);
+            bool found = false;
+            for (const Step &s : p.steps)
+                found = found || s.tool == c.id;
+            requireText(found, qPrintable(u"the menu's example is understood as "_s + c.id), e);
+        }
+    }
+    for (const ToolSpec &t : tools())
+        requireText(listed.contains(t.name), "every tool is in the menu", t.name);
+    const QJsonArray rows = capabilityRows(Lang::Ru, [](const QString &c) { return c == u"audio"_s ? u"off"_s : defaultPermission(c); },
+                                           {{u"bluetooth"_s, u"no adapter"_s}}, true);
+    for (const QJsonValue &v : rows) {
+        const QJsonObject o = v.toObject();
+        if (o.value(u"id"_s) == u"audio.volume"_s)
+            require(!o.value(u"available"_s).toBool() && o.value(u"reason"_s).toString().contains(u"выключено"_s), "permission off: unavailable");
+        if (o.value(u"id"_s) == u"bluetooth.connect"_s)
+            require(!o.value(u"available"_s).toBool() && o.value(u"reason"_s) == u"no adapter"_s, "no adapter: unavailable, with the reason");
+        if (o.value(u"id"_s) == u"app.close"_s)
+            require(o.value(u"confirm"_s) == u"ask"_s, "closing asks");
+        require(o.value(u"offline"_s).toBool(), "everything runs offline");
+    }
+    std::puts("ok capabilities");
+}
+
+// A model file that passes the checks and a llama-server stand-in.
+static void installModel(const QString &server)
+{
+    const LocalModel::Entry e = LocalModel::entry(u"qwen3.5-4b"_s);
+    QDir().mkpath(LocalModel::modelsDir());
+    QFile model(LocalModel::modelsDir() + u'/' + e.file);
+    require(model.open(QIODevice::WriteOnly) && model.resize(e.size), "sparse model file");
+    model.close();
+    const QFileInfo fi(model.fileName());
+    QFile verified(LocalModel::modelsDir() + u"/verified.json"_s);
+    require(verified.open(QIODevice::WriteOnly), "verified.json");
+    verified.write(QJsonDocument(QJsonObject{{e.file, QJsonObject{{u"sha256"_s, e.sha256}, {u"size"_s, double(e.size)},
+                                                                    {u"mtime"_s, double(fi.lastModified().toSecsSinceEpoch())}}}})
+                       .toJson());
+    verified.close();
+    qputenv("JARVIS_LLAMA_SERVER", server.toUtf8());
+}
+
+// What 0.22 did with "put sound on 20": the rules missed it, the model returned an
+// empty plan ("I can't change the volume…") and the request went on to the chat.
+static void modelRefusal(const QString &dir)
+{
+    QFile plans(dir + u"/plans.json"_s);
+    require(plans.open(QIODevice::WriteOnly), "plans");
+    plans.write(QJsonDocument(QJsonObject{
+                                  {u"*"_s, QJsonObject{{u"steps"_s, QJsonArray{}}, {u"clarify"_s, u""_s},
+                                                       {u"say"_s, u"I can't change the volume myself. Run wpctl set-volume @DEFAULT_AUDIO_SINK@ 20%"_s}}},
+                                  {u"Переведи"_s, QJsonObject{{u"steps"_s, QJsonArray{QJsonObject{{u"tool"_s, u"audio.volume"_s},
+                                                                                                  {u"args"_s, QJsonObject{{u"level"_s, 20}}}}}},
+                                                             {u"clarify"_s, u""_s}, {u"say"_s, u""_s}}},
+                              })
+                    .toJson());
+    plans.close();
+    qputenv("JARVIS_FAKE_PLANS", plans.fileName().toUtf8());
+    const QString server = dir + u"/fake-llama"_s;
+    QFile script(server);
+    require(script.open(QIODevice::WriteOnly), "server wrapper");
+    script.write("#!/bin/sh\nexec python3 -I '" JARVIS_TESTS_DIR "/fake_llama_server.py' \"$@\"\n");
+    script.close();
+    script.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    installModel(server);
+
+    auto sys = laptop();
+    Harness h(sys);
+    h.model.configure(u"qwen3.5-4b"_s, u"cpu"_s, 1);
+    require(h.agent->localModelReady(), "installed");
+    // Claude configured (chatFallback false), as on the machine where it failed.
+    quint64 id = h.send(u"звук какой-то не такой, поправь"_s, Lang::Ru, false);
+    QString r = h.wait(id, 30000);
+    requireText(h.routes.value(id) == u"agent"_s && !r.contains(u"can't"_s) && !r.contains(u"wpctl"_s) && r.contains(u"Не понял"_s),
+                "a laptop task the model made nothing of is not passed to the chat", r);
+    // A request that is not a laptop task still goes on to the chat.
+    id = h.send(u"power supply design for 12V"_s, Lang::En, false);
+    r = h.wait(id, 30000);
+    requireText(h.routes.value(id) == u"pass"_s, "not a laptop task: the chat answers", r);
+    // A quoted command the model "planned" is explained, not carried out.
+    const int calls = sys->count(u"setVolume"_s);
+    id = h.next++;
+    require(h.agent->converse(id, u"Переведи \"громкость 20\" на английский"_s, Lang::Ru), "converse");
+    r = h.wait(id, 30000);
+    requireText(sys->count(u"setVolume"_s) == calls && r.contains(u"ничего не меняю"_s), "a model's steps for a quotation are not run", r);
+    h.model.stop();
+    QFile::remove(LocalModel::modelsDir() + u'/' + LocalModel::entry(u"qwen3.5-4b"_s).file);
+    qunsetenv("JARVIS_LLAMA_SERVER");
+    std::puts("ok model refusal");
+}
+
+// The overlay sends a request with what is on the screen. In 0.22 that went straight
+// to the screen answer (Claude); a laptop command goes to the agent now. The real
+// Assistant, without a sound server (a private runtime dir): an honest failure.
+static void overlayRoute(const QString &dir)
+{
+    QDir().mkpath(dir + u"/run"_s);
+    QFile::setPermissions(dir + u"/run"_s, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+    const QByteArray runtime = qgetenv("XDG_RUNTIME_DIR");
+    qputenv("XDG_RUNTIME_DIR", (dir + u"/run"_s).toUtf8());
+    qputenv("PULSE_SERVER", "unix:/nonexistent"); // never the real PipeWire
+    {
+        Assistant a;
+        QHash<quint64, QStringList> routes;
+        QHash<quint64, QString> replies;
+        QObject::connect(&a, &Assistant::routed, [&](quint64 id, const QString &r) { routes[id].append(r); });
+        QObject::connect(&a, &Assistant::replyReady, [&](quint64 id, const QString &r) { replies.insert(id, r); });
+        const quint64 id = a.ask(u"put sound on 20"_s, {}, QJsonObject{{u"screen"_s, u"text"_s}, {u"screenText"_s, u"Konsole — bohdan@nitro: ~"_s}});
+        QElapsedTimer t;
+        t.start();
+        while (!replies.contains(id) && t.elapsed() < 15000)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
+        const QString r = replies.value(id, u"<timeout>"_s);
+        requireText(routes.value(id).contains(u"agent"_s) && !routes.value(id).contains(u"context"_s) && !routes.value(id).contains(u"llm"_s),
+                    "an overlay command with the screen goes to the agent", routes.value(id).join(u", "_s) + u" → "_s + r);
+        requireText(r.contains(u"sound output"_s) && !r.contains(u"can't"_s) && !r.contains(u"Done"_s), "no sound server: said, not done", r);
+    }
+    qputenv("XDG_RUNTIME_DIR", runtime);
+    qunsetenv("PULSE_SERVER");
+    std::puts("ok overlay route");
+}
+
 int main(int argc, char **argv)
 {
     // Everything in a temporary home: no real config, task file or models.
@@ -795,6 +1145,12 @@ int main(int argc, char **argv)
     restart();
     noModel();
     crashingModel(home.path());
+    phrasings();
+    modes();
+    conversation();
+    capabilities();
+    modelRefusal(home.path());
+    overlayRoute(home.path());
     std::puts("agent tests passed");
     return 0;
 }

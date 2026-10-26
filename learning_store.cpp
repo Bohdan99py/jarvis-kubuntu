@@ -82,10 +82,24 @@ void LearningStore::touch(const QString &question) {
         return;
     }
 }
+bool LearningStore::markBad(const QString &question) {
+    const QString key = normalize(question);
+    QJsonArray items = load();
+    for (int i=0; i<items.size(); ++i) {
+        QJsonObject o = items[i].toObject();
+        if (normalize(o["question"].toString()) != key) continue;
+        o["bad"] = true;
+        o["badAt"] = double(QDateTime::currentMSecsSinceEpoch());
+        items[i] = o;
+        return save(items).isEmpty();
+    }
+    return false;
+}
 QString LearningStore::recall(const QString &question) const {
     const QString key = normalize(question);
     for (const auto &v : load()) {
         const auto o=v.toObject();
+        if (o["bad"].toBool()) continue;
         if (normalize(o["question"].toString()) == key) return o["answer"].toString();
     }
     return {};
@@ -111,6 +125,7 @@ QList<LearningStore::Match> LearningStore::similar(const QString &question, doub
         for (const QString &s : have) if (!wanted.contains(s)) all += weight(s);
         const double score = all > 0 ? common / all : 0;
         const auto o = items[i].toObject();
+        if (o["bad"].toBool()) continue;
         if (score >= minScore) out.append({o["question"].toString(), o["answer"].toString(), score});
     }
     std::stable_sort(out.begin(), out.end(), [](const Match &a, const Match &b) { return a.score > b.score; });

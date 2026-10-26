@@ -26,13 +26,15 @@ ApplicationWindow {
     property var screenAware: null  // ScreenAwareness
     property var shortcut: null     // GlobalShortcut
     signal memoryRequested()
+    // An example from "What Jarvis can do": the main window puts it into its message field.
+    signal exampleChosen(string text)
 
     property string page: "desktop"
     // For the pages' `win` (inside a page, `win` names the page's own property).
     readonly property var host: win
     readonly property bool daemonUp: chat.daemonConnected
     readonly property bool english: settings.uiLanguage === "en"
-    readonly property var pages: ["desktop", "conversation", "intelligence", "autonomy", "privacy", "actions", "skills", "system"]
+    readonly property var pages: ["desktop", "conversation", "intelligence", "autonomy", "capabilities", "privacy", "actions", "skills", "system"]
 
     title: qsTr("Jarvis settings")
     color: Theme.bg
@@ -314,7 +316,7 @@ ApplicationWindow {
                 }
                 DarkButton {
                     objectName: "resetPageButton"
-                    visible: search.text.length === 0 && win.page !== "skills"
+                    visible: search.text.length === 0 && win.page !== "skills" && win.page !== "capabilities"
                     text: qsTr("Reset this page…")
                     onClicked: win.askReset(win.page)
                 }
@@ -386,7 +388,7 @@ ApplicationWindow {
                     width: pageScroll.availableWidth
                     // One page at a time: diagnostics and Plasma reads run only on their page.
                     sourceComponent: ({ desktop: desktopPage, conversation: conversationPage, intelligence: intelligencePage,
-                                        autonomy: autonomyPage, privacy: privacyPage, actions: actionsPage, skills: skillsPage,
+                                        autonomy: autonomyPage, capabilities: capabilitiesPage, privacy: privacyPage, actions: actionsPage, skills: skillsPage,
                                         system: systemPage })[win.page]
                     onLoaded: pageScroll.contentItem.contentY = 0
                 }
@@ -398,6 +400,7 @@ ApplicationWindow {
     Component { id: conversationPage; ConversationPage { win: host; kde: kdeSettings } }
     Component { id: intelligencePage; IntelligencePage { win: host } }
     Component { id: autonomyPage; AutonomyPage { win: host } }
+    Component { id: capabilitiesPage; CapabilitiesPage { win: host } }
     Component { id: privacyPage; PrivacyPage { win: host } }
     Component { id: actionsPage; ActionsPage { win: host } }
     Component { id: skillsPage; SkillsPage { win: host; skillPage: skillDetails } }

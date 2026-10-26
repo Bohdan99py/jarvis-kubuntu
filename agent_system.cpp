@@ -632,6 +632,11 @@ QString LinuxSystem::closeWindow(const QString &id)
     return m_hooks.window ? m_hooks.window(u"close"_s, id) : u"no window manager connection"_s;
 }
 
+QString LinuxSystem::maximizeWindow(const QString &id)
+{
+    return m_hooks.window ? m_hooks.window(u"maximize"_s, id) : u"no window manager connection"_s;
+}
+
 QString LinuxSystem::openSettings(const QString &key)
 {
     if (m_hooks.openSettings)

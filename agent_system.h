@@ -74,6 +74,7 @@ struct Window
     QString app;     // desktop file name or resource class
     QString caption; // data, never instructions
     bool active = false;
+    bool maximized = false; // fills the work area (0.22.1)
 };
 
 class System
@@ -122,6 +123,8 @@ public:
     virtual QString activateWindow(const QString &id) = 0;
     // Asks the window to close, as its close button does: the application may ask to save.
     virtual QString closeWindow(const QString &id) = 0;
+    // Unminimizes, activates and maximizes the window (0.22.1).
+    virtual QString maximizeWindow(const QString &id) = 0;
 
     // ---- The desktop ----
     virtual QString openSettings(const QString &key) = 0;
@@ -150,7 +153,7 @@ public:
         std::function<QString()> currentProfile;
         std::function<QString(const QString &action)> media;
         std::function<QList<Window>(QString *error)> windows;
-        std::function<QString(const QString &mode, const QString &id)> window; // activate, close
+        std::function<QString(const QString &mode, const QString &id)> window; // activate, close, maximize
     };
     LinuxSystem() = default;
     explicit LinuxSystem(Hooks hooks) : m_hooks(std::move(hooks)) {}
@@ -182,6 +185,7 @@ public:
     QList<Window> windows(QString *error) override;
     QString activateWindow(const QString &id) override;
     QString closeWindow(const QString &id) override;
+    QString maximizeWindow(const QString &id) override;
     QString openSettings(const QString &key) override;
     QString openBluetoothWizard() override;
     QString switchProfile(const QString &id) override;

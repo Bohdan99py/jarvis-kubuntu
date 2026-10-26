@@ -78,10 +78,15 @@ public:
     // A message that should not wait in the queue (stop while a task runs).
     static bool isStop(const QString &text);
 
+    // 👍/👎 on the last task's reply: kept in its record (agent-task.json).
+    void rateLast(bool good);
+
     // {mode, task: {...}, model: {...}, pending}
     QJsonObject status() const;
     // Capabilities of this computer for the diagnostics page.
     QJsonObject diagnostics(Lang lang);
+    // The "What Jarvis can do" menu with what is available here now (agent::capabilityRows).
+    QJsonArray capabilities(Lang lang);
 
     // A plan as a model gives it, through the same checks (the cloud planner, tests).
     void acceptPlanForTest(quint64 id, const QString &text, Lang lang, const QJsonObject &plan, const QString &source)
@@ -121,7 +126,11 @@ private:
     void execute(quint64 id, const QString &text, Lang lang, const QList<agent::Step> &steps, const QString &source,
                  const QStringList &notes, const QJsonObject &exclude = {});
     void taskDone(quint64 id, Lang lang, const QJsonArray &results, bool timedOut, const QStringList &notes);
+    void remember(const QJsonArray &results);
     QString systemPrompt() const;
+    bool cloudPlanningAllowed() const;
+    QString notUnderstood(Lang lang, const QString &why) const;
+    QString describe(Lang lang, const QList<agent::Step> &steps, bool hypothetical);
     QString stateData(Lang lang);
     QString permission(const QString &category) const;
     void saveTask();
@@ -132,7 +141,7 @@ private:
     LocalModel *m_model;
     ClaudeClient *m_cloud;
     Settings m_settings;
-    QJsonObject m_memory;     // preferred headphones, last device, volume step
+    QJsonObject m_memory;     // preferred headphones, last device, volume step, last setting and application
     QJsonObject m_task;       // the current or last task
     QJsonObject m_undo;       // {steps, at, text}: what puts back the last task that changed something
     Pending m_pending;

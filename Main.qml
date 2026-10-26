@@ -200,6 +200,7 @@ ApplicationWindow {
         desktop: desktopBridge; voice: voiceEngine; chat: chatModel; settings: appSettings
         screenAware: screenAware; shortcut: globalShortcut
         onMemoryRequested: { root.showMain(); appSettings.memoryOpen = true; memoryPanel.showTab(2) }
+        onExampleChosen: text => { root.showMain(); composer.setText(text) }
     }
     Platform.SystemTrayIcon {
         id: tray
@@ -212,6 +213,7 @@ ApplicationWindow {
             Platform.MenuItem { text: qsTr("Quick commands"); onTriggered: quickBar.reveal() }
             Platform.MenuItem { text: qsTr("Open Jarvis"); onTriggered: { root.show(); root.raise(); root.requestActivate() } }
             Platform.MenuItem { text: qsTr("French studies"); onTriggered: studyWindow.showTab(0) }
+            Platform.MenuItem { text: qsTr("What Jarvis can do"); onTriggered: controlCenter.showPage("capabilities") }
             Platform.MenuItem { text: qsTr("Settings…"); onTriggered: controlCenter.open() }
             Platform.MenuItem { text: qsTr("Compact overlay"); checkable: true; checked: appSettings.overlay; onTriggered: appSettings.overlay = !appSettings.overlay }
             Platform.MenuItem {
@@ -611,8 +613,47 @@ ApplicationWindow {
                 agentMode: appSettings.agentMode
                 onAttachRequested: attachDialog.open()
                 onVoiceSetupRequested: controlCenter.showVoice()
+                onCapabilitiesRequested: capabilitiesPopup.open()
                 onSent: text => root.lastAsked = text
             }
+        }
+        // "What Jarvis can do" from the chat: an example goes into the field, nothing runs.
+        Popup {
+            id: capabilitiesPopup
+            objectName: "capabilitiesPopup"
+            parent: Overlay.overlay
+            x: Math.round((parent.width - width) / 2)
+            y: Math.round((parent.height - height) / 2)
+            width: Math.min(720, parent.width - 40)
+            height: Math.min(640, parent.height - 40)
+            modal: true
+            focus: true
+            padding: 16
+            background: Rectangle { color: Theme.bg; border.color: Theme.border; radius: 8 }
+            contentItem: ColumnLayout {
+                spacing: 8
+                RowLayout {
+                    Layout.fillWidth: true
+                    Label { Layout.fillWidth: true; text: qsTr("What Jarvis can do"); color: Theme.text; font.pixelSize: 20; font.bold: true }
+                    DarkButton { text: qsTr("Close"); onClicked: capabilitiesPopup.close() }
+                }
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+                    Loader {
+                        width: parent.width
+                        active: capabilitiesPopup.opened
+                        sourceComponent: CapabilitiesView {
+                            panel: capabilitiesPanel
+                            english: appSettings.uiLanguage === "en"
+                            onExampleChosen: text => { capabilitiesPopup.close(); composer.setText(text) }
+                        }
+                    }
+                }
+            }
+            AgentPanel { id: capabilitiesPanel }
         }
       }
       }

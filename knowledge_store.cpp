@@ -552,8 +552,10 @@ QString KnowledgeStore::addEpisode(const QString &input, qint64 when)
         return error;
     QJsonObject root = load();
     QJsonArray list = root.value(u"episodes"_s).toArray();
-    const QJsonObject entry{{u"id"_s, QUuid::createUuid().toString(QUuid::WithoutBraces).left(8)},
-                            {u"text"_s, summary}, {u"created"_s, double(when)}};
+    QJsonObject entry{{u"id"_s, QUuid::createUuid().toString(QUuid::WithoutBraces).left(8)},
+                      {u"text"_s, summary}, {u"created"_s, double(when)}};
+    if (claimsIncapable(summary))
+        entry[u"excluded"_s] = u"capability-claim"_s;
     // The same conversation summarised again (it went on): replace the last summary.
     if (!list.isEmpty()) {
         const QJsonObject last = list.last().toObject();
@@ -597,6 +599,34 @@ bool KnowledgeStore::forgetEpisode(const QString &id)
     return false;
 }
 
+bool KnowledgeStore::claimsIncapable(const QString &summary)
+{
+    static const QRegularExpression claim(
+        u"(?:не\\s+может|не\\s+могу|не\\s+умеет|не\\s+способен|нет\\s+доступа|cannot|can'?t|can\\s+not|is\\s+unable|unable\\s+to|has\\s+no\\s+access)"
+        u"[^.;]{0,60}(?:управл|компьютер|громкост|звук|выполн|запуск|control|computer|volume|sound|run\\s+programs|execute)"_s,
+        QRegularExpression::CaseInsensitiveOption | QRegularExpression::UseUnicodePropertiesOption);
+    return claim.match(summary).hasMatch();
+}
+
+int KnowledgeStore::excludeCapabilityClaims()
+{
+    QJsonObject root = load();
+    QJsonArray list = root.value(u"episodes"_s).toArray();
+    int marked = 0;
+    for (int i = 0; i < list.size(); ++i) {
+        QJsonObject e = list.at(i).toObject();
+        if (e.contains(u"excluded"_s) || !claimsIncapable(e.value(u"text"_s).toString()))
+            continue;
+        e[u"excluded"_s] = u"capability-claim"_s;
+        list[i] = e;
+        ++marked;
+    }
+    if (marked == 0)
+        return 0;
+    root[u"episodes"_s] = list;
+    return save(root) ? marked : 0;
+}
+
 QString KnowledgeStore::episodesForPrompt(const QString &question, qint64 now, int maxChars) const
 {
     const QJsonArray list = episodes();
@@ -606,6 +636,8 @@ QString KnowledgeStore::episodesForPrompt(const QString &question, qint64 now, i
     QList<std::pair<double, QJsonObject>> picked;
     for (int i = 0; i < list.size(); ++i) {
         const QJsonObject e = list.at(i).toObject();
+        if (e.contains(u"excluded"_s))
+            continue;
         const double o = text::overlap(wanted, text::stems(e.value(u"text"_s).toString()));
         const bool latest = i == 0 && now - qint64(e.value(u"created"_s).toDouble()) < 3LL * 24 * 3600 * 1000;
         if (o >= 0.08 || latest)

@@ -277,7 +277,8 @@ private:
     QString m_pendingMode;
     int m_ideClients = 0;
     int m_codeBeats = 0;
-    qint64 m_correctionAt = 0; // 👎 given: the next message is the right answer
+    QString m_lastRoute;       // what answered last: agent (a task), recall (taught), chat
+    bool m_fromMemory = false; // the reply being finished came from taught answers
     QQueue<Request> m_queue;
     QTimer m_activityTick;
     QTimer m_activityNotify;

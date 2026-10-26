@@ -2,6 +2,7 @@
 //
 //   agent_cli [--model ID] [--mode auto|local] [--lang ru|en] [--stop-after MS]
 //             [--permission category=allow|ask|off] [--no-model] COMMAND...
+//   agent_cli --parse TEXT...   (only what the rules understand; changes nothing)
 //
 // Runs each COMMAND in turn as a chat message to the agent and prints one line
 // of JSON per event: {"cmd", "event": progress|reply, "text", "ms"}. With
@@ -10,6 +11,7 @@
 // would; run it under `unshare -c -n --keep-caps` to prove no network is used.
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTimer>
@@ -34,6 +36,22 @@ int main(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
     QStringList args = app.arguments().mid(1);
+    if (args.value(0) == u"--parse") {
+        for (const QString &t : args.mid(1)) {
+            const jarvis::agent::Parsed p = jarvis::agent::parse(t);
+            QJsonArray steps, described;
+            for (const jarvis::agent::Step &s : p.steps)
+                steps.append(s.toJson());
+            for (const jarvis::agent::Step &s : p.described)
+                described.append(s.toJson());
+            emitLine({{u"text"_s, t}, {u"steps"_s, steps}, {u"mode"_s, p.mode}, {u"described"_s, described},
+                      {u"unparsed"_s, QJsonArray::fromStringList(p.unparsed)}, {u"declined"_s, QJsonArray::fromStringList(p.declined)},
+                      {u"problems"_s, QJsonArray::fromStringList(p.problems)}, {u"followUp"_s, p.followUp}, {u"number"_s, p.number},
+                      {u"choice"_s, p.choice}, {u"actionish"_s, p.actionish}, {u"pronoun"_s, p.pronoun},
+                      {u"command"_s, jarvis::agent::isCommand(t)}});
+        }
+        return 0;
+    }
     QString model = u"qwen3.5-4b"_s, mode = u"local"_s;
     jarvis::Lang lang = jarvis::Lang::Ru;
     int stopAfter = -1;

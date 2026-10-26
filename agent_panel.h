@@ -29,6 +29,8 @@ class AgentPanel : public QObject
     Q_PROPERTY(QVariantMap daemon READ daemon NOTIFY daemonChanged FINAL)
     // [{name, ok, detail}] after runDiagnostics().
     Q_PROPERTY(QVariantList diagnostics READ diagnostics NOTIFY daemonChanged FINAL)
+    // The "What Jarvis can do" menu after loadCapabilities(): rows of agent::capabilityRows.
+    Q_PROPERTY(QVariantList capabilities READ capabilities NOTIFY capabilitiesChanged FINAL)
     // Local voice: {dictation: [ru, en installed], natural: Piper installed, voices: n}.
     Q_PROPERTY(QVariantMap voice READ voice NOTIFY changed FINAL)
 
@@ -42,6 +44,7 @@ public:
     QString jobError() const { return m_jobError; }
     QVariantMap daemon() const { return m_daemon; }
     QVariantList diagnostics() const { return m_diagnostics; }
+    QVariantList capabilities() const { return m_capabilities; }
     QVariantMap voice() const;
 
     // Downloads the model (once; resumes a partial file) and verifies it. Only on request.
@@ -52,11 +55,14 @@ public:
     Q_INVOKABLE QString remove(const QString &id);
     Q_INVOKABLE void refresh();
     Q_INVOKABLE void runDiagnostics();
+    // Asks jarvisd what is available now; without it, the catalogue alone (unchecked).
+    Q_INVOKABLE void loadCapabilities();
 
 signals:
     void changed();
     void jobChanged();
     void daemonChanged();
+    void capabilitiesChanged();
 
 private:
     void runScript(const QStringList &args, const QString &id, const QString &phase);
@@ -68,5 +74,6 @@ private:
     QString m_jobError;
     QVariantMap m_daemon;
     QVariantList m_diagnostics;
+    QVariantList m_capabilities;
     QTimer m_poll;
 };
